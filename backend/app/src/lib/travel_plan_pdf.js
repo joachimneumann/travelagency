@@ -1,8 +1,7 @@
 import { createWriteStream } from "node:fs";
-import { access, mkdir } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import PDFDocument from "pdfkit";
-import sharp from "sharp";
 import {
   formatPdfDateOnly,
   pdfTextAlign,
@@ -18,6 +17,7 @@ import {
 import { pdfTheme } from "./style_tokens.js";
 import { normalizeText } from "./text.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
+import { pdfImageFileExists, rasterizePdfImage } from "./pdf_image_cache.js";
 import { drawMultifontText, measureMultifontTextHeight } from "./pdf_multifont_text.js";
 import { drawPdfCompanyHeader } from "./pdf_company_header.js";
 import { resolveLocalizedText } from "../domain/booking_content_i18n.js";
@@ -47,10 +47,12 @@ import {
   drawMarketingTourPdfBackground
 } from "./marketing_tour_pdf_background.js";
 import {
+  drawMarketingTourOnePagerFooter,
   drawMarketingTourOnePagerLogo,
   drawMarketingTourOnePagerTripTitle,
   registerMarketingTourOnePagerFonts,
-  resolveMarketingTourOnePagerCoverFonts
+  resolveMarketingTourOnePagerCoverFonts,
+  resolveMarketingTourOnePagerFooterFonts
 } from "./marketing_tour_one_pager_pdf.js";
 
 const MM_TO_POINTS = 72 / 25.4;
@@ -276,13 +278,7 @@ function measureTextHeight(doc, text, { width, fontSize, fonts, weight = "regula
 }
 
 async function fileExists(filePath) {
-  if (!filePath) return false;
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
+  return pdfImageFileExists(filePath);
 }
 
 function registerPdfFonts(doc, fonts) {
@@ -313,22 +309,7 @@ function mixedFontChoices(weight = "regular", fonts = null) {
 }
 
 async function rasterizeImage(filePath, { width, height } = {}) {
-  if (!(await fileExists(filePath))) return null;
-  const image = sharp(filePath, { failOn: "none" }).rotate();
-  const metadata = await image.metadata().catch(() => ({}));
-  const resized = image.resize({
-    width: width || null,
-    height: height || null,
-    fit: "cover",
-    position: "centre",
-    withoutEnlargement: false
-  });
-  const buffer = await resized.jpeg({ quality: 88 }).toBuffer();
-  return {
-    buffer,
-    width: width || metadata.width || 1,
-    height: height || metadata.height || 1
-  };
+  return rasterizePdfImage(filePath, { width, height, quality: 88 });
 }
 
 async function resolveBookingHeroTitle(booking, lang, readTours) {
@@ -441,30 +422,8 @@ function firstTravelTourCardImagePath(tour) {
   return entries[0]?.storagePath || "";
 }
 
-function footerText(companyProfile, lang) {
-  if (companyProfile) {
-    return [
-      companyProfile.name,
-      companyProfile.website,
-      companyProfile.email,
-      companyProfile.whatsapp
-    ].filter(Boolean).join(" · ");
-  }
-  return pdfT(lang, "document.footer", "Issued by Asia Travel Plan");
-}
-
-function drawFooter(doc, fonts, companyProfile, lang) {
-  drawDivider(doc, doc.page.height - PAGE_MARGIN - 12);
-  doc
-    .font(pdfFontName("regular", fonts))
-    .fontSize(8.5)
-    .fillColor(PDF_COLORS.textMuted)
-    .text(
-      footerText(companyProfile, lang),
-      PAGE_MARGIN,
-      doc.page.height - PAGE_MARGIN,
-      { width: doc.page.width - PAGE_MARGIN * 2, align: "center" }
-    );
+function drawFooter(doc, fonts, companyProfile) {
+  drawMarketingTourOnePagerFooter(doc, companyProfile || {}, fonts);
 }
 
 function resolveGuideSectionTitle(guideContext, lang) {
@@ -1016,6 +975,15 @@ export function createTravelPlanPdfWriter({
     const marketingCoverFonts = includeMarketingTourBackground
       ? await resolveMarketingTourOnePagerCoverFonts(lang, normalizeText(process.env.ONE_PAGER_FONT_DIR), fonts)
       : null;
+    const onePagerFooterFonts = await resolveMarketingTourOnePagerFooterFonts(lang, {
+      fontDir: normalizeText(process.env.ONE_PAGER_FONT_DIR),
+      sampleText: [
+        textOrNull(companyProfile?.whatsapp),
+        textOrNull(companyProfile?.email),
+        textOrNull(companyProfile?.website),
+        textOrNull(companyProfile?.address)
+      ].filter(Boolean).join(" ")
+    });
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
@@ -1039,6 +1007,7 @@ export function createTravelPlanPdfWriter({
       if (includeMarketingTourBackground) {
         registerMarketingTourOnePagerFonts(doc, marketingCoverFonts);
       }
+      registerMarketingTourOnePagerFonts(doc, onePagerFooterFonts);
 
       const bottomLimit = () => doc.page.height - PAGE_MARGIN - PAGE_FOOTER_GAP;
       const drawPageBackground = ({ includeHeroImage = false } = {}) => {
@@ -1047,7 +1016,7 @@ export function createTravelPlanPdfWriter({
         }
       };
       const addContinuationPage = () => {
-        drawFooter(doc, fonts, companyProfile, lang);
+        drawFooter(doc, onePagerFooterFonts, companyProfile);
         doc.addPage();
         drawPageBackground();
         return includeMarketingTourBackground
@@ -1153,7 +1122,7 @@ export function createTravelPlanPdfWriter({
           attachmentCount: attachmentPaths.length
         });
       }
-      drawFooter(doc, fonts, companyProfile, lang);
+      drawFooter(doc, onePagerFooterFonts, companyProfile);
       doc.end();
     });
 

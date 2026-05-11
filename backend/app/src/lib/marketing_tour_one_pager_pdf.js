@@ -1,5 +1,5 @@
 import { createWriteStream } from "node:fs";
-import { access, readFile, rm } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import PDFDocument from "pdfkit";
@@ -8,6 +8,7 @@ import { normalizeText } from "./text.js";
 import { styleToken } from "./style_tokens.js";
 import { pdfTextOptions, normalizePdfLang, pdfT } from "./pdf_i18n.js";
 import { resolvePdfFontsForLang } from "./pdf_font_resolver.js";
+import { pdfImageFileExists, rasterizePdfImage } from "./pdf_image_cache.js";
 import {
   createMarketingTourPdfBackgroundImageBuffer,
   drawMarketingTourPdfBackground
@@ -56,6 +57,12 @@ const PHOTO_LABEL_PROTECTED_EXTRA_Y = 10;
 const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 18;
 const BODY_IMAGE_COMPACT_TARGET_GAP = 6;
 const BODY_IMAGE_COMPACT_HORIZONTAL_PROXIMITY = 34;
+const BODY_IMAGE_HIGHEST_SMALL_MAX_WIDTH = 138;
+const BODY_IMAGE_HIGHEST_SMALL_MAX_HEIGHT = 100;
+const BODY_IMAGE_HIGHLIGHTS_SAFE_GAP = 10;
+const BODY_IMAGE_HIGHLIGHTS_PROTECTED_X = 34;
+const BODY_IMAGE_HIGHLIGHTS_PROTECTED_WIDTH = 298;
+const BODY_IMAGE_HIGHLIGHTS_PROTECTED_HEIGHT = 144;
 const PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO = 0.2;
 const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 155;
 const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
@@ -315,13 +322,7 @@ export function registerMarketingTourOnePagerFonts(doc, fonts) {
 }
 
 async function fileExists(filePath) {
-  if (!filePath) return false;
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
+  return pdfImageFileExists(filePath);
 }
 
 async function firstExistingPath(candidates) {
@@ -408,6 +409,28 @@ export async function resolveMarketingTourOnePagerCoverFonts(lang, fontDir = "",
     ...(baseFonts || {}),
     ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
   };
+}
+
+export async function resolveMarketingTourOnePagerFooterFonts(lang, { sampleText = "", fontDir = "" } = {}) {
+  const normalizedLang = normalizePdfLang(lang);
+  const onePagerFontDir = normalizeText(fontDir);
+  const onePagerFontDirOnly = Boolean(onePagerFontDir);
+  const bodyFonts = onePagerFontDirOnly
+    ? await resolvePdfFontsForLang({
+      lang: normalizedLang,
+      sampleText,
+      regularCandidates: fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES),
+      boldCandidates: fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES)
+    })
+    : await resolvePdfFontsForLang({
+      lang: normalizedLang,
+      sampleText,
+      regularCandidates: prioritizeOnePagerFontCandidates(PDF_FONT_REGULAR_CANDIDATES),
+      boldCandidates: prioritizeOnePagerFontCandidates(PDF_FONT_BOLD_CANDIDATES)
+    });
+  if (bodyFonts?.regular && !bodyFonts.bold) bodyFonts.bold = bodyFonts.regular;
+  ensureOnePagerFontDirHasBodyFont(onePagerFontDir, bodyFonts);
+  return bodyFonts;
 }
 
 function ensureOnePagerFontDirHasBodyFont(fontDir, fonts) {
@@ -883,6 +906,25 @@ function bodyImageVerticalGapScore(candidate, placedLayouts) {
   }, 0);
 }
 
+function bodyImageHighlightsProtectedRect(highlightsY) {
+  return {
+    x: BODY_IMAGE_HIGHLIGHTS_PROTECTED_X,
+    y: (Number(highlightsY) || 438) - 8,
+    width: BODY_IMAGE_HIGHLIGHTS_PROTECTED_WIDTH,
+    height: BODY_IMAGE_HIGHLIGHTS_PROTECTED_HEIGHT
+  };
+}
+
+function bodyImageHighlightsOverlapPenalty(candidate, highlightsY) {
+  const candidateImage = bodyImageCoverageRect(candidate);
+  const protectedRect = bodyImageHighlightsProtectedRect(highlightsY);
+  const overlapArea = rectOverlapArea(candidateImage, protectedRect);
+  if (overlapArea <= 0) return 0;
+  const targetX = protectedRect.x + protectedRect.width + BODY_IMAGE_HIGHLIGHTS_SAFE_GAP;
+  const leftShiftPenalty = Math.max(0, targetX - candidateImage.x);
+  return overlapArea * 100 + leftShiftPenalty * 1000;
+}
+
 function clampBodyImageLayout(layout, dx = 0, dy = 0) {
   return {
     ...layout,
@@ -899,7 +941,15 @@ function clampBodyImageLayout(layout, dx = 0, dy = 0) {
   };
 }
 
-function bodyImageTitleCollisionCandidates(layout) {
+function pushBodyImageRightOfHighlights(layout, highlightsY) {
+  const candidateImage = bodyImageCoverageRect(layout);
+  const protectedRect = bodyImageHighlightsProtectedRect(highlightsY);
+  if (rectOverlapArea(candidateImage, protectedRect) <= 0) return layout;
+  const targetX = protectedRect.x + protectedRect.width + BODY_IMAGE_HIGHLIGHTS_SAFE_GAP;
+  return clampBodyImageLayout(layout, targetX - candidateImage.x, 0);
+}
+
+function bodyImageTitleCollisionCandidates(layout, highlightsY) {
   const step = PHOTO_LABEL_COLLISION_STEP;
   const diagonal = step * 0.7;
   const offsets = [
@@ -930,7 +980,7 @@ function bodyImageTitleCollisionCandidates(layout) {
   ];
   const seen = new Set();
   return offsets
-    .map(([dx, dy]) => clampBodyImageLayout(layout, dx, dy))
+    .map(([dx, dy]) => pushBodyImageRightOfHighlights(clampBodyImageLayout(layout, dx, dy), highlightsY))
     .filter((candidate) => {
       const key = `${candidate.x}:${candidate.y}`;
       if (seen.has(key)) return false;
@@ -939,19 +989,21 @@ function bodyImageTitleCollisionCandidates(layout) {
     });
 }
 
-function resolveBodyImageTitleCollisions(items) {
+function resolveBodyImageTitleCollisions(items, { highlightsY = 438 } = {}) {
   const resolvedItems = [];
   return items.map(({ frame, layout }) => {
     const placedLayouts = resolvedItems.map((item) => item.layout);
-    const resolvedLayout = bodyImageTitleCollisionCandidates(layout)
+    const resolvedLayout = bodyImageTitleCollisionCandidates(layout, highlightsY)
       .map((candidate, index) => ({
         candidate,
         index,
+        highlightsScore: bodyImageHighlightsOverlapPenalty(candidate, highlightsY),
         collisionScore: bodyImageTitleCollisionScore(candidate, placedLayouts),
         gapScore: bodyImageVerticalGapScore(candidate, placedLayouts),
         distance: Math.hypot(candidate.x - layout.x, candidate.y - layout.y)
       }))
-      .sort((left, right) => left.collisionScore - right.collisionScore
+      .sort((left, right) => left.highlightsScore - right.highlightsScore
+        || left.collisionScore - right.collisionScore
         || left.gapScore - right.gapScore
         || left.distance - right.distance
         || left.index - right.index)[0]
@@ -962,33 +1014,44 @@ function resolveBodyImageTitleCollisions(items) {
   });
 }
 
-function resolveBodyImageCollageTitleCollisions(items) {
-  return resolveBodyImageTitleCollisions(sortBodyImageLayoutsForDraw(items))
+function resolveBodyImageCollageTitleCollisions(items, options = {}) {
+  return resolveBodyImageTitleCollisions(sortBodyImageLayoutsForDraw(items), options)
     .sort((left, right) => (left.layout?.y || 0) - (right.layout?.y || 0));
 }
 
 function bodyImageBaseLayouts(count) {
   const layoutsByCount = {
     1: [
-      { x: 326, y: 420, width: 224, height: 146, angle: 1.2 }
+      { x: 348, y: 426, width: 198, height: 132, angle: 1.2 }
     ],
     2: [
       { x: 330, y: 350, width: 212, height: 136, angle: -1.2 },
-      { x: 322, y: 518, width: 216, height: 138, angle: 1.4 }
+      { x: 358, y: 520, width: 176, height: 124, angle: 1.4 }
     ],
     3: [
       { x: 336, y: 324, width: 210, height: 132, angle: -1 },
-      { x: 306, y: 478, width: 176, height: 110, angle: 1.4 },
-      { x: 416, y: 556, width: 136, height: 98, angle: -1.2 }
+      { x: 400, y: 476, width: 144, height: 100, angle: 1.4 },
+      { x: 348, y: 568, width: 174, height: 108, angle: -1.2 }
     ],
     4: [
       { x: 326, y: 314, width: 220, height: 136, angle: -1.2 },
       { x: 412, y: 444, width: 142, height: 98, angle: 1.1 },
-      { x: 304, y: 554, width: 176, height: 108, angle: -1.1 },
-      { x: 476, y: 562, width: 82, height: 110, angle: 1.3 }
+      { x: 352, y: 558, width: 174, height: 108, angle: -1.1 },
+      { x: 476, y: 572, width: 82, height: 104, angle: 1.3 }
     ]
   };
   return layoutsByCount[clampNumber(count, 1, BODY_IMAGE_LIMIT)] || [];
+}
+
+function bodyImageHighestLayoutIndex(layouts) {
+  if (!Array.isArray(layouts) || layouts.length <= 1) return -1;
+  return layouts.reduce((highestIndex, layout, index) => (
+    !layout
+      ? highestIndex
+      : highestIndex < 0 || layout.y < layouts[highestIndex].y
+        ? index
+        : highestIndex
+  ), -1);
 }
 
 function createBodyImageLayoutSeed(tour, bodyFrames) {
@@ -1004,23 +1067,36 @@ function createBodyImageLayoutSeed(tour, bodyFrames) {
   ].filter(Boolean).join("|") || "one-pager-body-images";
 }
 
-function createBodyImageLayouts(tour, frameImages) {
+function createBodyImageLayouts(tour, frameImages, { highlightsY = 438 } = {}) {
   const bodyFrames = safeArray(frameImages)
     .slice(1)
     .filter((frame) => frame?.entry)
     .slice(0, BODY_IMAGE_LIMIT);
   const baseLayouts = bodyImageBaseLayouts(bodyFrames.length);
+  const highestLayoutIndex = bodyImageHighestLayoutIndex(baseLayouts);
   const seed = createBodyImageLayoutSeed(tour, bodyFrames);
   const layouts = bodyFrames.map((frame, index) => {
     const base = baseLayouts[index];
+    const isHighestBodyImage = index === highestLayoutIndex;
     const scaledBaseWidth = base.width * BODY_IMAGE_SIZE_SCALE;
     const scaledBaseHeight = base.height * BODY_IMAGE_SIZE_SCALE;
     const scale = deterministicRange(seed, `scale:${index}`, 0.96, 1.04);
     const ratioScale = deterministicRange(seed, `ratio:${index}`, 0.96, 1.04);
-    const width = clampNumber(scaledBaseWidth * scale, BODY_IMAGE_MIN_WIDTH, BODY_IMAGE_RENDER_FRAME.width);
-    const height = clampNumber(scaledBaseHeight * scale * ratioScale, BODY_IMAGE_MIN_HEIGHT, BODY_IMAGE_RENDER_FRAME.height);
+    const width = isHighestBodyImage
+      ? Math.min(
+        clampNumber(scaledBaseWidth * scale, BODY_IMAGE_MIN_WIDTH, BODY_IMAGE_RENDER_FRAME.width),
+        BODY_IMAGE_HIGHEST_SMALL_MAX_WIDTH
+      )
+      : clampNumber(scaledBaseWidth * scale, BODY_IMAGE_MIN_WIDTH, BODY_IMAGE_RENDER_FRAME.width);
+    const height = isHighestBodyImage
+      ? Math.min(
+        clampNumber(scaledBaseHeight * scale * ratioScale, BODY_IMAGE_MIN_HEIGHT, BODY_IMAGE_RENDER_FRAME.height),
+        BODY_IMAGE_HIGHEST_SMALL_MAX_HEIGHT
+      )
+      : clampNumber(scaledBaseHeight * scale * ratioScale, BODY_IMAGE_MIN_HEIGHT, BODY_IMAGE_RENDER_FRAME.height);
+    const baseXOffset = isHighestBodyImage ? base.width - width : (base.width - width) / 2;
     const x = clampNumber(
-      base.x + (base.width - width) / 2 + deterministicRange(seed, `x:${index}`, -6, 6),
+      base.x + baseXOffset + deterministicRange(seed, `x:${index}`, -6, 6),
       BODY_IMAGE_LAYOUT_BOUNDS.minX,
       BODY_IMAGE_LAYOUT_BOUNDS.maxX - width
     );
@@ -1041,7 +1117,7 @@ function createBodyImageLayouts(tour, frameImages) {
       }
     };
   });
-  return resolveBodyImageCollageTitleCollisions(layouts);
+  return resolveBodyImageCollageTitleCollisions(layouts, { highlightsY });
 }
 
 function drawBodyImageCollage(doc, bodyImageLayouts, fonts, lang) {
@@ -1275,15 +1351,12 @@ async function loadImageBuffer(storagePath, { width, height, resolveTourImageDis
   for (const candidate of candidates) {
     if (!(await fileExists(candidate))) continue;
     try {
-      return await sharp(candidate)
-        .rotate()
-        .resize(
-          Math.max(1, Math.round(width * IMAGE_RENDER_SCALE)),
-          Math.max(1, Math.round(height * IMAGE_RENDER_SCALE)),
-          { fit: "cover", position: "centre" }
-        )
-        .jpeg({ quality: 88, mozjpeg: true })
-        .toBuffer();
+      const image = await rasterizePdfImage(candidate, {
+        width: Math.max(1, Math.round(width * IMAGE_RENDER_SCALE)),
+        height: Math.max(1, Math.round(height * IMAGE_RENDER_SCALE)),
+        quality: 88
+      });
+      if (image?.buffer) return image.buffer;
     } catch {
       // Try the next candidate.
     }
@@ -1851,7 +1924,7 @@ function drawCta(doc, companyProfile, fonts, lang) {
   doc.restore();
 }
 
-function drawFooter(doc, companyProfile, fonts) {
+export function drawMarketingTourOnePagerFooter(doc, companyProfile, fonts) {
   const footerY = PAGE_HEIGHT - FOOTER_HEIGHT;
   const iconSize = 16;
   const itemY = footerY + 14;
@@ -2025,7 +2098,6 @@ export function createMarketingTourOnePagerPdfWriter({
     };
     const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang);
     const heroBackgroundBuffer = await createMarketingTourPdfBackgroundImageBuffer(frameImages[0]?.buffer);
-    const bodyImageLayouts = createBodyImageLayouts(tour, frameImages);
     const configuredHighlightItems = await collectConfiguredExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath);
     const highlightItems = configuredHighlightItems.length
       ? configuredHighlightItems
@@ -2055,6 +2127,7 @@ export function createMarketingTourOnePagerPdfWriter({
       const mainCopyLayout = drawMainCopy(doc, tour, duration, renderFonts, normalizedLang);
       const highlightsY = Math.max(438, Number(mainCopyLayout?.highlightsY) || 438);
       const lowerContentY = highlightsY + A4_VERTICAL_EXTENSION;
+      const bodyImageLayouts = createBodyImageLayouts(tour, frameImages, { highlightsY });
       drawHighlights(doc, highlightItems, 42, highlightsY, 276, renderFonts, normalizedLang);
       drawRouteConnector(doc, 43, lowerContentY + 132, 296, {
         busImagePath: resolvedBusImagePath,
@@ -2064,7 +2137,7 @@ export function createMarketingTourOnePagerPdfWriter({
 
       drawBodyImageCollage(doc, bodyImageLayouts, renderFonts, normalizedLang);
       drawCta(doc, companyProfile || {}, renderFonts, normalizedLang);
-      drawFooter(doc, companyProfile || {}, renderFonts);
+      drawMarketingTourOnePagerFooter(doc, companyProfile || {}, renderFonts);
       await streamPdfToFile(doc, outputPath);
     };
 

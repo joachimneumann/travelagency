@@ -2610,6 +2610,16 @@ test("travel-plan PDF removes the old hero subtitle and in-body section title, a
     "Travel-plan PDFs should not render a standalone in-body section heading above the first itinerary day"
   );
   assert.match(
+    travelPlanPdfSource,
+    /drawMarketingTourOnePagerFooter,[\s\S]*registerMarketingTourOnePagerFonts,[\s\S]*resolveMarketingTourOnePagerFooterFonts[\s\S]*function drawFooter\(doc, fonts, companyProfile\) \{[\s\S]*drawMarketingTourOnePagerFooter\(doc, companyProfile \|\| \{\}, fonts\);[\s\S]*const onePagerFooterFonts = await resolveMarketingTourOnePagerFooterFonts\(lang,[\s\S]*registerMarketingTourOnePagerFonts\(doc, onePagerFooterFonts\);[\s\S]*drawFooter\(doc, onePagerFooterFonts, companyProfile\)/,
+    "Travel-plan PDF footers should reuse the one-pager company-info footer"
+  );
+  assert.doesNotMatch(
+    travelPlanPdfSource,
+    /function drawFooter\(doc, fonts, companyProfile\) \{\s*drawDivider\(doc,/,
+    "Travel-plan PDF footer rendering should not draw the old horizontal footer rule"
+  );
+  assert.match(
     bookingTravelPlanHandlerSource,
     /function buildTravelPlanDownloadFilename\(nowValue = nowIso\(\), rawSuffix = ""\)/,
     "Travel-plan PDF download responses should build the new date-based filename"
@@ -3918,8 +3928,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /const BODY_IMAGE_LIMIT = 4;[\s\S]*const BODY_IMAGE_SIZE_SCALE = 1\.1;[\s\S]*const BODY_IMAGE_RENDER_FRAME = Object\.freeze\(\{ width: 273, height: 191 \}\);[\s\S]*maxY: 662[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*\{ x: 326, y: 314, width: 220, height: 136[\s\S]*\{ x: 412, y: 444, width: 142, height: 98[\s\S]*\{ x: 304, y: 554, width: 176, height: 108[\s\S]*\{ x: 476, y: 562, width: 82, height: 110[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*const scaledBaseWidth = base\.width \* BODY_IMAGE_SIZE_SCALE;[\s\S]*const scaledBaseHeight = base\.height \* BODY_IMAGE_SIZE_SCALE;[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`, 0\.96, 1\.04\)[\s\S]*clampNumber\(scaledBaseWidth \* scale, BODY_IMAGE_MIN_WIDTH, BODY_IMAGE_RENDER_FRAME\.width\)[\s\S]*deterministicRange\(seed, `x:\$\{index\}`, -6, 6\)[\s\S]*deterministicRange\(seed, `angle:\$\{index\}`, -0\.8, 0\.8\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);/,
-    "The one-pager PDF should lay out up to four right-side body images in a lower fixed editorial cascade with light deterministic jitter and title-strip collision cleanup"
+    /const BODY_IMAGE_LIMIT = 4;[\s\S]*const BODY_IMAGE_SIZE_SCALE = 1\.1;[\s\S]*const BODY_IMAGE_RENDER_FRAME = Object\.freeze\(\{ width: 273, height: 191 \}\);[\s\S]*const BODY_IMAGE_HIGHEST_SMALL_MAX_WIDTH = 138;[\s\S]*const BODY_IMAGE_HIGHEST_SMALL_MAX_HEIGHT = 100;[\s\S]*maxY: 662[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*\{ x: 326, y: 314, width: 220, height: 136[\s\S]*\{ x: 412, y: 444, width: 142, height: 98[\s\S]*\{ x: 352, y: 558, width: 174, height: 108[\s\S]*\{ x: 476, y: 572, width: 82, height: 104[\s\S]*function bodyImageHighestLayoutIndex\(layouts\)[\s\S]*function createBodyImageLayouts\(tour, frameImages, \{ highlightsY = 438 \} = \{\}\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*const highestLayoutIndex = bodyImageHighestLayoutIndex\(baseLayouts\);[\s\S]*const isHighestBodyImage = index === highestLayoutIndex;[\s\S]*Math\.min\([\s\S]*BODY_IMAGE_HIGHEST_SMALL_MAX_WIDTH[\s\S]*Math\.min\([\s\S]*BODY_IMAGE_HIGHEST_SMALL_MAX_HEIGHT[\s\S]*const baseXOffset = isHighestBodyImage \? base\.width - width : \(base\.width - width\) \/ 2;[\s\S]*deterministicRange\(seed, `x:\$\{index\}`, -6, 6\)[\s\S]*deterministicRange\(seed, `angle:\$\{index\}`, -0\.8, 0\.8\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts, \{ highlightsY \}\);/,
+    "The one-pager PDF should lay out up to four right-side body images with the highest image size-capped small and light deterministic jitter"
   );
   assert.match(
     onePagerPdfSource,
@@ -3928,8 +3938,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /const PHOTO_LABEL_COLLISION_STEP = 22;[\s\S]*const PHOTO_LABEL_PROTECTED_EXTRA_X = 18;[\s\S]*const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 18;[\s\S]*const BODY_IMAGE_COMPACT_TARGET_GAP = 6;[\s\S]*function bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*bodyImageLowerEdgeAlignmentPenalty\(candidate, placed\)[\s\S]*function bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*BODY_IMAGE_COMPACT_TARGET_GAP[\s\S]*collisionScore: bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*gapScore: bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*left\.collisionScore - right\.collisionScore[\s\S]*left\.gapScore - right\.gapScore[\s\S]*function resolveBodyImageCollageTitleCollisions\(items\)[\s\S]*return resolveBodyImageTitleCollisions\(sortBodyImageLayoutsForDraw\(items\)\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);[\s\S]*function drawBodyImageCollage\(doc, bodyImageLayouts, fonts, lang\)[\s\S]*const drawItems = sortBodyImageLayoutsForDraw\(bodyImageLayouts\);[\s\S]*drawFramedImage\(doc,[\s\S]*labelLayer: false[\s\S]*drawItems\.forEach\(\(\{ frame, layout, drawOrderIndex \}\) => \{[\s\S]*drawFramedImageLabel\(doc,[\s\S]*drawBodyImageCollage\(doc, bodyImageLayouts, renderFonts, normalizedLang\);/,
-    "The one-pager PDF should score body-photo title-strip overlaps, avoid near-aligned lower edges, compact safe vertical gaps, then draw all labels above the complete collage"
+    /const PHOTO_LABEL_COLLISION_STEP = 22;[\s\S]*const PHOTO_LABEL_PROTECTED_EXTRA_X = 18;[\s\S]*const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 18;[\s\S]*const BODY_IMAGE_COMPACT_TARGET_GAP = 6;[\s\S]*const BODY_IMAGE_HIGHLIGHTS_PROTECTED_WIDTH = 298;[\s\S]*function bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*bodyImageLowerEdgeAlignmentPenalty\(candidate, placed\)[\s\S]*function bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*BODY_IMAGE_COMPACT_TARGET_GAP[\s\S]*function bodyImageHighlightsProtectedRect\(highlightsY\)[\s\S]*function bodyImageHighlightsOverlapPenalty\(candidate, highlightsY\)[\s\S]*function pushBodyImageRightOfHighlights\(layout, highlightsY\)[\s\S]*bodyImageTitleCollisionCandidates\(layout, highlightsY\)[\s\S]*pushBodyImageRightOfHighlights\(clampBodyImageLayout\(layout, dx, dy\), highlightsY\)[\s\S]*highlightsScore: bodyImageHighlightsOverlapPenalty\(candidate, highlightsY\)[\s\S]*collisionScore: bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*gapScore: bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*left\.highlightsScore - right\.highlightsScore[\s\S]*left\.collisionScore - right\.collisionScore[\s\S]*left\.gapScore - right\.gapScore[\s\S]*function resolveBodyImageCollageTitleCollisions\(items, options = \{\}\)[\s\S]*return resolveBodyImageTitleCollisions\(sortBodyImageLayoutsForDraw\(items\), options\)[\s\S]*const bodyImageLayouts = createBodyImageLayouts\(tour, frameImages, \{ highlightsY \}\);[\s\S]*drawBodyImageCollage\(doc, bodyImageLayouts, renderFonts, normalizedLang\);/,
+    "The one-pager PDF should avoid the experience-highlights block, score body-photo title-strip overlaps, compact safe vertical gaps, then draw all labels above the complete collage"
   );
   assert.match(
     onePagerPdfSource,

@@ -1,7 +1,6 @@
-import { access } from "node:fs/promises";
 import path from "node:path";
-import sharp from "sharp";
 import { drawMarketingTourFramedImage } from "./marketing_tour_one_pager_pdf.js";
+import { pdfImageFileExists, rasterizePdfImage } from "./pdf_image_cache.js";
 import { normalizeText } from "./text.js";
 
 const ITEM_THUMBNAIL_WIDTH = 118;
@@ -17,6 +16,7 @@ const FLUID_TEXT_IMAGE_SERVICE_LIMIT = 2;
 const TRAVEL_PLAN_IMAGE_FRAME_INSET = 8;
 const TRAVEL_PLAN_IMAGE_FRAME_SHAPE_INTENSITY = 0.38;
 const TRAVEL_PLAN_TRIP_LABEL_COLOR = "#F27A1A";
+const DEFAULT_THUMBNAIL_CONCURRENCY = 4;
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -34,33 +34,8 @@ function extractPublicRelativePath(publicUrl, prefix) {
   return normalizedUrl.slice(prefix.length).replace(/^\/+/, "");
 }
 
-async function fileExists(filePath) {
-  if (!filePath) return false;
-  try {
-    await access(filePath);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 async function rasterizeImage(filePath, { width, height } = {}) {
-  if (!(await fileExists(filePath))) return null;
-  const image = sharp(filePath, { failOn: "none" }).rotate();
-  const metadata = await image.metadata().catch(() => ({}));
-  const resized = image.resize({
-    width: width || null,
-    height: height || null,
-    fit: "cover",
-    position: "centre",
-    withoutEnlargement: false
-  });
-  const buffer = await resized.jpeg({ quality: 88 }).toBuffer();
-  return {
-    buffer,
-    width: width || metadata.width || 1,
-    height: height || metadata.height || 1
-  };
+  return rasterizePdfImage(filePath, { width, height, quality: 88 });
 }
 
 export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir, options = {}) {
@@ -84,16 +59,37 @@ export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir, op
 
 export async function buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, options = {}) {
   const items = safeArray(plan?.days).flatMap((day) => safeArray(day?.services || day?.items));
-  const entries = await Promise.all(items.map(async (item) => {
+  const concurrency = normalizeThumbnailConcurrency(options.thumbnailConcurrency || process.env.PDF_THUMBNAIL_CONCURRENCY);
+  const entries = await mapWithConcurrency(items, concurrency, async (item) => {
     const thumbnailPath = resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir, options);
-    if (!thumbnailPath || !(await fileExists(thumbnailPath))) return [item.id, null];
+    if (!thumbnailPath || !(await pdfImageFileExists(thumbnailPath))) return [item.id, null];
     const thumbnail = await rasterizeImage(thumbnailPath, {
       width: ITEM_THUMBNAIL_WIDTH * 3,
       height: ITEM_THUMBNAIL_HEIGHT * 3
     }).catch(() => null);
     return [item.id, thumbnail];
-  }));
+  });
   return new Map(entries.filter(([, thumbnail]) => thumbnail?.buffer));
+}
+
+function normalizeThumbnailConcurrency(value) {
+  const parsed = Number.parseInt(String(value || ""), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 12) : DEFAULT_THUMBNAIL_CONCURRENCY;
+}
+
+async function mapWithConcurrency(items, concurrency, worker) {
+  const source = Array.isArray(items) ? items : [];
+  const results = new Array(source.length);
+  let nextIndex = 0;
+  const workerCount = Math.min(Math.max(1, concurrency), source.length || 1);
+  await Promise.all(Array.from({ length: workerCount }, async () => {
+    while (nextIndex < source.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await worker(source[index], index);
+    }
+  }));
+  return results;
 }
 
 function formatTravelPlanDate(rawValue, lang, formatPdfDateOnly) {
