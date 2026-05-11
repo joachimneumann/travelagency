@@ -348,8 +348,14 @@ function tripEdgeServiceKeys(days) {
   return keys;
 }
 
-function automaticOnePagerImageCandidates(entries) {
+function middleDayImageCandidates(entries) {
   const sourceEntries = Array.isArray(entries) ? entries : [];
+  const middleEntries = sourceEntries.filter((entry) => entry?.is_middle_day_image === true);
+  return uniqueImageEntries(middleEntries).length >= onePagerFrameImageCount - 1 ? middleEntries : sourceEntries;
+}
+
+function automaticOnePagerImageCandidates(entries) {
+  const sourceEntries = middleDayImageCandidates(entries);
   if (uniqueImageEntries(sourceEntries).length <= onePagerFrameImageCount) return sourceEntries;
   return sourceEntries.filter((entry) => entry?.skip_automatic_one_pager_selection !== true);
 }
@@ -371,6 +377,7 @@ function collectVisibleTravelPlanImages(travelPlan) {
   const images = [];
   const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
   const edgeServiceKeys = tripEdgeServiceKeys(days);
+  const lastDayIndex = days.length - 1;
   for (const [dayIndex, day] of days.entries()) {
     const services = Array.isArray(day?.services) ? day.services : [];
     for (const [serviceIndex, service] of services.entries()) {
@@ -384,6 +391,7 @@ function collectVisibleTravelPlanImages(travelPlan) {
           id,
           storage_path: storagePath,
           label: serviceImageLabel(service),
+          is_middle_day_image: dayIndex > 0 && dayIndex < lastDayIndex,
           skip_automatic_one_pager_selection: edgeServiceKeys.has(`${dayIndex}:${serviceIndex}`)
         });
       }

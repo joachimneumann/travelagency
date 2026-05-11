@@ -137,6 +137,21 @@ function textOrNull(value) {
   return normalized || null;
 }
 
+function createPdfRenderTiming() {
+  const timings = [];
+  return {
+    timings,
+    async measure(label, callback) {
+      const startedAtMs = Date.now();
+      try {
+        return await callback();
+      } finally {
+        timings.push({ label, ms: Math.max(0, Date.now() - startedAtMs) });
+      }
+    }
+  };
+}
+
 function extractPublicRelativePath(publicUrl, prefix) {
   const normalizedUrl = normalizeText(publicUrl);
   if (!normalizedUrl) return null;
@@ -849,6 +864,7 @@ export function createTravelPlanPdfWriter({
   companyProfile = null
 }) {
   return async function writeTravelPlanPdf(booking, travelPlan, options = {}) {
+    const timing = createPdfRenderTiming();
     const lang = normalizePdfLang(
       options?.lang
       || booking?.customer_language
@@ -872,14 +888,14 @@ export function createTravelPlanPdfWriter({
     const closingText = includeEndingSection ? resolveTravelPlanClosingText(booking, lang) : "";
 
     const guideContext = includeGuideSection
-      ? await resolveAtpGuidePdfContext({
+      ? await timing.measure("guide_context", () => resolveAtpGuidePdfContext({
           booking,
           resolveAssignedAtpStaffProfile,
           resolveAtpStaffPhotoDiskPath
-        })
+        }))
       : null;
 
-    const [heroTitle, logoImage, heroPath, itemThumbnailMap, guidePhoto] = await Promise.all([
+    const [heroTitle, logoImage, heroPath, itemThumbnailMap, guidePhoto] = await timing.measure("initial_assets", () => Promise.all([
       resolveBookingHeroTitle(booking, lang, readTours),
       rasterizeImage(logoPath, { width: 1000 }).catch(() => null),
       resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
@@ -892,11 +908,11 @@ export function createTravelPlanPdfWriter({
             height: 420
           }).catch(() => null)
         : null
-    ]);
-    const heroImage = await rasterizeImage(heroPath || fallbackImagePath, {
+    ]));
+    const heroImage = await timing.measure("hero_image", () => rasterizeImage(heroPath || fallbackImagePath, {
       width: 1200,
       height: 780
-    }).catch(() => null);
+    }).catch(() => null));
     const marketingTourBackgroundEntry = includeMarketingTourBackground
       ? firstMarketingTourOverviewImageEntry(plan)
       : null;
@@ -909,13 +925,13 @@ export function createTravelPlanPdfWriter({
       ? textOrNull(resolveTravelPlanServiceImageDiskPath(marketingTourBackgroundEntry?.storagePath, marketingTourBackgroundEntry?.service))
       : "";
     const marketingTourBackgroundSourceImage = marketingTourBackgroundPath
-      ? await rasterizeImage(marketingTourBackgroundPath, {
+      ? await timing.measure("marketing_background_source", () => rasterizeImage(marketingTourBackgroundPath, {
           width: 1200,
           height: 780
-        }).catch(() => null)
+        }).catch(() => null))
       : heroImage;
     const marketingTourBackgroundImage = includeMarketingTourBackground
-      ? await createMarketingTourPdfBackgroundImageBuffer(marketingTourBackgroundSourceImage?.buffer).catch(() => null)
+      ? await timing.measure("marketing_background", () => createMarketingTourPdfBackgroundImageBuffer(marketingTourBackgroundSourceImage?.buffer).catch(() => null))
       : null;
     const asciiOnly = [
       textOrNull(heroTitle),
@@ -949,7 +965,7 @@ export function createTravelPlanPdfWriter({
 
     const [baseFonts, accentFonts] = asciiOnly
       ? [null, null]
-      : await Promise.all([
+      : await timing.measure("fonts", () => Promise.all([
           resolvePdfFontsForLang({
             lang,
             regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
@@ -964,7 +980,7 @@ export function createTravelPlanPdfWriter({
             regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
             boldCandidates: PDF_FONT_BOLD_CANDIDATES
           })
-        ]);
+        ]));
     const fonts = baseFonts
       ? {
           ...baseFonts,
@@ -973,9 +989,9 @@ export function createTravelPlanPdfWriter({
         }
       : null;
     const marketingCoverFonts = includeMarketingTourBackground
-      ? await resolveMarketingTourOnePagerCoverFonts(lang, normalizeText(process.env.ONE_PAGER_FONT_DIR), fonts)
+      ? await timing.measure("marketing_cover_fonts", () => resolveMarketingTourOnePagerCoverFonts(lang, normalizeText(process.env.ONE_PAGER_FONT_DIR), fonts))
       : null;
-    const onePagerFooterFonts = await resolveMarketingTourOnePagerFooterFonts(lang, {
+    const onePagerFooterFonts = await timing.measure("footer_fonts", () => resolveMarketingTourOnePagerFooterFonts(lang, {
       fontDir: normalizeText(process.env.ONE_PAGER_FONT_DIR),
       sampleText: [
         textOrNull(companyProfile?.whatsapp),
@@ -983,9 +999,9 @@ export function createTravelPlanPdfWriter({
         textOrNull(companyProfile?.website),
         textOrNull(companyProfile?.address)
       ].filter(Boolean).join(" ")
-    });
+    }));
 
-    await new Promise((resolve, reject) => {
+    await timing.measure("pdfkit", () => new Promise((resolve, reject) => {
       const doc = new PDFDocument({
         size: PAGE_SIZE,
         margin: 0,
@@ -1124,14 +1140,16 @@ export function createTravelPlanPdfWriter({
       }
       drawFooter(doc, onePagerFooterFonts, companyProfile);
       doc.end();
+    }));
+
+    await timing.measure("postprocess", async () => {
+      if (attachmentPaths.length) {
+        await appendPdfAttachmentsToFile(outputPath, attachmentPaths);
+      } else {
+        await trimTrailingBlankPagesInFile(outputPath);
+      }
     });
 
-    if (attachmentPaths.length) {
-      await appendPdfAttachmentsToFile(outputPath, attachmentPaths);
-    } else {
-      await trimTrailingBlankPagesInFile(outputPath);
-    }
-
-    return { outputPath };
+    return { outputPath, timings: timing.timings };
   };
 }

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import sharp from "sharp";
 
 const IMAGE_RENDER_SCALE = 2.4;
@@ -8,6 +9,10 @@ const HERO_BACKGROUND_IMAGE = Object.freeze({
   width: 466,
   height: 274
 });
+const BACKGROUND_CACHE_MAX_ENTRIES = 128;
+const backgroundImageCache = new Map();
+const backgroundImageInflight = new Map();
+const alphaMaskCache = new Map();
 
 function smoothStep(edge0, edge1, value) {
   if (edge0 === edge1) return value < edge0 ? 0 : 1;
@@ -46,10 +51,32 @@ function drawHeroBackgroundImage(doc, imageBuffer) {
   doc.restore();
 }
 
-export async function createMarketingTourPdfBackgroundImageBuffer(imageBuffer) {
-  if (!imageBuffer) return null;
-  const width = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.width * IMAGE_RENDER_SCALE));
-  const height = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.height * IMAGE_RENDER_SCALE));
+function bufferHash(buffer) {
+  return createHash("sha256").update(buffer).digest("hex");
+}
+
+function readBackgroundCache(key) {
+  if (!backgroundImageCache.has(key)) return null;
+  const value = backgroundImageCache.get(key);
+  backgroundImageCache.delete(key);
+  backgroundImageCache.set(key, value);
+  return value;
+}
+
+function rememberBackgroundCache(key, value) {
+  if (!value) return value;
+  backgroundImageCache.set(key, value);
+  while (backgroundImageCache.size > BACKGROUND_CACHE_MAX_ENTRIES) {
+    const oldestKey = backgroundImageCache.keys().next().value;
+    if (!oldestKey) break;
+    backgroundImageCache.delete(oldestKey);
+  }
+  return value;
+}
+
+async function alphaMaskBuffer(width, height) {
+  const key = `${width}x${height}`;
+  if (alphaMaskCache.has(key)) return alphaMaskCache.get(key);
   const alphaMask = Buffer.alloc(width * height * 4);
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
@@ -71,12 +98,39 @@ export async function createMarketingTourPdfBackgroundImageBuffer(imageBuffer) {
       channels: 4
     }
   }).png().toBuffer();
+  alphaMaskCache.set(key, maskBuffer);
+  return maskBuffer;
+}
+
+async function createMarketingTourPdfBackgroundImageBufferUncached(imageBuffer) {
+  const width = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.width * IMAGE_RENDER_SCALE));
+  const height = Math.max(1, Math.round(HERO_BACKGROUND_IMAGE.height * IMAGE_RENDER_SCALE));
+  const maskBuffer = await alphaMaskBuffer(width, height);
   return await sharp(imageBuffer)
     .resize(width, height, { fit: "cover", position: "centre" })
     .ensureAlpha()
     .composite([{ input: maskBuffer, blend: "dest-in" }])
     .png()
     .toBuffer();
+}
+
+export async function createMarketingTourPdfBackgroundImageBuffer(imageBuffer) {
+  if (!imageBuffer) return null;
+  if (String(process.env.PDF_IMAGE_CACHE || "").trim() === "0") {
+    return createMarketingTourPdfBackgroundImageBufferUncached(imageBuffer);
+  }
+  const key = `background|${bufferHash(imageBuffer)}`;
+  const cached = readBackgroundCache(key);
+  if (cached) return cached;
+  const inflight = backgroundImageInflight.get(key);
+  if (inflight) return inflight;
+  const promise = createMarketingTourPdfBackgroundImageBufferUncached(imageBuffer)
+    .then((value) => rememberBackgroundCache(key, value))
+    .finally(() => {
+      backgroundImageInflight.delete(key);
+    });
+  backgroundImageInflight.set(key, promise);
+  return promise;
 }
 
 export function drawMarketingTourPdfBackground(doc, heroImageBuffer, { includeHeroImage = true } = {}) {

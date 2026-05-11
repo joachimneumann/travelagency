@@ -230,6 +230,7 @@ const ONE_PAGER_DECORATIVE_FONT_LANGS = Object.freeze(new Set([
   "vi",
   "ms"
 ]));
+const onePagerDisplayFontCache = new Map();
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -238,6 +239,21 @@ function safeArray(value) {
 function textOrNull(value) {
   const normalized = normalizeText(value);
   return normalized || null;
+}
+
+function createPdfRenderTiming() {
+  const timings = [];
+  return {
+    timings,
+    async measure(label, callback) {
+      const startedAtMs = Date.now();
+      try {
+        return await callback();
+      } finally {
+        timings.push({ label, ms: Math.max(0, Date.now() - startedAtMs) });
+      }
+    }
+  };
 }
 
 function localizedMapValue(value, lang, fallback = "") {
@@ -365,6 +381,8 @@ function prioritizeOnePagerFontCandidates(staticCandidates, preferredCandidates 
 }
 
 async function resolveOnePagerDisplayFonts(lang, fontDir = "") {
+  const cacheKey = `${normalizePdfLang(lang)}|${normalizeText(fontDir)}`;
+  if (onePagerDisplayFontCache.has(cacheKey)) return { ...onePagerDisplayFontCache.get(cacheKey) };
   const fontDirOnly = Boolean(normalizeText(fontDir));
   const scriptCandidates = shouldUseOnePagerScriptFonts(lang)
     ? PDF_FONT_SCRIPT_CANDIDATES
@@ -397,7 +415,9 @@ async function resolveOnePagerDisplayFonts(lang, fontDir = "") {
       { preferredOnly: fontDirOnly }
     ))
   ]);
-  return { display, script, label, tripLabel };
+  const result = { display, script, label, tripLabel };
+  onePagerDisplayFontCache.set(cacheKey, result);
+  return { ...result };
 }
 
 export async function resolveMarketingTourOnePagerCoverFonts(lang, fontDir = "", baseFonts = null) {
@@ -1237,8 +1257,14 @@ function uniqueBodyImageEntryCount(entries) {
   ).size;
 }
 
-function filterAutomaticOnePagerImageCandidates(entries) {
+function middleDayBodyImageEntries(entries) {
   const sourceEntries = safeArray(entries);
+  const middleEntries = sourceEntries.filter((entry) => entry?.isMiddleDayImage === true);
+  return uniqueBodyImageEntryCount(middleEntries) >= BODY_IMAGE_LIMIT ? middleEntries : sourceEntries;
+}
+
+function filterAutomaticOnePagerImageCandidates(entries) {
+  const sourceEntries = middleDayBodyImageEntries(entries);
   if (uniqueBodyImageEntryCount(sourceEntries) <= 5) return sourceEntries;
   return sourceEntries.filter((entry) => entry?.skipAutomaticOnePagerSelection !== true);
 }
@@ -1261,6 +1287,7 @@ function collectTourImages(tour, lang) {
     || selectedImageIds[0]
     || webImageIds[0]
     || textOrNull(tour?.travel_plan?.tour_card_primary_image_id);
+  const lastDayIndex = days.length - 1;
   days.forEach((day, dayIndex) => {
     safeArray(day?.services).forEach((service, serviceIndex) => {
       const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
@@ -1277,6 +1304,7 @@ function collectTourImages(tour, lang) {
           : (image.include_in_travel_tour_card === true ? webImageIds.length : webImageIds.length + 1),
         order: dayIndex * 100 + serviceIndex,
         label: textOrNull(service?.title) || textOrNull(service?.location) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour"),
+        isMiddleDayImage: dayIndex > 0 && dayIndex < lastDayIndex,
         skipAutomaticOnePagerSelection: edgeServiceKeys.has(`${dayIndex}:${serviceIndex}`)
       });
     });
@@ -2058,6 +2086,7 @@ export function createMarketingTourOnePagerPdfWriter({
     lang = "en",
     outputPath
   } = {}) {
+    const timing = createPdfRenderTiming();
     const normalizedLang = normalizePdfLang(lang);
     const days = safeArray(tour?.travel_plan?.days);
     const duration = durationParts(days, normalizedLang);
@@ -2075,30 +2104,30 @@ export function createMarketingTourOnePagerPdfWriter({
     const onePagerFontDir = normalizeText(process.env.ONE_PAGER_FONT_DIR);
     const onePagerFontDirOnly = Boolean(onePagerFontDir);
     const bodyFonts = onePagerFontDirOnly
-      ? await resolvePdfFontsForLang({
+      ? await timing.measure("body_fonts", () => resolvePdfFontsForLang({
         lang: normalizedLang,
         sampleText,
         regularCandidates: fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES),
         boldCandidates: fontCandidatesFromDir(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES)
-      })
-      : await resolvePdfFontsForLang({
+      }))
+      : await timing.measure("body_fonts", () => resolvePdfFontsForLang({
         lang: normalizedLang,
         sampleText,
         regularCandidates: prioritizeOnePagerFontCandidates(PDF_FONT_REGULAR_CANDIDATES),
         boldCandidates: prioritizeOnePagerFontCandidates(PDF_FONT_BOLD_CANDIDATES)
-      });
+      }));
     if (bodyFonts?.regular && !bodyFonts.bold) bodyFonts.bold = bodyFonts.regular;
     ensureOnePagerFontDirHasBodyFont(onePagerFontDir, bodyFonts);
     const displayFonts = shouldUseOnePagerDecorativeFonts(normalizedLang)
-      ? await resolveOnePagerDisplayFonts(normalizedLang, onePagerFontDir)
+      ? await timing.measure("display_fonts", () => resolveOnePagerDisplayFonts(normalizedLang, onePagerFontDir))
       : {};
     const fonts = {
       ...bodyFonts,
       ...Object.fromEntries(Object.entries(displayFonts).filter(([, value]) => value))
     };
-    const frameImages = await prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang);
-    const heroBackgroundBuffer = await createMarketingTourPdfBackgroundImageBuffer(frameImages[0]?.buffer);
-    const configuredHighlightItems = await collectConfiguredExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath);
+    const frameImages = await timing.measure("frame_images", () => prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang));
+    const heroBackgroundBuffer = await timing.measure("background", () => createMarketingTourPdfBackgroundImageBuffer(frameImages[0]?.buffer));
+    const configuredHighlightItems = await timing.measure("experience_highlights", () => collectConfiguredExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath));
     const highlightItems = configuredHighlightItems.length
       ? configuredHighlightItems
       : collectHighlightItems(tour, duration, normalizedLang);
@@ -2138,7 +2167,7 @@ export function createMarketingTourOnePagerPdfWriter({
       drawBodyImageCollage(doc, bodyImageLayouts, renderFonts, normalizedLang);
       drawCta(doc, companyProfile || {}, renderFonts, normalizedLang);
       drawMarketingTourOnePagerFooter(doc, companyProfile || {}, renderFonts);
-      await streamPdfToFile(doc, outputPath);
+      await timing.measure("pdfkit", () => streamPdfToFile(doc, outputPath));
     };
 
     try {
@@ -2155,6 +2184,6 @@ export function createMarketingTourOnePagerPdfWriter({
         await renderWithFonts({});
       }
     }
-    return { outputPath };
+    return { outputPath, timings: timing.timings };
   };
 }

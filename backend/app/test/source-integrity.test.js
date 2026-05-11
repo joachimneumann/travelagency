@@ -2480,7 +2480,7 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
   );
   assert.match(
     onePagerPdfSource,
-    /PDF_FONT_DIR_REGULAR_FILES[\s\S]*"NotoSerif-Regular\.ttf"[\s\S]*"NotoSerifCJKjp-Regular\.otf"[\s\S]*"Arial Unicode\.ttf"[\s\S]*PDF_FONT_DIR_SCRIPT_FALLBACK_FILES[\s\S]*"NotoSerif-Italic\.ttf"[\s\S]*function fontCandidatesFromDir\(fontDir, fileNames\)[\s\S]*function prioritizeOnePagerFontCandidates\(staticCandidates, preferredCandidates = \[\], \{ preferredOnly = false \} = \{\}\)[\s\S]*if \(preferredOnly\) return uniqueFontCandidates\(preferredCandidates\);[\s\S]*process\.env\.ONE_PAGER_FONT_DIR[\s\S]*onePagerFontDirOnly[\s\S]*await resolvePdfFontsForLang\(\{[\s\S]*regularCandidates: fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES\)[\s\S]*boldCandidates: fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES\)[\s\S]*ensureOnePagerFontDirHasBodyFont\(onePagerFontDir, bodyFonts\)[\s\S]*resolveOnePagerDisplayFonts\(normalizedLang, onePagerFontDir\)[\s\S]*: \{\}/,
+    /PDF_FONT_DIR_REGULAR_FILES[\s\S]*"NotoSerif-Regular\.ttf"[\s\S]*"NotoSerifCJKjp-Regular\.otf"[\s\S]*"Arial Unicode\.ttf"[\s\S]*PDF_FONT_DIR_SCRIPT_FALLBACK_FILES[\s\S]*"NotoSerif-Italic\.ttf"[\s\S]*function fontCandidatesFromDir\(fontDir, fileNames\)[\s\S]*function prioritizeOnePagerFontCandidates\(staticCandidates, preferredCandidates = \[\], \{ preferredOnly = false \} = \{\}\)[\s\S]*if \(preferredOnly\) return uniqueFontCandidates\(preferredCandidates\);[\s\S]*process\.env\.ONE_PAGER_FONT_DIR[\s\S]*onePagerFontDirOnly[\s\S]*resolvePdfFontsForLang\(\{[\s\S]*regularCandidates: fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_REGULAR_FILES\)[\s\S]*boldCandidates: fontCandidatesFromDir\(onePagerFontDir, PDF_FONT_DIR_BOLD_FILES\)[\s\S]*ensureOnePagerFontDirHasBodyFont\(onePagerFontDir, bodyFonts\)[\s\S]*resolveOnePagerDisplayFonts\(normalizedLang, onePagerFontDir\)[\s\S]*: \{\}/,
     "One-pager PDFs should support a strict private ONE_PAGER_FONT_DIR override while skipping unsafe display fonts for broader-script languages"
   );
   assert.doesNotMatch(
@@ -2611,7 +2611,7 @@ test("travel-plan PDF removes the old hero subtitle and in-body section title, a
   );
   assert.match(
     travelPlanPdfSource,
-    /drawMarketingTourOnePagerFooter,[\s\S]*registerMarketingTourOnePagerFonts,[\s\S]*resolveMarketingTourOnePagerFooterFonts[\s\S]*function drawFooter\(doc, fonts, companyProfile\) \{[\s\S]*drawMarketingTourOnePagerFooter\(doc, companyProfile \|\| \{\}, fonts\);[\s\S]*const onePagerFooterFonts = await resolveMarketingTourOnePagerFooterFonts\(lang,[\s\S]*registerMarketingTourOnePagerFonts\(doc, onePagerFooterFonts\);[\s\S]*drawFooter\(doc, onePagerFooterFonts, companyProfile\)/,
+    /drawMarketingTourOnePagerFooter,[\s\S]*registerMarketingTourOnePagerFonts,[\s\S]*resolveMarketingTourOnePagerFooterFonts[\s\S]*function drawFooter\(doc, fonts, companyProfile\) \{[\s\S]*drawMarketingTourOnePagerFooter\(doc, companyProfile \|\| \{\}, fonts\);[\s\S]*const onePagerFooterFonts = await[\s\S]*resolveMarketingTourOnePagerFooterFonts\(lang,[\s\S]*registerMarketingTourOnePagerFonts\(doc, onePagerFooterFonts\);[\s\S]*drawFooter\(doc, onePagerFooterFonts, companyProfile\)/,
     "Travel-plan PDF footers should reuse the one-pager company-info footer"
   );
   assert.doesNotMatch(
@@ -3918,6 +3918,11 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
+    /function middleDayBodyImageEntries\(entries\)[\s\S]*entry\?\.isMiddleDayImage === true[\s\S]*uniqueBodyImageEntryCount\(middleEntries\) >= BODY_IMAGE_LIMIT[\s\S]*function filterAutomaticOnePagerImageCandidates\(entries\)[\s\S]*const sourceEntries = middleDayBodyImageEntries\(entries\);[\s\S]*const lastDayIndex = days\.length - 1;[\s\S]*isMiddleDayImage: dayIndex > 0 && dayIndex < lastDayIndex/,
+    "The one-pager PDF should use only middle-day service images for automatic selection when at least four are available"
+  );
+  assert.match(
+    onePagerPdfSource,
     /const PDF_PRIMARY_GREEN = "#30796B";[\s\S]*const PDF_SECONDARY_GREEN = "#e4ecdf";[\s\S]*const PDF_BACKGROUND_CREAM = "#FFF8EC";[\s\S]*surface: PDF_BACKGROUND_CREAM,[\s\S]*surfaceMuted: PDF_SECONDARY_GREEN,[\s\S]*accent: PDF_PRIMARY_GREEN,[\s\S]*accentText: PDF_PRIMARY_GREEN,[\s\S]*secondary: PDF_SECONDARY_GREEN,[\s\S]*cta: PDF_PRIMARY_GREEN/,
     "The one-pager PDF should use the requested green, secondary, and cream palette"
   );
@@ -3963,12 +3968,12 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     marketingTourPdfBackgroundSource,
-    /function smoothStep\(edge0, edge1, value\)[\s\S]*async function createMarketingTourPdfBackgroundImageBuffer\(imageBuffer\)[\s\S]*alphaMask[\s\S]*blend: "dest-in"[\s\S]*\.png\(\)/,
+    /function smoothStep\(edge0, edge1, value\)[\s\S]*async function alphaMaskBuffer\(width, height\)[\s\S]*alphaMask[\s\S]*async function createMarketingTourPdfBackgroundImageBufferUncached\(imageBuffer\)[\s\S]*blend: "dest-in"[\s\S]*\.png\(\)[\s\S]*async function createMarketingTourPdfBackgroundImageBuffer\(imageBuffer\)[\s\S]*createMarketingTourPdfBackgroundImageBufferUncached\(imageBuffer\)/,
     "The shared marketing-tour PDF background should feather the hero image into transparency"
   );
   assert.match(
     onePagerPdfSource,
-    /const heroBackgroundBuffer = await createMarketingTourPdfBackgroundImageBuffer\(frameImages\[0\]\?\.buffer\)[\s\S]*drawMarketingTourPdfBackground\(doc, heroBackgroundBuffer\)/,
+    /const heroBackgroundBuffer = await[\s\S]*createMarketingTourPdfBackgroundImageBuffer\(frameImages\[0\]\?\.buffer\)[\s\S]*drawMarketingTourPdfBackground\(doc, heroBackgroundBuffer\)/,
     "The one-pager PDF should use the shared feathered marketing-tour background"
   );
   assert.match(
@@ -4000,6 +4005,11 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerScriptSource,
     /function tripEdgeServiceKeys\(days\)[\s\S]*firstDayServices[\s\S]*lastDayServices[\s\S]*function automaticOnePagerImageCandidates\(entries\)[\s\S]*uniqueImageEntries\(sourceEntries\)\.length <= onePagerFrameImageCount[\s\S]*skip_automatic_one_pager_selection[\s\S]*function collectVisibleTravelPlanImages\(travelPlan\)[\s\S]*edgeServiceKeys = tripEdgeServiceKeys\(days\)[\s\S]*skip_automatic_one_pager_selection: edgeServiceKeys\.has\(`\$\{dayIndex\}:\$\{serviceIndex\}`\)[\s\S]*const automaticServiceImages = automaticOnePagerImageCandidates\(serviceImages\)[\s\S]*automaticServiceImages\.filter/,
     "The one-pager batch script should skip first-service and last-service trip images only for automatic filler selection on image-rich tours"
+  );
+  assert.match(
+    onePagerScriptSource,
+    /function middleDayImageCandidates\(entries\)[\s\S]*entry\?\.is_middle_day_image === true[\s\S]*uniqueImageEntries\(middleEntries\)\.length >= onePagerFrameImageCount - 1[\s\S]*function automaticOnePagerImageCandidates\(entries\)[\s\S]*const sourceEntries = middleDayImageCandidates\(entries\);[\s\S]*const lastDayIndex = days\.length - 1;[\s\S]*is_middle_day_image: dayIndex > 0 && dayIndex < lastDayIndex/,
+    "The one-pager batch script should choose automatic PDF images only from middle days when there are at least four middle-day images"
   );
   assert.match(
     onePagerScriptSource,
@@ -5740,8 +5750,8 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourHandlersSource,
-    /function collectRandomOverviewFrameImages\(tour\)[\s\S]*tour\?\.travel_plan\?\.days[\s\S]*edgeServiceKeys[\s\S]*firstServices[\s\S]*lastServices[\s\S]*day\?\.services \|\| day\?\.items[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*skip_automatic_one_pager_selection: edgeServiceKeys\.has\(`\$\{dayIndex\}:\$\{serviceIndex\}`\)[\s\S]*const automaticEntries = entries\.length > 5[\s\S]*skip_automatic_one_pager_selection !== true[\s\S]*randomUUID\(\)[\s\S]*\.slice\(0, 4\)/,
-    "Customized Overview PDFs should randomly select up to four visible service images while skipping first-arrival and last-departure images on image-rich itineraries"
+    /function collectRandomOverviewFrameImages\(tour\)[\s\S]*tour\?\.travel_plan\?\.days[\s\S]*edgeServiceKeys[\s\S]*const lastDayIndex = days\.length - 1[\s\S]*firstServices[\s\S]*lastServices[\s\S]*day\?\.services \|\| day\?\.items[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*is_middle_day_image: dayIndex > 0 && dayIndex < lastDayIndex[\s\S]*skip_automatic_one_pager_selection: edgeServiceKeys\.has\(`\$\{dayIndex\}:\$\{serviceIndex\}`\)[\s\S]*const middleDayEntries = entries\.filter\(\(entry\) => entry\.is_middle_day_image === true\);[\s\S]*middleDayEntries\.length >= 4[\s\S]*skip_automatic_one_pager_selection !== true[\s\S]*randomUUID\(\)[\s\S]*\.slice\(0, 4\)/,
+    "Customized Overview PDFs should use middle-day images when at least four exist, otherwise skip first-arrival and last-departure images on image-rich itineraries"
   );
   assert.match(
     tourHandlersSource,

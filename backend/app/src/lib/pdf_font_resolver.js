@@ -1,4 +1,5 @@
 import { access } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import PDFDocument from "pdfkit";
 import * as fontkit from "fontkit";
 
@@ -17,6 +18,12 @@ const LANGUAGE_FONT_PRIORITY_MARKERS = Object.freeze({
 });
 
 const PDF_SUPPORTED_FONT_EXTENSIONS = Object.freeze([".ttf", ".otf"]);
+const fileExistsCache = new Map();
+const registerableFontCache = new Map();
+const fontFaceCache = new Map();
+const fontSupportCache = new Map();
+const resolvedFontCache = new Map();
+const resolvedFontInflight = new Map();
 
 function isSupportedPdfFontContainer(filePath) {
   const normalized = String(filePath || "").trim().toLowerCase();
@@ -28,15 +35,19 @@ function isSupportedPdfFontContainer(filePath) {
 
 async function fileExists(filePath) {
   if (!filePath) return false;
+  if (fileExistsCache.has(filePath)) return fileExistsCache.get(filePath);
   try {
     await access(filePath);
+    fileExistsCache.set(filePath, true);
     return true;
   } catch {
+    fileExistsCache.set(filePath, false);
     return false;
   }
 }
 
 function canRegisterPdfFont(candidate) {
+  if (registerableFontCache.has(candidate)) return registerableFontCache.get(candidate);
   try {
     const probe = new PDFDocument({ autoFirstPage: false });
     probe.on("data", () => {});
@@ -45,32 +56,50 @@ function canRegisterPdfFont(candidate) {
     probe.registerFont("__probe__", candidate);
     probe.font("__probe__").fontSize(12).text("PDF", 4, 4);
     probe.end();
+    registerableFontCache.set(candidate, true);
     return true;
   } catch {
+    registerableFontCache.set(candidate, false);
     return false;
   }
 }
 
 function openFontFace(candidate) {
+  if (fontFaceCache.has(candidate)) return fontFaceCache.get(candidate);
   try {
     const opened = fontkit.openSync(candidate);
     if (Array.isArray(opened?.fonts) && opened.fonts.length) {
+      fontFaceCache.set(candidate, opened.fonts[0]);
       return opened.fonts[0];
     }
+    fontFaceCache.set(candidate, opened);
     return opened;
   } catch {
+    fontFaceCache.set(candidate, null);
     return null;
   }
 }
 
+function sampleTextFingerprint(sampleText = "") {
+  const chars = Array.from(new Set(Array.from(String(sampleText || "")).filter((char) => char.trim()))).sort().join("");
+  return createHash("sha1").update(chars).digest("hex");
+}
+
 function fontSupportsText(candidate, sampleText = "") {
   if (!sampleText) return true;
+  const cacheKey = `${candidate}|${sampleTextFingerprint(sampleText)}`;
+  if (fontSupportCache.has(cacheKey)) return fontSupportCache.get(cacheKey);
   const face = openFontFace(candidate);
-  if (!face?.hasGlyphForCodePoint) return false;
-  return Array.from(sampleText).every((char) => {
+  if (!face?.hasGlyphForCodePoint) {
+    fontSupportCache.set(cacheKey, false);
+    return false;
+  }
+  const supported = Array.from(sampleText).every((char) => {
     if (!char.trim()) return true;
     return face.hasGlyphForCodePoint(char.codePointAt(0));
   });
+  fontSupportCache.set(cacheKey, supported);
+  return supported;
 }
 
 async function findFirstUsablePath(paths, sampleText = "") {
@@ -107,7 +136,25 @@ export async function resolvePdfFontsForLang({
   boldCandidates = []
 } = {}) {
   const combinedSampleText = `${LANGUAGE_FONT_PROBES[String(lang || "").trim().toLowerCase()] || ""} ${String(sampleText || "").trim()}`.trim();
-  const regular = await findFirstUsablePath(prioritizeCandidatesForLang(regularCandidates, lang), combinedSampleText);
-  const bold = (await findFirstUsablePath(prioritizeCandidatesForLang(boldCandidates, lang), combinedSampleText)) || regular;
-  return { regular, bold };
+  const prioritizedRegularCandidates = prioritizeCandidatesForLang(regularCandidates, lang);
+  const prioritizedBoldCandidates = prioritizeCandidatesForLang(boldCandidates, lang);
+  const cacheKey = [
+    String(lang || "").trim().toLowerCase(),
+    sampleTextFingerprint(combinedSampleText),
+    prioritizedRegularCandidates.join("\u0000"),
+    prioritizedBoldCandidates.join("\u0000")
+  ].join("\u0001");
+  if (resolvedFontCache.has(cacheKey)) return { ...resolvedFontCache.get(cacheKey) };
+  if (resolvedFontInflight.has(cacheKey)) return { ...(await resolvedFontInflight.get(cacheKey)) };
+  const promise = (async () => {
+    const regular = await findFirstUsablePath(prioritizedRegularCandidates, combinedSampleText);
+    const bold = (await findFirstUsablePath(prioritizedBoldCandidates, combinedSampleText)) || regular;
+    const result = { regular, bold };
+    resolvedFontCache.set(cacheKey, result);
+    return result;
+  })().finally(() => {
+    resolvedFontInflight.delete(cacheKey);
+  });
+  resolvedFontInflight.set(cacheKey, promise);
+  return { ...(await promise) };
 }
