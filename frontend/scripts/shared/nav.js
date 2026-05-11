@@ -1,7 +1,6 @@
 import { readCachedAuthMe, wireAuthLogoutLink } from "./auth.js";
 
 const TRANSLATIONS_ICON_READY = "assets/img/translation.png";
-const TRANSLATIONS_ICON_MISSING = "assets/img/translation.missing.png";
 const PUBLIC_SITE_PUBLISH_POLL_MS = 1800;
 const NAV_STATUS_CACHE_TTL_MS = 60_000;
 const NAV_STATUS_REFRESH_DELAY_MS = 400;
@@ -226,51 +225,21 @@ function translationsButton(mount) {
   return mount?.querySelector?.('.backend-section-nav__item[data-backend-section="translations"]') || null;
 }
 
-function setTranslationsIconState(mount, isDirty) {
+function setTranslationsIconState(mount) {
   const button = translationsButton(mount);
   const image = button?.querySelector?.(".backend-section-nav__icon-image");
   if (!(button instanceof HTMLElement) || !(image instanceof HTMLImageElement)) return;
-  const dirty = Boolean(isDirty);
-  image.src = dirty ? TRANSLATIONS_ICON_MISSING : TRANSLATIONS_ICON_READY;
-  button.classList.toggle("has-translation-issues", dirty);
-  const label = dirty
-    ? backendT("nav.translations_dirty", "Translations need attention")
-    : backendT("nav.translations", "Translations");
+  image.src = TRANSLATIONS_ICON_READY;
+  button.classList.remove("has-translation-issues");
+  const label = backendT("nav.translations", "Translations");
   button.title = label;
   button.setAttribute("aria-label", label);
 }
 
-function hasTranslationWork(payload = {}) {
-  if (Object.prototype.hasOwnProperty.call(payload || {}, "translationNeeded")) {
-    return Boolean(payload.translationNeeded);
-  }
-  if (Object.prototype.hasOwnProperty.call(payload || {}, "translation_work_count")) {
-    return Number(payload.translation_work_count || 0) > 0;
-  }
-  return Number(payload?.missing_count || 0) > 0
-    || Number(payload?.stale_count || 0) > 0
-    || Number(payload?.legacy_count || 0) > 0
-    || Number(payload?.protected_term_count || 0) > 0
-    || Number(payload?.dirty_count || 0) > 0;
-}
-
-async function refreshTranslationsIconState(mount, apiBase, options = {}) {
+function refreshTranslationsIconState(mount) {
   const button = translationsButton(mount);
   if (!(button instanceof HTMLElement) || button.hidden) return;
-  const requestId = (mount.__backendTranslationStatusRequestId || 0) + 1;
-  mount.__backendTranslationStatusRequestId = requestId;
-  try {
-    const base = String(apiBase || "").replace(/\/$/, "");
-    const payload = await fetchNavStatusJson(
-      "translations",
-      `${base}/api/v1/static-translations/status`,
-      { force: options.force === true }
-    );
-    if (!payload || mount.__backendTranslationStatusRequestId !== requestId) return;
-    setTranslationsIconState(mount, hasTranslationWork(payload));
-  } catch {
-    // Keep the default icon if the optional status probe is unavailable.
-  }
+  setTranslationsIconState(mount);
 }
 
 function bindTranslationsStatusRefresh(mount, apiBase) {
@@ -279,13 +248,7 @@ function bindTranslationsStatusRefresh(mount, apiBase) {
   }
   mount.__backendTranslationStatusHandler = (event) => {
     const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
-    if (
-      Object.prototype.hasOwnProperty.call(detail, "translationNeeded")
-      || Object.prototype.hasOwnProperty.call(detail, "translation_work_count")
-      || Object.prototype.hasOwnProperty.call(detail, "dirty")
-    ) {
-      setTranslationsIconState(mount, hasTranslationWork(detail));
-    }
+    setTranslationsIconState(mount);
     if (detail.refresh === false) return;
     clearNavStatusCache("translations");
     void refreshTranslationsIconState(mount, apiBase, { force: true });

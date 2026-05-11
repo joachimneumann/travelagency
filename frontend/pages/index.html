@@ -959,10 +959,10 @@
           window.addEventListener(eventName, startPlayback, { once: true, passive: true });
         });
 
-        if (document.readyState === "complete") {
-          startPlayback();
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", startPlayback, { once: true });
         } else {
-          window.addEventListener("load", startPlayback, { once: true });
+          startPlayback();
         }
       })();
     </script>
