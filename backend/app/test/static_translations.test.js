@@ -286,6 +286,13 @@ test("static translation service updates translated strings that contain protect
       }
     });
 
+    const status = await service.getStatusSummary({ domains: ["frontend"] });
+    const viStatus = status.languages.find((entry) => entry.domain === "frontend" && entry.target_lang === "vi");
+    assert.equal(viStatus.translation_work_count, 1);
+    assert.equal(viStatus.protected_term_count, 1);
+    assert.equal(status.translation_work_count >= 1, true);
+    assert.equal(status.protected_term_count >= 1, true);
+
     const summary = await service.applyProtectedTerms({ domains: ["frontend"], target_langs: ["vi"] });
     assert.equal(summary.requested_count, 1);
     assert.equal(summary.translated_count, 1);

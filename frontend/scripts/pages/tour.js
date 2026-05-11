@@ -1961,7 +1961,7 @@ async function initTourPage() {
           updateHeaderTitle();
         }
         if (isLocalizedSourceContentDirty()) {
-          notifyBackendTranslationsStatus({ dirty: true, refresh: false });
+          notifyBackendTranslationsStatus({ translationNeeded: true, refresh: false });
         } else {
           notifyBackendTranslationsStatus();
         }

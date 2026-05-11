@@ -184,7 +184,8 @@ function callbackPhase(id, label, run) {
 }
 
 function languageHasTranslationIssues(entry) {
-  return Number(entry?.missing_count || 0) > 0
+  return Number(entry?.translation_work_count || 0) > 0
+    || Number(entry?.missing_count || 0) > 0
     || Number(entry?.stale_count || 0) > 0
     || Number(entry?.legacy_count || 0) > 0;
 }
@@ -228,7 +229,7 @@ function issueEntriesFromStatus(status) {
 function fallbackApplyPhases({ applyTranslations } = {}) {
   const phases = [];
   if (typeof applyTranslations === "function") {
-    phases.push(callbackPhase("translate_content_store", "Translate missing and stale strings", async (_phase, job, helpers) => {
+    phases.push(callbackPhase("translate_content_store", "Translate strings", async (_phase, job, helpers) => {
       const summary = await applyTranslations();
       helpers.appendLog(
         job,
@@ -253,7 +254,7 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
     const progressKeys = [...new Set(issueEntries
       .map(progressKeyForEntry)
       .filter(Boolean))];
-    phases.push(withProgress(callbackPhase("translate_content_store", "Translate missing and stale strings", async (phase, job, helpers) => {
+    phases.push(withProgress(callbackPhase("translate_content_store", "Translate strings", async (phase, job, helpers) => {
       const summary = await applyTranslations({
         ...applyOptions,
         onProgress(progress = {}) {
@@ -272,14 +273,14 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
       );
     }), progressMetadataForEntries(issueEntries, progressKeys)));
   } else if (applyOptions.domains.length) {
-    phases.push(withProgress(callbackPhase("translate_content_store", "Translate missing and stale strings", async () => {
+    phases.push(withProgress(callbackPhase("translate_content_store", "Translate strings", async () => {
       throw apiError(500, "STATIC_TRANSLATION_PROVIDER_UNAVAILABLE", "Static translation apply service is not configured.");
     }), progressMetadataForEntries(issueEntries)));
   }
 
   if (!phases.length) {
     phases.push(callbackPhase("apply_noop", "No translation work needed", async (_phase, job, helpers) => {
-      helpers.appendLog(job, "No missing or stale translations were found.");
+      helpers.appendLog(job, "No translation work was found.");
     }));
   }
 
@@ -375,6 +376,9 @@ function protectedTermsPhases({ protectTranslations } = {}) {
         job,
         `Updated ${summary?.translated_count || 0} protected-term translation item${summary?.translated_count === 1 ? "" : "s"}.`
       );
+      if (Number(summary?.translated_count || 0) > 0) {
+        helpers.appendLog(job, "Use Publish Website to update runtime translations and static website content.");
+      }
     })
   ];
 }

@@ -240,6 +240,20 @@ function setTranslationsIconState(mount, isDirty) {
   button.setAttribute("aria-label", label);
 }
 
+function hasTranslationWork(payload = {}) {
+  if (Object.prototype.hasOwnProperty.call(payload || {}, "translationNeeded")) {
+    return Boolean(payload.translationNeeded);
+  }
+  if (Object.prototype.hasOwnProperty.call(payload || {}, "translation_work_count")) {
+    return Number(payload.translation_work_count || 0) > 0;
+  }
+  return Number(payload?.missing_count || 0) > 0
+    || Number(payload?.stale_count || 0) > 0
+    || Number(payload?.legacy_count || 0) > 0
+    || Number(payload?.protected_term_count || 0) > 0
+    || Number(payload?.dirty_count || 0) > 0;
+}
+
 async function refreshTranslationsIconState(mount, apiBase, options = {}) {
   const button = translationsButton(mount);
   if (!(button instanceof HTMLElement) || button.hidden) return;
@@ -253,7 +267,7 @@ async function refreshTranslationsIconState(mount, apiBase, options = {}) {
       { force: options.force === true }
     );
     if (!payload || mount.__backendTranslationStatusRequestId !== requestId) return;
-    setTranslationsIconState(mount, Boolean(payload?.dirty || Number(payload?.dirty_count || 0) > 0));
+    setTranslationsIconState(mount, hasTranslationWork(payload));
   } catch {
     // Keep the default icon if the optional status probe is unavailable.
   }
@@ -265,8 +279,12 @@ function bindTranslationsStatusRefresh(mount, apiBase) {
   }
   mount.__backendTranslationStatusHandler = (event) => {
     const detail = event?.detail && typeof event.detail === "object" ? event.detail : {};
-    if (Object.prototype.hasOwnProperty.call(detail, "dirty")) {
-      setTranslationsIconState(mount, Boolean(detail.dirty));
+    if (
+      Object.prototype.hasOwnProperty.call(detail, "translationNeeded")
+      || Object.prototype.hasOwnProperty.call(detail, "translation_work_count")
+      || Object.prototype.hasOwnProperty.call(detail, "dirty")
+    ) {
+      setTranslationsIconState(mount, hasTranslationWork(detail));
     }
     if (detail.refresh === false) return;
     clearNavStatusCache("translations");

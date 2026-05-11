@@ -4609,7 +4609,7 @@ test("frontend translation requests send explicit translation profiles outside c
   );
 });
 
-test("backend translation nav icon reflects dirty centralized translation state", async () => {
+test("backend translation nav icon reflects translation action state", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const [navSource, tourSource, routesSource, handlersSource] = await Promise.all([
     readFile(path.join(repoRoot, "frontend", "scripts", "shared", "nav.js"), "utf8"),
@@ -4625,8 +4625,18 @@ test("backend translation nav icon reflects dirty centralized translation state"
   );
   assert.match(
     navSource,
-    /\/api\/v1\/static-translations\/status[\s\S]*setTranslationsIconState\(mount, Boolean\(payload\?\.dirty/,
-    "Backend nav should load the central translation status and switch the icon when dirty"
+    /function hasTranslationWork\(payload = \{\}\)[\s\S]*translation_work_count[\s\S]*missing_count[\s\S]*stale_count[\s\S]*legacy_count[\s\S]*protected_term_count[\s\S]*dirty_count/,
+    "Backend nav should derive the translation icon from translation-work fields, not publish-only dirty state"
+  );
+  assert.match(
+    navSource,
+    /TRANSLATIONS_ICON_READY = "assets\/img\/translation\.png"[\s\S]*TRANSLATIONS_ICON_MISSING = "assets\/img\/translation\.missing\.png"/,
+    "Backend nav should use the requested ready and missing translation icon assets"
+  );
+  assert.match(
+    navSource,
+    /\/api\/v1\/static-translations\/status[\s\S]*setTranslationsIconState\(mount, hasTranslationWork\(payload\)\)/,
+    "Backend nav should load the central translation status and switch the icon when translation work is needed"
   );
   assert.match(
     navSource,
@@ -4635,7 +4645,7 @@ test("backend translation nav icon reflects dirty centralized translation state"
   );
   assert.match(
     tourSource,
-    /isLocalizedSourceContentDirty\(\)[\s\S]*notifyBackendTranslationsStatus\(\{ dirty: true, refresh: false \}\)/,
+    /isLocalizedSourceContentDirty\(\)[\s\S]*notifyBackendTranslationsStatus\(\{ translationNeeded: true, refresh: false \}\)/,
     "Marketing-tour source title or description edits should immediately mark the translation icon as needing attention"
   );
   assert.match(
@@ -4677,6 +4687,11 @@ test("translations page exposes one translate action and leaves website generati
     `${translationsHtml}\n${translationsSource}`,
     /translationsApplyBtn/,
     "translations.html should not expose a separate Publish button"
+  );
+  assert.doesNotMatch(
+    `${translationsHtml}\n${translationsSource}`,
+    /translationsApplyProtectedTermsBtn|mode: "protected_terms"|applyProtectedTermsOverlayText/,
+    "translations.html should keep protected-term repairs inside the single top-level Translate action"
   );
   assert.doesNotMatch(
     `${translationsHtml}\n${translationsSource}`,
@@ -4760,7 +4775,7 @@ test("translations page exposes one translate action and leaves website generati
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{count\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*Use Publish Website to update runtime translations and static website content\./,
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{displayCount\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*Use Publish Website to update runtime translations and static website content\./,
     "The status text above Translate should point clean unpublished translations to central Publish"
   );
   assert.match(

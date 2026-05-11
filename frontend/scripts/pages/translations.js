@@ -1,4 +1,4 @@
-import { createApiFetcher, escapeHtml, formatDateTime, logBrowserConsoleError, normalizeText } from "../shared/api.js";
+import { createApiFetcher, escapeHtml, formatDateTime, logBrowserConsoleError, normalizeText, resolveApiUrl } from "../shared/api.js";
 import {
   getBackendApiOrigin,
   initializeBackendPageChrome,
@@ -60,7 +60,6 @@ const els = {
   runtimeWarningMessage: document.getElementById("translationsRuntimeWarningMessage"),
   sections: document.getElementById("translationsSections"),
   translateBtn: document.getElementById("translationsTranslateBtn"),
-  applyProtectedTermsBtn: document.getElementById("translationsApplyProtectedTermsBtn"),
   retranslateFrontendAllBtn: document.getElementById("translationsRetranslateFrontendAllBtn"),
   clearMarketingTourCacheBtn: document.getElementById("translationsClearMarketingTourCacheBtn"),
   retranslateBackendViBtn: document.getElementById("translationsRetranslateBackendViBtn"),
@@ -79,6 +78,7 @@ const state = {
   },
   translationWritesEnabled: true,
   translationStatus: null,
+  publicSiteStatus: null,
   customerTargetLang: "",
   isStatusRefreshing: false,
   isLoadingSections: false,
@@ -178,13 +178,6 @@ function retranslateBackendViOverlayText() {
   );
 }
 
-function applyProtectedTermsOverlayText() {
-  return backendT(
-    "backend.translations.protected_terms_overlay",
-    "Updating translations that use protected terms. Please wait."
-  );
-}
-
 function languageLabel(language) {
   return normalizeText(language?.nativeLabel || language?.native_label || language?.code).toUpperCase();
 }
@@ -257,6 +250,10 @@ function numberCount(value) {
   return Math.max(0, Number(value) || 0);
 }
 
+function publicSitePublishReady() {
+  return Boolean(state.publicSiteStatus?.loaded && state.publicSiteStatus.dirty && !state.publicSiteStatus.blocked);
+}
+
 function pluralize(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
@@ -287,6 +284,12 @@ function summarizeTranslationStatus(payload) {
   const untranslatedCount = numberCount(payload?.untranslated_count);
   const unpublishedCount = numberCount(payload?.unpublished_count);
   const dirtyCount = numberCount(payload?.dirty_count);
+  const protectedTermCount = numberCount(payload?.protected_term_count);
+  const translationWorkCount = numberCount(
+    payload?.translation_work_count === undefined
+      ? missingCount + staleCount + legacyCount + protectedTermCount
+      : payload.translation_work_count
+  );
   const unavailableCount = Array.isArray(payload?.unavailable) ? payload.unavailable.length : 0;
   const translationIssueCount = missingCount + staleCount + legacyCount;
   return {
@@ -294,6 +297,7 @@ function summarizeTranslationStatus(payload) {
     dirty: Boolean(payload?.dirty || dirtyCount > 0),
     total: numberCount(payload?.total),
     dirtyCount,
+    protectedTermCount,
     missingCount,
     staleCount,
     legacyCount,
@@ -301,11 +305,35 @@ function summarizeTranslationStatus(payload) {
     unpublishedCount,
     unavailableCount,
     translationIssueCount,
-    publishReadyCount: translationIssueCount > 0 ? 0 : unpublishedCount,
+    translationWorkCount,
+    publishReadyCount: translationWorkCount > 0 ? 0 : unpublishedCount,
     runtimeI18n: payload?.runtime_i18n && typeof payload.runtime_i18n === "object"
       ? payload.runtime_i18n
       : null
   };
+}
+
+function summarizePublicSiteStatus(payload) {
+  if (!payload || typeof payload !== "object") return null;
+  return {
+    loaded: true,
+    dirty: Boolean(payload.dirty || payload.source_dirty),
+    blocked: Boolean(payload.blocked),
+    reason: normalizeText((Array.isArray(payload.block_reasons) ? payload.block_reasons[0]?.message : "") || "")
+  };
+}
+
+async function loadPublicSiteStatus() {
+  try {
+    const response = await fetch(resolveApiUrl(apiOrigin, "/api/v1/public-site-publish/status"), {
+      cache: "no-store",
+      credentials: "include"
+    });
+    if (!response.ok) return null;
+    return summarizePublicSiteStatus(await response.json().catch(() => null));
+  } catch {
+    return null;
+  }
 }
 
 function runtimeI18nBlocked(status = state.translationStatus) {
@@ -333,7 +361,7 @@ function updateRuntimeWarning(status = state.translationStatus) {
 function currentTranslationActionState() {
   const status = state.translationStatus;
   const loaded = Boolean(status?.loaded);
-  const translateNeeded = loaded && status.translationIssueCount > 0;
+  const translateNeeded = loaded && status.translationWorkCount > 0;
   const publishReady = loaded && !translateNeeded && status.publishReadyCount > 0;
   const translateActionReady = translateNeeded;
   return {
@@ -351,8 +379,9 @@ function translationActionTitle(action, translationState, actionsBusy) {
     return "Translation editing is disabled for your account or this environment.";
   }
   if (action === "translate") {
-    if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content.";
+    if (translationState.translateNeeded) return "Translate missing, stale, or protected-term strings across staff and customer content.";
     if (translationState.publishReady) return "No strings need translation. Use Publish Website to update runtime translations and static website content.";
+    if (publicSitePublishReady()) return "No strings need translation. Use Publish Website to update runtime translations and static website content.";
     if (runtimeI18nHardBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
     return translationState.loaded ? "No strings need translation." : "Loading translation status.";
   }
@@ -380,12 +409,17 @@ function configureTranslationActionButton(button, action, translationState, canR
 function translationStatusMessage(status) {
   if (!status?.loaded) return "Loading translation status.";
   const count = numberCount(status.translationIssueCount);
-  const subject = count === 1 ? "string" : "strings";
-  const verb = count === 1 ? "needs" : "need";
-  const base = `${count} ${subject} ${verb} translation before publishing.`;
-  if (count > 0) return base;
+  const workCount = numberCount(status.translationWorkCount);
+  const displayCount = workCount || count;
+  const subject = displayCount === 1 ? "string" : "strings";
+  const verb = displayCount === 1 ? "needs" : "need";
+  const base = `${displayCount} ${subject} ${verb} translation before publishing.`;
+  if (workCount > 0) return base;
   if (status.publishReadyCount > 0) {
     return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready. Use Publish Website to update runtime translations and static website content.`;
+  }
+  if (publicSitePublishReady()) {
+    return `${base} Website changes are ready. Use Publish Website to update runtime translations and static website content.`;
   }
   if (runtimeI18nHardBlocked(status)) {
     return `${base} Runtime i18n generation is blocked; Publish Website cannot finish yet.`;
@@ -410,7 +444,12 @@ function refreshTranslationStatusText() {
 
 function notifyBackendTranslationsStatus(status = state.translationStatus) {
   const detail = status?.loaded
-    ? { dirty: Boolean(status.dirty), refresh: false, publicSiteRefresh: true }
+    ? {
+        translationNeeded: numberCount(status.translationWorkCount) > 0,
+        translation_work_count: numberCount(status.translationWorkCount),
+        refresh: false,
+        publicSiteRefresh: true
+      }
     : {};
   window.dispatchEvent(new CustomEvent("backend-translations-status-refresh", { detail }));
 }
@@ -419,7 +458,11 @@ async function loadTranslationStatus({ updateMessage = false } = {}) {
   state.isStatusRefreshing = true;
   updateActions();
   try {
-    const payload = await fetchApi("/api/v1/static-translations/status", { cache: "no-store" });
+    const [payload, publicSiteStatus] = await Promise.all([
+      fetchApi("/api/v1/static-translations/status", { cache: "no-store" }),
+      loadPublicSiteStatus()
+    ]);
+    state.publicSiteStatus = publicSiteStatus;
     if (!payload) {
       state.translationStatus = null;
       updateRuntimeWarning(null);
@@ -445,9 +488,6 @@ function updateActions() {
   const sectionControlsBusy = state.isSaving || state.isJobRunning || state.isLoadingSections;
   const canRunTranslationAction = state.permissions.canEditTranslations && !actionsBusy;
   configureTranslationActionButton(els.translateBtn, "translate", translationState, canRunTranslationAction, actionsBusy);
-  if (els.applyProtectedTermsBtn) {
-    els.applyProtectedTermsBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
-  }
   if (els.retranslateFrontendAllBtn) {
     els.retranslateFrontendAllBtn.disabled = !state.permissions.canEditTranslations || actionsBusy;
   }
@@ -1678,10 +1718,6 @@ async function loadCustomerSectionForSelectedLanguage(section) {
 
 function bindEvents() {
   els.translateBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/apply", null, translationsTranslateOverlayText()));
-  els.applyProtectedTermsBtn?.addEventListener("click", () => {
-    if (!window.confirm("Update translations that use protected terms? This can take several minutes.")) return;
-    startJob("/api/v1/static-translations/retranslate", { mode: "protected_terms" }, applyProtectedTermsOverlayText());
-  });
   els.retranslateFrontendAllBtn?.addEventListener("click", () => {
     if (!window.confirm("Retranslate customer UI strings? This can take several minutes. Manual overrides are preserved.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, retranslateFrontendAllOverlayText());

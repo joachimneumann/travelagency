@@ -1702,6 +1702,7 @@ export function createStaticTranslationService({
     async getStatusSummary(options = {}) {
       const domains = normalizeStatusDomains(options);
       const publishedIndex = await readPublishedIndex();
+      const protectedTerms = protectedTermSet(await loadProtectedTermsForApply(options));
       const languageStates = [];
       const unavailable = [];
       for (const config of domains) {
@@ -1722,12 +1723,16 @@ export function createStaticTranslationService({
             throw error;
           }
           const dirtyCount = Number(state.counts?.dirty || 0);
+          const translationWorkCount = rowsNeedingMachineTranslation(state.rows, protectedTerms).length;
+          const protectedTermCount = rowsNeedingMachineTranslation(state.rows, protectedTerms, { protectedTermsOnly: true }).length;
           languageStates.push({
             domain: config.id,
             target_lang: language.code,
             publishable,
             total: Number(state.total || 0),
             dirty_count: dirtyCount,
+            translation_work_count: translationWorkCount,
+            protected_term_count: protectedTermCount,
             missing_count: Number(state.counts?.["freshness_state.missing"] || state.counts?.missing || 0),
             stale_count: Number(state.counts?.["freshness_state.stale"] || state.counts?.stale || 0),
             legacy_count: Number(state.counts?.["freshness_state.legacy"] || 0),
@@ -1739,6 +1744,8 @@ export function createStaticTranslationService({
       const totals = languageStates.reduce((acc, entry) => {
         acc.total += entry.total;
         acc.dirty_count += entry.dirty_count;
+        acc.translation_work_count += entry.translation_work_count;
+        acc.protected_term_count += entry.protected_term_count;
         acc.missing_count += entry.missing_count;
         acc.stale_count += entry.stale_count;
         acc.legacy_count += entry.legacy_count;
@@ -1748,6 +1755,8 @@ export function createStaticTranslationService({
       }, {
         total: 0,
         dirty_count: 0,
+        translation_work_count: 0,
+        protected_term_count: 0,
         missing_count: 0,
         stale_count: 0,
         legacy_count: 0,
@@ -1756,7 +1765,7 @@ export function createStaticTranslationService({
       });
       const runtimeI18n = await checkRuntimeI18nGenerator();
       return {
-        dirty: totals.dirty_count > 0 || totals.unpublished_count > 0,
+        dirty: totals.dirty_count > 0 || totals.translation_work_count > 0 || totals.unpublished_count > 0,
         ...totals,
         unavailable,
         runtime_i18n: runtimeI18n,

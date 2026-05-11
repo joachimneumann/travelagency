@@ -251,6 +251,46 @@ test("static translation apply job leaves publish work for central publish after
   assert.doesNotMatch(finished.log.join("\n"), /Validated 2 content\/translations items|runtime i18n|homepage assets/i);
 });
 
+test("static translation apply job includes protected-term repair work in the normal translate action", async () => {
+  const applyOptions = [];
+  const service = createStaticTranslationApplyJobs({
+    repoRoot: "/tmp/repo",
+    nowIso: () => "2026-04-28T00:00:00.000Z",
+    idFactory: () => "job-protected-normal-apply",
+    getStatusSummary: async () => ({
+      languages: [
+        {
+          domain: "frontend",
+          target_lang: "de",
+          missing_count: 0,
+          stale_count: 0,
+          legacy_count: 0,
+          protected_term_count: 2,
+          translation_work_count: 2
+        }
+      ]
+    }),
+    applyTranslations: async (options) => {
+      applyOptions.push(options);
+      return { translated_count: 2 };
+    }
+  });
+
+  await service.startApply();
+  const finished = await waitForJob(service, "job-protected-normal-apply", "succeeded");
+
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(withoutProgressCallbacks(applyOptions), [
+    {
+      domains: ["frontend"],
+      target_langs_by_domain: {
+        frontend: ["de"]
+      }
+    }
+  ]);
+  assert.match(finished.log.join("\n"), /Translated 2 translation items in content\/translations/);
+});
+
 test("static translation apply job limits content store translation to affected languages", async () => {
   const seen = [];
   const applyOptions = [];
@@ -427,6 +467,28 @@ test("static translation advanced job clears marketing tour memory cache without
   ]);
   assert.match(finished.log.join("\n"), /Cleared 4 cached marketing tour translation items/);
   assert.match(finished.log.join("\n"), /Use Translate to rebuild missing machine translations/);
+});
+
+test("static translation protected terms job points changed translations to Publish Website", async () => {
+  const seen = [];
+  const service = createStaticTranslationApplyJobs({
+    repoRoot: "/tmp/repo",
+    nowIso: () => "2026-04-28T00:00:00.000Z",
+    idFactory: () => "job-protected-terms",
+    protectTranslations: async () => {
+      seen.push("protected terms");
+      return { translated_count: 12 };
+    }
+  });
+
+  const started = service.startRetranslate({ mode: "protected_terms" });
+  assert.deepEqual(started.phases.map((phase) => phase.id), ["protected_terms_update"]);
+  const finished = await waitForJob(service, "job-protected-terms", "succeeded");
+
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(seen, ["protected terms"]);
+  assert.match(finished.log.join("\n"), /Updated 12 protected-term translation items/);
+  assert.match(finished.log.join("\n"), /Use Publish Website to update runtime translations/);
 });
 
 test("static translation retranslate job validates frontend current language", () => {
