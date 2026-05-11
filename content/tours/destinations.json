@@ -108,16 +108,16 @@
     },
     {
       "id": "place_phu_quoc",
+      "destination": "VN",
+      "region_id": "region_024155db-da17-4cdb-ae0e-a01fd1e77f58",
       "code": "phu-quoc",
       "name": "Phu Quoc",
+      "latitude": 10.2241,
+      "longitude": 103.9716,
       "sort_order": 90,
       "is_active": true,
       "created_at": "2026-05-07T00:00:00.000Z",
-      "updated_at": "2026-05-07T00:00:00.000Z",
-      "region_id": "region_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-      "destination": "VN",
-      "latitude": 10.22879,
-      "longitude": 104.01436
+      "updated_at": "2026-05-11T05:25:55.371Z"
     },
     {
       "id": "place_sao_beach",
