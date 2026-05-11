@@ -368,8 +368,32 @@ export function createStaticTranslationService({
     return "reviewed";
   }
 
+  function publishedIndexKey(domain, targetLang, sourceRefValue) {
+    const domainValue = normalizeText(domain).toLowerCase();
+    const targetLangValue = normalizeText(targetLang).toLowerCase();
+    const sourceRefText = normalizeText(sourceRefValue);
+    return domainValue && targetLangValue && sourceRefText
+      ? `${domainValue}|${targetLangValue}|${sourceRefText}`
+      : "";
+  }
+
   async function readPublishedIndex() {
-    return { manifest: {}, rows: new Map() };
+    const { data: manifest } = await readTranslationStoreManifest();
+    const rows = new Map();
+    for (const section of Array.isArray(manifest?.sections) ? manifest.sections : []) {
+      const relativeFile = normalizeText(section?.file);
+      if (!relativeFile) continue;
+      const { data } = await readJsonFile(path.join(translationsSnapshotDir, relativeFile), {});
+      for (const item of Array.isArray(data?.items) ? data.items : []) {
+        const key = publishedIndexKey(
+          item?.domain || section?.domain,
+          item?.target_lang || section?.target_lang,
+          item?.source_ref
+        );
+        if (key && !rows.has(key)) rows.set(key, item);
+      }
+    }
+    return { manifest, rows };
   }
 
   async function readTranslationStoreManifest() {
@@ -498,8 +522,19 @@ export function createStaticTranslationService({
     } else if (!targetText) {
       next.publish_state = "untranslated";
     } else {
-      next.publish_state = next.freshness_state === "current" ? "published" : "unpublished";
-      next.published_at = "";
+      const publishedKey = publishedIndexKey(config.id, language.code, next.source_ref);
+      const publishedItem = publishedIndex?.rows?.get(publishedKey) || null;
+      const publishedSourceHash = normalizeText(publishedItem?.source_hash);
+      const publishedTargetHash = normalizeText(publishedItem?.target_hash);
+      const matchesPublishedSnapshot = Boolean(
+        publishedItem
+        && publishedSourceHash === next.source_hash
+        && publishedTargetHash === sourceHash(targetText)
+      );
+      next.publish_state = next.freshness_state === "current" && matchesPublishedSnapshot ? "published" : "unpublished";
+      next.published_at = matchesPublishedSnapshot
+        ? normalizeText(publishedItem?.published_at || publishedItem?.generated_at)
+        : "";
     }
 
     next.dirty = next.required && (
@@ -1721,7 +1756,7 @@ export function createStaticTranslationService({
       });
       const runtimeI18n = await checkRuntimeI18nGenerator();
       return {
-        dirty: totals.dirty_count > 0,
+        dirty: totals.dirty_count > 0 || totals.unpublished_count > 0,
         ...totals,
         unavailable,
         runtime_i18n: runtimeI18n,

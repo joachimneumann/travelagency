@@ -145,7 +145,10 @@ function translationBlockers(status = {}) {
       message: `${normalized.issue_count} translation item${normalized.issue_count === 1 ? "" : "s"} need translation or update before publishing.`
     });
   }
-  if (normalized.runtime_i18n?.blocked) {
+  const runtimeSnapshotCanBeRefreshed = normalized.unpublished_count > 0
+    && normalized.issue_count === 0
+    && normalized.unavailable_count === 0;
+  if (normalized.runtime_i18n?.blocked && !runtimeSnapshotCanBeRefreshed) {
     blockers.push({
       code: "runtime_i18n_blocked",
       message: normalizeText(normalized.runtime_i18n.error || normalized.runtime_i18n.output) || "Runtime translation generation is blocked."

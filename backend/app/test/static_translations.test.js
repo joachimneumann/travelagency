@@ -137,6 +137,74 @@ test("static translation service publishes a versioned snapshot for clean target
   }
 });
 
+test("static translation service marks current rows unpublished when missing from the published snapshot", async () => {
+  const repoRoot = await createFixture();
+  try {
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {
+      "hero.title": "Kỳ nghỉ riêng mới",
+      "hero.cta": "Lập kế hoạch chuyến đi"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), {
+      "hero.title": {
+        source_hash: sha("New private holidays"),
+        origin: "machine",
+        updated_at: "2026-01-03T00:00:00.000Z"
+      },
+      "hero.cta": {
+        source_hash: sha("Plan my trip"),
+        origin: "machine",
+        updated_at: "2026-01-02T00:00:00.000Z"
+      }
+    });
+    const service = createStaticTranslationService({
+      repoRoot,
+      translationsSnapshotDir: path.join(repoRoot, "content", "translations"),
+      nowIso: () => "2026-04-28T04:00:00.000Z"
+    });
+    await service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+
+    await writeJson(path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "frontend", "en.json"), {
+      "hero.title": "New private holidays",
+      "hero.cta": "Plan my trip",
+      "hero.badge": "Tailor it"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {
+      "hero.title": "Kỳ nghỉ riêng mới",
+      "hero.cta": "Lập kế hoạch chuyến đi",
+      "hero.badge": "Tùy chỉnh"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), {
+      "hero.title": {
+        source_hash: sha("New private holidays"),
+        origin: "machine",
+        updated_at: "2026-01-03T00:00:00.000Z"
+      },
+      "hero.cta": {
+        source_hash: sha("Plan my trip"),
+        origin: "machine",
+        updated_at: "2026-01-02T00:00:00.000Z"
+      },
+      "hero.badge": {
+        source_hash: sha("Tailor it"),
+        origin: "machine",
+        updated_at: "2026-01-04T00:00:00.000Z"
+      }
+    });
+
+    const state = await service.getLanguageState("frontend", "vi");
+    const badge = state.rows.find((row) => row.key === "hero.badge");
+    assert.equal(badge.freshness_state, "current");
+    assert.equal(badge.publish_state, "unpublished");
+    assert.equal(state.counts["publish_state.unpublished"], 1);
+
+    await service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+    const republished = await service.getLanguageState("frontend", "vi");
+    assert.equal(republished.rows.find((row) => row.key === "hero.badge").publish_state, "published");
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test("static translation service repairs protected-term-only strings during machine apply", async () => {
   const repoRoot = await createFixture();
   try {

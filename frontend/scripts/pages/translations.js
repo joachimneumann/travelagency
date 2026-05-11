@@ -312,12 +312,16 @@ function runtimeI18nBlocked(status = state.translationStatus) {
   return Boolean(status?.runtimeI18n?.blocked);
 }
 
+function runtimeI18nHardBlocked(status = state.translationStatus) {
+  return runtimeI18nBlocked(status) && numberCount(status?.publishReadyCount) <= 0;
+}
+
 function runtimeI18nErrorMessage(status = state.translationStatus) {
   return normalizeText(status?.runtimeI18n?.error || status?.runtimeI18n?.output);
 }
 
 function updateRuntimeWarning(status = state.translationStatus) {
-  const blocked = runtimeI18nBlocked(status);
+  const blocked = runtimeI18nHardBlocked(status);
   if (els.runtimeWarning) els.runtimeWarning.hidden = !blocked;
   if (els.runtimeWarningMessage) {
     els.runtimeWarningMessage.textContent = blocked
@@ -348,12 +352,11 @@ function translationActionTitle(action, translationState, actionsBusy) {
   }
   if (action === "translate") {
     if (translationState.translateNeeded) return "Translate all missing or stale strings across staff and customer content.";
-    if (runtimeI18nBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
     if (translationState.publishReady) return "No strings need translation. Use Publish Website to update runtime translations and static website content.";
+    if (runtimeI18nHardBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
     return translationState.loaded ? "No strings need translation." : "Loading translation status.";
   }
   if (translationState.translateNeeded) return "Translate missing or stale strings before publishing.";
-  if (runtimeI18nBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
   return translationState.publishReady ? "Use Publish Website to update runtime translations and static website content." : "No translated strings are ready for publishing.";
 }
 
@@ -381,11 +384,11 @@ function translationStatusMessage(status) {
   const verb = count === 1 ? "needs" : "need";
   const base = `${count} ${subject} ${verb} translation before publishing.`;
   if (count > 0) return base;
-  if (runtimeI18nBlocked(status)) {
-    return `${base} Runtime i18n generation is blocked; Publish Website cannot finish yet.`;
-  }
   if (status.publishReadyCount > 0) {
     return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready. Use Publish Website to update runtime translations and static website content.`;
+  }
+  if (runtimeI18nHardBlocked(status)) {
+    return `${base} Runtime i18n generation is blocked; Publish Website cannot finish yet.`;
   }
   if (status.dirty) {
     return `${base} ${pluralize(status.dirtyCount, "translation item")} still need attention.`;

@@ -136,6 +136,91 @@ test("public-site publish runs translations and homepage generation before writi
   assert.equal(after.last_published_at, "2026-05-10T10:00:00.000Z");
 });
 
+test("public-site publish refreshes stale runtime snapshots when translated items are unpublished", async () => {
+  const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
+  const seen = [];
+  const service = createPublicSitePublishService({
+    repoRoot,
+    translationsSnapshotDir,
+    manifestPath,
+    readTours: async () => [],
+    nowIso: () => "2026-05-10T10:00:00.000Z",
+    idFactory: () => "public-job-runtime-refresh",
+    translationMemoryStore: {
+      patchManualOverrides: async () => {}
+    },
+    staticTranslationService: {
+      getStatusSummary: async () => ({
+        ...cleanTranslationStatus(),
+        dirty: true,
+        unpublished_count: 20,
+        runtime_i18n: {
+          blocked: true,
+          error: "Runtime i18n snapshot validation failed: missing source keys"
+        }
+      }),
+      publishTranslations: async () => {
+        seen.push("publish translations");
+        return { total_items: 20, source_set_hash: "updated" };
+      }
+    },
+    runCommand: async (phase) => {
+      seen.push(phase.id);
+    }
+  });
+
+  const status = await service.getStatus();
+  assert.equal(status.dirty, true);
+  assert.equal(status.blocked, false);
+
+  service.startPublish();
+  const finished = await waitForJob(service, "public-job-runtime-refresh", "succeeded");
+
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(seen, ["publish translations", "runtime_i18n", "homepage_assets"]);
+});
+
+test("public-site publish still blocks runtime failures when no unpublished translations can refresh them", async () => {
+  const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
+  const seen = [];
+  const service = createPublicSitePublishService({
+    repoRoot,
+    translationsSnapshotDir,
+    manifestPath,
+    readTours: async () => [],
+    idFactory: () => "public-job-runtime-blocked",
+    translationMemoryStore: {
+      patchManualOverrides: async () => {}
+    },
+    staticTranslationService: {
+      getStatusSummary: async () => ({
+        ...cleanTranslationStatus(),
+        runtime_i18n: {
+          blocked: true,
+          error: "Runtime i18n generator failed"
+        }
+      }),
+      publishTranslations: async () => {
+        seen.push("publish translations");
+      }
+    },
+    runCommand: async (phase) => {
+      seen.push(phase.id);
+    }
+  });
+
+  const status = await service.getStatus();
+  assert.equal(status.blocked, true);
+  assert.equal(status.block_reasons[0].code, "runtime_i18n_blocked");
+
+  service.startPublish();
+  const finished = await waitForJob(service, "public-job-runtime-blocked", "failed");
+
+  assert.equal(finished.status, "failed");
+  assert.equal(finished.error_code, "PUBLIC_SITE_PUBLISH_BLOCKED");
+  assert.deepEqual(seen, []);
+});
+
 test("public-site publish marks the job failed when translations need work", async () => {
   const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
   const seen = [];
