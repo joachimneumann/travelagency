@@ -120,6 +120,45 @@
       "updated_at": "2026-05-11T05:25:55.371Z"
     },
     {
+      "id": "place_sao_beach",
+      "destination": "VN",
+      "region_id": "region_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+      "code": "sao-beach",
+      "name": "Sao Beach",
+      "latitude": 10.22879,
+      "longitude": 104.01436,
+      "sort_order": 91,
+      "is_active": true,
+      "created_at": "2026-05-11T05:46:29.385Z",
+      "updated_at": "2026-05-11T07:27:30.415Z"
+    },
+    {
+      "id": "place_vinwonders_phu_quoc",
+      "destination": "VN",
+      "region_id": "region_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+      "code": "vinwonders-phu-quoc",
+      "name": "VinWonders Phu Quoc",
+      "latitude": 10.22879,
+      "longitude": 104.01436,
+      "sort_order": 92,
+      "is_active": true,
+      "created_at": "2026-05-11T05:46:29.385Z",
+      "updated_at": "2026-05-11T07:27:38.335Z"
+    },
+    {
+      "id": "place_dinh_cau",
+      "destination": "VN",
+      "region_id": "region_024155db-da17-4cdb-ae0e-a01fd1e77f58",
+      "code": "dinh-cau",
+      "name": "Dinh Cau",
+      "latitude": 10.22879,
+      "longitude": 104.01436,
+      "sort_order": 93,
+      "is_active": true,
+      "created_at": "2026-05-11T05:46:29.385Z",
+      "updated_at": "2026-05-11T07:27:46.362Z"
+    },
+    {
       "id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
       "code": "ho-chi-minh-city",
       "name": "Ho Chi Minh City",
