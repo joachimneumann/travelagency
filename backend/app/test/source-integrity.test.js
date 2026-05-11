@@ -6268,8 +6268,8 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     homepageSource,
-    /data-mobile-src="\/assets\/video\/rice%20field-mobile\.mp4"[\s\S]*data-desktop-src="\/assets\/video\/rice%20field\.mp4"[\s\S]*const chooseHeroVideoSource = \(\) => \{[\s\S]*window\.matchMedia\("\(max-width: 760px\)"\)\.matches[\s\S]*heroVideo\.src = heroVideoSource;[\s\S]*window\.addEventListener\("load", startPlayback, \{ once: true \}\)/,
-    "Homepage should keep hero MP4s out of the initial request graph and attach a mobile-specific source on small screens"
+    /data-mobile-src="\/assets\/video\/rice%20field-mobile\.mp4"[\s\S]*data-desktop-src="\/assets\/video\/rice%20field\.mp4"[\s\S]*const chooseHeroVideoSource = \(\) => \{[\s\S]*window\.matchMedia\("\(max-width: 760px\)"\)\.matches[\s\S]*heroVideo\.src = heroVideoSource;[\s\S]*document\.addEventListener\("DOMContentLoaded", startPlayback, \{ once: true \}\)/,
+    "Homepage should keep hero MP4s out of the initial request graph, attach a mobile-specific source on small screens, and start autoplay setup before full page load"
   );
   assert.ok(
     mobileHeroVideo.size < desktopHeroVideo.size / 3,
