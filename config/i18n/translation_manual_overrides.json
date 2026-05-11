@@ -118,6 +118,11 @@
       "manual_override": "Chính sách hủy ({travelerRange})"
     },
     {
+      "source_text": "Central",
+      "target_lang": "vi",
+      "manual_override": "Miền Trung"
+    },
+    {
       "source_text": "Change Reel",
       "target_lang": "vi",
       "manual_override": "Đổi Reel"
@@ -376,6 +381,11 @@
       "source_text": "New Reel",
       "target_lang": "vi",
       "manual_override": "Reel mới"
+    },
+    {
+      "source_text": "North",
+      "target_lang": "vi",
+      "manual_override": "Miền Bắc"
     },
     {
       "source_text": "No customer languages configured.",
@@ -661,6 +671,11 @@
       "source_text": "Some tours use destinations, regions, or places that are not configured.",
       "target_lang": "vi",
       "manual_override": "Một số tour đang dùng điểm đến, khu vực hoặc địa điểm chưa được cấu hình."
+    },
+    {
+      "source_text": "South",
+      "target_lang": "vi",
+      "manual_override": "Miền Nam"
     },
     {
       "source_text": "Statistics: {count} tours",

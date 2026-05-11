@@ -24,6 +24,10 @@ import {
   loadPublishedMarketingTourTranslations
 } from "../../backend/app/src/domain/marketing_tour_translations.js";
 import {
+  createTranslationManualOverrideIndex,
+  resolveTranslationManualOverride
+} from "../../backend/app/src/lib/translation_manual_overrides.js";
+import {
   normalizeLocalizedTextMap,
   resolveLocalizedText
 } from "../../backend/app/src/domain/booking_content_i18n.js";
@@ -53,6 +57,10 @@ const DESTINATION_CATALOG_PATH = path.resolve(
 const TRANSLATIONS_SNAPSHOT_DIR = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATIONS_SNAPSHOT_DIR || process.env.TRANSLATIONS_SNAPSHOT_DIR)
     || path.join(CONTENT_ROOT, "translations")
+);
+const TRANSLATION_MANUAL_OVERRIDES_PATH = path.resolve(
+  normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATION_MANUAL_OVERRIDES_PATH || process.env.TRANSLATION_MANUAL_OVERRIDES_PATH)
+    || path.join(ROOT_DIR, "config", "i18n", "translation_manual_overrides.json")
 );
 const ONE_PAGERS_MANIFEST_PATH = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_ONE_PAGERS_MANIFEST_PATH || process.env.ONE_PAGERS_MANIFEST_PATH)
@@ -92,6 +100,7 @@ const TOUR_FILE_PREFIX = "public-tours.";
 const TOUR_FILE_SUFFIX = ".json";
 const TOUR_DESTINATIONS_FILE_PREFIX = "public-tour-destinations.";
 const TOUR_DESTINATIONS_FILE_SUFFIX = ".json";
+const DESTINATION_TRANSLATION_DOMAIN = "destination-scope-catalog";
 const FOOTER_ALIGNED_TRAVEL_AGENCY_STRUCTURED_DATA = Object.freeze({
   "@id": "https://asiatravelplan.com/#travelagency",
   name: "AsiaTravelPlan",
@@ -722,6 +731,107 @@ function publicDestinationScopeCatalog(store, destinationOptions, { lang = "en",
     .filter(Boolean);
 
   return { destinations, regions, places };
+}
+
+function snapshotItems(payload) {
+  if (Array.isArray(payload)) return payload;
+  return Array.isArray(payload?.items) ? payload.items : [];
+}
+
+function destinationTranslationKeyFromSourceRef(value) {
+  const normalized = normalizeText(value);
+  if (!normalized) return "";
+  const prefix = `${DESTINATION_TRANSLATION_DOMAIN}:`;
+  return normalized.startsWith(prefix) ? normalized.slice(prefix.length) : normalized;
+}
+
+async function loadTranslationManualOverrideIndex(manualOverridesPath) {
+  const normalizedPath = normalizeText(manualOverridesPath);
+  if (!normalizedPath) return createTranslationManualOverrideIndex({ items: [] });
+  return createTranslationManualOverrideIndex(await readJson(normalizedPath, { fallback: { items: [] } }));
+}
+
+async function loadPublishedDestinationScopeCatalogTranslations(translationsSnapshotDir, languages, manualOverridesPath = "") {
+  const mapsByLang = new Map();
+  const root = normalizeText(translationsSnapshotDir);
+  const manualOverrideIndex = await loadTranslationManualOverrideIndex(manualOverridesPath);
+  const uniqueLanguages = Array.from(new Set(
+    (Array.isArray(languages) ? languages : [])
+      .map((lang) => normalizeTourLang(lang))
+      .filter((lang) => lang && lang !== "en")
+  ));
+
+  await Promise.all(uniqueLanguages.map(async (lang) => {
+    const byKey = new Map();
+    const bySource = new Map();
+    if (root) {
+      const snapshotPath = path.join(root, "customers", `tour-destinations.${lang}.json`);
+      const payload = await readJson(snapshotPath, { fallback: { items: [] } });
+      for (const item of snapshotItems(payload)) {
+        const targetText = normalizeText(item?.target_text);
+        if (!targetText) continue;
+        const key = normalizeText(item?.key) || destinationTranslationKeyFromSourceRef(item?.source_ref);
+        const sourceText = normalizeText(item?.source_text);
+        if (key) byKey.set(key, targetText);
+        if (sourceText) bySource.set(sourceText, targetText);
+      }
+    }
+    mapsByLang.set(lang, { lang, byKey, bySource, manualOverrideIndex });
+  }));
+  return mapsByLang;
+}
+
+function destinationCatalogTranslation(translations, key, sourceText) {
+  if (!translations || typeof translations !== "object") return "";
+  const normalizedKey = normalizeText(key);
+  const normalizedSource = normalizeText(sourceText);
+  const manualOverride = normalizedSource
+    ? resolveTranslationManualOverride(translations.manualOverrideIndex, {
+        target_lang: translations.lang,
+        source_text: normalizedSource
+      })
+    : null;
+  return normalizeText(
+    normalizeText(manualOverride?.manual_override)
+    || (normalizedKey && translations.byKey instanceof Map ? translations.byKey.get(normalizedKey) : "")
+    || (normalizedSource && translations.bySource instanceof Map ? translations.bySource.get(normalizedSource) : "")
+  );
+}
+
+function applyDestinationScopeCatalogTranslations(catalog, lang, translationsByLang) {
+  const normalizedLang = normalizeTourLang(lang);
+  if (!normalizedLang || normalizedLang === "en") return catalog;
+  const translations = translationsByLang instanceof Map ? translationsByLang.get(normalizedLang) : null;
+  if (!translations) return catalog;
+  return {
+    destinations: (Array.isArray(catalog?.destinations) ? catalog.destinations : []).map((destination) => {
+      const countryCode = normalizeText(destination?.country_code).toUpperCase();
+      const translated = destinationCatalogTranslation(
+        translations,
+        countryCode ? `destination.${countryCode}.label` : "",
+        destination?.label
+      );
+      return translated ? { ...destination, label: translated } : destination;
+    }),
+    regions: (Array.isArray(catalog?.regions) ? catalog.regions : []).map((region) => {
+      const id = normalizeText(region?.id);
+      const translated = destinationCatalogTranslation(
+        translations,
+        id ? `region.${id}.name` : "",
+        region?.label
+      );
+      return translated ? { ...region, label: translated } : region;
+    }),
+    places: (Array.isArray(catalog?.places) ? catalog.places : []).map((place) => {
+      const id = normalizeText(place?.id);
+      const translated = destinationCatalogTranslation(
+        translations,
+        id ? `place.${id}.name` : "",
+        place?.label
+      );
+      return translated ? { ...place, label: translated } : place;
+    })
+  };
 }
 
 function normalizeTourForPublicHomepage(tour, { normalizeTourForStorage, destinationCatalogPayload }) {
@@ -1712,6 +1822,7 @@ async function generateTourAssets({
   destinationCatalogPath = "",
   onePagersManifestPath = ONE_PAGERS_MANIFEST_PATH,
   translationsSnapshotDir = TRANSLATIONS_SNAPSHOT_DIR,
+  translationManualOverridesPath = TRANSLATION_MANUAL_OVERRIDES_PATH,
   frontendI18nDir = FRONTEND_I18N_DIR,
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
@@ -1778,7 +1889,14 @@ async function generateTourAssets({
   const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
   const publishedCountryCodes = publicTourCountryCodes(sortedPublicTours);
   const destinationScopeFilters = publicTourDestinationScopeFilters(sortedPublicTours);
-  const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages);
+  const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages, {
+    manualOverridesPath: translationManualOverridesPath
+  });
+  const publishedDestinationScopeTranslations = await loadPublishedDestinationScopeCatalogTranslations(
+    translationsSnapshotDir,
+    languages,
+    translationManualOverridesPath
+  );
   const onePagerArtifactsByTourId = await loadOnePagerArtifacts(onePagersManifestPath);
   const experienceHighlightCatalog = await loadExperienceHighlightCatalog();
   const assetUrlsByLang = {};
@@ -1869,10 +1987,10 @@ async function generateTourAssets({
       Array.isArray(tour?.destinations) ? tour.destinations : []
     ))))
       .map((code) => ({ code, label: countryDisplayName(TOUR_DESTINATION_TO_COUNTRY_CODE[normalizeTourDestinationCode(code)] || code, normalizedLang) || code }));
-    const destinationScopeCatalog = publicDestinationScopeCatalog(storePayload, availableDestinations, {
+    const destinationScopeCatalog = applyDestinationScopeCatalogTranslations(publicDestinationScopeCatalog(storePayload, availableDestinations, {
       lang: normalizedLang,
       scopeFilters: destinationScopeFilters
-    });
+    }), normalizedLang, publishedDestinationScopeTranslations);
     const destinationFilename = `${TOUR_DESTINATIONS_FILE_PREFIX}${normalizedLang}${TOUR_DESTINATIONS_FILE_SUFFIX}`;
     const destinationPayload = {
       available_destination_scope_catalog: destinationScopeCatalog
@@ -2133,6 +2251,7 @@ export async function generatePublicHomepageAssets({
   homepageTemplatePath = HOMEPAGE_TEMPLATE_PATH,
   homepageIndexPath = "",
   translationsSnapshotDir = "",
+  translationManualOverridesPath = "",
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
   const resolvedHomepageInitialBundlePath = normalizeText(homepageInitialBundlePath)
@@ -2155,6 +2274,10 @@ export async function generatePublicHomepageAssets({
     || (toursRoot === TOURS_ROOT ? ONE_PAGERS_MANIFEST_PATH : path.join(path.dirname(toursRoot), "one-pagers", "manifest.json"));
   const resolvedTranslationsSnapshotDir = normalizeText(translationsSnapshotDir)
     || (toursRoot === TOURS_ROOT ? TRANSLATIONS_SNAPSHOT_DIR : path.join(path.dirname(toursRoot), "translations"));
+  const resolvedTranslationManualOverridesPath = normalizeText(translationManualOverridesPath)
+    || (toursRoot === TOURS_ROOT
+      ? TRANSLATION_MANUAL_OVERRIDES_PATH
+      : path.join(path.dirname(path.dirname(toursRoot)), "config", "i18n", "translation_manual_overrides.json"));
   await cleanGeneratedFrontendData(frontendDataDir);
   const tours = await generateTourAssets({
     toursRoot,
@@ -2164,6 +2287,7 @@ export async function generatePublicHomepageAssets({
     destinationCatalogPath: resolvedDestinationCatalogPath,
     onePagersManifestPath: resolvedOnePagersManifestPath,
     translationsSnapshotDir: resolvedTranslationsSnapshotDir,
+    translationManualOverridesPath: resolvedTranslationManualOverridesPath,
     frontendI18nDir,
     languages
   });

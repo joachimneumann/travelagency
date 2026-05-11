@@ -6213,8 +6213,8 @@ test("homepage hero title follows published destinations and keeps the destinati
 
   assert.match(
     homepageSource,
-    /id="heroTitle"[\s\S]*class="filter-menu--hero__filters"[\s\S]*id="navStyleTrigger"[\s\S]*id="navDestinationWrap" class="select-wrap"[\s\S]*id="navDestinationSummary" data-i18n-id="filters\.all_destinations">All destinations/,
-    "Homepage hero should expose a dedicated title mount and keep the style and destination controls available"
+    /id="heroTitle"[\s\S]*class="filter-menu--hero__filters"[\s\S]*id="navDestinationWrap" class="select-wrap"[\s\S]*id="navDestinationTrigger"[\s\S]*id="navStyleTrigger"[\s\S]*id="navStyleSummary" data-i18n-id="filters\.all_styles">All travel styles/,
+    "Homepage hero should expose a dedicated title mount and keep the destination and style controls available"
   );
   assert.doesNotMatch(
     homepageSource,

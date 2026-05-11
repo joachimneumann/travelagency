@@ -212,6 +212,7 @@
 .home-page .hero-destination-menu__all-button,
 .home-page .hero-destination-menu__destination-button,
 .home-page .hero-destination-menu__area-button,
+.home-page .hero-destination-menu__region-button,
 .home-page .hero-destination-menu__item {
   border: 0;
   background: transparent;
@@ -238,19 +239,22 @@
   font-weight: var(--font-weight-bold);
 }
 
-.home-page .hero-destination-menu__areas {
+.home-page .hero-destination-menu__areas,
+.home-page .hero-destination-menu__regions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.home-page .hero-destination-menu__area {
+.home-page .hero-destination-menu__area,
+.home-page .hero-destination-menu__region {
   display: grid;
   align-content: start;
   gap: 0.25rem;
 }
 
-.home-page .hero-destination-menu__area-button {
+.home-page .hero-destination-menu__area-button,
+.home-page .hero-destination-menu__region-button {
   padding: 0 0 0.15rem;
   color: var(--text-strong);
   font-size: var(--font-size-body-lg);
@@ -276,6 +280,8 @@
 .home-page .hero-destination-menu__destination-button:focus-visible,
 .home-page .hero-destination-menu__area-button:hover,
 .home-page .hero-destination-menu__area-button:focus-visible,
+.home-page .hero-destination-menu__region-button:hover,
+.home-page .hero-destination-menu__region-button:focus-visible,
 .home-page .hero-destination-menu__item:hover,
 .home-page .hero-destination-menu__item:focus-visible,
 .home-page .hero-destination-menu [aria-pressed="true"] {
@@ -448,7 +454,8 @@
     transform: none;
   }
 
-  .home-page .hero-destination-menu__areas {
+  .home-page .hero-destination-menu__areas,
+  .home-page .hero-destination-menu__regions {
     grid-template-columns: 1fr;
     gap: 0.8rem;
   }

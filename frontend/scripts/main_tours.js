@@ -31,6 +31,11 @@ const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
   KH: "cambodia",
   LA: "laos"
 });
+const DESTINATION_REGION_MENU_ORDER = Object.freeze(new Map([
+  ["north", 0],
+  ["central", 1],
+  ["south", 2]
+]));
 const TOUR_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
 const EXPERIENCE_HIGHLIGHTS_BASE_PATH = "/assets/img/experience-highlights";
 const TOUR_EXPERIENCE_HIGHLIGHTS = Object.freeze([
@@ -4128,7 +4133,7 @@ export function createFrontendToursController(ctx) {
     }
 
     const destinationMarkup = catalog.destinations.map((destination) => {
-      const regions = regionByDestination.get(destination.code) || [];
+      const regions = sortDestinationMenuRegions(regionByDestination.get(destination.code) || []);
       const countryPlaces = placesByDestination.get(destination.code) || [];
       return `
         <section class="hero-destination-menu__destination">
@@ -4186,6 +4191,19 @@ export function createFrontendToursController(ctx) {
       </div>
       ${destinationMarkup || `<p class="hero-destination-menu__empty">${escapeHTML(frontendT("filters.no_destinations", "No destinations configured."))}</p>`}
     `;
+  }
+
+  function destinationMenuRegionOrder(region, index) {
+    const code = normalizeText(region?.code).toLowerCase();
+    if (DESTINATION_REGION_MENU_ORDER.has(code)) return DESTINATION_REGION_MENU_ORDER.get(code);
+    return DESTINATION_REGION_MENU_ORDER.size + index;
+  }
+
+  function sortDestinationMenuRegions(regions) {
+    return (Array.isArray(regions) ? regions : [])
+      .map((region, index) => ({ region, index, order: destinationMenuRegionOrder(region, index) }))
+      .sort((left, right) => left.order - right.order || left.index - right.index)
+      .map((entry) => entry.region);
   }
 
   function populateFilterOptions() {

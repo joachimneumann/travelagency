@@ -25,6 +25,7 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
 const toursDir = path.join(repoRoot, "content", "tours");
 const translationsSnapshotDir = path.join(repoRoot, "content", "translations");
+const translationManualOverridesPath = path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
 const defaultOutputDir = path.join(repoRoot, "content", "one-pagers");
 const flagTokensPath = path.join(repoRoot, "shared", "css", "tokens.css");
 const experienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
@@ -712,7 +713,9 @@ async function main() {
   if (experienceHighlightIds.length < onePagerExperienceHighlightCount) {
     throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${experienceHighlightsManifestPath}.`);
   }
-  const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, options.languages);
+  const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, options.languages, {
+    manualOverridesPath: translationManualOverridesPath
+  });
 
   let tours = (await readTours())
     .map((tour) => tourHelpers.normalizeTourForStorage(tour))

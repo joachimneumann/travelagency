@@ -153,6 +153,21 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       { source_text: "Driver at arrivals", target_text: "Tai xe tai sanh den" }
     ]
   });
+  await writeJson(path.join(contentRoot, "translations", "customers", "tour-destinations.vi.json"), {
+    items: [
+      { key: "destination.VN.label", source_text: "Vietnam", target_text: "Việt Nam" },
+      { key: "region.region_central.name", source_text: "Central", target_text: "Miền Trung" },
+      { key: "place.place_hoi_an.name", source_text: "Hoi An", target_text: "Hội An" },
+      { key: "place.place_unused.name", source_text: "Unused", target_text: "Không dùng" }
+    ]
+  });
+  await writeJson(path.join(root, "config", "i18n", "translation_manual_overrides.json"), {
+    schema: "translation-manual-overrides/v2",
+    schema_version: 2,
+    items: [
+      { source_text: "Central", target_lang: "vi", manual_override: "Miền Trung Manual" }
+    ]
+  });
   await writeJson(path.join(contentRoot, "one-pagers", "manifest.json"), {
     tours: [
       {
@@ -300,6 +315,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const publicToursDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.de.json"), "utf8"));
   const publicToursVi = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.vi.json"), "utf8"));
   const publicTourDestinationsEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-destinations.en.json"), "utf8"));
+  const publicTourDestinationsVi = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-destinations.vi.json"), "utf8"));
   const publicTourDetailsEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-details.en.tour_alpha.json"), "utf8"));
   const publicTourDetailsDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-details.de.tour_alpha.json"), "utf8"));
   const publicTourDetailsVi = JSON.parse(await readFile(path.join(frontendDataDir, "public-tour-details.vi.tour_alpha.json"), "utf8"));
@@ -329,6 +345,13 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     ],
     regions: [{ id: "region_central", destination: "vietnam", country_code: "VN", code: "central", label: "Central" }],
     places: [{ id: "place_hoi_an", destination: "vietnam", country_code: "VN", region_id: "region_central", code: "hoi-an", label: "Hoi An" }]
+  });
+  assert.deepEqual(publicTourDestinationsVi.available_destination_scope_catalog, {
+    destinations: [
+      { code: "vietnam", country_code: "VN", label: "Việt Nam" }
+    ],
+    regions: [{ id: "region_central", destination: "vietnam", country_code: "VN", code: "central", label: "Miền Trung Manual" }],
+    places: [{ id: "place_hoi_an", destination: "vietnam", country_code: "VN", region_id: "region_central", code: "hoi-an", label: "Hội An" }]
   });
   assert.equal("travel_plan" in publicToursEn.items[0], false);
   assert.equal(publicToursEn.items[0].travel_plan_day_count, 1);
@@ -429,7 +452,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageInitialBundle, /function createFrontendToursController/);
   assert.doesNotMatch(homepageInitialBundle, /function frontendT\(/);
   assert.match(homepageInitialBundle, /const frontendT = \(id, fallback, vars\) => \{/);
-  assert.match(homepageInitialBundle, /<a class="btn tour-card__show-more"/);
+  assert.match(homepageInitialBundle, /<a class="btn tour-card__show-more/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_booking_form_options\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_reels\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);
