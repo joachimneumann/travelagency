@@ -1,6 +1,6 @@
 {
   "id": "tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb",
-  "title": "SymphonyY Of Flowers: Discovering The Romance Of Da Lat",
+  "title": "Discovering the Romance Of Dalat",
   "short_description": "Cool air, flower gardens and misty streets give Da Lat its gentle romance, a highland pause shaped by color, nostalgia and slow wandering.",
   "styles": [
     "budget",
@@ -14,20 +14,9 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-14T01:35:35.203Z",
-  "updated_at": "2026-05-08T14:28:41.697Z",
+  "updated_at": "2026-05-10T14:36:29.912Z",
   "published_on_webpage": true,
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_eebe5c3b-38f9-4a53-bf52-fd90a7256a13",
       "travel_plan_service_image_a640303d-b14f-47e0-a1fc-dfb713486e99",
@@ -61,6 +50,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_46a0e3d7-0f03-4b58-9cff-277f68157d27",
@@ -180,6 +170,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_be4300a4-cb6c-425d-91ec-b34ea6f61e0d",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_81173400-f852-4e37-ad8b-1b523a0410b0",
@@ -334,6 +325,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_2492b05e-15d4-4ed6-9253-d17e08792a63",
@@ -488,6 +480,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_73a4b20a-acb6-42a5-8f0d-92370f72c07e",
@@ -607,6 +600,7 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [],
         "notes": "Farewell, dreamy Da Lat! Thank you for the cool mountain air, misty pine forests, and colorful blooms. You leave us with beautiful memories and a longing to return to your romantic charm very soon",
         "notes_i18n": {}
