@@ -28,6 +28,7 @@ content/**
 frontend/data/generated/
 assets/generated/
 tmp/
+.playwright-cli/
 
 # Runtime translation outputs are generated from content/translations.
 # Canonical English source catalogs live in scripts/i18n/source_catalogs.
