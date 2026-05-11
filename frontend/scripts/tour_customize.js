@@ -8,10 +8,10 @@ const TOUR_CUSTOMIZE_TIMELINE_DELETE_DISTANCE_PX = 50;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER = 0;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MAX_CENTER = 100;
 const TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS = Object.freeze({
-  north: 28,
-  south: -11,
-  west: 92,
-  east: 142
+  north: 24.398444,
+  south: 7.528160,
+  west: 101.183227,
+  east: 109.987724
 });
 const TOUR_CUSTOMIZE_MAP_ZOOM_FACTOR = 3;
 
@@ -112,24 +112,8 @@ function locationCatalogById(catalog) {
   }).filter(([id]) => id));
 }
 
-function locationCatalogRouteBounds(catalog) {
-  const locations = Array.from(locationCatalogById(catalog).values())
-    .filter((location) => Number.isFinite(location.latitude) && Number.isFinite(location.longitude));
-  if (!locations.length) return TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS;
-  const latitudes = locations.map((location) => location.latitude);
-  const longitudes = locations.map((location) => location.longitude);
-  const north = Math.max(...latitudes);
-  const south = Math.min(...latitudes);
-  const east = Math.max(...longitudes);
-  const west = Math.min(...longitudes);
-  const latMargin = Math.max(0.5, (north - south) * 0.16);
-  const lngMargin = Math.max(0.5, (east - west) * 0.16);
-  return {
-    north: north + latMargin,
-    south: south - latMargin,
-    east: east + lngMargin,
-    west: west - lngMargin
-  };
+function customizerRouteBounds() {
+  return TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS;
 }
 
 function locationCatalogRoutePoints(catalog) {
@@ -233,7 +217,7 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
   const sourceDayId = normalizeText(day?.id);
   const title = resolveLocalizedField(day, "title", lang);
   const thumbnailUrl = firstCustomerImage(day);
-  const routeBounds = locationCatalogRouteBounds(destinationCatalog);
+  const routeBounds = customizerRouteBounds();
   const routePoints = resolveRoutePoints(day, lang, destinationCatalog, { allowTextFallback: false })
     .map((routePoint) => ({
       routePoint,

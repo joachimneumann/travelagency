@@ -336,6 +336,24 @@ function uniqueImageEntries(entries) {
   return output;
 }
 
+function tripEdgeServiceKeys(days) {
+  const tripDays = Array.isArray(days) ? days : [];
+  const keys = new Set();
+  if (!tripDays.length) return keys;
+  const firstDayServices = Array.isArray(tripDays[0]?.services) ? tripDays[0].services : [];
+  if (firstDayServices.length) keys.add("0:0");
+  const lastDayIndex = tripDays.length - 1;
+  const lastDayServices = Array.isArray(tripDays[lastDayIndex]?.services) ? tripDays[lastDayIndex].services : [];
+  if (lastDayServices.length) keys.add(`${lastDayIndex}:${lastDayServices.length - 1}`);
+  return keys;
+}
+
+function automaticOnePagerImageCandidates(entries) {
+  const sourceEntries = Array.isArray(entries) ? entries : [];
+  if (uniqueImageEntries(sourceEntries).length <= onePagerFrameImageCount) return sourceEntries;
+  return sourceEntries.filter((entry) => entry?.skip_automatic_one_pager_selection !== true);
+}
+
 async function filterExistingImages(entries, resolveTourImageDiskPath = null) {
   const uniqueEntries = uniqueImageEntries(entries);
   if (!resolveTourImageDiskPath) return uniqueEntries;
@@ -351,8 +369,11 @@ async function filterExistingImages(entries, resolveTourImageDiskPath = null) {
 
 function collectVisibleTravelPlanImages(travelPlan) {
   const images = [];
-  for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
-    for (const service of Array.isArray(day?.services) ? day.services : []) {
+  const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
+  const edgeServiceKeys = tripEdgeServiceKeys(days);
+  for (const [dayIndex, day] of days.entries()) {
+    const services = Array.isArray(day?.services) ? day.services : [];
+    for (const [serviceIndex, service] of services.entries()) {
       const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
         ? service.image
         : null;
@@ -362,7 +383,8 @@ function collectVisibleTravelPlanImages(travelPlan) {
         images.push({
           id,
           storage_path: storagePath,
-          label: serviceImageLabel(service)
+          label: serviceImageLabel(service),
+          skip_automatic_one_pager_selection: edgeServiceKeys.has(`${dayIndex}:${serviceIndex}`)
         });
       }
     }
@@ -423,8 +445,9 @@ async function prepareScriptFrameImages(tour, rawTravelPlan, seed, { resolveTour
     .filter(Boolean)
     .slice(0, onePagerFrameImageCount);
   const selectedStoragePaths = new Set(selectedImages.map((entry) => entry.storage_path));
+  const automaticServiceImages = automaticOnePagerImageCandidates(serviceImages);
   const randomServiceImages = deterministicShuffle(
-    serviceImages.filter((entry) => !selectedStoragePaths.has(entry.storage_path)),
+    automaticServiceImages.filter((entry) => !selectedStoragePaths.has(entry.storage_path)),
     `${seed}:services`
   );
   const randomDirectoryImages = deterministicShuffle(

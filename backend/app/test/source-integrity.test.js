@@ -3903,8 +3903,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /function collectTourImages\(tour, lang\)[\s\S]*one_pager_image_ids[\s\S]*hasSelectedOnePagerBodyImages = hasOnePagerImageIds && onePagerImageIds\.length > 0[\s\S]*selectedImageIds = hasSelectedOnePagerBodyImages \? onePagerImageIds : webImageIds[\s\S]*one_pager_hero_image_id[\s\S]*addEntry\(entriesById\.get\(heroImageId\)\)[\s\S]*if \(!hasSelectedOnePagerBodyImages\) \{[\s\S]*fallbackEntries\.forEach\(addEntry\)/,
-    "The one-pager PDF should prioritize dedicated one-pager selections while falling back when no body images are selected"
+    /function onePagerTripEdgeServiceKeys\(days\)[\s\S]*firstDayServices[\s\S]*lastDayServices[\s\S]*function filterAutomaticOnePagerImageCandidates\(entries\)[\s\S]*uniqueBodyImageEntryCount\(sourceEntries\) <= 5[\s\S]*skipAutomaticOnePagerSelection[\s\S]*function collectTourImages\(tour, lang\)[\s\S]*edgeServiceKeys = onePagerTripEdgeServiceKeys\(days\)[\s\S]*one_pager_image_ids[\s\S]*hasSelectedOnePagerBodyImages = hasOnePagerImageIds && onePagerImageIds\.length > 0[\s\S]*selectedImageIds = hasSelectedOnePagerBodyImages \? onePagerImageIds : webImageIds[\s\S]*explicitHeroImageId = textOrNull\(tour\?\.travel_plan\?\.one_pager_hero_image_id\)[\s\S]*skipAutomaticOnePagerSelection: edgeServiceKeys\.has\(`\$\{dayIndex\}:\$\{serviceIndex\}`\)[\s\S]*automaticEntries = filterAutomaticOnePagerImageCandidates\(entries\)[\s\S]*automaticEntriesById[\s\S]*addEntry\(\(explicitHeroImageId \? entriesById : automaticEntriesById\)\.get\(heroImageId\)\)[\s\S]*selectedEntriesById = hasSelectedOnePagerBodyImages \? entriesById : automaticEntriesById[\s\S]*if \(!hasSelectedOnePagerBodyImages\) \{[\s\S]*fallbackEntries\.forEach\(addEntry\)/,
+    "The one-pager PDF should prioritize dedicated one-pager selections while automatic fallback skips first-arrival and last-departure images on image-rich trips"
   );
   assert.match(
     onePagerPdfSource,
@@ -3918,8 +3918,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /const BODY_IMAGE_LIMIT = 4;[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*\{ x: 326, y: 256, width: 220, height: 136[\s\S]*\{ x: 412, y: 398, width: 142, height: 98[\s\S]*\{ x: 304, y: 510, width: 176, height: 108[\s\S]*\{ x: 476, y: 512, width: 82, height: 110[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`, 0\.96, 1\.04\)[\s\S]*deterministicRange\(seed, `x:\$\{index\}`, -6, 6\)[\s\S]*deterministicRange\(seed, `angle:\$\{index\}`, -0\.8, 0\.8\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);/,
-    "The one-pager PDF should lay out up to four right-side body images in a fixed editorial cascade with light deterministic jitter and title-strip collision cleanup"
+    /const BODY_IMAGE_LIMIT = 4;[\s\S]*const BODY_IMAGE_SIZE_SCALE = 1\.1;[\s\S]*const BODY_IMAGE_RENDER_FRAME = Object\.freeze\(\{ width: 273, height: 191 \}\);[\s\S]*maxY: 662[\s\S]*function bodyImageBaseLayouts\(count\)[\s\S]*1: \[[\s\S]*2: \[[\s\S]*3: \[[\s\S]*4: \[[\s\S]*\{ x: 326, y: 314, width: 220, height: 136[\s\S]*\{ x: 412, y: 444, width: 142, height: 98[\s\S]*\{ x: 304, y: 554, width: 176, height: 108[\s\S]*\{ x: 476, y: 562, width: 82, height: 110[\s\S]*function createBodyImageLayouts\(tour, frameImages\)[\s\S]*\.slice\(1\)[\s\S]*\.slice\(0, BODY_IMAGE_LIMIT\)[\s\S]*const scaledBaseWidth = base\.width \* BODY_IMAGE_SIZE_SCALE;[\s\S]*const scaledBaseHeight = base\.height \* BODY_IMAGE_SIZE_SCALE;[\s\S]*deterministicRange\(seed, `scale:\$\{index\}`, 0\.96, 1\.04\)[\s\S]*clampNumber\(scaledBaseWidth \* scale, BODY_IMAGE_MIN_WIDTH, BODY_IMAGE_RENDER_FRAME\.width\)[\s\S]*deterministicRange\(seed, `x:\$\{index\}`, -6, 6\)[\s\S]*deterministicRange\(seed, `angle:\$\{index\}`, -0\.8, 0\.8\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);/,
+    "The one-pager PDF should lay out up to four right-side body images in a lower fixed editorial cascade with light deterministic jitter and title-strip collision cleanup"
   );
   assert.match(
     onePagerPdfSource,
@@ -3928,7 +3928,7 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /const PHOTO_LABEL_COLLISION_STEP = 22;[\s\S]*const PHOTO_LABEL_PROTECTED_EXTRA_X = 18;[\s\S]*const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 18;[\s\S]*const BODY_IMAGE_COMPACT_TARGET_GAP = 14;[\s\S]*function bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*bodyImageLowerEdgeAlignmentPenalty\(candidate, placed\)[\s\S]*function bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*BODY_IMAGE_COMPACT_TARGET_GAP[\s\S]*collisionScore: bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*gapScore: bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*left\.collisionScore - right\.collisionScore[\s\S]*left\.gapScore - right\.gapScore[\s\S]*function resolveBodyImageCollageTitleCollisions\(items\)[\s\S]*return resolveBodyImageTitleCollisions\(sortBodyImageLayoutsForDraw\(items\)\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);[\s\S]*function drawBodyImageCollage\(doc, bodyImageLayouts, fonts, lang\)[\s\S]*const drawItems = sortBodyImageLayoutsForDraw\(bodyImageLayouts\);[\s\S]*drawFramedImage\(doc,[\s\S]*labelLayer: false[\s\S]*drawItems\.forEach\(\(\{ frame, layout, drawOrderIndex \}\) => \{[\s\S]*drawFramedImageLabel\(doc,[\s\S]*drawBodyImageCollage\(doc, bodyImageLayouts, renderFonts, normalizedLang\);/,
+    /const PHOTO_LABEL_COLLISION_STEP = 22;[\s\S]*const PHOTO_LABEL_PROTECTED_EXTRA_X = 18;[\s\S]*const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 18;[\s\S]*const BODY_IMAGE_COMPACT_TARGET_GAP = 6;[\s\S]*function bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*bodyImageLowerEdgeAlignmentPenalty\(candidate, placed\)[\s\S]*function bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*BODY_IMAGE_COMPACT_TARGET_GAP[\s\S]*collisionScore: bodyImageTitleCollisionScore\(candidate, placedLayouts\)[\s\S]*gapScore: bodyImageVerticalGapScore\(candidate, placedLayouts\)[\s\S]*left\.collisionScore - right\.collisionScore[\s\S]*left\.gapScore - right\.gapScore[\s\S]*function resolveBodyImageCollageTitleCollisions\(items\)[\s\S]*return resolveBodyImageTitleCollisions\(sortBodyImageLayoutsForDraw\(items\)\)[\s\S]*return resolveBodyImageCollageTitleCollisions\(layouts\);[\s\S]*function drawBodyImageCollage\(doc, bodyImageLayouts, fonts, lang\)[\s\S]*const drawItems = sortBodyImageLayoutsForDraw\(bodyImageLayouts\);[\s\S]*drawFramedImage\(doc,[\s\S]*labelLayer: false[\s\S]*drawItems\.forEach\(\(\{ frame, layout, drawOrderIndex \}\) => \{[\s\S]*drawFramedImageLabel\(doc,[\s\S]*drawBodyImageCollage\(doc, bodyImageLayouts, renderFonts, normalizedLang\);/,
     "The one-pager PDF should score body-photo title-strip overlaps, avoid near-aligned lower edges, compact safe vertical gaps, then draw all labels above the complete collage"
   );
   assert.match(
@@ -3985,6 +3985,11 @@ test("tour card images are selected from travel-plan service images", async () =
     onePagerScriptSource,
     /const onePagerFrameImageCount = 5;[\s\S]*const minOnePagerImageCount = 2;[\s\S]*scriptFrameImages\.length >= minOnePagerImageCount/,
     "The one-pager batch script should render tours with fewer than four body images when a hero plus one body image is available"
+  );
+  assert.match(
+    onePagerScriptSource,
+    /function tripEdgeServiceKeys\(days\)[\s\S]*firstDayServices[\s\S]*lastDayServices[\s\S]*function automaticOnePagerImageCandidates\(entries\)[\s\S]*uniqueImageEntries\(sourceEntries\)\.length <= onePagerFrameImageCount[\s\S]*skip_automatic_one_pager_selection[\s\S]*function collectVisibleTravelPlanImages\(travelPlan\)[\s\S]*edgeServiceKeys = tripEdgeServiceKeys\(days\)[\s\S]*skip_automatic_one_pager_selection: edgeServiceKeys\.has\(`\$\{dayIndex\}:\$\{serviceIndex\}`\)[\s\S]*const automaticServiceImages = automaticOnePagerImageCandidates\(serviceImages\)[\s\S]*automaticServiceImages\.filter/,
+    "The one-pager batch script should skip first-service and last-service trip images only for automatic filler selection on image-rich tours"
   );
   assert.match(
     onePagerScriptSource,
@@ -5725,8 +5730,8 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourHandlersSource,
-    /function collectRandomOverviewFrameImages\(tour\)[\s\S]*tour\?\.travel_plan\?\.days[\s\S]*day\?\.services \|\| day\?\.items[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*randomUUID\(\)[\s\S]*\.slice\(0, 4\)/,
-    "Customized Overview PDFs should randomly select up to four visible service images from the selected itinerary days"
+    /function collectRandomOverviewFrameImages\(tour\)[\s\S]*tour\?\.travel_plan\?\.days[\s\S]*edgeServiceKeys[\s\S]*firstServices[\s\S]*lastServices[\s\S]*day\?\.services \|\| day\?\.items[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*skip_automatic_one_pager_selection: edgeServiceKeys\.has\(`\$\{dayIndex\}:\$\{serviceIndex\}`\)[\s\S]*const automaticEntries = entries\.length > 5[\s\S]*skip_automatic_one_pager_selection !== true[\s\S]*randomUUID\(\)[\s\S]*\.slice\(0, 4\)/,
+    "Customized Overview PDFs should randomly select up to four visible service images while skipping first-arrival and last-departure images on image-rich itineraries"
   );
   assert.match(
     tourHandlersSource,
@@ -5953,6 +5958,11 @@ test("homepage tour cards expand descriptions and align same-row cards without a
     mainToursSource,
     /function stickyHeaderBottomOffset\(\)[\s\S]*document\.querySelector\("\.header"\)[\s\S]*function scrollTourCardFullyVisible\(tripId,[\s\S]*visibleTop = stickyHeaderBottomOffset\(\) \+ TOUR_CARD_SCROLL_MARGIN_PX[\s\S]*rect\.height > availableHeight \|\| rect\.top < visibleTop[\s\S]*rect\.bottom > visibleBottom/,
     "Show more should account for the sticky header and scroll the selected card fully into the visible viewport when needed"
+  );
+  assert.match(
+    mainToursSource,
+    /const TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_PX = 180;[\s\S]*const TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_THRESHOLD_PX = 180;[\s\S]*const TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_MS = 1100;[\s\S]*function easeOutCubic\(progress\)[\s\S]*function scrollWindowToY\(top, behavior = "smooth", \{ durationMs = 0, easing = easeOutCubic \} = \{\}\)[\s\S]*canUseCustomDuration[\s\S]*customDurationMs > 0[\s\S]*window\.requestAnimationFrame\(tick\)[\s\S]*function tourDetailsButtonIsAtViewportBottom\(button\)[\s\S]*viewportHeight - TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_THRESHOLD_PX[\s\S]*function revealTourDetailsTopAfterBottomButtonClick\(\)[\s\S]*window\.scrollY \+ TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_PX[\s\S]*durationMs: TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_MS/,
+    "Bottom-edge details buttons should reveal more of the opening panel with a slower dedicated scroll and a wider bottom threshold"
   );
   assert.doesNotMatch(
     mainToursSource,

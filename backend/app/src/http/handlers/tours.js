@@ -1037,7 +1037,18 @@ export function createTourHandlers(deps) {
   function collectRandomOverviewFrameImages(tour) {
     const entries = [];
     const seenStoragePaths = new Set();
-    (Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []).forEach((day, dayIndex) => {
+    const days = Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : [];
+    const edgeServiceKeys = new Set();
+    if (days.length) {
+      const firstServices = Array.isArray(days[0]?.services || days[0]?.items) ? (days[0].services || days[0].items) : [];
+      if (firstServices.length) edgeServiceKeys.add("0:0");
+      const lastDayIndex = days.length - 1;
+      const lastServices = Array.isArray(days[lastDayIndex]?.services || days[lastDayIndex]?.items)
+        ? (days[lastDayIndex].services || days[lastDayIndex].items)
+        : [];
+      if (lastServices.length) edgeServiceKeys.add(`${lastDayIndex}:${lastServices.length - 1}`);
+    }
+    days.forEach((day, dayIndex) => {
       (Array.isArray(day?.services || day?.items) ? (day.services || day.items) : []).forEach((service, serviceIndex) => {
         const images = [
           service?.image && typeof service.image === "object" && !Array.isArray(service.image) ? service.image : null,
@@ -1050,12 +1061,16 @@ export function createTourHandlers(deps) {
           entries.push({
             id: normalizeText(image?.id) || `overview-service-image-${dayIndex + 1}-${serviceIndex + 1}-${imageIndex + 1}`,
             storage_path: storagePath,
-            label: normalizeText(service?.title) || normalizeText(service?.location) || normalizeText(day?.overnight_location) || normalizeText(day?.title) || "Tour"
+            label: normalizeText(service?.title) || normalizeText(service?.location) || normalizeText(day?.overnight_location) || normalizeText(day?.title) || "Tour",
+            skip_automatic_one_pager_selection: edgeServiceKeys.has(`${dayIndex}:${serviceIndex}`)
           });
         });
       });
     });
-    return entries
+    const automaticEntries = entries.length > 5
+      ? entries.filter((entry) => entry.skip_automatic_one_pager_selection !== true)
+      : entries;
+    return automaticEntries
       .map((entry) => ({ entry, sortKey: randomUUID() }))
       .sort((left, right) => left.sortKey.localeCompare(right.sortKey))
       .slice(0, 4)

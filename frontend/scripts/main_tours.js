@@ -10,6 +10,9 @@ const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_DETAILS_OPEN_TRANSITION_MS = 920;
 const TOUR_DETAILS_MOBILE_OPEN_TRANSITION_MS = 1500;
 const TOUR_DETAILS_MOBILE_OPEN_EASING = "cubic-bezier(0.45, 0, 0.2, 1)";
+const TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_PX = 180;
+const TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_THRESHOLD_PX = 180;
+const TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_MS = 1100;
 const TOUR_DETAILS_TRANSITION_MS = 640;
 const TOUR_DETAILS_CLOSE_TRANSITION_MS = 780;
 const TOUR_PLAN_SERVICE_SWAP_TRANSITION_MS = 380;
@@ -2278,6 +2281,7 @@ export function createFrontendToursController(ctx) {
         event.preventDefault();
         if (button.dataset.tourDetailsLoading === "1") return;
         const willOpen = !expandedTourIdSet().has(tripId);
+        const shouldRevealDetailsTop = willOpen && tourDetailsButtonIsAtViewportBottom(button);
         if (willOpen) {
           button.dataset.tourDetailsLoading = "1";
           button.setAttribute("aria-disabled", "true");
@@ -2287,6 +2291,9 @@ export function createFrontendToursController(ctx) {
           if (!loadedTrip || !hasTravelPlanDays(loadedTrip)) return;
         }
         animateTourDetailsToggle(tripId, willOpen);
+        if (shouldRevealDetailsTop) {
+          revealTourDetailsTopAfterBottomButtonClick();
+        }
       });
       button.dataset.tourDetailsBound = "1";
     });
@@ -2695,15 +2702,55 @@ export function createFrontendToursController(ctx) {
     return Math.max(0, Math.ceil(rect.bottom));
   }
 
-  function scrollWindowToY(top, behavior = "smooth") {
+  function easeOutCubic(progress) {
+    const normalizedProgress = Math.min(1, Math.max(0, Number(progress) || 0));
+    return 1 - Math.pow(1 - normalizedProgress, 3);
+  }
+
+  function performanceNowMs() {
+    const now = window?.performance?.now;
+    return typeof now === "function" ? now.call(window.performance) : Date.now();
+  }
+
+  function scrollWindowToY(top, behavior = "smooth", { durationMs = 0, easing = easeOutCubic } = {}) {
     const documentElement = document.documentElement;
     const maxScrollY = Math.max(0, documentElement.scrollHeight - window.innerHeight);
     const targetY = Math.min(maxScrollY, Math.max(0, Math.round(Number(top) || 0)));
     if (Math.abs(window.scrollY - targetY) < 1) return Promise.resolve();
 
     return new Promise((resolve) => {
-      const startedAt = performance.now();
       const scrollBehavior = prefersReducedMotion() ? "auto" : behavior;
+      const customDurationMs = Math.max(0, Number(durationMs) || 0);
+      const canUseCustomDuration = scrollBehavior === "smooth"
+        && customDurationMs > 0
+        && typeof window.requestAnimationFrame === "function"
+        && typeof window.scrollTo === "function";
+      if (canUseCustomDuration) {
+        const startedAt = performanceNowMs();
+        const startY = Number(window.scrollY) || 0;
+        const deltaY = targetY - startY;
+        const ease = typeof easing === "function" ? easing : easeOutCubic;
+        let frameIndex = 0;
+        const tick = (timestamp) => {
+          frameIndex += 1;
+          const frameNow = Number.isFinite(Number(timestamp))
+            ? Number(timestamp)
+            : startedAt + frameIndex * 16.7;
+          const progress = Math.min(1, Math.max(0, (frameNow - startedAt) / customDurationMs));
+          const nextY = startY + deltaY * ease(progress);
+          window.scrollTo({ top: Math.round(nextY), behavior: "auto" });
+          if (progress >= 1 || Math.abs(window.scrollY - targetY) < 1) {
+            window.scrollTo({ top: targetY, behavior: "auto" });
+            resolve();
+            return;
+          }
+          window.requestAnimationFrame(tick);
+        };
+        window.requestAnimationFrame(tick);
+        return;
+      }
+
+      const startedAt = performanceNowMs();
       window.scrollTo({ top: targetY, behavior: scrollBehavior });
 
       if (scrollBehavior === "auto") {
@@ -2720,6 +2767,27 @@ export function createFrontendToursController(ctx) {
       };
       window.requestAnimationFrame(tick);
     });
+  }
+
+  function tourDetailsButtonIsAtViewportBottom(button) {
+    if (!(button instanceof HTMLElement)) return false;
+    const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+    if (!viewportHeight) return false;
+    const rect = button.getBoundingClientRect();
+    return rect.bottom >= viewportHeight - TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_THRESHOLD_PX;
+  }
+
+  function revealTourDetailsTopAfterBottomButtonClick() {
+    const scroll = () => {
+      scrollWindowToY(window.scrollY + TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_PX, "smooth", {
+        durationMs: TOUR_DETAILS_BOTTOM_BUTTON_REVEAL_SCROLL_MS
+      });
+    };
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(scroll);
+      return;
+    }
+    scroll();
   }
 
   function scrollTourCardFullyVisible(tripId, { behavior = "smooth" } = {}) {

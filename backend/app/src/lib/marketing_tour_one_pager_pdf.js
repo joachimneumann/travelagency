@@ -43,7 +43,10 @@ const PDF_PIN_IMAGE_WIDTH = 100;
 const PDF_PIN_IMAGE_HEIGHT = 135;
 const BODY_IMAGE_LIMIT = 4;
 const TRIP_LABEL_Y = 154;
-const BODY_IMAGE_RENDER_FRAME = Object.freeze({ width: 248, height: 174 });
+const BODY_IMAGE_SIZE_SCALE = 1.1;
+const BODY_IMAGE_RENDER_FRAME = Object.freeze({ width: 273, height: 191 });
+const BODY_IMAGE_MIN_WIDTH = 114.4 * BODY_IMAGE_SIZE_SCALE;
+const BODY_IMAGE_MIN_HEIGHT = 88.4 * BODY_IMAGE_SIZE_SCALE;
 const PHOTO_LABEL_BACKDROP_COLOR = "#000000";
 const PHOTO_LABEL_BACKDROP_OPACITY = 0.34;
 const PHOTO_LABEL_COLLISION_PAD = 8;
@@ -51,7 +54,7 @@ const PHOTO_LABEL_COLLISION_STEP = 22;
 const PHOTO_LABEL_PROTECTED_EXTRA_X = 18;
 const PHOTO_LABEL_PROTECTED_EXTRA_Y = 10;
 const PHOTO_LABEL_LOWER_EDGE_ALIGNMENT_THRESHOLD = 18;
-const BODY_IMAGE_COMPACT_TARGET_GAP = 14;
+const BODY_IMAGE_COMPACT_TARGET_GAP = 6;
 const BODY_IMAGE_COMPACT_HORIZONTAL_PROXIMITY = 34;
 const PHOTO_LABEL_BRIGHTNESS_SAMPLE_RATIO = 0.2;
 const PHOTO_LABEL_BRIGHTNESS_THRESHOLD = 155;
@@ -59,7 +62,7 @@ const BODY_IMAGE_LAYOUT_BOUNDS = Object.freeze({
   minX: 302,
   minY: 246,
   maxX: 570,
-  maxY: 626
+  maxY: 662
 });
 const PDF_FONT_REGULAR_CANDIDATES = Object.freeze([
   "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
@@ -967,22 +970,22 @@ function resolveBodyImageCollageTitleCollisions(items) {
 function bodyImageBaseLayouts(count) {
   const layoutsByCount = {
     1: [
-      { x: 326, y: 362, width: 224, height: 146, angle: 1.2 }
+      { x: 326, y: 420, width: 224, height: 146, angle: 1.2 }
     ],
     2: [
-      { x: 330, y: 292, width: 212, height: 136, angle: -1.2 },
-      { x: 322, y: 466, width: 216, height: 138, angle: 1.4 }
+      { x: 330, y: 350, width: 212, height: 136, angle: -1.2 },
+      { x: 322, y: 518, width: 216, height: 138, angle: 1.4 }
     ],
     3: [
-      { x: 336, y: 268, width: 210, height: 132, angle: -1 },
-      { x: 306, y: 432, width: 176, height: 110, angle: 1.4 },
-      { x: 416, y: 502, width: 136, height: 98, angle: -1.2 }
+      { x: 336, y: 324, width: 210, height: 132, angle: -1 },
+      { x: 306, y: 478, width: 176, height: 110, angle: 1.4 },
+      { x: 416, y: 556, width: 136, height: 98, angle: -1.2 }
     ],
     4: [
-      { x: 326, y: 256, width: 220, height: 136, angle: -1.2 },
-      { x: 412, y: 398, width: 142, height: 98, angle: 1.1 },
-      { x: 304, y: 510, width: 176, height: 108, angle: -1.1 },
-      { x: 476, y: 512, width: 82, height: 110, angle: 1.3 }
+      { x: 326, y: 314, width: 220, height: 136, angle: -1.2 },
+      { x: 412, y: 444, width: 142, height: 98, angle: 1.1 },
+      { x: 304, y: 554, width: 176, height: 108, angle: -1.1 },
+      { x: 476, y: 562, width: 82, height: 110, angle: 1.3 }
     ]
   };
   return layoutsByCount[clampNumber(count, 1, BODY_IMAGE_LIMIT)] || [];
@@ -1010,12 +1013,14 @@ function createBodyImageLayouts(tour, frameImages) {
   const seed = createBodyImageLayoutSeed(tour, bodyFrames);
   const layouts = bodyFrames.map((frame, index) => {
     const base = baseLayouts[index];
+    const scaledBaseWidth = base.width * BODY_IMAGE_SIZE_SCALE;
+    const scaledBaseHeight = base.height * BODY_IMAGE_SIZE_SCALE;
     const scale = deterministicRange(seed, `scale:${index}`, 0.96, 1.04);
     const ratioScale = deterministicRange(seed, `ratio:${index}`, 0.96, 1.04);
-    const width = clampNumber(base.width * scale, 114.4, BODY_IMAGE_RENDER_FRAME.width);
-    const height = clampNumber(base.height * scale * ratioScale, 88.4, BODY_IMAGE_RENDER_FRAME.height);
+    const width = clampNumber(scaledBaseWidth * scale, BODY_IMAGE_MIN_WIDTH, BODY_IMAGE_RENDER_FRAME.width);
+    const height = clampNumber(scaledBaseHeight * scale * ratioScale, BODY_IMAGE_MIN_HEIGHT, BODY_IMAGE_RENDER_FRAME.height);
     const x = clampNumber(
-      base.x + deterministicRange(seed, `x:${index}`, -6, 6),
+      base.x + (base.width - width) / 2 + deterministicRange(seed, `x:${index}`, -6, 6),
       BODY_IMAGE_LAYOUT_BOUNDS.minX,
       BODY_IMAGE_LAYOUT_BOUNDS.maxX - width
     );
@@ -1136,8 +1141,36 @@ function durationParts(days, lang) {
   };
 }
 
+function onePagerTripEdgeServiceKeys(days) {
+  const tripDays = safeArray(days);
+  const keys = new Set();
+  if (!tripDays.length) return keys;
+  const firstDayServices = safeArray(tripDays[0]?.services);
+  if (firstDayServices.length) keys.add("0:0");
+  const lastDayIndex = tripDays.length - 1;
+  const lastDayServices = safeArray(tripDays[lastDayIndex]?.services);
+  if (lastDayServices.length) keys.add(`${lastDayIndex}:${lastDayServices.length - 1}`);
+  return keys;
+}
+
+function uniqueBodyImageEntryCount(entries) {
+  return new Set(
+    safeArray(entries)
+      .map((entry) => textOrNull(entry?.storagePath || entry?.storage_path))
+      .filter(Boolean)
+  ).size;
+}
+
+function filterAutomaticOnePagerImageCandidates(entries) {
+  const sourceEntries = safeArray(entries);
+  if (uniqueBodyImageEntryCount(sourceEntries) <= 5) return sourceEntries;
+  return sourceEntries.filter((entry) => entry?.skipAutomaticOnePagerSelection !== true);
+}
+
 function collectTourImages(tour, lang) {
   const entries = [];
+  const days = safeArray(tour?.travel_plan?.days);
+  const edgeServiceKeys = onePagerTripEdgeServiceKeys(days);
   const webImageIds = (Array.isArray(tour?.travel_plan?.tour_card_image_ids) ? tour.travel_plan.tour_card_image_ids : [])
     .map((value) => textOrNull(value))
     .filter(Boolean);
@@ -1147,11 +1180,12 @@ function collectTourImages(tour, lang) {
     .filter(Boolean);
   const hasSelectedOnePagerBodyImages = hasOnePagerImageIds && onePagerImageIds.length > 0;
   const selectedImageIds = hasSelectedOnePagerBodyImages ? onePagerImageIds : webImageIds;
-  const heroImageId = textOrNull(tour?.travel_plan?.one_pager_hero_image_id)
+  const explicitHeroImageId = textOrNull(tour?.travel_plan?.one_pager_hero_image_id);
+  const heroImageId = explicitHeroImageId
     || selectedImageIds[0]
     || webImageIds[0]
     || textOrNull(tour?.travel_plan?.tour_card_primary_image_id);
-  safeArray(tour?.travel_plan?.days).forEach((day, dayIndex) => {
+  days.forEach((day, dayIndex) => {
     safeArray(day?.services).forEach((service, serviceIndex) => {
       const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)
         ? service.image
@@ -1166,14 +1200,17 @@ function collectTourImages(tour, lang) {
           ? webImageIds.indexOf(imageId)
           : (image.include_in_travel_tour_card === true ? webImageIds.length : webImageIds.length + 1),
         order: dayIndex * 100 + serviceIndex,
-        label: textOrNull(service?.title) || textOrNull(service?.location) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour")
+        label: textOrNull(service?.title) || textOrNull(service?.location) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour"),
+        skipAutomaticOnePagerSelection: edgeServiceKeys.has(`${dayIndex}:${serviceIndex}`)
       });
     });
   });
 
   const seen = new Set();
+  const automaticEntries = filterAutomaticOnePagerImageCandidates(entries);
   const entriesById = new Map(entries.filter((entry) => entry.id).map((entry) => [entry.id, entry]));
-  const fallbackEntries = entries
+  const automaticEntriesById = new Map(automaticEntries.filter((entry) => entry.id).map((entry) => [entry.id, entry]));
+  const fallbackEntries = automaticEntries
     .sort((left, right) => left.priority - right.priority || left.order - right.order)
     .filter((entry) => {
       if (seen.has(entry.storagePath)) return false;
@@ -1185,8 +1222,9 @@ function collectTourImages(tour, lang) {
     if (!entry || orderedEntries.some((existing) => existing.storagePath === entry.storagePath)) return;
     orderedEntries.push(entry);
   };
-  addEntry(entriesById.get(heroImageId));
-  selectedImageIds.forEach((imageId) => addEntry(entriesById.get(imageId)));
+  addEntry((explicitHeroImageId ? entriesById : automaticEntriesById).get(heroImageId));
+  const selectedEntriesById = hasSelectedOnePagerBodyImages ? entriesById : automaticEntriesById;
+  selectedImageIds.forEach((imageId) => addEntry(selectedEntriesById.get(imageId)));
   if (!hasSelectedOnePagerBodyImages) {
     fallbackEntries.forEach(addEntry);
   }
