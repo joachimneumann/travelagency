@@ -512,8 +512,7 @@ test("static translation service exposes destination scope catalog labels as cus
       destination_scope_destinations: [
         {
           code: "VN",
-          label: "Vietnam",
-          label_i18n: { en: "Vietnam", vi: "Việt Nam" }
+          label: "Vietnam"
         }
       ],
       destination_regions: [
@@ -521,8 +520,7 @@ test("static translation service exposes destination scope catalog labels as cus
           id: "region_north",
           destination: "VN",
           code: "north",
-          name: "North",
-          name_i18n: { en: "North", vi: "Miền Bắc" }
+          name: "North"
         }
       ],
       destination_places: [
@@ -531,22 +529,10 @@ test("static translation service exposes destination scope catalog labels as cus
           destination: "VN",
           region_id: "region_north",
           code: "sapa",
-          name: "Sapa",
-          name_i18n: { en: "Sapa" }
+          name: "Sapa"
         }
       ]
     };
-    const translationMemoryStore = createTranslationMemoryStore({
-      dataPath: path.join(repoRoot, "content", "translations", "translation_memory.json"),
-      writeQueueRef: { current: Promise.resolve() },
-      nowIso: () => "2026-04-28T03:15:00.000Z"
-    });
-    await translationMemoryStore.patchManualOverrides("vi", [
-      {
-        source_text: "North",
-        manual_override: "Miền Bắc"
-      }
-    ]);
 
     const service = createStaticTranslationService({
       repoRoot,
@@ -554,7 +540,6 @@ test("static translation service exposes destination scope catalog labels as cus
       persistStore: async (nextStore) => {
         store = JSON.parse(JSON.stringify(nextStore));
       },
-      translationMemoryStore,
       nowIso: () => "2026-04-28T03:15:00.000Z"
     });
 
@@ -565,23 +550,28 @@ test("static translation service exposes destination scope catalog labels as cus
     const north = state.rows.find((row) => row.key === "region.region_north.name");
     const sapa = state.rows.find((row) => row.key === "place.place_sapa.name");
 
-    assert.equal(vietnam.cached, "Việt Nam");
-    assert.equal(vietnam.status, "content_translation");
-    assert.equal(north.override, "Miền Bắc");
-    assert.equal(north.cached, "");
-    assert.equal(north.status, "manual_override");
+    assert.equal(vietnam.cached, "");
+    assert.equal(vietnam.status, "missing");
+    assert.equal(north.override, "");
+    assert.equal(north.status, "missing");
     assert.equal(sapa.status, "missing");
 
     const saved = await service.patchOverrides("destination-scope-catalog", "vi", {
       expected_revision: state.revision,
       overrides: {
+        "region.region_north.name": "Miền Bắc",
         "place.place_sapa.name": "Sa Pa"
       }
     });
+    const savedNorth = saved.rows.find((row) => row.key === "region.region_north.name");
     const savedSapa = saved.rows.find((row) => row.key === "place.place_sapa.name");
+    assert.equal(savedNorth.override, "Miền Bắc");
     assert.equal(savedSapa.override, "Sa Pa");
     const viSection = await readTranslationSection(repoRoot, "customers/tour-destinations.vi.json");
+    assert.equal(viSection.items.find((item) => item.key === "region.region_north.name").manual_override, "Miền Bắc");
     assert.equal(viSection.items.find((item) => item.key === "place.place_sapa.name").manual_override, "Sa Pa");
+    assert.equal(Object.hasOwn(store.destination_regions[0], "name_i18n"), false);
+    assert.equal(Object.hasOwn(store.destination_places[0], "name_i18n"), false);
 
     const calls = [];
     const summary = await service.applyMissingTranslations({
@@ -705,8 +695,7 @@ test("static translation service keeps frontend UI and generated content out of 
       destination_scope_destinations: [
         {
           code: "VN",
-          label: "Vietnam",
-          label_i18n: { en: "Vietnam" }
+          label: "Vietnam"
         }
       ],
       destination_areas: [],

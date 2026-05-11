@@ -166,7 +166,6 @@ export function createStaticTranslationService({
   repoRoot,
   translationsSnapshotDir = path.join(repoRoot || "", "content", "translations"),
   readStore = null,
-  persistStore = null,
   readTours = null,
   translationMemoryStore = null,
   translateEntriesWithMeta = null,
@@ -695,29 +694,6 @@ export function createStaticTranslationService({
     );
   }
 
-  function setLocalizedTextValue(record, mapField, lang, value) {
-    if (!record || typeof record !== "object" || Array.isArray(record)) return false;
-    const normalizedLang = normalizeText(lang).toLowerCase();
-    const normalizedValue = normalizeText(value);
-    if (!normalizedLang || !normalizedValue) return false;
-    const map = normalizeLocalizedTextMap(record[mapField]);
-    if (normalizeText(map[normalizedLang]) === normalizedValue) return false;
-    map[normalizedLang] = normalizedValue;
-    record[mapField] = map;
-    return true;
-  }
-
-  function deleteLocalizedTextValue(record, mapField, lang) {
-    if (!record || typeof record !== "object" || Array.isArray(record)) return false;
-    const normalizedLang = normalizeText(lang).toLowerCase();
-    if (!normalizedLang) return false;
-    const map = normalizeLocalizedTextMap(record[mapField]);
-    if (!Object.prototype.hasOwnProperty.call(map, normalizedLang)) return false;
-    delete map[normalizedLang];
-    record[mapField] = map;
-    return true;
-  }
-
   function destinationRecordSource(record, sourceField, fallback = "") {
     return normalizeText(record?.[sourceField]) || normalizeText(fallback);
   }
@@ -729,7 +705,7 @@ export function createStaticTranslationService({
         return {
           record,
           kind: "destination",
-          mapField: "label_i18n",
+          legacyMapField: "label_i18n",
           sourceField: "label",
           sourceFallback: code || "",
           key: code ? `destination.${code}.label` : ""
@@ -739,7 +715,7 @@ export function createStaticTranslationService({
       .map((record) => ({
         record,
         kind: "region",
-        mapField: "name_i18n",
+        legacyMapField: "name_i18n",
         sourceField: "name",
         sourceFallback: "",
         key: `region.${normalizeText(record?.id)}.name`
@@ -748,7 +724,7 @@ export function createStaticTranslationService({
       .map((record) => ({
         record,
         kind: "place",
-        mapField: "name_i18n",
+        legacyMapField: "name_i18n",
         sourceField: "name",
         sourceFallback: "",
         key: `place.${normalizeText(record?.id)}.name`
@@ -849,60 +825,31 @@ export function createStaticTranslationService({
     return readStore();
   }
 
-  async function readTranslationMemoryOrEmpty() {
-    if (!translationMemoryStore || typeof translationMemoryStore.readTranslationMemory !== "function") {
-      return {
-        items: {},
-        revision: ""
-      };
-    }
-    return translationMemoryStore.readTranslationMemory();
-  }
-
-  function destinationCatalogStateRevision(rows, memoryRevision) {
-    return sha256(JSON.stringify({
-      memoryRevision: normalizeText(memoryRevision),
-      rows: (Array.isArray(rows) ? rows : []).map((row) => ({
-        key: row.key,
-        source: row.source,
-        cached: row.cached,
-        override: row.override,
-        updated_at: row.updated_at
-      }))
-    }));
-  }
-
   async function loadDestinationScopeCatalogState(config, language, { publishedIndex = null } = {}) {
-    const [store, memory] = await Promise.all([
-      readDestinationScopeStore(),
-      readTranslationMemoryOrEmpty()
-    ]);
+    const store = await readDestinationScopeStore();
     const legacyRows = destinationScopeCatalogRecordEntries(store)
       .map((entry) => {
         const source = destinationRecordSource(entry.record, entry.sourceField, entry.sourceFallback);
-        const map = normalizeLocalizedTextMap(entry.record[entry.mapField]);
+        const map = normalizeLocalizedTextMap(entry.record[entry.legacyMapField]);
         const directTarget = normalizeText(map[language.code]);
-        const target = memory.items?.[sourceKey(source)]?.targets?.[language.code] || {};
-        const override = normalizeText(target.manual_override);
-        const cached = override ? "" : directTarget;
         const expectedSourceHash = sourceHash(source);
-        const status = override ? "manual_override" : (cached ? "content_translation" : "missing");
+        const status = directTarget ? "content_translation" : "missing";
         return {
           key: entry.key,
           source,
-          cached,
-          override,
+          cached: directTarget,
+          override: "",
           status,
           source_hash: expectedSourceHash,
-          cached_source_hash: (cached || override) ? expectedSourceHash : "",
-          origin: override ? "manual_override" : (cached ? "content" : ""),
-          updated_at: normalizeText(target.manual_updated_at || entry.record?.updated_at),
+          cached_source_hash: directTarget ? expectedSourceHash : "",
+          origin: directTarget ? "content" : "",
+          updated_at: normalizeText(entry.record?.updated_at),
           cache_meta: {
             source_hash: expectedSourceHash,
             catalog_kind: entry.kind,
-            map_field: entry.mapField,
+            legacy_map_field: entry.legacyMapField,
             direct_target: directTarget || null,
-            manual_updated_at: normalizeText(target.manual_updated_at) || null
+            legacy_inline_target: Boolean(directTarget)
           }
         };
       })
@@ -919,7 +866,7 @@ export function createStaticTranslationService({
       language,
       source_lang: config.sourceLang,
       target_lang: language.code,
-      revision: storeState.revision || destinationCatalogStateRevision(storeState.rows, memory.revision),
+      revision: storeState.revision,
       total: storeState.rows.length,
       counts: storeState.counts,
       rows: storeState.rows
@@ -1106,72 +1053,8 @@ export function createStaticTranslationService({
     return loadTranslationMemoryState(config, language);
   }
 
-  async function persistDestinationScopeCatalogTargets(targetLang, updatesByKey, { remove = false } = {}) {
-    if (typeof persistStore !== "function") {
-      throw apiError(
-        500,
-        "STATIC_TRANSLATION_DESTINATION_CATALOG_UNAVAILABLE",
-        "Destination-scope catalog storage is not writable."
-      );
-    }
-    const store = cloneJson(await readDestinationScopeStore());
-    const recordsByKey = new Map(destinationScopeCatalogRecordEntries(store).map((entry) => [entry.key, entry]));
-    let changed = false;
-    for (const [key, value] of Object.entries(updatesByKey || {})) {
-      const entry = recordsByKey.get(key);
-      if (!entry) continue;
-      const recordChanged = remove
-        ? deleteLocalizedTextValue(entry.record, entry.mapField, targetLang)
-        : setLocalizedTextValue(entry.record, entry.mapField, targetLang, value);
-      if (recordChanged) {
-        entry.record.updated_at = normalizeText(entry.record.updated_at) || nowIso();
-      }
-      changed = recordChanged || changed;
-    }
-    if (changed) await persistStore(store);
-    return changed;
-  }
-
   async function patchDestinationScopeCatalogOverrides(config, language, payload = {}) {
-    const expectedRevision = normalizeText(payload?.expected_revision);
-    const updates = payload?.overrides && typeof payload.overrides === "object" && !Array.isArray(payload.overrides)
-      ? payload.overrides
-      : null;
-    if (!updates) {
-      throw apiError(400, "STATIC_TRANSLATION_INVALID_OVERRIDES", "overrides must be an object keyed by translation id.");
-    }
-
-    const currentState = await loadDestinationScopeCatalogState(config, language);
-    if (expectedRevision && expectedRevision !== currentState.revision) {
-      throw apiError(409, "STATIC_TRANSLATION_REVISION_MISMATCH", "Translation overrides changed. Refresh and retry.");
-    }
-    const rowsByKey = new Map(currentState.rows.map((row) => [row.key, row]));
-    const unknownKeys = Object.keys(updates).filter((key) => !rowsByKey.has(key));
-    if (unknownKeys.length) {
-      throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${unknownKeys[0]}`);
-    }
-
-    if (!translationMemoryStore || typeof translationMemoryStore.patchManualOverrides !== "function") {
-      throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Translation memory storage is not configured.");
-    }
-
-    const memoryUpdates = [];
-    const catalogUpdates = {};
-    for (const [key, rawValue] of Object.entries(updates)) {
-      const row = rowsByKey.get(key);
-      const value = normalizeText(rawValue);
-      memoryUpdates.push({
-        source_text: row.source,
-        manual_override: value
-      });
-      if (value) catalogUpdates[key] = value;
-    }
-
-    await translationMemoryStore.patchManualOverrides(language.code, memoryUpdates);
-    if (Object.keys(catalogUpdates).length) {
-      await persistDestinationScopeCatalogTargets(language.code, catalogUpdates);
-    }
-    return loadDestinationScopeCatalogState(config, language);
+    return patchTranslationStoreOverrides(config, language, payload);
   }
 
   async function deleteTranslationMemoryCache(config, language, key, payload = {}) {
@@ -1194,19 +1077,7 @@ export function createStaticTranslationService({
   }
 
   async function deleteDestinationScopeCatalogCache(config, language, key, payload = {}) {
-    const currentState = await loadDestinationScopeCatalogState(config, language);
-    const expectedRevision = normalizeText(payload?.expected_revision);
-    if (expectedRevision && expectedRevision !== currentState.revision) {
-      throw apiError(409, "STATIC_TRANSLATION_REVISION_MISMATCH", "Translation memory changed. Refresh and retry.");
-    }
-    const row = currentState.rows.find((entry) => entry.key === key);
-    if (!row) {
-      throw apiError(400, "STATIC_TRANSLATION_UNKNOWN_KEY", `Unknown translation key: ${key}`);
-    }
-    if (row.cached) {
-      await persistDestinationScopeCatalogTargets(language.code, { [row.key]: "" }, { remove: true });
-    }
-    return loadDestinationScopeCatalogState(config, language);
+    return deleteTranslationStoreCache(config, language, key, payload);
   }
 
   async function deleteStaticCache(config, language, key) {

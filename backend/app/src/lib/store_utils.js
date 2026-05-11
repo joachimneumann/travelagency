@@ -3,7 +3,6 @@ import path from "node:path";
 import { normalizeBookingPdfPersonalization } from "./booking_pdf_personalization.js";
 import { normalizeText } from "./text.js";
 import { normalizeStoredBookingRecord } from "./booking_persons.js";
-import { CUSTOMER_CONTENT_LANGUAGE_CODES } from "../../../../shared/generated/language_catalog.js";
 import {
   DESTINATION_COUNTRY_CODES,
   DESTINATION_COUNTRY_TO_TOUR_DESTINATION_CODE
@@ -23,11 +22,6 @@ const DEFAULT_DESTINATION_SCOPE_DESTINATIONS = Object.freeze(
     return Object.freeze({
       code,
       label: getTourDestinationLabel(destinationCode, "en"),
-      label_i18n: Object.freeze(
-        Object.fromEntries(
-          CUSTOMER_CONTENT_LANGUAGE_CODES.map((lang) => [lang, getTourDestinationLabel(destinationCode, lang)])
-        )
-      ),
       sort_order: index,
       is_active: true
     });

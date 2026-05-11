@@ -982,7 +982,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         fields: [
     schemaField({"name":"destination","required":true,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_2),
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_81),
     schemaField({"name":"code","required":false,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -1018,7 +1017,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"destination","required":true,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_2),
     schemaField({"name":"region_id","required":false,"wireName":"region_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_81),
     schemaField({"name":"code","required":false,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"actor","required":false,"wireName":"actor"}, SHARED_FIELD_DEFS.FIELD_1)
         ]
@@ -1726,7 +1724,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"destination","required":true,"wireName":"destination"}, SHARED_FIELD_DEFS.FIELD_2),
     schemaField({"name":"code","required":true,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_81),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"is_active","required":true,"wireName":"is_active"}, SHARED_FIELD_DEFS.FIELD_9),
@@ -1751,7 +1748,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"region_id","required":false,"wireName":"region_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"code","required":true,"wireName":"code"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"name","required":true,"wireName":"name"}, SHARED_FIELD_DEFS.FIELD_1),
-    schemaField({"name":"name_i18n","required":false,"wireName":"name_i18n"}, SHARED_FIELD_DEFS.FIELD_81),
     schemaField({"name":"label","required":true,"wireName":"label"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"sort_order","required":true,"wireName":"sort_order"}, SHARED_FIELD_DEFS.FIELD_19),
     schemaField({"name":"is_active","required":true,"wireName":"is_active"}, SHARED_FIELD_DEFS.FIELD_9),

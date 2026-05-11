@@ -30,9 +30,7 @@ export function createDestinationScopeHandlers(deps) {
     repoRoot,
     execFile,
     toursDir,
-    tourDestinationsPath,
-    translateEntriesWithMeta,
-    readTranslationRules
+    tourDestinationsPath
   } = deps;
 
   const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
@@ -86,17 +84,8 @@ export function createDestinationScopeHandlers(deps) {
     }
   }
 
-  async function ensureCatalogI18n(store, reason) {
-    const translationRulesPayload = typeof readTranslationRules === "function"
-      ? await readTranslationRules()
-      : null;
-    const translationRules = Array.isArray(translationRulesPayload?.items) ? translationRulesPayload.items : [];
-    const result = await ensureDestinationScopeCatalogI18n(store, {
-      translateEntriesWithMeta,
-      translationRules,
-      nowIso,
-      traceId: reason
-    });
+  async function ensureCatalogI18n(store) {
+    const result = await ensureDestinationScopeCatalogI18n(store);
     return result;
   }
 
@@ -211,7 +200,7 @@ export function createDestinationScopeHandlers(deps) {
       return;
     }
     store.destination_regions = result.store.destination_regions;
-    const i18nResult = await ensureCatalogI18n(store, "destination_scope_region_create");
+    const i18nResult = await ensureCatalogI18n(store);
     Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
@@ -257,7 +246,7 @@ export function createDestinationScopeHandlers(deps) {
       return;
     }
     store.destination_scope_destinations = result.store.destination_scope_destinations;
-    const i18nResult = await ensureCatalogI18n(store, "destination_scope_destination_create");
+    const i18nResult = await ensureCatalogI18n(store);
     Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
@@ -302,7 +291,7 @@ export function createDestinationScopeHandlers(deps) {
       return;
     }
     store.destination_places = result.store.destination_places;
-    const i18nResult = await ensureCatalogI18n(store, "destination_scope_place_create");
+    const i18nResult = await ensureCatalogI18n(store);
     Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });

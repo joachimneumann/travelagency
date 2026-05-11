@@ -7,25 +7,13 @@ const TOUR_CUSTOMIZE_DELETE_ANIMATION_MS = 220;
 const TOUR_CUSTOMIZE_TIMELINE_DELETE_DISTANCE_PX = 50;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER = 0;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MAX_CENTER = 100;
-const TOUR_CUSTOMIZE_ROUTE_BOUNDS = Object.freeze({
-  north: 24.3,
-  south: 7.49,
-  west: 101.1,
-  east: 110
+const TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS = Object.freeze({
+  north: 28,
+  south: -11,
+  west: 92,
+  east: 142
 });
 const TOUR_CUSTOMIZE_MAP_ZOOM_FACTOR = 3;
-
-const TOUR_CUSTOMIZE_ROUTE_POINTS = Object.freeze([
-  { id: "hanoi", label: "Hanoi", lat: 21.0278, lng: 105.8342, aliases: ["hanoi", "ha noi", "hà nội", "hà nội", "noi bai"] },
-  { id: "halong", label: "Halong Bay", lat: 20.9101, lng: 107.1839, aliases: ["halong", "ha long", "hạ long", "hạ long"] },
-  { id: "ninh-binh", label: "Ninh Binh", lat: 20.2506, lng: 105.9745, aliases: ["ninh binh", "ninh bình", "trang an", "tràng an", "hang mua", "hoa lu", "bai dinh"] },
-  { id: "tam-dao", label: "Tam Dao", lat: 21.4569, lng: 105.6440, aliases: ["tam dao", "tam đảo"] },
-  { id: "sapa", label: "Sapa", lat: 22.3364, lng: 103.8438, aliases: ["sapa", "sa pa", "fansipan", "o quy ho", "muong hoa"] },
-  { id: "hue", label: "Hue", lat: 16.4637, lng: 107.5909, aliases: ["hue", "huế", "thien mu", "thiên mụ", "imperial citadel", "lang co", "lăng cô"] },
-  { id: "danang", label: "Da Nang", lat: 16.0544, lng: 108.2022, aliases: ["da nang", "danang", "đà nẵng", "marble mountains", "son tra", "dragon bridge", "ba na", "bà nà", "bana"] },
-  { id: "hoi-an", label: "Hoi An", lat: 15.8801, lng: 108.3380, aliases: ["hoi an", "hội an", "họi an", "coconut forest"] },
-  { id: "phu-quoc", label: "Phu Quoc", lat: 10.2899, lng: 103.9840, aliases: ["phu quoc", "phú quốc", "phú quốc", "sao beach", "hon thom", "hòn thơm", "grand world", "sunset town"] }
-]);
 
 function normalizeText(value) {
   return String(value ?? "").trim();
@@ -55,12 +43,15 @@ function storageKey(tourId) {
   return `${TOUR_CUSTOMIZE_STORAGE_PREFIX}${tourId}`;
 }
 
-function projectLatLng(routePoint) {
+function projectLatLng(routePoint, bounds = TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS) {
   const lat = Number(routePoint?.lat);
   const lng = Number(routePoint?.lng);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
-  const x = ((lng - TOUR_CUSTOMIZE_ROUTE_BOUNDS.west) / (TOUR_CUSTOMIZE_ROUTE_BOUNDS.east - TOUR_CUSTOMIZE_ROUTE_BOUNDS.west)) * 100;
-  const y = ((TOUR_CUSTOMIZE_ROUTE_BOUNDS.north - lat) / (TOUR_CUSTOMIZE_ROUTE_BOUNDS.north - TOUR_CUSTOMIZE_ROUTE_BOUNDS.south)) * 100;
+  const activeBounds = bounds && typeof bounds === "object" ? bounds : TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS;
+  const width = Math.max(0.01, Number(activeBounds.east) - Number(activeBounds.west));
+  const height = Math.max(0.01, Number(activeBounds.north) - Number(activeBounds.south));
+  const x = ((lng - Number(activeBounds.west)) / width) * 100;
+  const y = ((Number(activeBounds.north) - lat) / height) * 100;
   return {
     x: Math.min(96, Math.max(4, x)),
     y: Math.min(96, Math.max(4, y))
@@ -109,10 +100,48 @@ function locationCatalogById(catalog) {
     return [id, {
       id,
       label: normalizeText(location?.label || location?.name || location?.code || id),
+      aliases: [
+        normalizeText(location?.label),
+        normalizeText(location?.name),
+        normalizeText(location?.code),
+        id
+      ].filter(Boolean),
       latitude: normalizeCoordinate(location?.latitude),
       longitude: normalizeCoordinate(location?.longitude)
     }];
   }).filter(([id]) => id));
+}
+
+function locationCatalogRouteBounds(catalog) {
+  const locations = Array.from(locationCatalogById(catalog).values())
+    .filter((location) => Number.isFinite(location.latitude) && Number.isFinite(location.longitude));
+  if (!locations.length) return TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS;
+  const latitudes = locations.map((location) => location.latitude);
+  const longitudes = locations.map((location) => location.longitude);
+  const north = Math.max(...latitudes);
+  const south = Math.min(...latitudes);
+  const east = Math.max(...longitudes);
+  const west = Math.min(...longitudes);
+  const latMargin = Math.max(0.5, (north - south) * 0.16);
+  const lngMargin = Math.max(0.5, (east - west) * 0.16);
+  return {
+    north: north + latMargin,
+    south: south - latMargin,
+    east: east + lngMargin,
+    west: west - lngMargin
+  };
+}
+
+function locationCatalogRoutePoints(catalog) {
+  return Array.from(locationCatalogById(catalog).values())
+    .filter((location) => Number.isFinite(location.latitude) && Number.isFinite(location.longitude))
+    .map((location) => ({
+      id: location.id,
+      label: location.label,
+      lat: location.latitude,
+      lng: location.longitude,
+      aliases: location.aliases
+    }));
 }
 
 function daySearchText(day, lang) {
@@ -158,7 +187,7 @@ function resolveRoutePoints(day, lang, catalog = null, { allowTextFallback = tru
   if (!allowTextFallback) return [];
   const haystack = normalizeSearchText(daySearchText(day, lang));
   let match = null;
-  for (const point of TOUR_CUSTOMIZE_ROUTE_POINTS) {
+  for (const point of locationCatalogRoutePoints(catalog)) {
     for (const alias of point.aliases) {
       const normalizedAlias = normalizeSearchText(alias);
       const index = normalizedAlias ? haystack.lastIndexOf(normalizedAlias) : -1;
@@ -204,10 +233,11 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
   const sourceDayId = normalizeText(day?.id);
   const title = resolveLocalizedField(day, "title", lang);
   const thumbnailUrl = firstCustomerImage(day);
+  const routeBounds = locationCatalogRouteBounds(destinationCatalog);
   const routePoints = resolveRoutePoints(day, lang, destinationCatalog, { allowTextFallback: false })
     .map((routePoint) => ({
       routePoint,
-      mapPoint: projectLatLng(routePoint),
+      mapPoint: projectLatLng(routePoint, routeBounds),
       label: normalizeText(routePoint?.label)
     }))
     .filter((entry) => entry.mapPoint);

@@ -148,7 +148,7 @@ const GEOCODE_ALIASES = new Map([
   ["vinwonders", ["VinWonders Phu Quoc"]],
 ]);
 
-const AREA_BY_LATITUDE = [
+const REGION_BY_LATITUDE = [
   { code: "north", minLatitude: 18 },
   { code: "central", minLatitude: 13 },
   { code: "south", minLatitude: -Infinity },
@@ -290,14 +290,14 @@ function isVietnameseCoordinate(latitude, longitude) {
   return latitude >= 8 && latitude <= 24 && longitude >= 102 && longitude <= 110.5;
 }
 
-function areaForCoordinate(catalogIndex, latitude) {
-  for (const rule of AREA_BY_LATITUDE) {
+function regionForCoordinate(catalogIndex, latitude) {
+  for (const rule of REGION_BY_LATITUDE) {
     if (latitude >= rule.minLatitude) {
-      const area = catalogIndex.areaByCode.get(rule.code);
-      if (area) return area;
+      const region = catalogIndex.regionByCode.get(rule.code);
+      if (region) return region;
     }
   }
-  return catalogIndex.areas[0] || null;
+  return catalogIndex.regions[0] || null;
 }
 
 function addAlias(aliasMap, alias, place) {
@@ -310,9 +310,11 @@ function addAlias(aliasMap, alias, place) {
 }
 
 function buildCatalogIndex(catalog) {
-  const areas = Array.isArray(catalog.destination_areas) ? catalog.destination_areas : [];
+  const regions = Array.isArray(catalog.destination_regions)
+    ? catalog.destination_regions
+    : (Array.isArray(catalog.destination_areas) ? catalog.destination_areas : []);
   const places = Array.isArray(catalog.destination_places) ? catalog.destination_places : [];
-  const areaByCode = new Map(areas.map((area) => [normalizeText(area.code), area]));
+  const regionByCode = new Map(regions.map((region) => [normalizeText(region.code), region]));
   const placeById = new Map(places.map((place) => [String(place.id), place]));
   const placeByCode = new Map(places.map((place) => [normalizeText(place.code), place]));
   const placeByName = new Map();
@@ -323,9 +325,6 @@ function buildCatalogIndex(catalog) {
     addAlias(aliasMap, place.code, place);
     if (place.code) addAlias(aliasMap, String(place.code).replace(/[-_]+/g, " "), place);
 
-    const names = Object.values(place.name_i18n || {});
-    for (const name of names) addAlias(aliasMap, name, place);
-
     const normalizedName = normalizeText(place.name);
     if (normalizedName) placeByName.set(normalizedName, place);
   }
@@ -335,7 +334,7 @@ function buildCatalogIndex(catalog) {
     if (canonicalPlace) aliasMap.set(normalizeText(alias), canonicalPlace);
   }
 
-  return { areas, areaByCode, places, placeById, placeByCode, placeByName, aliasMap };
+  return { regions, regionByCode, places, placeById, placeByCode, placeByName, aliasMap };
 }
 
 function findExistingPlaceMentions(title, catalogIndex) {
@@ -595,8 +594,8 @@ function makeNewPlace(candidate, geocodeValue, catalogIndex, options, now) {
   const result = geocodeValue.result;
   const latitude = roundCoord(result.lat);
   const longitude = roundCoord(result.lon);
-  const area = areaForCoordinate(catalogIndex, latitude);
-  if (!area) throw new Error(`No destination area is available for ${candidate}`);
+  const region = regionForCoordinate(catalogIndex, latitude);
+  if (!region) throw new Error(`No destination region is available for ${candidate}`);
 
   const name = titleCase(candidate);
   const existingByName = catalogIndex.placeByName.get(normalizeText(name));
@@ -608,10 +607,10 @@ function makeNewPlace(candidate, geocodeValue, catalogIndex, options, now) {
 
   return {
     id: makePlaceId(name, catalogIndex),
-    area_id: area.id,
+    destination: normalizeText(region.destination) || normalizeText(options.destination) || DEFAULT_DESTINATION,
+    region_id: region.id,
     code,
     name,
-    name_i18n: {},
     latitude,
     longitude,
     sort_order: 100,
@@ -790,7 +789,7 @@ async function main() {
           report.created_places.push({
             id: place.id,
             name: place.name,
-            area_id: place.area_id,
+            region_id: place.region_id,
             latitude: place.latitude,
             longitude: place.longitude,
           });

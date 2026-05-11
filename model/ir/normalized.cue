@@ -1204,12 +1204,11 @@ IR: {
 			sourceType: "api.#DestinationRegion"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
-				{name: "code", kind: "scalar", typeName: "string", required: true},
-				{name: "name", kind: "scalar", typeName: "string", required: true},
-				{name: "name_i18n", kind: "map", typeName: "string", required: false},
-				{name: "label", kind: "scalar", typeName: "string", required: true},
-				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+					{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+					{name: "code", kind: "scalar", typeName: "string", required: true},
+					{name: "name", kind: "scalar", typeName: "string", required: true},
+					{name: "label", kind: "scalar", typeName: "string", required: true},
+					{name: "sort_order", kind: "scalar", typeName: "int", required: true},
 				{name: "is_active", kind: "scalar", typeName: "bool", required: true},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -1223,12 +1222,11 @@ IR: {
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
-				{name: "region_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "code", kind: "scalar", typeName: "string", required: true},
-				{name: "name", kind: "scalar", typeName: "string", required: true},
-				{name: "name_i18n", kind: "map", typeName: "string", required: false},
-				{name: "label", kind: "scalar", typeName: "string", required: true},
-				{name: "sort_order", kind: "scalar", typeName: "int", required: true},
+					{name: "region_id", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "code", kind: "scalar", typeName: "string", required: true},
+					{name: "name", kind: "scalar", typeName: "string", required: true},
+					{name: "label", kind: "scalar", typeName: "string", required: true},
+					{name: "sort_order", kind: "scalar", typeName: "int", required: true},
 				{name: "is_active", kind: "scalar", typeName: "bool", required: true},
 				{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
 				{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
@@ -1913,11 +1911,10 @@ IR: {
 			module:     "api"
 			sourceType: "api.#DestinationRegionCreateRequest"
 			fields: [
-				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
-				{name: "name", kind: "scalar", typeName: "string", required: true},
-				{name: "name_i18n", kind: "map", typeName: "string", required: false},
-				{name: "code", kind: "scalar", typeName: "string", required: false},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
+					{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+					{name: "name", kind: "scalar", typeName: "string", required: true},
+					{name: "code", kind: "scalar", typeName: "string", required: false},
+					{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{
@@ -1926,12 +1923,11 @@ IR: {
 			module:     "api"
 			sourceType: "api.#DestinationPlaceCreateRequest"
 			fields: [
-				{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
-				{name: "region_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "name", kind: "scalar", typeName: "string", required: true},
-				{name: "name_i18n", kind: "map", typeName: "string", required: false},
-				{name: "code", kind: "scalar", typeName: "string", required: false},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
+					{name: "destination", kind: "enum", typeName: "CountryCode", required: true},
+					{name: "region_id", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "name", kind: "scalar", typeName: "string", required: true},
+					{name: "code", kind: "scalar", typeName: "string", required: false},
+					{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
 		{

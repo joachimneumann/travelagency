@@ -99,12 +99,12 @@
           <section class="backend-section settings-location-manager" id="locationManagerPanel" hidden>
             <div class="settings-destination-publication__head">
               <div>
-                <h2 class="section-title u-title-medium">Locations and website destinations</h2>
-                <p class="micro">Manage the country, region, and place hierarchy used by tour filters and itinerary maps. Website destinations for the public title are derived from the countries in tours visible on the website.</p>
+                <h2 class="section-title u-title-medium" data-i18n-id="backend.settings.locations_heading">Locations and website destinations</h2>
+                <p class="micro" data-i18n-id="backend.settings.locations_intro">Manage the country, region, and place hierarchy used by tour filters and itinerary maps. Website destinations for the public title are derived from the countries in tours visible on the website.</p>
               </div>
               <div class="settings-destination-publication__actions">
                 <p class="micro settings-destination-publication__status" id="locationManagerStatus"></p>
-                <button class="btn btn-primary" id="locationManagerSaveBtn" type="button" disabled>Save</button>
+                <button class="btn btn-primary" id="locationManagerSaveBtn" type="button" disabled data-i18n-id="common.save">Save</button>
               </div>
             </div>
             <div class="settings-location-manager__grid" id="locationManagerList"></div>
@@ -246,7 +246,7 @@
     <div class="booking-page-overlay" id="settingsLocationOverlay" hidden aria-hidden="true">
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
-        <span class="booking-page-overlay__text" id="settingsLocationOverlayText">Updating locations. Please wait.</span>
+        <span class="booking-page-overlay__text" id="settingsLocationOverlayText" data-i18n-id="backend.settings.locations.updating_overlay">Updating locations. Please wait.</span>
       </div>
     </div>
 

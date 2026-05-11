@@ -1,5 +1,6 @@
 import {
   bookingTravelPlanAttachmentDeleteRequest,
+  bookingTravelPlanAttachmentPdfRequest,
   bookingTravelPlanAttachmentUploadRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import { bookingT } from "./i18n.js";
@@ -49,7 +50,13 @@ export function createBookingTravelPlanAttachmentsModule(deps) {
     const bookingId = String(state.booking?.id || "").trim();
     const normalizedAttachmentId = String(attachmentId || "").trim();
     if (!bookingId || !normalizedAttachmentId) return "";
-    return `${apiOrigin}/api/v1/bookings/${encodeURIComponent(bookingId)}/travel-plan/attachments/${encodeURIComponent(normalizedAttachmentId)}/pdf`;
+    return bookingTravelPlanAttachmentPdfRequest({
+      baseURL: apiOrigin,
+      params: {
+        booking_id: bookingId,
+        attachment_id: normalizedAttachmentId
+      }
+    }).url;
   }
 
   function renderTravelPlanAttachments(plan) {

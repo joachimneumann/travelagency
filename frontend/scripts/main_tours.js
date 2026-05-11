@@ -1693,7 +1693,7 @@ export function createFrontendToursController(ctx) {
     const overviewLabel = frontendT("tour.plan.pdf_overview_one_pager", "Overview (one-pager)");
     const travelPlanLabel = frontendT("tour.plan.pdf_day_by_day_travel_plan", "Day-by-Day Travel Plan");
     const overviewDescription = frontendT("tour.plan.pdf_overview_description", "A PDF that gives you an overview of this tour");
-    const travelPlanDescription = frontendT("tour.plan.pdf_day_by_day_description", "A PDF that shows you all activies of this tour");
+    const travelPlanDescription = frontendT("tour.plan.pdf_day_by_day_description", "A PDF that shows you all activities of this tour");
     return `
       <section class="tour-plan-pdf" aria-label="${escapeAttr(pdfAriaLabel)}">
         <div class="tour-plan-pdf__actions">

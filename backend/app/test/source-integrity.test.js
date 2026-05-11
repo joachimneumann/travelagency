@@ -638,8 +638,8 @@ test("booking person modal exposes traveler-details link actions and the public 
   const siteStyles = await readFile(siteStylesPath, "utf8");
   assert.match(
     travelerDetailsScript,
-    /buildEndpointPath\(pathname\) \{\s+return `\/public\/v1\/bookings\/\$\{encodeURIComponent\(state\.bookingId\)\}\/persons\/\$\{encodeURIComponent\(state\.personId\)\}\$\{pathname\}`;/,
-    "Public traveler-details page should target the person-specific public traveler-details endpoint"
+    /publicTravelerDetailsAccessRequest[\s\S]*publicTravelerDetailsUpdateRequest[\s\S]*publicTravelerDocumentPictureUploadRequest[\s\S]*function buildTravelerDetailsRequest\(requestFactory, \{ params = \{\}, body \} = \{\}\)[\s\S]*booking_id: state\.bookingId[\s\S]*person_id: state\.personId[\s\S]*token: state\.token/,
+    "Public traveler-details page should use the generated person-specific public traveler-details requests"
   );
   assert.match(
     travelerDetailsScript,
@@ -698,8 +698,8 @@ test("booking person modal exposes traveler-details link actions and the public 
   );
   assert.match(
     travelerDetailsScript,
-    /requestJson\(`\/documents\/\$\{encodeURIComponent\(documentType\)\}\/picture`, \{[\s\S]*method: "POST"[\s\S]*data_base64: await fileToBase64\(file\)/,
-    "Public traveler-details page should upload the active passport or ID image through the public document-picture endpoint"
+    /publicTravelerDocumentPictureUploadRequest[\s\S]*buildTravelerDetailsRequest\(publicTravelerDocumentPictureUploadRequest,[\s\S]*document_type: documentType[\s\S]*data_base64: await fileToBase64\(file\)[\s\S]*requestJson\(request\)/,
+    "Public traveler-details page should upload the active passport or ID image through the generated public document-picture request"
   );
   assert.match(
     travelerDetailsScript,
@@ -2260,8 +2260,8 @@ test("backend bookings page exposes an internal create-booking modal backed by a
   );
   assert.match(
     scriptSource,
-    /bookingCreateOpenBtn[\s\S]*function openCreateBookingModal\(\)[\s\S]*function createBackendBooking\(\)[\s\S]*fetchApi\("\/api\/v1\/bookings"/,
-    "booking_list.js should wire the internal create-booking modal to the protected bookings API"
+    /bookingCreateOpenBtn[\s\S]*function openCreateBookingModal\(\)[\s\S]*function createBackendBooking\(\)[\s\S]*bookingCreateRequest\(\{[\s\S]*baseURL: apiOrigin[\s\S]*fetchApi\(request\.url/,
+    "booking_list.js should wire the internal create-booking modal through the generated protected bookings API request"
   );
   assert.match(
     routesSource,
@@ -3843,13 +3843,13 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerScriptSource,
-    /const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*async function loadPublishedMarketingTourTranslations\(languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function stripPublishedMarketingTourEmbeddedTranslations\(tour\)[\s\S]*removePublishedMarketingTourOwnField\(tour, "title_i18n"\)[\s\S]*stripPublishedMarketingTourI18nFields\(tour\.travel_plan\)[\s\S]*function applyPublishedTranslationsToTravelPlan\(travelPlan, lang, translations\)[\s\S]*applyPublishedTranslationToLocalizedPair\(service, "title", "title_i18n", lang, translations\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*stripPublishedMarketingTourEmbeddedTranslations\(next\)[\s\S]*applyPublishedTranslationsToTravelPlan\(next\.travel_plan, normalizedLang, translations\)[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(options\.languages\);[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
-    "Batch one-pager PDFs should apply published marketing-tour translation snapshots before localized PDF rendering"
+    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, options\.languages\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "Batch one-pager PDFs should apply published marketing-tour translation snapshots through the shared translator before localized PDF rendering"
   );
   assert.match(
     homepageGeneratorSource,
-    /async function loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages\)[\s\S]*`marketing-tours\.\$\{lang\}\.json`[\s\S]*function stripPublishedMarketingTourEmbeddedTranslations\(tour\)[\s\S]*removePublishedMarketingTourOwnField\(tour, "title_i18n"\)[\s\S]*stripPublishedMarketingTourI18nFields\(tour\.travel_plan\)[\s\S]*function applyPublishedMarketingTourTranslations\(tour, lang, translations\)[\s\S]*stripPublishedMarketingTourEmbeddedTranslations\(next\)[\s\S]*const localizedTour = applyPublishedMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
-    "Homepage generation should strip embedded marketing-tour translations before applying published snapshots"
+    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages\);[\s\S]*const localizedTour = applyMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
+    "Homepage generation should strip embedded marketing-tour translations through the shared translator before applying published snapshots"
   );
   assert.match(
     onePagerShellSource,
@@ -4258,8 +4258,8 @@ test("settings page joins website destinations into locations while emergency no
   );
   assert.match(
     settingsSource,
-    /\/api\/v1\/settings\/observability/,
-    "Settings page should fetch the settings observability endpoint for backend activity"
+    /settingsObservabilityRequest\(\{ baseURL: apiOrigin \}\)[\s\S]*fetchApiJson\(request\.url/,
+    "Settings page should fetch backend activity through the generated settings observability request"
   );
   assert.match(
     settingsSource,
@@ -5680,7 +5680,7 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
 
   assert.match(
     mainToursSource,
-    /function renderTourPdfActions\(trip\)[\s\S]*Overview \(one-pager\)[\s\S]*Day-by-Day Travel Plan[\s\S]*A PDF that gives you an overview of this tour[\s\S]*A PDF that shows you all activies of this tour[\s\S]*data-tour-overview-pdf[\s\S]*data-tour-travel-plan-pdf/,
+    /function renderTourPdfActions\(trip\)[\s\S]*Overview \(one-pager\)[\s\S]*Day-by-Day Travel Plan[\s\S]*A PDF that gives you an overview of this tour[\s\S]*A PDF that shows you all activities of this tour[\s\S]*data-tour-overview-pdf[\s\S]*data-tour-travel-plan-pdf/,
     "Expanded public tour details should expose separate overview and day-by-day PDF buttons with descriptions below highlights"
   );
   assert.doesNotMatch(

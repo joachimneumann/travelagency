@@ -10,6 +10,7 @@ import {
   normalizeCurrencyCode as normalizeGeneratedCurrencyCode
 } from "../../Generated/Models/generated_Currency.js";
 import {
+  bookingCreateRequest,
   bookingsRequest,
   publicToursRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
@@ -309,8 +310,8 @@ async function createBackendBooking() {
   setCreateBookingStatus("Creating booking...");
 
   try {
-    const payload = await fetchApi("/api/v1/bookings", {
-      method: "POST",
+    const request = bookingCreateRequest({
+      baseURL: apiOrigin,
       body: {
         name,
         preferred_language: normalizeText(els.bookingCreateLanguageInput?.value) || "en",
@@ -322,7 +323,11 @@ async function createBackendBooking() {
         primary_contact_phone_number: normalizeText(els.bookingCreatePrimaryContactPhoneInput?.value),
         number_of_travelers: normalizeText(els.bookingCreateTravelerCountInput?.value) || null,
         actor: state.authUser?.preferred_username || state.authUser?.sub || "backend_user"
-      },
+      }
+    });
+    const payload = await fetchApi(request.url, {
+      method: request.method,
+      body: request.body,
       connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
     });
 

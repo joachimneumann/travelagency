@@ -232,7 +232,6 @@ import (
 	destination: enums.#CountryCode
 	code:        string & !=""
 	name:        string & !=""
-	name_i18n?: [string]: string
 	label:       string & !=""
 	sort_order:  >=0 & int
 	is_active:   bool
@@ -246,7 +245,6 @@ import (
 	region_id?: common.#Identifier
 	code:    string & !=""
 	name:    string & !=""
-	name_i18n?: [string]: string
 	label:       string & !=""
 	latitude?:   >=-90 & <=90 & number
 	longitude?:  >=-180 & <=180 & number

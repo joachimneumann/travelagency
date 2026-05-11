@@ -12,6 +12,10 @@ import {
 } from "../../backend/app/src/config/runtime.js";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
 import { createTravelPlanHelpers } from "../../backend/app/src/domain/travel_plan.js";
+import {
+  applyMarketingTourTranslations,
+  loadPublishedMarketingTourTranslations
+} from "../../backend/app/src/domain/marketing_tour_translations.js";
 import { createMarketingTourOnePagerPdfWriter } from "../../backend/app/src/lib/marketing_tour_one_pager_pdf.js";
 import { escapeHtml, normalizeText } from "../../backend/app/src/lib/text.js";
 
@@ -294,144 +298,6 @@ async function readTours() {
     }
   }
   return tours;
-}
-
-function translationSourceKey(sourceText) {
-  return createHash("sha256").update(normalizeText(sourceText), "utf8").digest("hex");
-}
-
-async function loadPublishedMarketingTourTranslations(languages) {
-  const mapsByLang = new Map();
-  const uniqueLanguages = Array.from(new Set(
-    (Array.isArray(languages) ? languages : [])
-      .map((lang) => normalizeLanguageCode(lang))
-      .filter((lang) => lang && lang !== "en")
-  ));
-  await Promise.all(uniqueLanguages.map(async (lang) => {
-    const snapshotPath = path.join(translationsSnapshotDir, "customers", `marketing-tours.${lang}.json`);
-    const entries = new Map();
-    try {
-      const payload = JSON.parse(await readFile(snapshotPath, "utf8"));
-      for (const item of Array.isArray(payload?.items) ? payload.items : []) {
-        const sourceText = normalizeText(item?.source_text);
-        const targetText = normalizeText(item?.target_text);
-        if (!sourceText || !targetText) continue;
-        entries.set(translationSourceKey(sourceText), targetText);
-      }
-    } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
-    }
-    mapsByLang.set(lang, entries);
-  }));
-  return mapsByLang;
-}
-
-function sourceTextFromPlainValue(value) {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? normalizeText(value.en)
-    : normalizeText(value);
-}
-
-function publishedTranslationForSource(translations, sourceText) {
-  const normalizedSource = normalizeText(sourceText);
-  if (!normalizedSource || !(translations instanceof Map)) return "";
-  return normalizeText(translations.get(translationSourceKey(normalizedSource)));
-}
-
-function cloneJson(value) {
-  if (value === undefined || value === null) return value;
-  return JSON.parse(JSON.stringify(value));
-}
-
-function applyPublishedTranslationToLocalizedPair(holder, plainField, i18nField, lang, translations) {
-  if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
-  const normalizedLang = normalizeLanguageCode(lang);
-  const sourceText = sourceTextFromPlainValue(holder[plainField]);
-  if (!sourceText) return false;
-  const targetText = publishedTranslationForSource(translations, sourceText);
-  if (!targetText) return false;
-  holder[i18nField] = {
-    [normalizedLang]: targetText
-  };
-  return true;
-}
-
-function removePublishedMarketingTourOwnField(holder, fieldName) {
-  if (!holder || typeof holder !== "object" || Array.isArray(holder) || !Object.hasOwn(holder, fieldName)) return false;
-  delete holder[fieldName];
-  return true;
-}
-
-function stripPublishedMarketingTourI18nFields(value) {
-  if (Array.isArray(value)) {
-    return value.reduce((changed, item) => stripPublishedMarketingTourI18nFields(item) || changed, false);
-  }
-  if (!value || typeof value !== "object") return false;
-  let changed = false;
-  for (const key of Object.keys(value)) {
-    if (key.endsWith("_i18n")) {
-      delete value[key];
-      changed = true;
-      continue;
-    }
-    changed = stripPublishedMarketingTourI18nFields(value[key]) || changed;
-  }
-  return changed;
-}
-
-function stripPublishedMarketingTourEmbeddedTranslations(tour) {
-  if (!tour || typeof tour !== "object" || Array.isArray(tour)) return false;
-  let changed = false;
-  changed = removePublishedMarketingTourOwnField(tour, "title_i18n") || changed;
-  changed = removePublishedMarketingTourOwnField(tour, "short_description_i18n") || changed;
-  changed = stripPublishedMarketingTourI18nFields(tour.travel_plan) || changed;
-  return changed;
-}
-
-function applyPublishedTranslationsToTravelPlanImage(image, lang, translations) {
-  if (!image || typeof image !== "object" || Array.isArray(image)) return false;
-  let changed = false;
-  changed = applyPublishedTranslationToLocalizedPair(image, "caption", "caption_i18n", lang, translations) || changed;
-  changed = applyPublishedTranslationToLocalizedPair(image, "alt_text", "alt_text_i18n", lang, translations) || changed;
-  return changed;
-}
-
-function applyPublishedTranslationsToTravelPlan(travelPlan, lang, translations) {
-  if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return false;
-  let changed = false;
-  for (const day of Array.isArray(travelPlan.days) ? travelPlan.days : []) {
-    if (!day || typeof day !== "object" || Array.isArray(day)) continue;
-    changed = applyPublishedTranslationToLocalizedPair(day, "title", "title_i18n", lang, translations) || changed;
-    changed = applyPublishedTranslationToLocalizedPair(day, "overnight_location", "overnight_location_i18n", lang, translations) || changed;
-    changed = applyPublishedTranslationToLocalizedPair(day, "notes", "notes_i18n", lang, translations) || changed;
-
-    for (const service of Array.isArray(day.services) ? day.services : []) {
-      if (!service || typeof service !== "object" || Array.isArray(service)) continue;
-      changed = applyPublishedTranslationToLocalizedPair(service, "time_label", "time_label_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "title", "title_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "details", "details_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "location", "location_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "image_subtitle", "image_subtitle_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationsToTravelPlanImage(service.image, lang, translations) || changed;
-      for (const image of Array.isArray(service.images) ? service.images : []) {
-        changed = applyPublishedTranslationsToTravelPlanImage(image, lang, translations) || changed;
-      }
-    }
-  }
-  return changed;
-}
-
-function applyPublishedMarketingTourTranslations(tour, lang, translations) {
-  const normalizedLang = normalizeLanguageCode(lang);
-  if (!tour || typeof tour !== "object" || Array.isArray(tour)) return tour;
-  const next = cloneJson(tour);
-  let changed = stripPublishedMarketingTourEmbeddedTranslations(next);
-  if (normalizedLang !== "en" && translations instanceof Map && translations.size > 0) {
-    changed = applyPublishedTranslationToLocalizedPair(next, "title", "title_i18n", normalizedLang, translations) || changed;
-    changed = applyPublishedTranslationToLocalizedPair(next, "short_description", "short_description_i18n", normalizedLang, translations) || changed;
-    changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
-  }
-  return changed ? next : tour;
 }
 
 async function readExperienceHighlightIds() {
@@ -846,7 +712,7 @@ async function main() {
   if (experienceHighlightIds.length < onePagerExperienceHighlightCount) {
     throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${experienceHighlightsManifestPath}.`);
   }
-  const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(options.languages);
+  const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, options.languages);
 
   let tours = (await readTours())
     .map((tour) => tourHelpers.normalizeTourForStorage(tour))
@@ -905,7 +771,7 @@ async function main() {
     for (const lang of options.languages) {
       rendered += 1;
       const publishedTranslations = publishedTranslationsByLang.get(normalizeLanguageCode(lang));
-      const localizedTour = applyPublishedMarketingTourTranslations(tour, lang, publishedTranslations);
+      const localizedTour = applyMarketingTourTranslations(tour, lang, publishedTranslations);
       const readModel = tourHelpers.normalizeTourForRead(localizedTour, { lang });
       const localizedTravelPlan = travelPlanHelpers.normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
         sourceLang: "en",

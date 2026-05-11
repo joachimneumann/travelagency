@@ -135,8 +135,10 @@ test("frontend dictionaries keep the same placeholder keys as English", async ()
     const candidatePlaceholders = placeholdersByKey(dict);
     for (const [key, expected] of Object.entries(englishPlaceholders)) {
       const actual = candidatePlaceholders[key] || [];
-      if (expected.join("|") !== actual.join("|")) {
-        mismatches.push(`${lang}:${key}:${expected.join(",")}!=${actual.join(",")}`);
+      const expectedKeys = [...expected].sort();
+      const actualKeys = [...actual].sort();
+      if (expectedKeys.join("|") !== actualKeys.join("|")) {
+        mismatches.push(`${lang}:${key}:${expectedKeys.join(",")}!=${actualKeys.join(",")}`);
       }
     }
   }

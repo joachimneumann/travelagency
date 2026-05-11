@@ -1,7 +1,6 @@
 import {
   escapeHtml,
-  normalizeText,
-  resolveApiUrl
+  normalizeText
 } from "../shared/api.js";
 import { GENERATED_LANGUAGE_CODES } from "../../Generated/Models/generated_Language.js";
 import {
@@ -11,6 +10,11 @@ import {
   languageDirection
 } from "../../../shared/generated/language_catalog.js";
 import { COUNTRY_CODE_OPTIONS } from "../shared/generated_catalogs.js";
+import {
+  publicTravelerDetailsAccessRequest,
+  publicTravelerDetailsUpdateRequest,
+  publicTravelerDocumentPictureUploadRequest
+} from "../../Generated/API/generated_APIRequestFactory.js";
 
 const query = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
@@ -360,17 +364,25 @@ function setStatus(message, tone = "") {
   els.status.classList.toggle("is-success", tone === "success");
 }
 
-function buildEndpointPath(pathname) {
-  return `/public/v1/bookings/${encodeURIComponent(state.bookingId)}/persons/${encodeURIComponent(state.personId)}${pathname}`;
+function buildTravelerDetailsRequest(requestFactory, { params = {}, body } = {}) {
+  return requestFactory({
+    baseURL: apiOrigin,
+    params: {
+      booking_id: state.bookingId,
+      person_id: state.personId,
+      ...params
+    },
+    query: { token: state.token },
+    body
+  });
 }
 
-async function requestJson(pathname, { method = "GET", body } = {}) {
-  const url = new URL(resolveApiUrl(apiOrigin, buildEndpointPath(pathname)));
-  url.searchParams.set("token", state.token);
+async function requestJson(request) {
+  const url = new URL(request.url);
   const response = await fetch(url.toString(), {
-    method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
-    body: body ? JSON.stringify(body) : undefined
+    method: request.method,
+    headers: request.body ? { "Content-Type": "application/json" } : undefined,
+    body: request.body ? JSON.stringify(request.body) : undefined
   });
   const payload = await response.json().catch(() => null);
   return { ok: response.ok, status: response.status, payload };
@@ -989,13 +1001,14 @@ async function uploadActiveDocumentPicture(input) {
   try {
     let latestPayload = null;
     for (const file of files) {
-      const result = await requestJson(`/documents/${encodeURIComponent(documentType)}/picture`, {
-        method: "POST",
+      const request = buildTravelerDetailsRequest(publicTravelerDocumentPictureUploadRequest, {
+        params: { document_type: documentType },
         body: {
           filename: file.name,
           data_base64: await fileToBase64(file)
         }
       });
+      const result = await requestJson(request);
       if (!result.ok || !result.payload) {
         const message = normalizeText(result.payload?.error) || travelerDetailsT("could_not_upload_document_image", "Could not upload the document image.");
         setStatus(message, "error");
@@ -1027,12 +1040,12 @@ async function saveTravelerDetails() {
   render();
   setStatus(travelerDetailsT("saving_traveler_details", "Saving traveler details..."));
   try {
-    const result = await requestJson("/traveler-details", {
-      method: "PATCH",
+    const request = buildTravelerDetailsRequest(publicTravelerDetailsUpdateRequest, {
       body: {
         person: buildTravelerPayload(state.traveler)
       }
     });
+    const result = await requestJson(request);
     if (!result.ok || !result.payload) {
       const message = normalizeText(result.payload?.error)
         || (result.status === 410
@@ -1059,7 +1072,7 @@ async function loadTravelerDetails() {
     setError(travelerDetailsT("traveler_details_invalid_link", "This traveler details link is invalid."));
     return;
   }
-  const result = await requestJson("/traveler-details/access");
+  const result = await requestJson(buildTravelerDetailsRequest(publicTravelerDetailsAccessRequest));
   if (!result.ok || !result.payload) {
     const message = normalizeText(result.payload?.error)
       || (result.status === 410

@@ -226,7 +226,6 @@ import (
 #DestinationRegionCreateRequest: {
 	destination: enums.#CountryCode
 	name:        string & !=""
-	name_i18n?: [string]: string
 	code?:       string
 	actor?:      string
 }
@@ -235,7 +234,6 @@ import (
 	destination: enums.#CountryCode
 	region_id?: common.#Identifier
 	name:       string & !=""
-	name_i18n?: [string]: string
 	code?:       string
 	latitude?:   >=-90 & <=90 & number
 	longitude?:  >=-180 & <=180 & number

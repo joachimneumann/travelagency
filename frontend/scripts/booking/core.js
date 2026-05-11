@@ -1,4 +1,5 @@
 import {
+  bookingCloneRequest,
   bookingCustomerLanguageRequest,
   bookingDeleteRequest,
   bookingImageRequest,
@@ -332,7 +333,6 @@ export function createBookingCoreModule(ctx) {
     formatDateTime,
     updateContentLangInUrl,
     setPendingSavedCustomerLanguage,
-    resolveApiUrl,
     resolvePersonPhotoSrc,
     resolveBookingImageSrc,
     displayKeycloakUser,
@@ -1491,18 +1491,20 @@ export function createBookingCoreModule(ctx) {
     renderActionControls();
 
     try {
-      const result = await fetchBookingMutation(
-        resolveApiUrl(apiBase, `/api/v1/bookings/${encodeURIComponent(state.booking.id)}/clone`),
-        {
-          method: "POST",
-          body: {
-            expected_core_revision: getBookingRevision("core_revision"),
-            name: nextName,
-            include_travelers: includeTravelers,
-            actor: state.user
-          }
+      const request = bookingCloneRequest({
+        baseURL: apiBase,
+        params: { booking_id: state.booking.id },
+        body: {
+          expected_core_revision: getBookingRevision("core_revision"),
+          name: nextName,
+          include_travelers: includeTravelers,
+          actor: state.user
         }
-      );
+      });
+      const result = await fetchBookingMutation(request.url, {
+        method: request.method,
+        body: request.body
+      });
       const clonedId = normalizeText(result?.booking?.id);
       if (!clonedId) {
         cloneStatus(bookingT("booking.clone_failed", "Could not clone booking."));

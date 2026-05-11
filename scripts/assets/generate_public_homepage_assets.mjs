@@ -20,6 +20,10 @@ import {
   normalizeTourLang
 } from "../../backend/app/src/domain/tour_catalog_i18n.js";
 import {
+  applyMarketingTourTranslations,
+  loadPublishedMarketingTourTranslations
+} from "../../backend/app/src/domain/marketing_tour_translations.js";
+import {
   normalizeLocalizedTextMap,
   resolveLocalizedText
 } from "../../backend/app/src/domain/booking_content_i18n.js";
@@ -157,10 +161,6 @@ function jsonWithTrailingNewline(value) {
 
 function versionTokenForContent(value) {
   return createHash("sha1").update(String(value ?? ""), "utf8").digest("hex").slice(0, 12);
-}
-
-function translationSourceKey(value) {
-  return createHash("sha256").update(normalizeText(value), "utf8").digest("hex");
 }
 
 function buildVersionedGeneratedDataUrl(filename, version, { publicPrefix = "/frontend/data/generated/homepage" } = {}) {
@@ -750,131 +750,6 @@ function normalizeTourForPublicHomepage(tour, { normalizeTourForStorage, destina
 function cloneJson(value) {
   if (value === undefined || value === null) return value;
   return JSON.parse(JSON.stringify(value));
-}
-
-async function loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages) {
-  const mapsByLang = new Map();
-  const uniqueLanguages = Array.from(new Set(
-    (Array.isArray(languages) ? languages : [])
-      .map((lang) => normalizeTourLang(lang))
-      .filter((lang) => lang && lang !== "en")
-  ));
-  await Promise.all(uniqueLanguages.map(async (lang) => {
-    const snapshotPath = path.join(translationsSnapshotDir, "customers", `marketing-tours.${lang}.json`);
-    const payload = await readJson(snapshotPath, { fallback: { items: [] } });
-    const entries = new Map();
-    for (const item of Array.isArray(payload?.items) ? payload.items : []) {
-      const sourceText = normalizeText(item?.source_text);
-      const targetText = normalizeText(item?.target_text);
-      if (!sourceText || !targetText) continue;
-      entries.set(translationSourceKey(sourceText), targetText);
-    }
-    mapsByLang.set(lang, entries);
-  }));
-  return mapsByLang;
-}
-
-function publishedTranslationForSource(translations, sourceText) {
-  const normalizedSource = normalizeText(sourceText);
-  if (!normalizedSource || !(translations instanceof Map)) return "";
-  return normalizeText(translations.get(translationSourceKey(normalizedSource)));
-}
-
-function sourceTextFromPlainValue(value) {
-  return value && typeof value === "object" && !Array.isArray(value)
-    ? normalizeText(value.en)
-    : normalizeText(value);
-}
-
-function applyPublishedTranslationToLocalizedPair(holder, plainField, i18nField, lang, translations) {
-  if (!holder || typeof holder !== "object" || Array.isArray(holder)) return false;
-  const normalizedLang = normalizeTourLang(lang);
-  const sourceText = sourceTextFromPlainValue(holder[plainField]);
-  if (!sourceText) return false;
-  const targetText = publishedTranslationForSource(translations, sourceText);
-  if (!targetText) return false;
-  holder[i18nField] = {
-    [normalizedLang]: targetText
-  };
-  return true;
-}
-
-function removePublishedMarketingTourOwnField(holder, fieldName) {
-  if (!holder || typeof holder !== "object" || Array.isArray(holder) || !Object.hasOwn(holder, fieldName)) return false;
-  delete holder[fieldName];
-  return true;
-}
-
-function stripPublishedMarketingTourI18nFields(value) {
-  if (Array.isArray(value)) {
-    return value.reduce((changed, item) => stripPublishedMarketingTourI18nFields(item) || changed, false);
-  }
-  if (!value || typeof value !== "object") return false;
-  let changed = false;
-  for (const key of Object.keys(value)) {
-    if (key.endsWith("_i18n")) {
-      delete value[key];
-      changed = true;
-      continue;
-    }
-    changed = stripPublishedMarketingTourI18nFields(value[key]) || changed;
-  }
-  return changed;
-}
-
-function stripPublishedMarketingTourEmbeddedTranslations(tour) {
-  if (!tour || typeof tour !== "object" || Array.isArray(tour)) return false;
-  let changed = false;
-  changed = removePublishedMarketingTourOwnField(tour, "title_i18n") || changed;
-  changed = removePublishedMarketingTourOwnField(tour, "short_description_i18n") || changed;
-  changed = stripPublishedMarketingTourI18nFields(tour.travel_plan) || changed;
-  return changed;
-}
-
-function applyPublishedTranslationsToTravelPlanImage(image, lang, translations) {
-  if (!image || typeof image !== "object" || Array.isArray(image)) return false;
-  let changed = false;
-  changed = applyPublishedTranslationToLocalizedPair(image, "caption", "caption_i18n", lang, translations) || changed;
-  changed = applyPublishedTranslationToLocalizedPair(image, "alt_text", "alt_text_i18n", lang, translations) || changed;
-  return changed;
-}
-
-function applyPublishedTranslationsToTravelPlan(travelPlan, lang, translations) {
-  if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return false;
-  let changed = false;
-  for (const day of Array.isArray(travelPlan.days) ? travelPlan.days : []) {
-    if (!day || typeof day !== "object" || Array.isArray(day)) continue;
-    changed = applyPublishedTranslationToLocalizedPair(day, "title", "title_i18n", lang, translations) || changed;
-    changed = applyPublishedTranslationToLocalizedPair(day, "overnight_location", "overnight_location_i18n", lang, translations) || changed;
-    changed = applyPublishedTranslationToLocalizedPair(day, "notes", "notes_i18n", lang, translations) || changed;
-
-    for (const service of Array.isArray(day.services) ? day.services : []) {
-      if (!service || typeof service !== "object" || Array.isArray(service)) continue;
-      changed = applyPublishedTranslationToLocalizedPair(service, "time_label", "time_label_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "title", "title_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "details", "details_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "location", "location_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationToLocalizedPair(service, "image_subtitle", "image_subtitle_i18n", lang, translations) || changed;
-      changed = applyPublishedTranslationsToTravelPlanImage(service.image, lang, translations) || changed;
-      for (const image of Array.isArray(service.images) ? service.images : []) {
-        changed = applyPublishedTranslationsToTravelPlanImage(image, lang, translations) || changed;
-      }
-    }
-  }
-  return changed;
-}
-
-function applyPublishedMarketingTourTranslations(tour, lang, translations) {
-  const normalizedLang = normalizeTourLang(lang);
-  if (!tour || typeof tour !== "object" || Array.isArray(tour)) return tour;
-  const next = cloneJson(tour);
-  let changed = stripPublishedMarketingTourEmbeddedTranslations(next);
-  if (normalizedLang !== "en" && translations instanceof Map && translations.size > 0) {
-    changed = applyPublishedTranslationToLocalizedPair(next, "title", "title_i18n", normalizedLang, translations) || changed;
-    changed = applyPublishedTranslationToLocalizedPair(next, "short_description", "short_description_i18n", normalizedLang, translations) || changed;
-    changed = applyPublishedTranslationsToTravelPlan(next.travel_plan, normalizedLang, translations) || changed;
-  }
-  return changed ? next : tour;
 }
 
 function normalizeLegacyTourLocalizedPairs(tour) {
@@ -1692,6 +1567,23 @@ async function writeSeoSurfaceAssets({
   };
 }
 
+function stripStaticImports(source, moduleSpecifiers) {
+  return moduleSpecifiers.reduce((nextSource, moduleSpecifier) => {
+    const escapedSpecifier = escapeRegExp(moduleSpecifier);
+    return nextSource.replace(
+      new RegExp(`^import\\s+(?:[^'"]|\\n)*?from\\s+["']${escapedSpecifier}["'];\\s*\\n?`, "gm"),
+      ""
+    );
+  }, String(source || ""));
+}
+
+function localizeNamedFunctionExport(source, functionName) {
+  return String(source || "").replace(
+    new RegExp(`\\bexport\\s+function\\s+${escapeRegExp(functionName)}\\b`),
+    `function ${functionName}`
+  );
+}
+
 async function writeHomepageInitialBundleScript(outputPath) {
   await ensureDirectory(path.dirname(outputPath));
   const [mainSource, toursSource, tourCustomizeSource] = await Promise.all([
@@ -1742,26 +1634,19 @@ async function writeHomepageInitialBundleScript(outputPath) {
     ""
   ].join("\n");
 
-  const transformedTourCustomizeSource = tourCustomizeSource
-    .replace("export function createTourCustomizer", "function createTourCustomizer");
+  const transformedTourCustomizeSource = localizeNamedFunctionExport(tourCustomizeSource, "createTourCustomizer");
 
-  const transformedToursSource = toursSource
-    .replace(
-      'import { normalizeText } from "../../shared/js/text.js";\n',
-      ""
-    )
-    .replace(
-      'import {\n  FRONTEND_LANGUAGE_CODES,\n  normalizeLanguageCode\n} from "../../shared/generated/language_catalog.js";\n',
-      ""
-    )
-    .replace('import { createTourCustomizer } from "./tour_customize.js";\n', "")
-    .replace("export function createFrontendToursController", "function createFrontendToursController");
+  const transformedToursSource = localizeNamedFunctionExport(stripStaticImports(toursSource, [
+    "../../shared/js/text.js",
+    "../../shared/generated/language_catalog.js",
+    "./tour_customize.js"
+  ]), "createFrontendToursController");
 
-  const transformedMainSource = mainSource
-    .replace(
-      'import { normalizeText } from "../../shared/js/text.js";\nimport { logBrowserConsoleError } from "./shared/api.js";\nimport { createFrontendToursController } from "./main_tours.js";\n\n',
-      ""
-    )
+  const transformedMainSource = stripStaticImports(mainSource, [
+    "../../shared/js/text.js",
+    "./shared/api.js",
+    "./main_tours.js"
+  ])
     .replaceAll('import("./main_booking_form_options.js")', 'import("/frontend/scripts/main_booking_form_options.js")')
     .replaceAll('import("../Generated/API/generated_APIRequestFactory.js")', 'import("/frontend/Generated/API/generated_APIRequestFactory.js")')
     .replaceAll('import("../Generated/API/generated_APIModels.js")', 'import("/frontend/Generated/API/generated_APIModels.js")')
@@ -1907,7 +1792,7 @@ async function generateTourAssets({
     const localizedSeoItems = [];
     for (const tour of sortedPublicTours) {
       const seoSlug = storedTourSeoSlug(tour);
-      const localizedTour = applyPublishedMarketingTourTranslations(
+      const localizedTour = applyMarketingTourTranslations(
         normalizeLegacyTourLocalizedPairs(tour),
         normalizedLang,
         publishedTranslations

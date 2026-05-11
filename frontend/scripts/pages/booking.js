@@ -5,6 +5,7 @@ import {
   bookingTravelPlanDayImportRequest,
   bookingTravelPlanServiceImportRequest,
   bookingPaymentDocumentsRequest,
+  bookingPersonTravelerDetailsLinkRequest,
   bookingPersonCreateRequest,
   bookingPersonDeleteRequest,
   bookingPersonPhotoRequest,
@@ -1100,14 +1101,17 @@ async function requestTravelerDetailsLink() {
     };
   }
 
-  const requestUrl = resolveApiUrl(
-    apiOrigin,
-    `/api/v1/bookings/${encodeURIComponent(bookingId)}/persons/${encodeURIComponent(personId)}/traveler-details-link`
-  );
+  const request = bookingPersonTravelerDetailsLinkRequest({
+    baseURL: apiOrigin,
+    params: {
+      booking_id: bookingId,
+      person_id: personId
+    }
+  });
 
   try {
-    const response = await fetch(requestUrl, {
-      method: "POST",
+    const response = await fetch(request.url, {
+      method: request.method,
       credentials: "include"
     });
     const payload = await response.json().catch(() => null);

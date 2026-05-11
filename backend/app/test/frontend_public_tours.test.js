@@ -284,7 +284,7 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.match(els.tourGrid.innerHTML, />Overview \(one-pager\)<\/button>/);
   assert.match(els.tourGrid.innerHTML, />Day-by-Day Travel Plan<\/button>/);
   assert.match(els.tourGrid.innerHTML, /A PDF that gives you an overview of this tour/);
-  assert.match(els.tourGrid.innerHTML, /A PDF that shows you all activies of this tour/);
+  assert.match(els.tourGrid.innerHTML, /A PDF that shows you all activities of this tour/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan-pdf__badge/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /\/content\/one-pagers\/pdfs\/tour_localized_plan\/de\.pdf/);

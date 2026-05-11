@@ -1,4 +1,5 @@
 import {
+  bookingTravelPlanPdfArtifactPdfRequest,
   bookingTravelPlanPdfDeleteRequest,
   bookingTravelPlanPdfUpdateRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
@@ -35,6 +36,21 @@ export function createBookingTravelPlanPdfsModule(deps) {
     return url.toString();
   }
 
+  function resolveTravelPlanPdfUrl(artifactId, fallbackUrl = "") {
+    const bookingId = String(state.booking?.id || "").trim();
+    const normalizedArtifactId = String(artifactId || "").trim();
+    const url = bookingId && normalizedArtifactId
+      ? bookingTravelPlanPdfArtifactPdfRequest({
+          baseURL: apiOrigin,
+          params: {
+            booking_id: bookingId,
+            artifact_id: normalizedArtifactId
+          }
+        }).url
+      : fallbackUrl;
+    return url ? withBookingLanguageQuery(url) : "";
+  }
+
   function renderTravelPlanPdfsTable() {
     const pdfs = Array.isArray(state.booking?.travel_plan_pdfs) ? state.booking.travel_plan_pdfs : [];
     const canEdit = Boolean(state.permissions?.canEditBooking);
@@ -60,7 +76,7 @@ export function createBookingTravelPlanPdfsModule(deps) {
                       <td class="travel-plan-existing-pdfs-col-document">
                         <a
                           class="travel-plan-existing-pdfs__link"
-                          href="${escapeHtml(withBookingLanguageQuery(pdf.pdf_url || ""))}"
+                          href="${escapeHtml(resolveTravelPlanPdfUrl(pdf.id, pdf.pdf_url || ""))}"
                           target="_blank"
                           rel="noopener"
                         >${escapeHtml(pdf.filename || bookingT("booking.travel_plan.travel_plan_pdf", "Travel plan PDF"))}</a>

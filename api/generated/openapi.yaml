@@ -5911,11 +5911,6 @@ components:
           type: string
         name:
           type: string
-        name_i18n:
-          type: object
-          additionalProperties:
-            type: string
-          nullable: true
         label:
           type: string
         sort_order:
@@ -5952,11 +5947,6 @@ components:
           type: string
         name:
           type: string
-        name_i18n:
-          type: object
-          additionalProperties:
-            type: string
-          nullable: true
         label:
           type: string
         sort_order:
@@ -6919,11 +6909,6 @@ components:
           "$ref": "#/components/schemas/CountryCode"
         name:
           type: string
-        name_i18n:
-          type: object
-          additionalProperties:
-            type: string
-          nullable: true
         code:
           type: string
           nullable: true
@@ -6943,11 +6928,6 @@ components:
           nullable: true
         name:
           type: string
-        name_i18n:
-          type: object
-          additionalProperties:
-            type: string
-          nullable: true
         code:
           type: string
           nullable: true

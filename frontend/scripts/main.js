@@ -166,7 +166,6 @@ const HERO_DOWN_ARROW_DELAY_MS = 5000;
 const TOURS_SECTION_HASH = "#tours";
 const BACKEND_BASE_URL = window.ASIATRAVELPLAN_API_BASE ? window.ASIATRAVELPLAN_API_BASE.replace(/\/$/, "") : "";
 const API_BASE_ORIGIN = BACKEND_BASE_URL || window.location.origin;
-const PUBLIC_BOOTSTRAP_URL = `${API_BASE_ORIGIN}/public/v1/mobile/bootstrap`;
 const WEBSITE_AUTH_CACHE_KEY = "asiatravelplan_backend_auth_me_v1";
 const els = {
   pageBody: document.body,
@@ -945,10 +944,13 @@ async function loadTeamMembers({ force = false } = {}) {
   const request = (async () => {
     state.teamMembersLoaded = false;
     try {
-      const response = await fetch(dataUrl, { cache: "default" });
+      let response = await fetch(dataUrl, { cache: "default" });
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+        const { publicAtpStaffTeamRequest } = await import("../Generated/API/generated_APIRequestFactory.js");
+        const teamRequest = publicAtpStaffTeamRequest({ baseURL: API_BASE_ORIGIN });
+        response = await fetch(teamRequest.url, { cache: "default" });
       }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const payload = await response.json();
       const source = Array.isArray(payload?.items) ? payload.items : [];
       state.teamMembers = source
@@ -1244,30 +1246,33 @@ async function loadPublicBootstrap({ force = false } = {}) {
   if (publicBootstrapLoaded && !force) return state.companyProfile;
   if (publicBootstrapLoadPromise && !force) return publicBootstrapLoadPromise;
   publicBootstrapLoadPromise = (async () => {
-  try {
-    const response = await fetch(PUBLIC_BOOTSTRAP_URL, {
-      credentials: "same-origin",
-      cache: "default"
-    });
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+    let request = { url: "" };
+    try {
+      const { mobileBootstrapRequest } = await import("../Generated/API/generated_APIRequestFactory.js");
+      request = mobileBootstrapRequest({ baseURL: API_BASE_ORIGIN });
+      const response = await fetch(request.url, {
+        credentials: "same-origin",
+        cache: "default"
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const payload = await response.json();
+      state.companyProfile = payload?.company_profile && typeof payload.company_profile === "object"
+        ? payload.company_profile
+        : null;
+      publicBootstrapLoaded = true;
+    } catch (error) {
+      state.companyProfile = null;
+      logBrowserConsoleError("[frontend-home] Failed to load public bootstrap.", {
+        url: request.url,
+        page_url: window.location.href
+      }, error);
+    } finally {
+      syncFooterCompanyProfile();
+      publicBootstrapLoadPromise = null;
     }
-    const payload = await response.json();
-    state.companyProfile = payload?.company_profile && typeof payload.company_profile === "object"
-      ? payload.company_profile
-      : null;
-    publicBootstrapLoaded = true;
-  } catch (error) {
-    state.companyProfile = null;
-    logBrowserConsoleError("[frontend-home] Failed to load public bootstrap.", {
-      url: PUBLIC_BOOTSTRAP_URL,
-      page_url: window.location.href
-    }, error);
-  } finally {
-    syncFooterCompanyProfile();
-    publicBootstrapLoadPromise = null;
-  }
-  return state.companyProfile;
+    return state.companyProfile;
   })();
   return publicBootstrapLoadPromise;
 }

@@ -1,5 +1,7 @@
 import {
-  bookingPaymentDocumentCreateRequest
+  bookingGeneratedOfferPdfRequest,
+  bookingPaymentDocumentCreateRequest,
+  paymentDocumentPdfRequest
 } from "../../Generated/API/generated_APIRequestFactory.js";
 import {
   bookingContentLang,
@@ -133,6 +135,32 @@ export function createBookingPaymentFlowModule(ctx) {
     url.searchParams.set("content_lang", query.content_lang);
     url.searchParams.set("source_lang", query.source_lang);
     return url.toString();
+  }
+
+  function resolvePaymentDocumentPdfUrl(documentId, fallbackUrl = "") {
+    const normalizedDocumentId = String(documentId || "").trim();
+    const url = normalizedDocumentId
+      ? paymentDocumentPdfRequest({
+          baseURL: apiOrigin,
+          params: { document_id: normalizedDocumentId }
+        }).url
+      : fallbackUrl;
+    return url ? withBookingLanguageQuery(url) : "";
+  }
+
+  function resolveGeneratedOfferPdfUrl(generatedOffer, fallbackUrl = "") {
+    const bookingId = String(state.booking?.id || "").trim();
+    const generatedOfferId = String(generatedOffer?.id || "").trim();
+    const url = bookingId && generatedOfferId
+      ? bookingGeneratedOfferPdfRequest({
+          baseURL: apiOrigin,
+          params: {
+            booking_id: bookingId,
+            generated_offer_id: generatedOfferId
+          }
+        }).url
+      : fallbackUrl;
+    return url ? withBookingLanguageQuery(url) : "";
   }
 
   function currentOfferPaymentTerms() {
@@ -523,7 +551,7 @@ export function createBookingPaymentFlowModule(ctx) {
             <td class="travel-plan-existing-pdfs-col-document">
               <a
                 class="travel-plan-existing-pdfs__link"
-                href="${escapeHtml(withBookingLanguageQuery(doc.pdf_url || ""))}"
+                href="${escapeHtml(resolvePaymentDocumentPdfUrl(doc.id, doc.pdf_url || ""))}"
                 target="_blank"
                 rel="noopener"
               >${escapeHtml(doc.document_number || doc.title || doc.id || bookingT("booking.pdf", "PDF"))}</a>
@@ -697,7 +725,7 @@ export function createBookingPaymentFlowModule(ctx) {
     }
     const paymentTerms = generatedOffer?.offer?.payment_terms || state.booking?.offer?.payment_terms || state.booking?.accepted_payment_terms_snapshot || null;
     const paymentTermCount = Array.isArray(paymentTerms?.lines) ? paymentTerms.lines.length : 0;
-    const pdfUrl = generatedOffer?.pdf_url ? generatedOffer.pdf_url : "";
+    const pdfUrl = resolveGeneratedOfferPdfUrl(generatedOffer, generatedOffer?.pdf_url || "");
     const detailRows = [
       {
         label: bookingT("booking.pdf", "PDF"),

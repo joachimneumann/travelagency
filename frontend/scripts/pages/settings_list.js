@@ -18,6 +18,7 @@ import {
   keycloakUserStaffProfileUpdateRequest,
   keycloakUserStaffProfileTranslateFieldsRequest,
   keycloakUserStaffProfilePictureUploadRequest,
+  settingsObservabilityRequest,
   settingsTranslationRulesRequest,
   settingsTranslationRulesUpdateRequest,
   destinationScopeDestinationDeleteRequest,
@@ -574,7 +575,8 @@ function showObservabilityStatus(message, isError = false) {
 
 function setSettingsLocationOverlay(isVisible, message = "") {
   if (els.settingsLocationOverlayText) {
-    els.settingsLocationOverlayText.textContent = normalizeText(message) || "Updating locations. Please wait.";
+    els.settingsLocationOverlayText.textContent = normalizeText(message)
+      || backendT("backend.settings.locations.updating_overlay", "Updating locations. Please wait.");
   }
   if (els.pageBody instanceof HTMLElement) {
     els.pageBody.classList.toggle("backend-list-page--busy", Boolean(isVisible));
@@ -685,7 +687,8 @@ async function loadObservability() {
   updateObservabilityRefreshButtonState();
 
   try {
-    const payload = await fetchApiJson(`${apiOrigin}/api/v1/settings/observability`, {
+    const request = settingsObservabilityRequest({ baseURL: apiOrigin });
+    const payload = await fetchApiJson(request.url, {
       onError: (message) => showObservabilityStatus(message, true),
       connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API."),
       includeDetailInError: false
@@ -883,7 +886,9 @@ function bindEvents() {
       updateLocationMapLinkForRecord(recordKey);
     }
     updateLocationManagerSaveButtonState();
-    showLocationManagerStatus(isLocationManagerDirty() ? "Unsaved changes." : "Locations loaded.");
+    showLocationManagerStatus(isLocationManagerDirty()
+      ? backendT("backend.settings.locations.unsaved", "Unsaved changes.")
+      : backendT("backend.settings.locations.loaded", "Locations loaded."));
   });
   els.locationManagerList?.addEventListener("change", (event) => {
     const target = event.target instanceof Element ? event.target : null;
@@ -891,7 +896,9 @@ function bindEvents() {
     normalizeLocationCoordinateInput(target);
     updateLocationMapLinkForRecord(target.getAttribute("data-location-record"));
     updateLocationManagerSaveButtonState();
-    showLocationManagerStatus(isLocationManagerDirty() ? "Unsaved changes." : "Locations loaded.");
+    showLocationManagerStatus(isLocationManagerDirty()
+      ? backendT("backend.settings.locations.unsaved", "Unsaved changes.")
+      : backendT("backend.settings.locations.loaded", "Locations loaded."));
   });
   els.translationRulesAddBtn?.addEventListener("click", () => {
     if (!state.permissions.canEditTranslationRules) return;
@@ -1232,10 +1239,16 @@ function locationUsageState(id, noun = "location") {
   const count = ready ? Math.max(0, Number(state.locationUsageCounts?.[id] || 0)) : 0;
   const display = loading ? "..." : ready ? String(count) : "-";
   const label = loading
-    ? "Loading day usage counts"
+    ? backendT("backend.settings.locations.usage_loading", "Loading day usage counts")
     : ready
-      ? `${count} day${count === 1 ? "" : "s"} use this ${noun}`
-      : "Day usage counts have not loaded yet";
+      ? backendT(
+          count === 1
+            ? "backend.settings.locations.usage_count_one"
+            : "backend.settings.locations.usage_count_many",
+          count === 1 ? "{count} day uses this {noun}" : "{count} days use this {noun}",
+          { count, noun }
+        )
+      : backendT("backend.settings.locations.usage_not_loaded", "Day usage counts have not loaded yet");
   return {
     ready,
     loading,
@@ -1321,12 +1334,12 @@ function googleMapsLocationUrl(latitude, longitude) {
 
 function renderLocationMapLink(recordKey, latitude, longitude) {
   const url = googleMapsLocationUrl(latitude, longitude);
-  const label = url ? "Map" : "-";
+  const label = url ? backendT("backend.settings.locations.map", "Map") : "-";
   return `
     <span class="settings-location-manager__map-link-wrap">
       ${url
-        ? `<a class="settings-location-manager__map-link" data-location-map-link="${escapeHtml(recordKey)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="Open this location in Google Maps">${escapeHtml(label)}</a>`
-        : `<span class="settings-location-manager__map-link settings-location-manager__map-link--empty" data-location-map-link="${escapeHtml(recordKey)}" aria-label="No coordinates for Google Maps">${escapeHtml(label)}</span>`}
+        ? `<a class="settings-location-manager__map-link" data-location-map-link="${escapeHtml(recordKey)}" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer" aria-label="${escapeHtml(backendT("backend.settings.locations.open_google_maps", "Open this location in Google Maps"))}">${escapeHtml(label)}</a>`
+        : `<span class="settings-location-manager__map-link settings-location-manager__map-link--empty" data-location-map-link="${escapeHtml(recordKey)}" aria-label="${escapeHtml(backendT("backend.settings.locations.no_google_maps_coordinates", "No coordinates for Google Maps"))}">${escapeHtml(label)}</span>`}
     </span>
   `;
 }
@@ -1359,19 +1372,44 @@ function normalizeLocationCoordinateInput(target) {
 function renderLocationCoordinateInputs(record, type, { childCount = 0 } = {}) {
   const prefix = `${type}:${record.id}`;
   const disabled = state.permissions.canEditLocations ? "" : "disabled";
-  const nameLabel = type === "region" ? "Region name" : "Place name";
-  const namePlaceholder = type === "region" ? "Region" : "Place";
-  const nodeLabel = type === "region" ? "Region:" : "Place:";
+  const nameLabel = type === "region"
+    ? backendT("backend.settings.locations.region_name", "Region name")
+    : backendT("backend.settings.locations.place_name", "Place name");
+  const namePlaceholder = type === "region"
+    ? backendT("backend.settings.locations.region_placeholder", "Region")
+    : backendT("backend.settings.locations.place_placeholder", "Place");
+  const nodeLabel = type === "region"
+    ? backendT("backend.settings.locations.region_label", "Region:")
+    : backendT("backend.settings.locations.place_label", "Place:");
   const usage = locationUsageState(record.id, type === "region" ? "region" : "location");
   const isRegion = type === "region";
   const deleteDisabled = !state.permissions.canEditLocations || !usage.ready || (isRegion ? childCount > 0 || usage.count > 0 : usage.count > 0);
   const deleteTitle = isRegion && childCount > 0
-    ? `Cannot delete while this region has ${childCount} place${childCount === 1 ? "" : "s"}`
+    ? backendT(
+        childCount === 1
+          ? "backend.settings.locations.delete_block_region_child_one"
+          : "backend.settings.locations.delete_block_region_child_many",
+        childCount === 1
+          ? "Cannot delete while this region has {count} place"
+          : "Cannot delete while this region has {count} places",
+        { count: childCount }
+      )
     : !usage.ready
-      ? "Load day usage counts before deleting"
+      ? backendT("backend.settings.locations.delete_block_usage_not_loaded", "Load day usage counts before deleting")
     : usage.count > 0
-      ? `Cannot delete while ${usage.count} day${usage.count === 1 ? "" : "s"} use this location`
-      : `Delete ${isRegion ? "region" : "place"}`;
+      ? backendT(
+          usage.count === 1
+            ? "backend.settings.locations.delete_block_location_usage_one"
+            : "backend.settings.locations.delete_block_location_usage_many",
+          usage.count === 1
+            ? "Cannot delete while {count} day uses this location"
+            : "Cannot delete while {count} days use this location",
+          { count: usage.count }
+        )
+      : backendT(
+          isRegion ? "backend.settings.locations.delete_region" : "backend.settings.locations.delete_place",
+          isRegion ? "Delete region" : "Delete place"
+        );
   return `
     <label class="settings-location-manager__name-field settings-location-manager__name-field--${escapeHtml(type)}">
       <span>${escapeHtml(nodeLabel)}</span>
@@ -1379,17 +1417,17 @@ function renderLocationCoordinateInputs(record, type, { childCount = 0 } = {}) {
     </label>
     ${isRegion ? "" : `
       <label>
-        <span>Lat:</span>
+        <span>${escapeHtml(backendT("backend.settings.locations.latitude_short", "Lat:"))}</span>
         <input type="number" step="0.00001" inputmode="decimal" data-location-field="latitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.latitude)}" ${disabled} />
       </label>
       <label>
-        <span>Long:</span>
+        <span>${escapeHtml(backendT("backend.settings.locations.longitude_short", "Long:"))}</span>
         <input type="number" step="0.00001" inputmode="decimal" data-location-field="longitude" data-location-record="${escapeHtml(prefix)}" value="${escapeHtml(record.longitude)}" ${disabled} />
       </label>
       ${renderLocationMapLink(prefix, record.latitude, record.longitude)}
     `}
     <div class="settings-location-manager__usage" aria-label="${escapeHtml(usage.label)}">
-      <span>Days:</span>
+      <span>${escapeHtml(backendT("backend.settings.locations.days_short", "Days:"))}</span>
       <strong>${escapeHtml(usage.display)}</strong>
     </div>
     <button class="btn btn-ghost offer-remove-btn" type="button" data-location-delete="${escapeHtml(prefix)}" aria-label="${escapeHtml(deleteTitle)}" title="${escapeHtml(deleteTitle)}" ${deleteDisabled ? "disabled" : ""}>&times;</button>
@@ -1446,22 +1484,38 @@ function renderLocationManager() {
       const countryChildCount = regions.length + countryPlaces.length;
       const countryDeleteDisabled = !state.permissions.canEditLocations || !countryUsage.ready || countryChildCount > 0 || countryUsage.count > 0;
       const countryDeleteTitle = countryChildCount > 0
-        ? `Cannot delete while this country has ${countryChildCount} child location${countryChildCount === 1 ? "" : "s"}`
+        ? backendT(
+            countryChildCount === 1
+              ? "backend.settings.locations.delete_block_country_child_one"
+              : "backend.settings.locations.delete_block_country_child_many",
+            countryChildCount === 1
+              ? "Cannot delete while this country has {count} child location"
+              : "Cannot delete while this country has {count} child locations",
+            { count: countryChildCount }
+          )
         : !countryUsage.ready
-          ? "Load day usage counts before deleting"
+          ? backendT("backend.settings.locations.delete_block_usage_not_loaded", "Load day usage counts before deleting")
         : countryUsage.count > 0
-          ? `Cannot delete while ${countryUsage.count} day${countryUsage.count === 1 ? "" : "s"} use this country`
-          : "Delete country";
+          ? backendT(
+              countryUsage.count === 1
+                ? "backend.settings.locations.delete_block_country_usage_one"
+                : "backend.settings.locations.delete_block_country_usage_many",
+              countryUsage.count === 1
+                ? "Cannot delete while {count} day uses this country"
+                : "Cannot delete while {count} days use this country",
+              { count: countryUsage.count }
+            )
+          : backendT("backend.settings.locations.delete_country", "Delete country");
       return `
         <article class="settings-location-manager__country">
           <div class="settings-location-manager__country-head">
             <div>
-              <span class="settings-location-manager__node-kind">Country / website destination</span>
+              <span class="settings-location-manager__node-kind">${escapeHtml(backendT("backend.settings.locations.country_destination", "Country / website destination"))}</span>
               <h3>${escapeHtml(countryName)}</h3>
             </div>
             <div class="settings-location-manager__country-actions">
               <div class="settings-location-manager__usage" aria-label="${escapeHtml(countryUsage.label)}">
-                <span>Days:</span>
+                <span>${escapeHtml(backendT("backend.settings.locations.days_short", "Days:"))}</span>
                 <strong>${escapeHtml(countryUsage.display)}</strong>
               </div>
               <button class="btn btn-ghost offer-remove-btn" type="button" data-location-delete="destination:${escapeHtml(destination.code)}" aria-label="${escapeHtml(countryDeleteTitle)}" title="${escapeHtml(countryDeleteTitle)}" ${countryDeleteDisabled ? "disabled" : ""}>&times;</button>
@@ -1488,12 +1542,12 @@ function renderLocationManager() {
                     </div>
                   </div>
                 `).join("")}
-                <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-place="${escapeHtml(region.id)}" ${state.permissions.canEditLocations ? "" : "disabled"}>+ New place</button>
+                <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-place="${escapeHtml(region.id)}" ${state.permissions.canEditLocations ? "" : "disabled"}>${escapeHtml(backendT("backend.settings.locations.add_place", "+ New place"))}</button>
               </div>
             </section>
             `).join("")}
-            <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-country-place="${escapeHtml(destination.code)}" ${state.permissions.canEditLocations ? "" : "disabled"}>+ New country place</button>
-            <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-region="${escapeHtml(destination.code)}" ${state.permissions.canEditLocations ? "" : "disabled"}>+ New region</button>
+            <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-country-place="${escapeHtml(destination.code)}" ${state.permissions.canEditLocations ? "" : "disabled"}>${escapeHtml(backendT("backend.settings.locations.add_country_place", "+ New country place"))}</button>
+            <button class="btn btn-ghost settings-location-manager__inline-add" type="button" data-location-add-region="${escapeHtml(destination.code)}" ${state.permissions.canEditLocations ? "" : "disabled"}>${escapeHtml(backendT("backend.settings.locations.add_region", "+ New region"))}</button>
           </div>
         </article>
       `;
@@ -1505,7 +1559,7 @@ function renderLocationManager() {
 async function loadLocationCatalog() {
   if (!state.permissions.canReadLocations) return;
   state.locationCatalogLoading = true;
-  showLocationManagerStatus("Loading locations...");
+  showLocationManagerStatus(backendT("backend.settings.locations.loading", "Loading locations..."));
   try {
     const request = destinationScopeCatalogRequest({
       baseURL: apiOrigin,
@@ -1513,11 +1567,11 @@ async function loadLocationCatalog() {
     });
     const payload = await fetchApi(request.url, { suppressNotFound: true, cache: "no-store" });
     state.locationCatalog = normalizeLocationCatalog(payload);
-    showLocationManagerStatus("Locations loaded. Day counts load when this panel is opened.");
+    showLocationManagerStatus(backendT("backend.settings.locations.loaded_usage_lazy", "Locations loaded. Day counts load when this panel is opened."));
   } catch (error) {
     console.error("[backend-settings] Failed to load location catalog.", { error });
     state.locationCatalog = normalizeLocationCatalog({});
-    showLocationManagerStatus("Could not load locations.", true);
+    showLocationManagerStatus(backendT("backend.settings.locations.load_failed", "Could not load locations."), true);
   } finally {
     state.locationCatalogLoading = false;
     renderLocationManager();
@@ -1575,7 +1629,7 @@ async function loadLocationUsageCounts() {
   state.locationUsageLoading = true;
   state.locationUsageRequested = true;
   state.locationUsageLoaded = false;
-  showLocationManagerStatus("Loading location usage counts...");
+  showLocationManagerStatus(backendT("backend.settings.locations.usage_counts_loading", "Loading location usage counts..."));
   renderLocationManager();
   try {
     const tours = [];
@@ -1598,13 +1652,13 @@ async function loadLocationUsageCounts() {
     } while (page <= totalPages);
     state.locationUsageCounts = countLocationUsageFromTours(tours);
     state.locationUsageLoaded = true;
-    showLocationManagerStatus("Locations loaded.");
+    showLocationManagerStatus(backendT("backend.settings.locations.loaded", "Locations loaded."));
   } catch (error) {
     console.error("[backend-settings] Failed to load location usage counts.", { error });
     state.locationUsageCounts = {};
     state.locationUsageLoaded = false;
     state.locationUsageRequested = false;
-    showLocationManagerStatus("Could not load location usage counts.", true);
+    showLocationManagerStatus(backendT("backend.settings.locations.usage_counts_load_failed", "Could not load location usage counts."), true);
   } finally {
     state.locationUsageLoading = false;
     renderLocationManager();
@@ -1809,7 +1863,7 @@ async function fetchLocationCatalogSnapshot() {
 async function reloadLocationsAfterMutation({
   responseCatalog = null,
   expectation = null,
-  statusMessage = "Locations loaded."
+  statusMessage = backendT("backend.settings.locations.loaded", "Locations loaded.")
 } = {}) {
   const responseFallback = responseCatalog ? normalizeLocationCatalog(responseCatalog) : null;
   let nextCatalog = null;
@@ -1856,18 +1910,38 @@ function locationDeleteBlocker(type, id) {
     const regionCount = state.locationCatalog.regions.filter((region) => region.destination === normalizedId).length;
     const placeCount = state.locationCatalog.places.filter((place) => place.destination === normalizedId && !place.region_id).length;
     const childCount = regionCount + placeCount;
-    if (childCount > 0) return `Remove its ${childCount} child location${childCount === 1 ? "" : "s"} first.`;
+    if (childCount > 0) {
+      return backendT(
+        childCount === 1
+          ? "backend.settings.locations.remove_country_child_first_one"
+          : "backend.settings.locations.remove_country_child_first_many",
+        childCount === 1
+          ? "Remove its {count} child location first."
+          : "Remove its {count} child locations first.",
+        { count: childCount }
+      );
+    }
   }
   if (normalizedType === "region") {
     const childCount = state.locationCatalog.places.filter((place) => place.region_id === normalizedId).length;
-    if (childCount > 0) return `Remove its ${childCount} place${childCount === 1 ? "" : "s"} first.`;
+    if (childCount > 0) {
+      return backendT(
+        childCount === 1
+          ? "backend.settings.locations.remove_region_place_first_one"
+          : "backend.settings.locations.remove_region_place_first_many",
+        childCount === 1
+          ? "Remove its {count} place first."
+          : "Remove its {count} places first.",
+        { count: childCount }
+      );
+    }
   }
   if (!usage.ready) {
     requestLocationUsageCounts();
-    return "Load day usage counts before deleting.";
+    return backendT("backend.settings.locations.delete_block_usage_not_loaded", "Load day usage counts before deleting.");
   }
   if (usage.count > 0) {
-    return `Only locations with Days: 0 can be deleted.`;
+    return backendT("backend.settings.locations.delete_block_days_zero", "Only locations with Days: 0 can be deleted.");
   }
   return "";
 }
@@ -1884,16 +1958,20 @@ async function deleteLocationRecord(type, id) {
   const request = locationDeleteRequest(normalizedType, normalizedId);
   if (!request) return;
   const label = locationDeleteLabel(normalizedType, normalizedId);
-  const typeLabel = normalizedType === "destination" ? "country" : normalizedType === "region" ? "region" : "place";
-  if (!window.confirm(`Delete ${typeLabel} "${label}"?`)) return;
-  showLocationManagerStatus(`Deleting ${typeLabel}...`);
-  setSettingsLocationOverlay(true, `Deleting ${typeLabel}. Please wait.`);
+  const typeLabel = normalizedType === "destination"
+    ? backendT("backend.settings.locations.country", "country")
+    : normalizedType === "region"
+      ? backendT("backend.settings.locations.region", "region")
+      : backendT("backend.settings.locations.place", "place");
+  if (!window.confirm(backendT("backend.settings.locations.delete_confirm", "Delete {type} \"{label}\"?", { type: typeLabel, label }))) return;
+  showLocationManagerStatus(backendT("backend.settings.locations.deleting", "Deleting {type}...", { type: typeLabel }));
+  setSettingsLocationOverlay(true, backendT("backend.settings.locations.deleting_overlay", "Deleting {type}. Please wait.", { type: typeLabel }));
   try {
     const payload = await fetchApi(request.url, { method: request.method });
     if (!payload?.deleted) {
       throw new Error("Delete request did not confirm deletion.");
     }
-    const deletedMessage = `${typeLabel.charAt(0).toUpperCase()}${typeLabel.slice(1)} deleted. Refreshing...`;
+    const deletedMessage = backendT("backend.settings.locations.deleted_refreshing", "{type} deleted. Refreshing...", { type: typeLabel });
     await reloadLocationsAfterMutation({
       responseCatalog: payload.catalog,
       expectation: {
@@ -1905,7 +1983,7 @@ async function deleteLocationRecord(type, id) {
     });
   } catch (error) {
     console.error("[backend-settings] Failed to delete location.", { error, type: normalizedType, id: normalizedId });
-    showLocationManagerStatus("Could not delete location.", true);
+    showLocationManagerStatus(backendT("backend.settings.locations.delete_failed", "Could not delete location."), true);
   } finally {
     setSettingsLocationOverlay(false);
   }
@@ -1915,11 +1993,11 @@ async function addLocationRegion(destination) {
   if (!state.permissions.canEditLocations) return;
   const normalizedDestination = normalizeText(destination).toUpperCase();
   if (!DESTINATION_COUNTRY_CODE_SET.has(normalizedDestination)) return;
-  const name = window.prompt("Region name");
+  const name = window.prompt(backendT("backend.settings.locations.region_name", "Region name"));
   const normalizedName = normalizeText(name);
   if (!normalizedName) return;
-  showLocationManagerStatus("Adding region...");
-  setSettingsLocationOverlay(true, "Adding region. Please wait.");
+  showLocationManagerStatus(backendT("backend.settings.locations.adding_region", "Adding region..."));
+  setSettingsLocationOverlay(true, backendT("backend.settings.locations.adding_region_overlay", "Adding region. Please wait."));
   try {
     const request = destinationScopeRegionCreateRequest({ baseURL: apiOrigin });
     const payload = await fetchApi(request.url, {
@@ -1940,11 +2018,11 @@ async function addLocationRegion(destination) {
         id: state.locationFocusId,
         shouldExist: true
       },
-      statusMessage: "Region added."
+      statusMessage: backendT("backend.settings.locations.region_added", "Region added.")
     });
   } catch (error) {
     console.error("[backend-settings] Failed to add region.", { error, destination: normalizedDestination });
-    showLocationManagerStatus("Could not add region.", true);
+    showLocationManagerStatus(backendT("backend.settings.locations.add_region_failed", "Could not add region."), true);
   } finally {
     setSettingsLocationOverlay(false);
   }
@@ -1959,11 +2037,11 @@ async function addLocationPlace(regionId, destination = "") {
   const normalizedDestination = normalizeText(destination || region?.destination).toUpperCase();
   if (normalizedRegionId && !region) return;
   if (!DESTINATION_COUNTRY_CODE_SET.has(normalizedDestination)) return;
-  const name = window.prompt("Place name");
+  const name = window.prompt(backendT("backend.settings.locations.place_name", "Place name"));
   const normalizedName = normalizeText(name);
   if (!normalizedName) return;
-  showLocationManagerStatus("Adding place...");
-  setSettingsLocationOverlay(true, "Adding place. Please wait.");
+  showLocationManagerStatus(backendT("backend.settings.locations.adding_place", "Adding place..."));
+  setSettingsLocationOverlay(true, backendT("backend.settings.locations.adding_place_overlay", "Adding place. Please wait."));
   try {
     const request = destinationScopePlaceCreateRequest({ baseURL: apiOrigin });
     const payload = await fetchApi(request.url, {
@@ -1985,11 +2063,11 @@ async function addLocationPlace(regionId, destination = "") {
         id: state.locationFocusId,
         shouldExist: true
       },
-      statusMessage: "Place added."
+      statusMessage: backendT("backend.settings.locations.place_added", "Place added.")
     });
   } catch (error) {
     console.error("[backend-settings] Failed to add place.", { error, region_id: normalizedRegionId });
-    showLocationManagerStatus("Could not add place.", true);
+    showLocationManagerStatus(backendT("backend.settings.locations.add_place_failed", "Could not add place."), true);
   } finally {
     setSettingsLocationOverlay(false);
   }

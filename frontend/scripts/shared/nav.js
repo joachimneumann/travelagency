@@ -566,7 +566,7 @@ export function mountBackendNav(mount, options = {}) {
           ${buildSectionButton("bookings", backendT("nav.bookings", "Bookings"), { type: "image", src: "assets/img/profile_booking.png", size: "large" })}
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
           ${buildSectionButton("translations", backendT("nav.translations", "Translations"), { type: "image", src: TRANSLATIONS_ICON_READY, size: "large" })}
-          ${buildSectionButton("tours", "Marketing Tour", { type: "image", src: "assets/img/marketing_tours.png", size: "large" })}
+          ${buildSectionButton("tours", backendT("nav.tours", "Tours"), { type: "image", src: "assets/img/marketing_tours.png", size: "large" })}
         </div>
       </div>
 
