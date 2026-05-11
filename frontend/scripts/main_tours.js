@@ -18,7 +18,6 @@ const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;
 const TOUR_CARD_SCROLL_TIMEOUT_MS = 900;
 const TOUR_CARD_SCROLL_MARGIN_PX = 12;
 const TOUR_DETAILS_IMAGE_READY_TIMEOUT_MS = 900;
-const TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX = 100;
 const TOUR_CUSTOMIZE_MOBILE_QUERY = "(max-width: 760px)";
 const TOUR_CARD_MEDIA_SNAPSHOT_HOLD_MS = Math.max(
   TOUR_DETAILS_OPEN_TRANSITION_MS,
@@ -86,7 +85,6 @@ export function createFrontendToursController(ctx) {
 
   let renderedTourGridColumnCount = 0;
   let tourGridResizeBound = false;
-  let tourDetailsConnectorFrame = 0;
   let tourDetailsTransitionToken = 0;
   let tourCardMediaSnapshotToken = 0;
   const openingTourColumnIndexes = new Map();
@@ -1023,12 +1021,10 @@ export function createFrontendToursController(ctx) {
         syncTourCardImageSwipeSurfaces();
         fitTourCardDescriptions();
         syncExpandedTourDetailsHeights();
-        scheduleTourDetailsConnectorVisibilityUpdate();
         window.requestAnimationFrame(() => {
           syncTourCardImageSwipeSurfaces();
           fitTourCardDescriptions();
           syncExpandedTourDetailsHeights();
-          scheduleTourDetailsConnectorVisibilityUpdate();
         });
         return;
       }
@@ -1036,9 +1032,6 @@ export function createFrontendToursController(ctx) {
       openingTourColumnIndexes.clear();
       renderVisibleTrips();
     });
-    window.addEventListener("scroll", () => {
-      scheduleTourDetailsConnectorVisibilityUpdate();
-    }, { passive: true });
   }
 
   function renderTourMediaBadges(trip) {
@@ -1050,12 +1043,22 @@ export function createFrontendToursController(ctx) {
 
   function tourShowMoreLabel(expanded) {
     return expanded
-      ? frontendT("tour.card.show_less", "Show less")
+      ? frontendT("modal.nav.close", "Close")
       : frontendT("tour.card.details", "Details");
   }
 
-  function renderTourShowMoreLabel(label) {
+  function renderTourShowMoreLabel(label, { expanded = false } = {}) {
+    if (expanded) {
+      return `
+        <span class="tour-card__show-more-close" aria-hidden="true">&times;</span>
+        <span class="tour-card__show-more-label tour-card__show-more-label--hidden" data-tour-card-show-more-label aria-hidden="true">${escapeHTML(label)}</span>
+      `;
+    }
     return `<span class="tour-card__show-more-label" data-tour-card-show-more-label>${escapeHTML(label)}</span>`;
+  }
+
+  function inferTourShowMoreExpandedState(label) {
+    return normalizeText(label) === normalizeText(tourShowMoreLabel(true));
   }
 
   function renderTourDetailsCloseButton(tripId) {
@@ -1081,30 +1084,59 @@ export function createFrontendToursController(ctx) {
 
   function setTourShowMoreButtonLabel(button, label) {
     if (!(button instanceof HTMLElement)) return null;
+    const expanded = inferTourShowMoreExpandedState(label);
+    button.classList.toggle("tour-card__show-more--close", expanded);
+    button.setAttribute("aria-label", label);
+    button.setAttribute("title", label);
     const labelElement = button.querySelector("[data-tour-card-show-more-label]");
     if (labelElement instanceof HTMLElement) {
-      labelElement.textContent = label;
-      return labelElement;
+      const needsExpandedMarkup = expanded && !button.querySelector(".tour-card__show-more-close");
+      const needsCollapsedMarkup = !expanded && button.querySelector(".tour-card__show-more-close");
+      if (!needsExpandedMarkup && !needsCollapsedMarkup) {
+        labelElement.textContent = label;
+        labelElement.classList.toggle("tour-card__show-more-label--hidden", expanded);
+        if (expanded) {
+          labelElement.setAttribute("aria-hidden", "true");
+        } else {
+          labelElement.removeAttribute("aria-hidden");
+        }
+        return labelElement;
+      }
     }
-    button.innerHTML = renderTourShowMoreLabel(label);
+    button.innerHTML = renderTourShowMoreLabel(label, { expanded });
     const renderedLabel = button.querySelector("[data-tour-card-show-more-label]");
     return renderedLabel instanceof HTMLElement ? renderedLabel : null;
+  }
+
+  function setTourShowMoreButtonExpandedState(button, expanded) {
+    return setTourShowMoreButtonLabel(button, tourShowMoreLabel(expanded));
+  }
+
+  function setTourShowMoreButtonContent(button, label) {
+    if (!(button instanceof HTMLElement)) return null;
+    const expanded = inferTourShowMoreExpandedState(label);
+    button.classList.toggle("tour-card__show-more--close", expanded);
+    button.setAttribute("aria-label", label);
+    button.setAttribute("title", label);
+    button.innerHTML = renderTourShowMoreLabel(label, { expanded });
+    const labelElement = button.querySelector("[data-tour-card-show-more-label]");
+    return labelElement instanceof HTMLElement ? labelElement : null;
   }
 
   async function animateTourShowMoreButtonLabel(button, nextLabel, { direction = "open" } = {}) {
     if (!(button instanceof HTMLElement)) return;
     const labelElement = button.querySelector("[data-tour-card-show-more-label]");
     if (!(labelElement instanceof HTMLElement)) {
-      setTourShowMoreButtonLabel(button, nextLabel);
+      setTourShowMoreButtonContent(button, nextLabel);
       return;
     }
     if (normalizeText(labelElement.textContent) === normalizeText(nextLabel)) return;
-    if (prefersReducedMotion() || typeof labelElement.animate !== "function") {
-      labelElement.textContent = nextLabel;
+    if (prefersReducedMotion() || typeof button.animate !== "function") {
+      setTourShowMoreButtonContent(button, nextLabel);
       return;
     }
 
-    const fadeOut = labelElement.animate([
+    const fadeOut = button.animate([
       { opacity: 1 },
       { opacity: 0 }
     ], {
@@ -1114,8 +1146,8 @@ export function createFrontendToursController(ctx) {
     });
     await fadeOut.finished.catch(() => {});
     fadeOut.cancel();
-    labelElement.textContent = nextLabel;
-    const fadeIn = labelElement.animate([
+    setTourShowMoreButtonContent(button, nextLabel);
+    const fadeIn = button.animate([
       { opacity: 0 },
       { opacity: 1 }
     ], {
@@ -1225,6 +1257,9 @@ export function createFrontendToursController(ctx) {
     const showMoreStateAttrs = canShowDetails
       ? `aria-expanded="${expanded ? "true" : "false"}" aria-controls="${escapeAttr(detailsPanelId)}"`
       : `title="${escapeAttr(detailsUnavailableLabel)}"`;
+    const showMoreA11yAttrs = canShowDetails
+      ? `aria-label="${escapeAttr(showMoreLabel)}" title="${escapeAttr(showMoreLabel)}"`
+      : `aria-label="${escapeAttr(detailsUnavailableLabel)}"`;
 
     return `
       <article class="tour-card${expanded ? " tour-card--expanded" : ""}" data-tour-card-id="${escapeAttr(tripId)}" draggable="false">
@@ -1255,7 +1290,7 @@ export function createFrontendToursController(ctx) {
             <p class="tour-desc" data-tour-desc>${escapeHTML(tripShortDescription)}</p>
           </div>
           <div class="tour-card__actions">
-            <a class="btn tour-card__show-more" href="${escapeAttr(detailsHref)}" data-tour-card-show-more data-trip-id="${escapeAttr(tripId)}" ${showMoreStateAttrs}>${renderTourShowMoreLabel(showMoreLabel)}</a>
+            <a class="btn tour-card__show-more${expanded ? " tour-card__show-more--close" : ""}" href="${escapeAttr(detailsHref)}" data-tour-card-show-more data-trip-id="${escapeAttr(tripId)}" ${showMoreStateAttrs} ${showMoreA11yAttrs}>${renderTourShowMoreLabel(showMoreLabel, { expanded })}</a>
             <button class="btn btn-primary tour-card__plan-trip" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(ctaLabel)}</button>
           </div>
         </div>
@@ -1999,15 +2034,6 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
-  function tourDetailsAlignmentClass(columnIndex = 0, columnCount = getTourGridColumnCount()) {
-    const columns = Math.max(1, Number(columnCount) || 1);
-    const column = Math.min(Math.max(0, Number(columnIndex) || 0), columns - 1);
-    if (columns <= 1) return "tour-details-row--align-center";
-    if (column <= 0) return "tour-details-row--align-left";
-    if (column >= columns - 1) return "tour-details-row--align-right";
-    return "tour-details-row--align-center";
-  }
-
   function renderBelowGridTourDetailsRow(trip, columnIndex = 0, columnCount = getTourGridColumnCount()) {
     const tripId = normalizeText(trip?.id);
     const panelId = tourDetailsPanelId(tripId);
@@ -2017,11 +2043,10 @@ export function createFrontendToursController(ctx) {
     });
     const columns = Math.min(Math.max(1, Number(columnCount) || 1), 3);
     const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), columns);
-    const alignmentClass = tourDetailsAlignmentClass(columnIndex, columns);
     const singleVisibleClass = visibleTourCount() <= 1 ? " tour-details-row--single-visible-tour" : "";
     return `
       <article
-        class="tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}${singleVisibleClass}"
+        class="tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} tour-details-row--align-center${singleVisibleClass}"
         data-expanded-tour-id="${escapeAttr(tripId)}"
         style="--tour-grid-columns: ${columns}; --tour-details-column: ${column};"
       >
@@ -2107,11 +2132,10 @@ export function createFrontendToursController(ctx) {
     const anchor = rowCards[rowCards.length - 1] || directTourCardElement(tripId);
     if (!(anchor instanceof HTMLElement)) return null;
     const column = Math.min(Math.max(1, Number(columnIndex ?? 0) + 1), columns);
-    const alignmentClass = tourDetailsAlignmentClass(columnIndex, columns);
     const singleVisibleClass = visibleTourCount() <= 1 ? " tour-details-row--single-visible-tour" : "";
 
     const row = document.createElement("article");
-    row.className = `tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} ${alignmentClass}${singleVisibleClass}`;
+    row.className = `tour-details-row tour-details-row--below-grid tour-details-row--columns-${columns} tour-details-row--align-center${singleVisibleClass}`;
     row.dataset.expandedTourId = tripId;
     row.style.setProperty("--tour-grid-columns", String(columns));
     row.style.setProperty("--tour-details-column", String(column));
@@ -2129,9 +2153,6 @@ export function createFrontendToursController(ctx) {
     if (!(card instanceof HTMLElement)) return null;
     const tripId = normalizeText(card.getAttribute("data-tour-card-id"));
     card.classList.toggle("tour-card--expanded", expanded);
-    if (!expanded) {
-      card.classList.remove("tour-card--details-connector-visible");
-    }
     const button = card.querySelector("[data-tour-card-show-more][data-trip-id]");
     if (button instanceof HTMLElement) {
       button.setAttribute("aria-expanded", expanded ? "true" : "false");
@@ -2152,7 +2173,7 @@ export function createFrontendToursController(ctx) {
       const card = tourCardElement(tripId);
       if (card instanceof HTMLElement) {
         const button = setTourCardExpandedDomState(card, false);
-        setTourShowMoreButtonLabel(button, tourShowMoreLabel(false));
+        setTourShowMoreButtonExpandedState(button, false);
       }
       if (row instanceof HTMLElement) {
         if (card instanceof HTMLElement && row.contains(card)) {
@@ -2215,12 +2236,10 @@ export function createFrontendToursController(ctx) {
     bindTourCardOpenHandlers();
     fitTourCardDescriptions();
     syncExpandedTourDetailsHeights();
-    scheduleTourDetailsConnectorVisibilityUpdate();
     if (typeof window !== "undefined") {
       window.requestAnimationFrame(() => {
         fitTourCardDescriptions();
         syncExpandedTourDetailsHeights();
-        scheduleTourDetailsConnectorVisibilityUpdate();
       });
     }
   }
@@ -2835,37 +2854,6 @@ export function createFrontendToursController(ctx) {
     window.requestAnimationFrame(tick);
   }
 
-  function updateTourDetailsConnectorVisibility(root = els.tourGrid) {
-    if (!(root instanceof HTMLElement) || typeof window === "undefined") return;
-    const singleColumnLayout = isSingleColumnTourLayout();
-    const cards = Array.from(root.querySelectorAll(".tour-card--expanded"));
-    cards.forEach((card) => {
-      if (!(card instanceof HTMLElement)) return;
-      const button = card.querySelector("[data-tour-card-show-more][data-trip-id]");
-      if (!singleColumnLayout || !(button instanceof HTMLElement)) {
-        card.classList.remove("tour-card--details-connector-visible");
-        return;
-      }
-      const buttonBottom = button.getBoundingClientRect().bottom;
-      const distanceFromViewportBottom = window.innerHeight - buttonBottom;
-      card.classList.toggle(
-        "tour-card--details-connector-visible",
-        distanceFromViewportBottom < TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX
-      );
-    });
-  }
-
-  function scheduleTourDetailsConnectorVisibilityUpdate(root = els.tourGrid) {
-    if (!(root instanceof HTMLElement) || typeof window === "undefined") return;
-    if (tourDetailsConnectorFrame) {
-      window.cancelAnimationFrame(tourDetailsConnectorFrame);
-    }
-    tourDetailsConnectorFrame = window.requestAnimationFrame(() => {
-      tourDetailsConnectorFrame = 0;
-      updateTourDetailsConnectorVisibility(root);
-    });
-  }
-
   function collapsedTourDetailsHeight(row) {
     const syncedHeight = syncExpandedTourDetailsHeight(row);
     if (tourDetailsAreBelowGrid(row)) return 0;
@@ -2988,8 +2976,7 @@ export function createFrontendToursController(ctx) {
       row.style.setProperty("--tour-details-card-open-height", `${initialCardHeight}px`);
     }
     const openedButton = setTourCardExpandedDomState(card, true);
-    setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
-    scheduleTourDetailsConnectorVisibilityUpdate(row);
+    setTourShowMoreButtonExpandedState(openedButton, false);
     row.classList.add("tour-details-row--opening");
     row.style.height = `${initialCardHeight}px`;
     row.style.overflow = "hidden";
@@ -2999,9 +2986,8 @@ export function createFrontendToursController(ctx) {
     syncExpandedTourDetailsHeight(row);
 
     if (prefersReducedMotion()) {
-      setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true));
+      setTourShowMoreButtonExpandedState(openedButton, true);
       clearTourDetailsRowAnimation(row);
-      scheduleTourDetailsConnectorVisibilityUpdate(row);
       completeTourDetailsTransition(transitionToken, tripId);
       return;
     }
@@ -3024,7 +3010,6 @@ export function createFrontendToursController(ctx) {
     ]);
     if (!isCurrentTourDetailsTransition(transitionToken)) return;
     clearTourDetailsRowAnimation(row);
-    scheduleTourDetailsConnectorVisibilityUpdate(row);
     completeTourDetailsTransition(transitionToken, tripId);
   }
 
@@ -3045,11 +3030,11 @@ export function createFrontendToursController(ctx) {
     row.style.height = `${expandedHeight}px`;
     row.style.overflow = "hidden";
     row.style.opacity = "1";
-    setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(true));
+    setTourShowMoreButtonExpandedState(closedButton, true);
 
     if (prefersReducedMotion()) {
       setTourExpanded(tripId, false);
-      setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(false));
+      setTourShowMoreButtonExpandedState(closedButton, false);
       setTourCardExpandedDomState(card, false);
       row.replaceWith(card);
       bindTourCardOpenHandlers();
@@ -3095,7 +3080,7 @@ export function createFrontendToursController(ctx) {
       columnCount: renderedTourGridColumnCount
     });
     const openedButton = setTourCardExpandedDomState(card, true);
-    setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(false));
+    setTourShowMoreButtonExpandedState(openedButton, false);
 
     if (!(row instanceof HTMLElement)) {
       renderVisibleTrips();
@@ -3112,7 +3097,7 @@ export function createFrontendToursController(ctx) {
     syncExpandedTourDetailsHeight(row);
 
     if (prefersReducedMotion()) {
-      setTourShowMoreButtonLabel(openedButton, tourShowMoreLabel(true));
+      setTourShowMoreButtonExpandedState(openedButton, true);
       clearTourDetailsRowAnimation(row);
       completeTourDetailsTransition(transitionToken, tripId);
       return;
@@ -3155,11 +3140,11 @@ export function createFrontendToursController(ctx) {
     row.style.height = `${expandedHeight}px`;
     row.style.overflow = "hidden";
     row.style.opacity = "1";
-    setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(true));
+    setTourShowMoreButtonExpandedState(closedButton, true);
 
     if (prefersReducedMotion()) {
       setTourExpanded(tripId, false);
-      setTourShowMoreButtonLabel(closedButton, tourShowMoreLabel(false));
+      setTourShowMoreButtonExpandedState(closedButton, false);
       row.remove();
       bindTourCardOpenHandlers();
       fitTourCardDescriptions(card);

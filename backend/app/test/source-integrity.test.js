@@ -5823,11 +5823,14 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   const mainToursPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "main_tours.js");
   const homepagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "index.html");
   const tourCardCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
-  const [mainToursSource, homepageSource, tourCardCssSource] = await Promise.all([
+  const frontendEnI18nPath = path.resolve(__dirname, "..", "..", "..", "scripts", "i18n", "source_catalogs", "frontend.en.json");
+  const [mainToursSource, homepageSource, tourCardCssSource, frontendEnI18nSource] = await Promise.all([
     readFile(mainToursPath, "utf8"),
     readFile(homepagePath, "utf8"),
-    readFile(tourCardCssPath, "utf8")
+    readFile(tourCardCssPath, "utf8"),
+    readFile(frontendEnI18nPath, "utf8")
   ]);
+  const frontendEnI18n = JSON.parse(frontendEnI18nSource);
 
   assert.doesNotMatch(
     homepageSource,
@@ -5884,10 +5887,52 @@ test("homepage tour cards expand descriptions and align same-row cards without a
     /function renderTrips\(trips, \{ showNoResults = false \} = \{\}\)[\s\S]*renderedTourGridColumnCount = getTourGridColumnCount\(\);[\s\S]*if \(renderedTourGridColumnCount > 1\) \{[\s\S]*renderTourCard\(trip, \{ index: itemIndex, expanded: isTourExpanded\(trip\) \}\)[\s\S]*renderBelowGridTourDetailsRow\(trip, columnIndex, renderedTourGridColumnCount\)[\s\S]*continue;[\s\S]*renderExpandedTourRow\(trip, itemIndex, columnIndex\);/,
     "Multi-column expanded tour details should keep same-row cards rendered in place and insert details below the row"
   );
+  for (const key of [
+    "tour.card.get_quote",
+    "tour.plan.pdf_overview_one_pager",
+    "tour.plan.pdf_day_by_day_travel_plan",
+    "tour.plan.pdf_overview_description",
+    "tour.plan.pdf_day_by_day_description",
+    "tour.plan.your_itinerary",
+    "tour.plan.customize",
+    "tour.plan.customize_trip",
+    "common.and",
+    "tour.customize.close",
+    "tour.customize.confirm",
+    "tour.customize.day",
+    "tour.customize.drop_here",
+    "tour.customize.empty_timeline",
+    "tour.customize.map",
+    "tour.customize.marker_label",
+    "tour.customize.move_here",
+    "tour.customize.no_optional_days",
+    "tour.customize.optional_days",
+    "tour.customize.pdf_loading",
+    "tour.customize.pdf_loading_title",
+    "tour.customize.reset",
+    "tour.customize.subtitle",
+    "tour.customize.timeline",
+    "tour.customize.timeline_named",
+    "tour.customize.title",
+    "tour.customize.title_proposal_custom",
+    "tour.customize.zoom_out"
+  ]) {
+    assert.ok(frontendEnI18n[key], `Frontend i18n source should include ${key}`);
+  }
   assert.match(
     mainToursSource,
-    /function renderBelowGridTourDetailsRow\(trip, columnIndex = 0, columnCount = getTourGridColumnCount\(\)\)[\s\S]*tour-details-row--below-grid tour-details-row--columns-\$\{columns\} \$\{alignmentClass\}[\s\S]*style="--tour-grid-columns: \$\{columns\}; --tour-details-column: \$\{column\};"[\s\S]*function createBelowGridTourDetailsRow\(trip,[\s\S]*visibleTourRowTripIds\(tripId, columns\)[\s\S]*const anchor = rowCards\[rowCards\.length - 1\] \|\| directTourCardElement\(tripId\)[\s\S]*anchor\.after\(row\)/,
-    "Below-grid details should be anchored after the last visible card in the current card row"
+    /function renderBelowGridTourDetailsRow\(trip, columnIndex = 0, columnCount = getTourGridColumnCount\(\)\)[\s\S]*tour-details-row--below-grid tour-details-row--columns-\$\{columns\} tour-details-row--align-center[\s\S]*style="--tour-grid-columns: \$\{columns\}; --tour-details-column: \$\{column\};"[\s\S]*function createBelowGridTourDetailsRow\(trip,[\s\S]*visibleTourRowTripIds\(tripId, columns\)[\s\S]*const anchor = rowCards\[rowCards\.length - 1\] \|\| directTourCardElement\(tripId\)[\s\S]*tour-details-row--below-grid tour-details-row--columns-\$\{columns\} tour-details-row--align-center[\s\S]*anchor\.after\(row\)/,
+    "Below-grid details should be anchored after the last visible card in the current card row and centered in that row"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /tourDetailsConnector|renderTourDetailsConnector|createTourDetailsConnector|tour-details-row__connector|tour-details-row__connector-path|shell\.append\(createTourDetailsConnectorElement/,
+    "Below-grid details should not create connector SVG markup or connector helper code"
+  );
+  assert.doesNotMatch(
+    mainToursSource,
+    /tourDetailsAlignmentClass|tour-details-row--align-left|tour-details-row--align-right/,
+    "Below-grid details should not keep column-based left/right alignment"
   );
   assert.match(
     mainToursSource,
@@ -5931,13 +5976,13 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   );
   assert.match(
     mainToursSource,
-    /const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;[\s\S]*async function animateTourShowMoreButtonLabel\(button, nextLabel, \{ direction = "open" \} = \{\}\) \{[\s\S]*const fadeOut = labelElement\.animate\(\[[\s\S]*opacity:\s*1[\s\S]*opacity:\s*0[\s\S]*duration: Math\.round\(TOUR_SHOW_MORE_LABEL_TRANSITION_MS \/ 2\)[\s\S]*await fadeOut\.finished\.catch\(\(\) => \{\}\);[\s\S]*fadeOut\.cancel\(\);[\s\S]*labelElement\.textContent = nextLabel;[\s\S]*const fadeIn = labelElement\.animate\(\[[\s\S]*opacity:\s*0[\s\S]*opacity:\s*1[\s\S]*duration: Math\.round\(TOUR_SHOW_MORE_LABEL_TRANSITION_MS \/ 2\)[\s\S]*await fadeIn\.finished\.catch\(\(\) => \{\}\);[\s\S]*fadeIn\.cancel\(\);/,
-    "Show more/show less label swaps should fade out, swap text while hidden, then fade in to avoid alignment jumps"
+    /const TOUR_SHOW_MORE_LABEL_TRANSITION_MS = 420;[\s\S]*async function animateTourShowMoreButtonLabel\(button, nextLabel, \{ direction = "open" \} = \{\}\) \{[\s\S]*const fadeOut = button\.animate\(\[[\s\S]*opacity:\s*1[\s\S]*opacity:\s*0[\s\S]*duration: Math\.round\(TOUR_SHOW_MORE_LABEL_TRANSITION_MS \/ 2\)[\s\S]*await fadeOut\.finished\.catch\(\(\) => \{\}\);[\s\S]*fadeOut\.cancel\(\);[\s\S]*setTourShowMoreButtonContent\(button, nextLabel\);[\s\S]*const fadeIn = button\.animate\(\[[\s\S]*opacity:\s*0[\s\S]*opacity:\s*1[\s\S]*duration: Math\.round\(TOUR_SHOW_MORE_LABEL_TRANSITION_MS \/ 2\)[\s\S]*await fadeIn\.finished\.catch\(\(\) => \{\}\);[\s\S]*fadeIn\.cancel\(\);/,
+    "Details/close button content swaps should fade out, swap while hidden, then fade in to avoid alignment jumps"
   );
   assert.doesNotMatch(
     mainToursSource,
     /animateTourShowMoreButtonLabelAfterDetailThird|oneThirdDelayMs/,
-    "Show more/show less label swaps should not keep a delayed one-third transition helper"
+    "Details/close button content swaps should not keep a delayed one-third transition helper"
   );
   assert.match(
     mainToursSource,
@@ -5952,7 +5997,7 @@ test("homepage tour cards expand descriptions and align same-row cards without a
   assert.doesNotMatch(
     mainToursSource,
     /tourDetailsTransitioning|button\.disabled \|\| tourDetailsTransitioning/,
-    "Details/show-less clicks should not be ignored while a previous details animation is still running"
+    "Details/close clicks should not be ignored while a previous details animation is still running"
   );
   assert.match(
     mainToursSource,
@@ -5968,6 +6013,21 @@ test("homepage tour cards expand descriptions and align same-row cards without a
     tourCardCssSource,
     /\.tour-details-row--below-grid \.tour-details-row__shell \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*grid-template-columns: repeat\(var\(--tour-grid-columns, 2\), minmax\(0, 1fr\)\);[\s\S]*column-gap: 1\.5rem;[\s\S]*\.tour-details-row--below-grid \.tour-details-row__panel \{[\s\S]*grid-column: 1 \/ -1;[\s\S]*justify-self: center;[\s\S]*width: min\(var\(--tour-details-panel-fit-width, 100%\), 100%\);/,
     "Two-column below-row tour details should span beneath the unchanged card row and center the full-height panel"
+  );
+  assert.doesNotMatch(
+    tourCardCssSource,
+    /\.tour-details-row__connector|\.tour-details-row__connector-path|--tour-details-connector/,
+    "Below-grid tour detail connector CSS should be removed"
+  );
+  assert.doesNotMatch(
+    tourCardCssSource,
+    /\.tour-details-row--below-grid \.tour-details-row__shell::(?:before|after)/,
+    "Below-grid tour detail connectors should not be built from straight pseudo-element segments"
+  );
+  assert.doesNotMatch(
+    tourCardCssSource,
+    /tour-details-row--align-(?:left|right)/,
+    "Below-grid details CSS should not override centered panels for left or right card columns"
   );
   assert.match(
     tourCardCssSource,
@@ -6024,15 +6084,15 @@ test("homepage tour cards expand descriptions and align same-row cards without a
     /\.tour-card__show-more:disabled,[\s\S]*\.tour-card__show-more:disabled:active \{[\s\S]*background: var\(--surface-disabled\);[\s\S]*color: var\(--text-disabled\);[\s\S]*box-shadow: none;[\s\S]*transform: none;[\s\S]*\.tour-card__show-more:disabled::after,[\s\S]*\.tour-card__show-more:disabled:active::after \{[\s\S]*opacity: 0;/,
     "Disabled tour-card details buttons should not show hover, active, or pressed-overlay color changes"
   );
-  assert.match(
+  assert.doesNotMatch(
     mainToursSource,
-    /const TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX = 100;[\s\S]*function updateTourDetailsConnectorVisibility\(root = els\.tourGrid\) \{[\s\S]*const distanceFromViewportBottom = window\.innerHeight - buttonBottom;[\s\S]*"tour-card--details-connector-visible"[\s\S]*distanceFromViewportBottom < TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX/,
-    "Mobile details connector should only show when the show-less button is within 100px of the viewport bottom"
+    /TOUR_DETAILS_CONNECTOR_VIEWPORT_THRESHOLD_PX|updateTourDetailsConnectorVisibility|scheduleTourDetailsConnectorVisibilityUpdate|tour-card--details-connector-visible/,
+    "Mobile details connector measurement and visibility code should be removed"
   );
-  assert.match(
+  assert.doesNotMatch(
     tourCardCssSource,
     /\.tour-card--details-connector-visible \.tour-card__actions::before,[\s\S]*\.tour-card--details-connector-visible \.tour-card__actions::after/,
-    "Mobile details connector pseudo-elements should be gated by the measured visibility class"
+    "Mobile details connector pseudo-elements should be removed"
   );
 });
 

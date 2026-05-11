@@ -601,6 +601,27 @@ export function createTourCustomizer({
       : t("tour.customize.timeline", "Your Itinerary");
   }
 
+  function closeActionLabel() {
+    return draftHasCustomizedTimeline()
+      ? t("tour.customize.confirm", "I am happy")
+      : t("tour.customize.close", "Close");
+  }
+
+  function renderCloseActionButton() {
+    const label = closeActionLabel();
+    return `<button class="tour-customize__close" type="button" data-customize-close aria-label="${escapeAttr(label)}">${escapeHTML(label)}</button>`;
+  }
+
+  function refreshCloseActionDom() {
+    if (!modal) return false;
+    const closeButton = modal.querySelector("[data-customize-close]");
+    if (!(closeButton instanceof HTMLElement)) return false;
+    const label = closeActionLabel();
+    closeButton.textContent = label;
+    closeButton.setAttribute("aria-label", label);
+    return true;
+  }
+
   function tourTitleForTimeline(trip) {
     const currentLang = lang();
     return resolveLocalizedText(trip?.title_i18n, currentLang)
@@ -965,7 +986,7 @@ export function createTourCustomizer({
           </div>
           <div class="tour-customize__header-actions">
             <button class="btn btn-secondary" type="button" data-customize-reset>${escapeHTML(t("tour.customize.reset", "Reset tour"))}</button>
-            <button class="tour-customize__close" type="button" data-customize-close>${escapeHTML(t("tour.customize.confirm", "I am happy with this Tour"))}</button>
+            ${renderCloseActionButton()}
           </div>
         </header>
         <div class="tour-customize__workspace">
@@ -1053,6 +1074,7 @@ export function createTourCustomizer({
     refreshMapDom();
     refreshOptionsDom();
     refreshTimelineTitleDom();
+    refreshCloseActionDom();
   }
 
   function addDay(itemId, insertIndex = draft.timelineDays.length) {

@@ -268,6 +268,7 @@ function shouldIgnoreTourSnapshotControl(control) {
   if (!(control instanceof HTMLElement)) return false;
   // These sub-editors already contribute their own semantic snapshots via state.
   return control === els.reelVideoUpload
+    || control === els.onePagerLang
     || Boolean(els.localizedContentEditor?.contains(control))
     || Boolean(els.travel_plan_editor?.contains(control));
 }
@@ -459,14 +460,28 @@ function tourLanguageLabel(lang) {
     || tourLanguageShortLabel(lang);
 }
 
-function renderOnePagerLanguageOptions() {
+function onePagerCustomerLanguage() {
+  return normalizeLanguageCode(
+    state.tour?.customer_language
+      || state.booking?.customer_language
+      || state.booking?.web_form_submission?.preferred_language
+      || state.tour?.web_form_submission?.preferred_language
+      || "en",
+    {
+      allowedCodes: CUSTOMER_CONTENT_LANGUAGE_CODES,
+      fallback: "en"
+    }
+  );
+}
+
+function renderOnePagerLanguageOptions({ preserveCurrentValue = null } = {}) {
   if (!els.onePagerLang || String(els.onePagerLang.tagName || "").toLowerCase() !== "select") return;
   const languages = tourTextLanguages();
   const currentValue = normalizeTourTextLang(els.onePagerLang.value);
-  const shouldPreserveCurrentValue = els.onePagerLang.dataset.onePagerLangInitialized === "true";
-  const defaultLang = ["en", "vi"].includes(currentTourEditingLang())
-    ? currentTourEditingLang()
-    : "en";
+  const shouldPreserveCurrentValue = preserveCurrentValue === null
+    ? els.onePagerLang.dataset.onePagerLangInitialized === "true"
+    : Boolean(preserveCurrentValue);
+  const defaultLang = onePagerCustomerLanguage();
   const fragment = document.createDocumentFragment();
   languages.forEach((language) => {
     const code = normalizeTourTextLang(language?.code);
@@ -1826,10 +1841,7 @@ function handleBackendLanguageChanged() {
   void loadTravelPlanDestinationCatalog().then(() => {
     tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
   });
-  if (els.onePagerLang && els.onePagerLang.dataset.onePagerLangUserSelected !== "true") {
-    delete els.onePagerLang.dataset.onePagerLangInitialized;
-    renderOnePagerLanguageOptions();
-  }
+  renderOnePagerLanguageOptions({ preserveCurrentValue: true });
   syncLocalizedFieldState();
   updateHeaderTitle();
   updateHeaderSubtitle();
@@ -2117,6 +2129,7 @@ function applyTourEditorTour(tour, { preserveTravelPlanCollapsedState = false } 
   setInput("tour_seo_slug", tour.seo_slug || "");
   if (els.publishedOnWebpage) els.publishedOnWebpage.checked = tour.published_on_webpage === true;
   renderLocalizedTourContentEditor();
+  renderOnePagerLanguageOptions({ preserveCurrentValue: els.onePagerLang?.dataset.onePagerLangUserSelected === "true" });
   syncReelVideoDraftItemFromTour(tour);
   tourTravelPlanAdapter?.applyTour(tour, { preserveCollapsedState: preserveTravelPlanCollapsedState });
   renderTravelPlanDestinationSummary();
@@ -2159,6 +2172,7 @@ async function initializeNewTourForm() {
   setInput("tour_seo_slug", "");
   if (els.publishedOnWebpage) els.publishedOnWebpage.checked = false;
   renderLocalizedTourContentEditor();
+  renderOnePagerLanguageOptions({ preserveCurrentValue: els.onePagerLang?.dataset.onePagerLangUserSelected === "true" });
   syncReelVideoDraftItemFromTour(state.tour);
   tourTravelPlanAdapter?.applyTour(state.tour);
   renderTravelPlanDestinationSummary();

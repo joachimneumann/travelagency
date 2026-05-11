@@ -1530,7 +1530,9 @@ textarea:focus-visible {
 }
 
 .tour-card--expanded {
-  border: 0;
+  outline: 4px solid var(--accent);
+  outline-offset: 0;
+  box-shadow: none;
 }
 
 .tour-card:hover,
@@ -1952,6 +1954,31 @@ textarea:focus-visible {
   will-change: opacity;
 }
 
+.tour-card__show-more-label--hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tour-card__show-more-close {
+  position: relative;
+  z-index: 1;
+  display: inline-grid;
+  place-items: center;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+  font-size: 1.28em;
+  font-weight: var(--font-weight-bold);
+}
+
 .tour-card__show-more:hover,
 .tour-card__show-more:focus-visible {
   background: var(--surface-accent);
@@ -2208,16 +2235,8 @@ textarea:focus-visible {
   margin-top: calc(var(--tour-card-details-gap) - 1.8rem);
 }
 
-.tour-details-row--below-grid.tour-details-row--align-left .tour-details-row__panel {
-  justify-self: start;
-}
-
 .tour-details-row--below-grid.tour-details-row--align-center .tour-details-row__panel {
   justify-self: center;
-}
-
-.tour-details-row--below-grid.tour-details-row--align-right .tour-details-row__panel {
-  justify-self: end;
 }
 
 .tour-details-row:not(.tour-details-row--side-panel) .tour-details-row__panel::-webkit-scrollbar {
@@ -4034,37 +4053,6 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
   .tour-card__show-more:active {
     clip-path: inset(0 round 14px);
-  }
-
-  .tour-card--details-connector-visible .tour-card__actions::before,
-  .tour-card--details-connector-visible .tour-card__actions::after {
-    content: "";
-    position: absolute;
-    left: calc((100% - 0.9rem) * 0.78 / 1.78 / 2);
-    z-index: 2;
-    pointer-events: none;
-  }
-
-  .tour-card--details-connector-visible .tour-card__actions::before {
-    top: calc(100% + 0.45rem);
-    width: 2px;
-    height: 1.45rem;
-    border-radius: 999px;
-    background: linear-gradient(
-      180deg,
-      rgb(var(--accent-rgb) / 0.72),
-      rgb(var(--accent-rgb) / 0.16)
-    );
-    transform: translateX(-50%);
-  }
-
-  .tour-card--details-connector-visible .tour-card__actions::after {
-    top: calc(100% + 1.62rem);
-    width: 0.58rem;
-    height: 0.58rem;
-    border-right: 2px solid rgb(var(--accent-rgb) / 0.56);
-    border-bottom: 2px solid rgb(var(--accent-rgb) / 0.56);
-    transform: translateX(-50%) rotate(45deg);
   }
 
   .tour-card__media-button:hover .tour-card__media-zoom,

@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=2216, initial-scale=1" />
+    <title>Tour detail connection mockups</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 2216px;
+        height: 1782px;
+        overflow: hidden;
+        background: #eef4ea;
+      }
+
+      .frame {
+        position: relative;
+        width: 2216px;
+        height: 1782px;
+      }
+
+      .base,
+      .overlay {
+        position: absolute;
+        inset: 0;
+        width: 2216px;
+        height: 1782px;
+      }
+
+      .base {
+        object-fit: cover;
+      }
+
+      .label {
+        font-family: "Avenir Next", Avenir, Arial, sans-serif;
+        letter-spacing: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="frame">
+      <img class="base" src="./base-screenshot.png" alt="" />
+      <svg
+        class="overlay"
+        xmlns="http://www.w3.org/2000/svg"
+        width="2216"
+        height="1782"
+        viewBox="0 0 2216 1782"
+      ></svg>
+    </main>
+    <script>
+      const variant = new URLSearchParams(location.search).get("variant") || "1";
+      const overlay = document.querySelector(".overlay");
+
+      const defs = `
+        <defs>
+          <filter id="softShadow" x="-30%" y="-30%" width="160%" height="180%">
+            <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#15302a" flood-opacity="0.18"/>
+          </filter>
+          <filter id="smallShadow" x="-30%" y="-30%" width="160%" height="180%">
+            <feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#15302a" flood-opacity="0.20"/>
+          </filter>
+        </defs>
+      `;
+
+      const option1 = `
+        ${defs}
+        <rect x="846" y="-16" width="724" height="646" rx="31" fill="#e97864" opacity="0.055"/>
+        <rect x="846" y="-16" width="724" height="646" rx="31" fill="none" stroke="#e97864" stroke-width="8" opacity="0.98"/>
+
+        <path d="M1211 630 L1211 682" stroke="#e97864" stroke-width="11" stroke-linecap="round"/>
+        <circle cx="1211" cy="630" r="17" fill="#ffffff" stroke="#e97864" stroke-width="7"/>
+        <path d="M1160 685 L1211 638 L1262 685 Z" fill="#ffffff" stroke="#e97864" stroke-width="6" stroke-linejoin="round" filter="url(#smallShadow)"/>
+        <circle cx="1211" cy="684" r="12" fill="#e97864"/>
+
+        <rect x="566" y="685" width="1286" height="12" rx="6" fill="#e97864" opacity="0.95"/>
+        <rect x="566" y="685" width="1286" height="1062" rx="30" fill="none" stroke="#e97864" stroke-width="5" opacity="0.82"/>
+
+        <rect x="1022" y="641" width="378" height="53" rx="26.5" fill="#ffffff" stroke="#e97864" stroke-width="3.5" filter="url(#softShadow)"/>
+        <text x="1211" y="676" text-anchor="middle" class="label" fill="#e97864" font-size="30" font-weight="800">Selected tour</text>
+      `;
+
+      const option2 = `
+        ${defs}
+        <rect x="848" y="-14" width="720" height="642" rx="31" fill="none" stroke="#3f806f" stroke-width="8"/>
+        <rect x="566" y="685" width="1286" height="1062" rx="30" fill="none" stroke="#3f806f" stroke-width="7"/>
+
+        <rect x="876" y="469" width="280" height="110" rx="28" fill="#ffffff" stroke="#3f806f" stroke-width="2"/>
+        <text x="1016" y="536" text-anchor="middle" class="label" fill="#3f806f" font-size="34" font-weight="800">X</text>
+
+        <rect x="1365" y="48" width="160" height="54" rx="27" fill="#3f806f" filter="url(#smallShadow)"/>
+        <text x="1445" y="84" text-anchor="middle" class="label" fill="#ffffff" font-size="26" font-weight="800">Tour 2</text>
+
+        <circle cx="1211" cy="628" r="14" fill="#ffffff" stroke="#3f806f" stroke-width="6"/>
+        <circle cx="1211" cy="685" r="14" fill="#ffffff" stroke="#3f806f" stroke-width="6"/>
+        <path d="M1211 642 V671" stroke="#3f806f" stroke-width="8" stroke-linecap="round"/>
+      `;
+
+      const option3 = `
+        ${defs}
+        <rect x="848" y="-14" width="720" height="642" rx="31" fill="none" stroke="#2f7080" stroke-width="7"/>
+        <rect x="566" y="685" width="1286" height="1062" rx="30" fill="none" stroke="#2f7080" stroke-width="6" opacity="0.90"/>
+        <rect x="566" y="685" width="1286" height="10" rx="5" fill="#2f7080" opacity="0.85"/>
+
+        <rect x="856" y="606" width="710" height="96" rx="22" fill="#ffffff" stroke="#2f7080" stroke-width="6" filter="url(#softShadow)"/>
+        <path d="M856 665 H566" stroke="#2f7080" stroke-width="6" stroke-linecap="round" opacity="0.90"/>
+        <path d="M1566 665 H1852" stroke="#2f7080" stroke-width="6" stroke-linecap="round" opacity="0.90"/>
+        <path d="M1211 629 V606" stroke="#2f7080" stroke-width="7" stroke-linecap="round"/>
+
+        <rect x="892" y="628" width="58" height="58" rx="13" fill="#eef6f3" stroke="#2f7080" stroke-width="3"/>
+        <path d="M907 667 L916 652 L928 661 L938 640" fill="none" stroke="#2f7080" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="936" cy="641" r="6" fill="#e97864"/>
+
+        <text x="974" y="645" class="label" fill="#e97864" font-size="24" font-weight="800" letter-spacing="2">DETAILS FOR</text>
+        <text x="974" y="681" class="label" fill="#1f3340" font-size="34" font-weight="900">Hanoi to Sapa heights</text>
+      `;
+
+      const option2Left = `
+        ${defs}
+        <rect x="88" y="-14" width="720" height="642" rx="31" fill="none" stroke="#3f806f" stroke-width="8"/>
+        <rect x="566" y="685" width="1286" height="1062" rx="30" fill="none" stroke="#3f806f" stroke-width="7"/>
+
+        <rect x="590" y="716" width="1150" height="174" fill="#ffffff"/>
+        <text x="596" y="739" class="label" fill="#e97864" font-size="24" font-weight="800" letter-spacing="2">TOUR DETAILS</text>
+        <text x="603" y="824" class="label" fill="#1f3340" font-size="62" font-weight="900">Son Tra, Ba Na Hills and Hanoi</text>
+
+        <rect x="596" y="898" width="170" height="86" fill="#ffffff"/>
+        <text x="603" y="914" class="label" fill="#5e6b73" font-size="24" font-weight="800">Duration</text>
+        <text x="603" y="966" class="label" fill="#1f3340" font-size="32" font-weight="500">5 days</text>
+
+        <rect x="116" y="469" width="280" height="110" rx="28" fill="#ffffff" stroke="#3f806f" stroke-width="2"/>
+        <text x="256" y="536" text-anchor="middle" class="label" fill="#3f806f" font-size="34" font-weight="800">X</text>
+
+        <rect x="894" y="493" width="260" height="76" rx="30" fill="#ffffff"/>
+        <text x="1024" y="538" text-anchor="middle" class="label" fill="#3f806f" font-size="30" font-weight="800">Details</text>
+
+        <rect x="604" y="14" width="160" height="54" rx="27" fill="#3f806f" filter="url(#smallShadow)"/>
+        <text x="684" y="50" text-anchor="middle" class="label" fill="#ffffff" font-size="26" font-weight="800">Tour 1</text>
+
+        <path d="M448 628 V656 H650 V671" fill="none" stroke="#3f806f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="448" cy="628" r="14" fill="#ffffff" stroke="#3f806f" stroke-width="6"/>
+        <circle cx="650" cy="685" r="14" fill="#ffffff" stroke="#3f806f" stroke-width="6"/>
+      `;
+
+      overlay.innerHTML =
+        { 1: option1, 2: option2, 3: option3, "2-left": option2Left }[variant] ||
+        option1;
+    </script>
+  </body>
+</html>

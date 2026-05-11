@@ -15,8 +15,10 @@ class FakeElement {
   constructor() {
     this.hidden = false;
     this.innerHTML = "";
+    this.textContent = "";
     this.dataset = {};
     this.style = {};
+    this.attributes = {};
     this.classList = {
       add() {},
       remove() {},
@@ -25,6 +27,16 @@ class FakeElement {
   }
 
   addEventListener() {}
+
+  setAttribute(name, value) {
+    this.attributes[name] = String(value);
+  }
+
+  getAttribute(name) {
+    return Object.prototype.hasOwnProperty.call(this.attributes, name) ? this.attributes[name] : null;
+  }
+
+  focus() {}
 
   querySelectorAll() {
     return [];
@@ -281,10 +293,14 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   assert.match(els.tourGrid.innerHTML, /tour-plan-pdf/);
   assert.match(els.tourGrid.innerHTML, /data-tour-overview-pdf/);
   assert.match(els.tourGrid.innerHTML, /data-tour-travel-plan-pdf/);
-  assert.match(els.tourGrid.innerHTML, />Overview \(one-pager\)<\/button>/);
-  assert.match(els.tourGrid.innerHTML, />Day-by-Day Travel Plan<\/button>/);
-  assert.match(els.tourGrid.innerHTML, /A PDF that gives you an overview of this tour/);
-  assert.match(els.tourGrid.innerHTML, /A PDF that shows you all activities of this tour/);
+  assert.match(els.tourGrid.innerHTML, />Überblick \(Einseiter\)<\/button>/);
+  assert.match(els.tourGrid.innerHTML, />Tagesplan<\/button>/);
+  assert.match(els.tourGrid.innerHTML, /Ein PDF mit einem Überblick über diese Reise/);
+  assert.match(els.tourGrid.innerHTML, /Ein PDF mit allen Aktivitäten dieser Reise/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, />Overview \(one-pager\)<\/button>/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, />Day-by-Day Travel Plan<\/button>/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /A PDF that gives you an overview of this tour/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /A PDF that shows you all activities of this tour/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan-pdf__badge/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /\/content\/one-pagers\/pdfs\/tour_localized_plan\/de\.pdf/);
@@ -296,12 +312,15 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
   const cardActionsEnd = els.tourGrid.innerHTML.indexOf("</div>", cardActionsStart);
   const cardActionsMarkup = els.tourGrid.innerHTML.slice(cardActionsStart, cardActionsEnd);
   assert.match(cardActionsMarkup, /tour-card__show-more[\s\S]*tour-card__plan-trip/);
-  assert.match(cardActionsMarkup, />Get a Quote<\/button>/);
+  assert.match(cardActionsMarkup, />Angebot anfragen<\/button>/);
+  assert.doesNotMatch(cardActionsMarkup, />Get a Quote<\/button>/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-actions/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle/);
   assert.match(els.tourGrid.innerHTML, /tour-plan-itinerary"[^>]+hidden/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle[\s\S]*Ihre Reiseroute[\s\S]*<\/button>/);
-  assert.match(els.tourGrid.innerHTML, />Get a Quote<\/button>/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle[\s\S]*Reiseverlauf[\s\S]*<\/button>/);
+  assert.match(els.tourGrid.innerHTML, />Angebot anfragen<\/button>/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, />Itinerary<\/button>/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, />Get a Quote<\/button>/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-toggle/);
   assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-details hidden/);
   assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-full-itinerary/);
@@ -427,6 +446,7 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
   global.HTMLButtonElement = FakeElement;
 
   const { createFrontendToursController } = await loadToursController();
+  const germanDict = await loadFrontendDictionary("de");
   const trip = {
     id: "tour_customize_mobile",
     title: "Mobile customization tour",
@@ -498,10 +518,10 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
         backendBaseUrl: "",
         initialVisibleTours: 1,
         showMoreBatch: 1,
-        frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+        frontendT: (id, fallback, vars = {}) => String(state.lang === "de" ? germanDict[id] ?? fallback ?? "" : fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
           Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
         )),
-        currentFrontendLang: () => "en",
+        currentFrontendLang: () => state.lang || "en",
         preferredCurrencyForFrontendLang: () => "USD",
         approximateDisplayAmountFromUSD: () => null,
         formatDisplayMoney: () => "",
@@ -557,6 +577,16 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
 
   assert.match(desktop.els.tourGrid.innerHTML, /data-tour-customize/);
   assert.match(desktop.els.tourGrid.innerHTML, /Customize this Trip/);
+
+  const localizedDesktop = createController({
+    ...baseState(),
+    lang: "de"
+  });
+  localizedDesktop.controller.renderVisibleTrips();
+
+  assert.match(localizedDesktop.els.tourGrid.innerHTML, /data-tour-customize/);
+  assert.match(localizedDesktop.els.tourGrid.innerHTML, />Diese Reise anpassen<\/button>/);
+  assert.doesNotMatch(localizedDesktop.els.tourGrid.innerHTML, /Customize this Trip/);
 });
 
 test("tour customizer names the original itinerary with the tour title before customization", async () => {
@@ -652,8 +682,272 @@ test("tour customizer names the original itinerary with the tour title before cu
     await customizer.open(trip.id);
 
     assert.match(modalElement?.innerHTML || "", /Your Itinerary: Original Tour Title/);
-    assert.match(modalElement?.innerHTML || "", /I am happy with this Tour/);
+    assert.match(modalElement?.innerHTML || "", />Close<\/button>/);
+    assert.doesNotMatch(modalElement?.innerHTML || "", /I am happy/);
     assert.doesNotMatch(modalElement?.innerHTML || "", /&times;|>×<\/button>/);
+  } finally {
+    global.document = previousDocument;
+    global.HTMLElement = previousHTMLElement;
+    global.HTMLButtonElement = previousHTMLButtonElement;
+    global.window = previousWindow;
+  }
+});
+
+test("tour customizer modal chrome follows the frontend language", async () => {
+  const previousDocument = global.document;
+  const previousHTMLElement = global.HTMLElement;
+  const previousHTMLButtonElement = global.HTMLButtonElement;
+  const previousWindow = global.window;
+  let modalElement = null;
+
+  class CapturingElement extends FakeElement {
+    constructor() {
+      super();
+      this._innerHTML = "";
+    }
+
+    set innerHTML(value) {
+      this._innerHTML = String(value ?? "");
+    }
+
+    get innerHTML() {
+      return this._innerHTML;
+    }
+
+    querySelector() {
+      return null;
+    }
+
+    remove() {}
+  }
+
+  global.HTMLElement = CapturingElement;
+  global.HTMLButtonElement = CapturingElement;
+  global.document = {
+    activeElement: null,
+    body: {
+      appendChild(element) {
+        modalElement = element;
+      }
+    },
+    createElement() {
+      modalElement = new CapturingElement();
+      return modalElement;
+    },
+    documentElement: {
+      classList: {
+        add() {},
+        remove() {}
+      }
+    }
+  };
+  global.window = undefined;
+
+  try {
+    const { createTourCustomizer } = await loadTourCustomizer();
+    const germanDict = await loadFrontendDictionary("de");
+    const trip = {
+      id: "tour_customizer_i18n",
+      title: "Original Tour Title",
+      travel_plan: {
+        days: [
+          {
+            id: "day_hanoi",
+            day_number: 1,
+            title: "Hanoi arrival",
+            primary_location_id: "place_hanoi",
+            services: [
+              { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+            ]
+          }
+        ]
+      }
+    };
+    const customizer = createTourCustomizer({
+      state: {},
+      frontendT: (id, fallback, vars = {}) => String(germanDict[id] ?? fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+      )),
+      currentFrontendLang: () => "de",
+      normalizeFrontendTourLang: (lang) => lang || "en",
+      escapeHTML,
+      escapeAttr,
+      travelPlanDays: (item) => item?.travel_plan?.days || [],
+      destinationScopeCatalog: () => ({
+        places: [
+          { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 }
+        ]
+      }),
+      findTripById: () => trip,
+      ensureTourDetailsLoaded: async () => trip,
+      allTrips: () => [trip],
+      renderVisibleTrips() {}
+    });
+
+    await customizer.open(trip.id);
+
+    const markup = modalElement?.innerHTML || "";
+    assert.match(markup, /Passen Sie diese Tour individuell an/);
+    assert.match(markup, /Tour zurücksetzen/);
+    assert.match(markup, /Optionale Tage/);
+    assert.match(markup, /Ihre Reiseroute: Original Tour Title/);
+    assert.match(markup, /Tag 1/);
+    assert.match(markup, />Schließen<\/button>/);
+    assert.doesNotMatch(markup, /Customize this tour|Reset tour|Optional days|Your Itinerary|>Close<\/button>/);
+  } finally {
+    global.document = previousDocument;
+    global.HTMLElement = previousHTMLElement;
+    global.HTMLButtonElement = previousHTMLButtonElement;
+    global.window = previousWindow;
+  }
+});
+
+test("tour customizer uses happy confirmation only after customization and resets back to close", async () => {
+  const previousDocument = global.document;
+  const previousHTMLElement = global.HTMLElement;
+  const previousHTMLButtonElement = global.HTMLButtonElement;
+  const previousWindow = global.window;
+  let modalElement = null;
+  let resetHandler = null;
+  const storage = new Map();
+
+  class CapturingElement extends FakeElement {
+    constructor() {
+      super();
+      this._innerHTML = "";
+    }
+
+    set innerHTML(value) {
+      this._innerHTML = String(value ?? "");
+    }
+
+    get innerHTML() {
+      return this._innerHTML;
+    }
+
+    querySelector(selector) {
+      if (selector === "[data-customize-reset]") {
+        return {
+          addEventListener(_event, handler) {
+            resetHandler = handler;
+          }
+        };
+      }
+      if (selector === "[data-customize-close]") {
+        return new CapturingElement();
+      }
+      return null;
+    }
+
+    remove() {}
+  }
+
+  global.HTMLElement = CapturingElement;
+  global.HTMLButtonElement = CapturingElement;
+  global.document = {
+    activeElement: null,
+    body: {
+      appendChild(element) {
+        modalElement = element;
+      }
+    },
+    createElement() {
+      modalElement = new CapturingElement();
+      return modalElement;
+    },
+    documentElement: {
+      classList: {
+        add() {},
+        remove() {}
+      }
+    }
+  };
+  global.window = {
+    localStorage: {
+      getItem(key) {
+        return storage.has(key) ? storage.get(key) : null;
+      },
+      setItem(key, value) {
+        storage.set(key, String(value));
+      },
+      removeItem(key) {
+        storage.delete(key);
+      }
+    }
+  };
+
+  try {
+    const { createTourCustomizer } = await loadTourCustomizer();
+    const hanoiDay = {
+      id: "day_hanoi",
+      day_number: 1,
+      title: "Hanoi arrival",
+      primary_location_id: "place_hanoi",
+      services: [
+        { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+      ]
+    };
+    const hueDay = {
+      id: "day_hue",
+      day_number: 2,
+      title: "Hue temples",
+      primary_location_id: "place_hue",
+      services: [
+        { title: "Temples", image: { storage_path: "/assets/img/hue.webp" } }
+      ]
+    };
+    const trip = {
+      id: "tour_customized_confirmation",
+      title: "Original Tour Title",
+      travel_plan: {
+        days: [hanoiDay]
+      }
+    };
+    storage.set("asiatravelplan.custom_tour.tour_customized_confirmation", JSON.stringify({
+      originalTourId: "tour_customized_confirmation",
+      timelineDays: [
+        {
+          id: "tour_customized_confirmation:day_hue",
+          timelineInstanceId: "tour_customized_confirmation:day_hue::stored",
+          sourceTourId: "tour_customized_confirmation",
+          sourceDayId: "day_hue",
+          day: hueDay
+        }
+      ]
+    }));
+
+    const customizer = createTourCustomizer({
+      state: {},
+      frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+      )),
+      currentFrontendLang: () => "en",
+      normalizeFrontendTourLang: (lang) => lang || "en",
+      escapeHTML,
+      escapeAttr,
+      travelPlanDays: (item) => item?.travel_plan?.days || [],
+      destinationScopeCatalog: () => ({
+        places: [
+          { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 },
+          { id: "place_hue", label: "Hue", latitude: 16.4637, longitude: 107.5909 }
+        ]
+      }),
+      findTripById: () => trip,
+      ensureTourDetailsLoaded: async () => trip,
+      allTrips: () => [trip],
+      renderVisibleTrips() {}
+    });
+
+    await customizer.open(trip.id);
+
+    assert.match(modalElement?.innerHTML || "", />I am happy<\/button>/);
+    assert.doesNotMatch(modalElement?.innerHTML || "", /with this Tour/);
+
+    assert.equal(typeof resetHandler, "function");
+    resetHandler();
+
+    assert.match(modalElement?.innerHTML || "", />Close<\/button>/);
+    assert.doesNotMatch(modalElement?.innerHTML || "", />I am happy<\/button>/);
   } finally {
     global.document = previousDocument;
     global.HTMLElement = previousHTMLElement;
@@ -1360,4 +1654,103 @@ test("public tour details render only one expanded tour at a time", async () => 
   assert.equal((els.tourGrid.innerHTML.match(/data-expanded-tour-id=/g) || []).length, 1);
   assert.doesNotMatch(els.tourGrid.innerHTML, /data-expanded-tour-id="tour_first_open"/);
   assert.match(els.tourGrid.innerHTML, /data-expanded-tour-id="tour_second_open"/);
+});
+
+test("desktop public tour details center below the initiating card row", async () => {
+  global.HTMLElement = FakeElement;
+  global.HTMLButtonElement = FakeElement;
+  global.window = {
+    addEventListener() {},
+    requestAnimationFrame(callback) {
+      if (typeof callback === "function") callback();
+    },
+    matchMedia() {
+      return { matches: false };
+    }
+  };
+
+  const { createFrontendToursController } = await loadToursController();
+  const makeTrip = (id, title, destination) => ({
+    id,
+    title,
+    short_description: "",
+    styles: [],
+    destinations: [destination],
+    pictures: [],
+    travel_plan: {
+      days: [
+        {
+          id: `${id}_day`,
+          day_number: 1,
+          title: `${title} day`,
+          services: []
+        }
+      ]
+    }
+  });
+  const trips = [
+    makeTrip("tour_left_open", "Left tour", "Vietnam"),
+    makeTrip("tour_center_open", "Center tour", "Thailand"),
+    makeTrip("tour_right_open", "Right tour", "Laos")
+  ];
+  const state = {
+    lang: "en",
+    filteredTrips: trips,
+    trips,
+    visibleToursCount: 3,
+    expandedTourIds: new Set(["tour_right_open"]),
+    filterOptions: {
+      destinations: [],
+      styles: [],
+      destinationScopeCatalog: null
+    },
+    filters: {
+      dest: [],
+      area: "",
+      place: "",
+      style: []
+    }
+  };
+  const els = {
+    tourGrid: new FakeElement(),
+    noResultsMessage: new FakeElement(),
+    tourActions: null,
+    showMoreTours: null
+  };
+  const controller = createFrontendToursController({
+    state,
+    els,
+    backendBaseUrl: "",
+    initialVisibleTours: 3,
+    showMoreBatch: 1,
+    frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+      Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+    )),
+    currentFrontendLang: () => "en",
+    preferredCurrencyForFrontendLang: () => "USD",
+    approximateDisplayAmountFromUSD: () => null,
+    formatDisplayMoney: () => "",
+    defaultBookingCurrency: "USD",
+    escapeHTML,
+    escapeAttr,
+    updateBookingModalTitle() {},
+    openBookingModal() {},
+    setSelectedTourContext() {},
+    clearSelectedTourContext() {},
+    setBookingField() {},
+    prefillBookingFormWithFilters() {}
+  });
+
+  controller.renderVisibleTrips();
+
+  assert.match(
+    els.tourGrid.innerHTML,
+    /tour-details-row--below-grid tour-details-row--columns-3 tour-details-row--align-center/
+  );
+  assert.match(els.tourGrid.innerHTML, /--tour-details-column: 3;/);
+  assert.doesNotMatch(
+    els.tourGrid.innerHTML,
+    /tour-details-row__connector|tour-details-row__connector-path/
+  );
+  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-details-row--align-(left|right)/);
 });
