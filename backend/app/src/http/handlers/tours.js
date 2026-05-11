@@ -84,6 +84,7 @@ export function createTourHandlers(deps) {
     TEMP_UPLOAD_DIR,
     TOURS_DIR,
     TRANSLATIONS_SNAPSHOT_DIR,
+    TRANSLATION_MANUAL_OVERRIDES_PATH,
     BOOKING_IMAGES_DIR,
     writeFile,
     rm
@@ -102,6 +103,8 @@ export function createTourHandlers(deps) {
   const CUSTOM_PREVIEW_TITLE_PROPOSAL_LIMIT = 1;
   const CUSTOM_PREVIEW_TITLE_LOCATION_LIMIT = 3;
   const translationsSnapshotDir = normalizeText(TRANSLATIONS_SNAPSHOT_DIR) || path.join(repoRoot, "content", "translations");
+  const translationManualOverridesPath = normalizeText(TRANSLATION_MANUAL_OVERRIDES_PATH)
+    || path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
   const customOnePagerPreviewTokens = new Map();
   let publicHomepageAssetGenerationQueue = Promise.resolve();
 
@@ -163,7 +166,9 @@ export function createTourHandlers(deps) {
     const normalizedLang = normalizeTourLang(lang);
     if (!normalizedLang || normalizedLang === "en") return new Map();
     try {
-      const publishedByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, [normalizedLang]);
+      const publishedByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, [normalizedLang], {
+        manualOverridesPath: translationManualOverridesPath
+      });
       return publishedByLang.get(normalizedLang) || new Map();
     } catch (error) {
       console.warn("[backend-tour-translation] Could not read published marketing tour translations.", {

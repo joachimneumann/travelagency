@@ -3843,8 +3843,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     toursHandlerSource,
-    /loadMarketingTourContentTranslationMap\(lang\)[\s\S]*loadPublishedMarketingTourTranslations\(translationsSnapshotDir, \[normalizedLang\]\)[\s\S]*return publishedByLang\.get\(normalizedLang\) \|\| new Map\(\);[\s\S]*localizeMarketingToursForRead\(tours, lang\)[\s\S]*applyMarketingTourTranslations\(tour, lang, translations\)[\s\S]*localizeMarketingTourForRead\(tour, lang\)[\s\S]*const localizedTour = await localizeMarketingTourForRead\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
-    "On-demand one-pager PDFs should apply published content/translations marketing-tour copy before localized PDF rendering"
+    /translationManualOverridesPath[\s\S]*loadMarketingTourContentTranslationMap\(lang\)[\s\S]*loadPublishedMarketingTourTranslations\(translationsSnapshotDir, \[normalizedLang\], \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\)[\s\S]*return publishedByLang\.get\(normalizedLang\) \|\| new Map\(\);[\s\S]*localizeMarketingToursForRead\(tours, lang\)[\s\S]*applyMarketingTourTranslations\(tour, lang, translations\)[\s\S]*localizeMarketingTourForRead\(tour, lang\)[\s\S]*const localizedTour = await localizeMarketingTourForRead\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "On-demand one-pager PDFs should apply published content/translations and manual override marketing-tour copy before localized PDF rendering"
   );
   assert.doesNotMatch(
     toursHandlerSource,
@@ -3853,13 +3853,13 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerScriptSource,
-    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, options\.languages\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
-    "Batch one-pager PDFs should apply published marketing-tour translation snapshots through the shared translator before localized PDF rendering"
+    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*const translationManualOverridesPath = path\.join\(repoRoot, "config", "i18n", "translation_manual_overrides\.json"\);[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, options\.languages, \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "Batch one-pager PDFs should apply published marketing-tour snapshots and manual overrides through the shared translator before localized PDF rendering"
   );
   assert.match(
     homepageGeneratorSource,
-    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages\);[\s\S]*const localizedTour = applyMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
-    "Homepage generation should strip embedded marketing-tour translations through the shared translator before applying published snapshots"
+    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages, \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
+    "Homepage generation should strip embedded marketing-tour translations through the shared translator before applying published snapshots and manual overrides"
   );
   assert.match(
     onePagerShellSource,

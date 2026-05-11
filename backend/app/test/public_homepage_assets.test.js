@@ -165,6 +165,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     schema: "translation-manual-overrides/v2",
     schema_version: 2,
     items: [
+      { source_text: "Alpha tour", target_lang: "vi", manual_override: "Tour Alpha Manual" },
       { source_text: "Central", target_lang: "vi", manual_override: "Miền Trung Manual" }
     ]
   });
@@ -416,7 +417,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.ok(publicTourDetailsDe.one_pager_experience_highlight_ids.includes("iconic_landmarks"));
   assert.ok(publicTourDetailsDe.one_pager_experience_highlight_ids.includes("delicious_cuisine"));
   assert.equal(publicTourDetailsDe.one_pager_experience_highlights.length, 4);
-  assert.equal(publicToursVi.items[0].title, "Tour Alpha");
+  assert.equal(publicToursVi.items[0].title, "Tour Alpha Manual");
   assert.equal(publicToursVi.items[0].short_description, "Mo ta Alpha");
   assert.equal(publicTourDetailsVi.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/vi.pdf");
   assert.deepEqual(publicTourDetailsVi.one_pager_experience_highlights.map((item) => item.title), [

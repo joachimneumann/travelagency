@@ -402,6 +402,7 @@ export function createApplicationRoutes({
     TEMP_UPLOAD_DIR: runtime.paths.tempUploadDir,
     TOURS_DIR: runtime.paths.toursDir,
     TRANSLATIONS_SNAPSHOT_DIR: runtime.paths.translationsSnapshotDir,
+    TRANSLATION_MANUAL_OVERRIDES_PATH: runtime.paths.translationManualOverridesPath,
     BOOKING_IMAGES_DIR: runtime.paths.bookingImagesDir,
     writeFile,
     rm
