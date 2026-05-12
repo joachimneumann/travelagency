@@ -13,7 +13,7 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-05-12T12:22:53.630Z",
+  "updated_at": "2026-05-12T14:25:22.743Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
@@ -53,7 +53,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Phu Quoc airport welcome",
+            "title": "Phu Quoc Airport welcome",
             "title_i18n": {},
             "details": "Arrive on Phu Quoc and meet your driver for the first island visits after airport pickup.",
             "details_i18n": {},
@@ -63,23 +63,7 @@
             "location_i18n": {},
             "start_time": null,
             "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_7cd8fd2c-4abf-4bee-b3b0-402439d615bc",
-              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/travel_plan_service_abdee124-c984-4813-aae9-cea38dd11c85-1777344058412-5ce2aac0-e946-43cf-ab7d-74dc9754999c.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-04-28T02:40:58.471Z"
-            }
+            "image": null
           },
           {
             "id": "travel_plan_service_82fc71fa-1066-4a3d-a8f3-004293542098",
