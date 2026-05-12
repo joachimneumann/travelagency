@@ -13,19 +13,12 @@ const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultCatalogPath = path.join(defaultToursDir, "destinations.json");
 const defaultHighlightManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
 const defaultOutputPath = "/tmp/tour-meta/index.html";
-const experienceHighlightLimit = 4;
-const fallbackExperienceHighlightIds = [
-  "local_experiences",
-  "delicious_cuisine",
-  "family_friendly_activities",
-  "shopping_souvenirs"
-];
 
 function printUsage() {
   console.log(`Usage: scripts/content/create_tour_meta.mjs [options]
 
 Creates a static HTML matrix of tour metadata.
-Rows are tours. Columns are tour name, experience highlights, and linked locations.
+Rows are tours. Columns are tour name, locations, and one column per itinerary day.
 Experience highlight images are copied into an img/ folder next to the HTML file.
 
 Options:
@@ -206,88 +199,6 @@ function addUnique(output, seen, value) {
   output.push(normalized);
 }
 
-function stableHash(value) {
-  let hash = 2166136261;
-  const text = String(value ?? "");
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-function deterministicShuffle(values, seed) {
-  return [...values]
-    .map((value, index) => ({
-      value,
-      index,
-      rank: stableHash(`${seed || "tour"}:${value}`)
-    }))
-    .sort((left, right) => left.rank - right.rank || left.index - right.index)
-    .map((entry) => entry.value);
-}
-
-function collectExplicitHighlightIds(travelPlan) {
-  const ids = [];
-  const seen = new Set();
-
-  for (const id of Array.isArray(travelPlan?.one_pager_experience_highlight_ids) ? travelPlan.one_pager_experience_highlight_ids : []) {
-    addUnique(ids, seen, id);
-  }
-
-  for (const id of Array.isArray(travelPlan?.derived_experience_highlight_ids) ? travelPlan.derived_experience_highlight_ids : []) {
-    addUnique(ids, seen, id);
-  }
-
-  return ids;
-}
-
-function deriveDayHighlightIds(travelPlan, highlightCatalog) {
-  const counts = new Map();
-  const firstSeen = new Map();
-  let sequence = 0;
-
-  for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
-    const daySeen = new Set();
-    for (const rawId of Array.isArray(day?.experience_highlight_ids) ? day.experience_highlight_ids : []) {
-      const id = normalizeId(rawId);
-      if (!id || daySeen.has(id) || !highlightCatalog.has(id)) continue;
-      daySeen.add(id);
-      counts.set(id, (counts.get(id) || 0) + 1);
-      if (!firstSeen.has(id)) {
-        firstSeen.set(id, sequence);
-        sequence += 1;
-      }
-    }
-  }
-
-  const catalogOrder = new Map(Array.from(highlightCatalog.keys()).map((id, index) => [id, index]));
-  return Array.from(counts.keys())
-    .sort((left, right) => {
-      const countDelta = (counts.get(right) || 0) - (counts.get(left) || 0);
-      if (countDelta !== 0) return countDelta;
-      const catalogDelta = (catalogOrder.get(left) ?? Number.POSITIVE_INFINITY) - (catalogOrder.get(right) ?? Number.POSITIVE_INFINITY);
-      if (catalogDelta !== 0) return catalogDelta;
-      return (firstSeen.get(left) || 0) - (firstSeen.get(right) || 0);
-    });
-}
-
-function collectHighlightIds(tourJson, highlightCatalog, seed) {
-  const travelPlan = tourJson?.travel_plan;
-  const selected = [
-    ...collectExplicitHighlightIds(travelPlan),
-    ...deriveDayHighlightIds(travelPlan, highlightCatalog)
-  ].filter((id, index, ids) => highlightCatalog.has(id) && ids.indexOf(id) === index);
-
-  if (selected.length >= experienceHighlightLimit) return selected.slice(0, experienceHighlightLimit);
-
-  const fallbackIds = deterministicShuffle(
-    fallbackExperienceHighlightIds.filter((id) => highlightCatalog.has(id) && !selected.includes(id)),
-    seed
-  );
-  return selected.concat(fallbackIds).slice(0, experienceHighlightLimit);
-}
-
 function collectDestinationScopePlaceIds(destinationScope) {
   const ids = [];
   const seen = new Set();
@@ -330,28 +241,61 @@ function collectLocationIds(tourJson) {
   return ids;
 }
 
+function normalizeDayNumber(day, index) {
+  const parsed = Number(day?.day_number);
+  if (Number.isInteger(parsed) && parsed > 0) return parsed;
+  return index + 1;
+}
+
+function getDayTitle(day, dayNumber) {
+  return normalizeText(day?.title_i18n?.en) || normalizeText(day?.title) || `Day ${dayNumber}`;
+}
+
+function getSelectedDayHighlight(day, highlightCatalog) {
+  const id = (Array.isArray(day?.experience_highlight_ids) ? day.experience_highlight_ids : [])
+    .map((value) => normalizeId(value))
+    .find(Boolean);
+  if (!id) return null;
+
+  const catalogItem = highlightCatalog.get(id);
+  return {
+    id,
+    title: catalogItem?.title || id,
+    image: catalogItem?.image || "",
+    known: highlightCatalog.has(id),
+    url: ""
+  };
+}
+
+function collectDays(tourJson, highlightCatalog) {
+  return (Array.isArray(tourJson?.travel_plan?.days) ? tourJson.travel_plan.days : [])
+    .map((day, index) => {
+      const dayNumber = normalizeDayNumber(day, index);
+      return {
+        dayNumber,
+        title: getDayTitle(day, dayNumber),
+        highlight: getSelectedDayHighlight(day, highlightCatalog)
+      };
+    })
+    .sort((left, right) => left.dayNumber - right.dayNumber);
+}
+
 async function readTour(tourDir, dirent, highlightCatalog, placeCatalog) {
   const tourId = dirent.name;
   const tourJsonPath = path.join(tourDir, "tour.json");
   if (!(await pathExists(tourJsonPath))) return null;
 
   const tourJson = await readJson(tourJsonPath);
-  const highlightIds = collectHighlightIds(tourJson, highlightCatalog, tourId);
   const locationIds = collectLocationIds(tourJson);
 
   return {
     id: tourId,
     title: getEnglishTitle(tourJson, tourId),
-    highlights: highlightIds.map((id) => ({
-      id,
-      title: highlightCatalog.get(id)?.title || id,
-      image: highlightCatalog.get(id)?.image || "",
-      known: highlightCatalog.has(id)
-    })),
     locations: locationIds.map((id) => ({
       id,
       place: placeCatalog.get(id) || null
-    }))
+    })),
+    days: collectDays(tourJson, highlightCatalog)
   };
 }
 
@@ -386,7 +330,7 @@ async function copyHighlightImagesForOutput({ tours, highlightManifestPath, outp
   await mkdir(imageOutputDir, { recursive: true });
 
   for (const tour of tours) {
-    for (const highlight of tour.highlights) {
+    for (const highlight of tour.days.map((day) => day.highlight).filter(Boolean)) {
       if (!highlight.image) continue;
       usedImages.add(highlight.image);
     }
@@ -403,7 +347,7 @@ async function copyHighlightImagesForOutput({ tours, highlightManifestPath, outp
   }
 
   for (const tour of tours) {
-    for (const highlight of tour.highlights) {
+    for (const highlight of tour.days.map((day) => day.highlight).filter(Boolean)) {
       highlight.url = highlight.image && copiedImages.has(highlight.image)
         ? toRelativeUrl(path.join("img", "experience-highlights", highlight.image))
         : "";
@@ -469,28 +413,6 @@ function googleMapsUrl(place) {
   return `https://www.google.com/maps?q=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
 }
 
-function renderHighlightCell(highlights) {
-  if (!highlights.length) return '<td class="empty-cell">No highlights set</td>';
-
-  return `<td class="highlight-cell">
-        <div class="highlight-list">
-          ${highlights.map((highlight) => {
-            const title = escapeHtml(highlight.title);
-            const image = highlight.url
-              ? `<img src="${escapeAttr(highlight.url)}" alt="${title}" loading="lazy">`
-              : '<div class="missing-image">No image</div>';
-            return `<div class="highlight-item${highlight.known ? "" : " is-missing"}">
-              ${image}
-              <div>
-                <div class="highlight-title">${title}</div>
-                <div class="item-id">${escapeHtml(highlight.id)}</div>
-              </div>
-            </div>`;
-          }).join("")}
-        </div>
-      </td>`;
-}
-
 function renderLocationCell(locations) {
   if (!locations.length) return '<td class="empty-cell">No locations set</td>';
 
@@ -519,18 +441,50 @@ function renderLocationCell(locations) {
       </td>`;
 }
 
+function renderDayHighlight(highlight) {
+  if (!highlight) return "";
+
+  const title = escapeHtml(highlight.title);
+  const image = highlight.url
+    ? `<img src="${escapeAttr(highlight.url)}" alt="${title}" loading="lazy">`
+    : '<div class="missing-image">No image</div>';
+
+  return `<div class="day-highlight${highlight.known ? "" : " is-missing"}">
+          ${image}
+          <div>
+            <div class="highlight-title">${title}</div>
+            <div class="item-id">${escapeHtml(highlight.id)}</div>
+          </div>
+        </div>`;
+}
+
+function renderDayCell(day) {
+  if (!day) return '<td class="empty-cell"></td>';
+
+  return `<td class="day-cell">
+        <div class="day-title">${escapeHtml(day.title)}</div>
+        ${renderDayHighlight(day.highlight)}
+      </td>`;
+}
+
 function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outputPath }) {
-  const highlightCount = tours.reduce((total, tour) => total + tour.highlights.length, 0);
+  const maxDayNumber = tours.reduce((max, tour) => Math.max(max, ...tour.days.map((day) => day.dayNumber), 0), 0);
+  const dayHeaderCells = Array.from({ length: maxDayNumber }, (_, index) => `<th>Day ${index + 1}</th>`).join("");
+  const selectedHighlightCount = tours.reduce((total, tour) => total + tour.days.filter((day) => day.highlight).length, 0);
   const locationCount = tours.reduce((total, tour) => total + tour.locations.length, 0);
   const rows = tours
-    .map((tour) => `<tr>
+    .map((tour) => {
+      const daysByNumber = new Map(tour.days.map((day) => [day.dayNumber, day]));
+      const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1))).join("");
+      return `<tr>
       <th class="tour-cell" scope="row">
         <div class="tour-title">${escapeHtml(tour.title)}</div>
         <div class="tour-id">${escapeHtml(tour.id)}</div>
       </th>
-      ${renderHighlightCell(tour.highlights)}
       ${renderLocationCell(tour.locations)}
-    </tr>`)
+      ${dayCells}
+    </tr>`;
+    })
     .join("\n");
 
   return `<!doctype html>
@@ -603,7 +557,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
     table {
       border-collapse: separate;
       border-spacing: 0;
-      min-width: 980px;
+      min-width: max-content;
       width: 100%;
       background: var(--surface);
     }
@@ -654,6 +608,13 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       margin-bottom: 4px;
     }
 
+    .day-title {
+      font-weight: 700;
+      margin-bottom: 8px;
+      max-width: 220px;
+      overflow-wrap: anywhere;
+    }
+
     .tour-id,
     .item-id {
       color: var(--muted);
@@ -661,23 +622,19 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       overflow-wrap: anywhere;
     }
 
-    .highlight-cell,
-    .location-cell {
+    .location-cell,
+    .day-cell {
       background: #ffffff;
+      min-width: 240px;
       padding: 10px 12px;
     }
 
-    .highlight-list,
     .location-list {
       display: grid;
       gap: 8px;
     }
 
-    .highlight-list {
-      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    }
-
-    .highlight-item {
+    .day-highlight {
       align-items: center;
       border: 1px solid var(--line);
       display: grid;
@@ -687,7 +644,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       padding: 7px;
     }
 
-    .highlight-item img,
+    .day-highlight img,
     .missing-image {
       background: #eef2f0;
       border: 1px solid var(--line);
@@ -729,7 +686,8 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
     <h1>Tour Meta Matrix</h1>
     <div class="meta">
       <span>${tours.length} tours</span>
-      <span>${highlightCount} highlights</span>
+      <span>${maxDayNumber} day columns</span>
+      <span>${selectedHighlightCount} selected day highlights</span>
       <span>${locationCount} locations</span>
       <span>Source: ${escapeHtml(toursDir)}</span>
       <span>Catalog: ${escapeHtml(catalogPath)}</span>
@@ -741,9 +699,9 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
     <table>
       <thead>
         <tr>
-          <th>Tour title</th>
-          <th>Experience highlights</th>
-          <th>Locations</th>
+          <th>Tour name</th>
+          <th>Location</th>
+          ${dayHeaderCells}
         </tr>
       </thead>
       <tbody>
@@ -790,7 +748,7 @@ async function main() {
   console.log(`Wrote ${options.outputPath}`);
   console.log(`Copied highlight images to ${path.join(path.dirname(options.outputPath), "img", "experience-highlights")}`);
   if (options.createZip) console.log(`Wrote ${options.zipPath}`);
-  console.log(`Included ${tours.length} tours, ${tours.reduce((total, tour) => total + tour.highlights.length, 0)} highlights, and ${tours.reduce((total, tour) => total + tour.locations.length, 0)} locations.`);
+  console.log(`Included ${tours.length} tours, ${tours.reduce((total, tour) => total + tour.days.length, 0)} days, ${tours.reduce((total, tour) => total + tour.days.filter((day) => day.highlight).length, 0)} selected day highlights, and ${tours.reduce((total, tour) => total + tour.locations.length, 0)} locations.`);
 }
 
 main().catch((error) => {
