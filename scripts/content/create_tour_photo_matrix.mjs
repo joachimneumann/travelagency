@@ -11,12 +11,19 @@ const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultOutputPath = "/tmp/tour-photo-matrix/index.html";
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"]);
 const thumbnailMaxSize = 300;
+const missingPhotoWarningImage = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="Missing photo">
+  <rect width="300" height="300" rx="18" fill="#fef2f2"/>
+  <path d="M150 48 266 252H34L150 48Z" fill="#dc2626"/>
+  <path d="M150 100v78" stroke="#fff" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="150" cy="216" r="12" fill="#fff"/>
+  <text x="150" y="286" fill="#991b1b" font-family="Arial, sans-serif" font-size="22" font-weight="700" text-anchor="middle">Missing photo</text>
+</svg>`)}`;
 
 function printUsage() {
   console.log(`Usage: scripts/content/create_tour_photo_matrix.mjs [options]
 
-Creates a static HTML matrix of photos found below each content/tours/* subfolder.
-Images are copied into an img/ folder next to the HTML file and referenced with relative paths.
+Creates a static HTML matrix of itinerary services found in content/tours/*/tour.json.
+Service images are copied into an img/ folder next to the HTML file and referenced with relative paths.
 Before creating the matrix, unused images in content/tours/*/travel-plan-services are deleted.
 
 Options:
@@ -283,50 +290,79 @@ function imageCandidatesForService(service) {
   return candidates;
 }
 
-function collectServiceTitleByImagePath(tourJson, tourId) {
-  const titles = new Map();
-  const days = Array.isArray(tourJson?.travel_plan?.days) ? tourJson.travel_plan.days : [];
+function normalizeDayNumber(day, index) {
+  const parsed = Number(day?.day_number);
+  if (Number.isInteger(parsed) && parsed > 0) return parsed;
+  return index + 1;
+}
 
-  for (const day of days) {
-    const services = Array.isArray(day?.services) ? day.services : [];
-    for (const service of services) {
-      const serviceTitle = localizedText(service, "title");
-      if (!serviceTitle) continue;
+function storagePathFromImage(image) {
+  if (!image || typeof image !== "object" || Array.isArray(image)) return "";
+  return normalizeText(image.storage_path || image.url || image.src || image.path);
+}
 
-      for (const image of imageCandidatesForService(service)) {
-        const storagePath = normalizeText(image?.storage_path || image?.url || image?.src || image?.path);
-        const relativePath = serviceImageRelativePathFromReference(storagePath, tourId);
-        if (relativePath && !titles.has(relativePath)) {
-          titles.set(relativePath, serviceTitle);
-        }
-      }
+function serviceImageFromCandidate(image, tourId, toursDir) {
+  const sourceRelativePath = serviceImageRelativePathFromReference(storagePathFromImage(image), tourId);
+  if (!sourceRelativePath) return null;
+
+  return {
+    fileName: path.basename(sourceRelativePath),
+    sourceRelativePath,
+    sourcePath: path.join(toursDir, sourceRelativePath),
+    url: "",
+    missing: false
+  };
+}
+
+function selectedServiceImage(service, tourId, toursDir) {
+  const seen = new Set();
+  for (const candidate of imageCandidatesForService(service)) {
+    const image = serviceImageFromCandidate(candidate, tourId, toursDir);
+    if (!image || seen.has(image.sourceRelativePath)) continue;
+    seen.add(image.sourceRelativePath);
+    return image;
+  }
+  return null;
+}
+
+function collectServices(tourJson, tourId, toursDir) {
+  const days = (Array.isArray(tourJson?.travel_plan?.days) ? tourJson.travel_plan.days : [])
+    .map((day, index) => ({
+      day,
+      dayNumber: normalizeDayNumber(day, index),
+      originalIndex: index
+    }))
+    .sort((left, right) => {
+      if (left.dayNumber !== right.dayNumber) return left.dayNumber - right.dayNumber;
+      return left.originalIndex - right.originalIndex;
+    });
+
+  const services = [];
+  for (const { day, dayNumber } of days) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      services.push({
+        dayNumber,
+        title: localizedText(service, "title") || "Untitled service",
+        image: selectedServiceImage(service, tourId, toursDir)
+      });
     }
   }
 
-  return titles;
+  return services;
 }
 
 async function readTour(tourDir, dirent) {
   const tourId = dirent.name;
   const tourJsonPath = path.join(tourDir, "tour.json");
-  const images = await listImageFiles(tourDir, { includeImagesInCurrentDir: false });
-  let title = tourId;
-  let published = false;
-  let serviceTitleByImagePath = new Map();
+  if (!(await pathExists(tourJsonPath))) return null;
 
-  if (await pathExists(tourJsonPath)) {
-    const tourJson = await readJson(tourJsonPath);
-    title = getEnglishTitle(tourJson, tourId);
-    published = isPublishedOnWebpage(tourJson);
-    serviceTitleByImagePath = collectServiceTitleByImagePath(tourJson, tourId);
-  }
+  const tourJson = await readJson(tourJsonPath);
 
   return {
     id: tourId,
-    title,
-    published,
-    serviceTitleByImagePath,
-    images
+    title: getEnglishTitle(tourJson, tourId),
+    published: isPublishedOnWebpage(tourJson),
+    services: collectServices(tourJson, tourId, path.dirname(tourDir))
   };
 }
 
@@ -340,7 +376,7 @@ async function readTours(toursDir) {
   const tours = [];
   for (const dirent of tourDirs) {
     const tour = await readTour(path.join(toursDir, dirent.name), dirent);
-    if (tour.images.length > 0) tours.push(tour);
+    if (tour) tours.push(tour);
   }
 
   return tours.sort(compareTours);
@@ -350,70 +386,77 @@ function toRelativeUrl(filePath) {
   return filePath.split(path.sep).map(encodeURIComponent).join("/");
 }
 
-async function copyImagesForOutput({ tours, toursDir, outputPath }) {
+async function copyServiceImagesForOutput({ tours, outputPath }) {
   const outputDir = path.dirname(outputPath);
   const imageOutputDir = path.join(outputDir, "img");
+  const copiedImages = new Set();
   await mkdir(outputDir, { recursive: true });
   await rm(imageOutputDir, { recursive: true, force: true });
 
   for (const tour of tours) {
-    const copiedImages = [];
+    for (const service of tour.services) {
+      const image = service.image;
+      if (!image) continue;
+      if (!(await pathExists(image.sourcePath))) {
+        image.missing = true;
+        continue;
+      }
 
-    for (const imagePath of tour.images) {
-      const sourceRelativePath = normalizeRelativePath(path.relative(toursDir, imagePath));
+      const sourceRelativePath = image.sourceRelativePath;
       const outputRelativePath = path.join("img", sourceRelativePath);
       const copiedImagePath = path.join(outputDir, outputRelativePath);
 
-      await mkdir(path.dirname(copiedImagePath), { recursive: true });
-      await writeImageThumbnail(imagePath, copiedImagePath, { maxSize: thumbnailMaxSize });
-      copiedImages.push({
-        fileName: path.basename(imagePath),
-        sourceRelativePath,
-        serviceTitle: tour.serviceTitleByImagePath.get(sourceRelativePath) || "",
-        url: toRelativeUrl(outputRelativePath)
-      });
+      if (!copiedImages.has(sourceRelativePath)) {
+        await mkdir(path.dirname(copiedImagePath), { recursive: true });
+        await writeImageThumbnail(image.sourcePath, copiedImagePath, { maxSize: thumbnailMaxSize });
+        copiedImages.add(sourceRelativePath);
+      }
+      image.url = toRelativeUrl(outputRelativePath);
     }
-
-    tour.images = copiedImages;
   }
 }
 
-function renderImageCell(image) {
-  const serviceTitle = image.serviceTitle
-    ? `<div class="service-title" title="${escapeHtml(image.serviceTitle)}">${escapeHtml(image.serviceTitle)}</div>`
-    : "";
-  const imageLabel = image.serviceTitle || "Tour photo";
+function renderMissingPhoto(message) {
+  return `<div class="missing-photo">
+          <img src="${escapeHtml(missingPhotoWarningImage)}" alt="${escapeHtml(message)}" loading="lazy">
+          <div class="missing-photo-label">${escapeHtml(message)}</div>
+        </div>`;
+}
 
-  return `<td class="photo-cell">
-        <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener">
-          <img src="${escapeHtml(image.url)}" alt="${escapeHtml(imageLabel)}" loading="lazy">
-        </a>
-        ${serviceTitle}
+function renderServiceCell(service) {
+  const imageLabel = service.title;
+  const imageHtml = service.image?.url
+    ? `<a href="${escapeHtml(service.image.url)}" target="_blank" rel="noopener">
+          <img src="${escapeHtml(service.image.url)}" alt="${escapeHtml(imageLabel)}" loading="lazy">
+        </a>`
+    : renderMissingPhoto(service.image?.missing ? "Photo file missing" : "No photo selected");
+
+  return `<td class="photo-cell${service.image?.url ? "" : " is-missing-photo"}">
+        ${imageHtml}
+        <div class="service-title" title="${escapeHtml(service.title)}">${escapeHtml(service.title)}</div>
       </td>`;
 }
 
-function renderHtml({ tours, toursDir, outputPath }) {
-  const maxImages = tours.reduce((max, tour) => Math.max(max, tour.images.length), 0);
-  const imageCount = tours.reduce((total, tour) => total + tour.images.length, 0);
-  const publishedTourCount = tours.filter((tour) => tour.published).length;
-  const unpublishedTourCount = tours.length - publishedTourCount;
-  const headerCells = Array.from({ length: maxImages }, (_, index) => `<th>Photo ${index + 1}</th>`).join("");
+function renderHtml({ tours }) {
+  const maxServices = tours.reduce((max, tour) => Math.max(max, tour.services.length), 0);
+  const unpublishedTourCount = tours.length - tours.filter((tour) => tour.published).length;
+  const headerCells = Array.from({ length: maxServices }, (_, index) => `<th>Service ${index + 1}</th>`).join("");
   const visibilityControl = unpublishedTourCount
     ? `<button class="publication-toggle" type="button" data-toggle-unpublished data-show-label="Not published tours (${unpublishedTourCount})" data-hide-label="Hide not published tours" aria-pressed="false">Not published tours (${unpublishedTourCount})</button>`
     : "";
   const rows = tours
     .map((tour) => {
-      const imageCells = tour.images.map((image) => renderImageCell(image)).join("");
-      const emptyCells = Array.from({ length: maxImages - tour.images.length }, () => '<td class="empty-cell"></td>').join("");
+      const serviceCells = tour.services.map((service) => renderServiceCell(service)).join("");
+      const emptyCells = Array.from({ length: maxServices - tour.services.length }, () => '<td class="empty-cell"></td>').join("");
 
       return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
         <div class="tour-title">${escapeHtml(tour.title)}</div>
         <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
         <div class="tour-id">${escapeHtml(tour.id)}</div>
-        <div class="photo-count">${tour.images.length} photos</div>
+        <div class="service-count">${tour.services.length} services</div>
       </th>
-      ${imageCells}${emptyCells}
+      ${serviceCells}${emptyCells}
     </tr>`;
     })
     .join("\n");
@@ -462,13 +505,6 @@ function renderHtml({ tours, toursDir, outputPath }) {
       letter-spacing: 0;
     }
 
-    .meta {
-      color: var(--muted);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px 18px;
-    }
-
     .header-row {
       align-items: flex-start;
       display: flex;
@@ -499,7 +535,7 @@ function renderHtml({ tours, toursDir, outputPath }) {
 
     .matrix-wrap {
       overflow: auto;
-      height: calc(100vh - 86px);
+      height: calc(100vh - 66px);
     }
 
     table {
@@ -562,7 +598,7 @@ function renderHtml({ tours, toursDir, outputPath }) {
     }
 
     .tour-id,
-    .photo-count {
+    .service-count {
       color: var(--muted);
       font-size: 12px;
       overflow-wrap: anywhere;
@@ -589,6 +625,20 @@ function renderHtml({ tours, toursDir, outputPath }) {
       width: 200px;
     }
 
+    .is-missing-photo img {
+      background: #fef2f2;
+      border-color: #dc2626;
+    }
+
+    .missing-photo-label {
+      color: #b91c1c;
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 5px;
+      max-width: 200px;
+      overflow-wrap: anywhere;
+    }
+
     .service-title {
       color: var(--text);
       font-size: 13px;
@@ -609,13 +659,6 @@ function renderHtml({ tours, toursDir, outputPath }) {
     <div class="header-row">
       <h1>Tour Photo Matrix</h1>
       ${visibilityControl}
-    </div>
-    <div class="meta">
-      <span>${publishedTourCount} published tours</span>
-      <span>${unpublishedTourCount} not published tours</span>
-      <span>${imageCount} photos</span>
-      <span>Source: ${escapeHtml(toursDir)}</span>
-      <span>Output: ${escapeHtml(outputPath)}</span>
     </div>
   </header>
   <div class="matrix-wrap">
@@ -653,15 +696,12 @@ async function main() {
     ? await deleteUnusedTravelPlanServicePhotos(options.toursDir, { dryRun: options.dryRunDeleteUnusedServicePhotos })
     : null;
   const tours = await readTours(options.toursDir);
-  await copyImagesForOutput({
+  await copyServiceImagesForOutput({
     tours,
-    toursDir: options.toursDir,
     outputPath: options.outputPath
   });
   const html = renderHtml({
-    tours,
-    toursDir: options.toursDir,
-    outputPath: options.outputPath
+    tours
   });
 
   await writeFile(options.outputPath, html);
@@ -671,7 +711,11 @@ async function main() {
     const action = cleanup.dryRun ? "Would delete" : "Deleted";
     console.log(`${action} ${cleanup.unusedPhotos.length} unused travel-plan service photos.`);
   }
-  console.log(`Included ${tours.length} tours and ${tours.reduce((total, tour) => total + tour.images.length, 0)} photos.`);
+  const serviceCount = tours.reduce((total, tour) => total + tour.services.length, 0);
+  const missingPhotoCount = tours.reduce((total, tour) => {
+    return total + tour.services.filter((service) => !service.image?.url).length;
+  }, 0);
+  console.log(`Included ${tours.length} tours, ${serviceCount} services, and ${missingPhotoCount} services without photos.`);
 }
 
 main().catch((error) => {
