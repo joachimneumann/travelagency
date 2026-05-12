@@ -82,6 +82,14 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function normalizeText(value) {
+  return String(value ?? "").trim().replace(/\s+/g, " ");
+}
+
+function localizedText(item, field) {
+  return normalizeText(item?.[`${field}_i18n`]?.en) || normalizeText(item?.[field]);
+}
+
 function naturalCompare(left, right) {
   return left.localeCompare(right, undefined, {
     numeric: true,
@@ -260,23 +268,62 @@ function isPublishedOnWebpage(tourJson) {
   return tourJson?.published_on_webpage === true;
 }
 
+function imageCandidatesForService(service) {
+  const candidates = [];
+  if (service?.image && typeof service.image === "object" && !Array.isArray(service.image)) {
+    candidates.push(service.image);
+  }
+  if (Array.isArray(service?.images)) {
+    candidates.push(...[...service.images].sort((left, right) => {
+      return Number(left?.sort_order || 0) - Number(right?.sort_order || 0);
+    }));
+  }
+  return candidates;
+}
+
+function collectServiceTitleByImagePath(tourJson, tourId) {
+  const titles = new Map();
+  const days = Array.isArray(tourJson?.travel_plan?.days) ? tourJson.travel_plan.days : [];
+
+  for (const day of days) {
+    const services = Array.isArray(day?.services) ? day.services : [];
+    for (const service of services) {
+      const serviceTitle = localizedText(service, "title") || normalizeText(service?.id);
+      if (!serviceTitle) continue;
+
+      for (const image of imageCandidatesForService(service)) {
+        const storagePath = normalizeText(image?.storage_path || image?.url || image?.src || image?.path);
+        const relativePath = serviceImageRelativePathFromReference(storagePath, tourId);
+        if (relativePath && !titles.has(relativePath)) {
+          titles.set(relativePath, serviceTitle);
+        }
+      }
+    }
+  }
+
+  return titles;
+}
+
 async function readTour(tourDir, dirent) {
   const tourId = dirent.name;
   const tourJsonPath = path.join(tourDir, "tour.json");
   const images = await listImageFiles(tourDir, { includeImagesInCurrentDir: false });
   let title = tourId;
   let published = false;
+  let serviceTitleByImagePath = new Map();
 
   if (await pathExists(tourJsonPath)) {
     const tourJson = await readJson(tourJsonPath);
     title = getEnglishTitle(tourJson, tourId);
     published = isPublishedOnWebpage(tourJson);
+    serviceTitleByImagePath = collectServiceTitleByImagePath(tourJson, tourId);
   }
 
   return {
     id: tourId,
     title,
     published,
+    serviceTitleByImagePath,
     images
   };
 }
@@ -311,7 +358,7 @@ async function copyImagesForOutput({ tours, toursDir, outputPath }) {
     const copiedImages = [];
 
     for (const imagePath of tour.images) {
-      const sourceRelativePath = path.relative(toursDir, imagePath);
+      const sourceRelativePath = normalizeRelativePath(path.relative(toursDir, imagePath));
       const outputRelativePath = path.join("img", sourceRelativePath);
       const copiedImagePath = path.join(outputDir, outputRelativePath);
 
@@ -320,6 +367,7 @@ async function copyImagesForOutput({ tours, toursDir, outputPath }) {
       copiedImages.push({
         fileName: path.basename(imagePath),
         sourceRelativePath,
+        serviceTitle: tour.serviceTitleByImagePath.get(sourceRelativePath) || "",
         url: toRelativeUrl(outputRelativePath)
       });
     }
@@ -329,10 +377,15 @@ async function copyImagesForOutput({ tours, toursDir, outputPath }) {
 }
 
 function renderImageCell(image) {
+  const serviceTitle = image.serviceTitle
+    ? `<div class="service-title" title="${escapeHtml(image.serviceTitle)}">${escapeHtml(image.serviceTitle)}</div>`
+    : "";
+
   return `<td class="photo-cell">
         <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener">
           <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.sourceRelativePath)}" loading="lazy">
         </a>
+        ${serviceTitle}
         <div class="file-name" title="${escapeHtml(image.sourceRelativePath)}">${escapeHtml(image.fileName)}</div>
       </td>`;
 }
@@ -536,6 +589,15 @@ function renderHtml({ tours, toursDir, outputPath }) {
     .file-name {
       margin-top: 6px;
       max-width: 200px;
+    }
+
+    .service-title {
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      margin-top: 7px;
+      max-width: 200px;
+      overflow-wrap: anywhere;
     }
 
     .empty-cell {
