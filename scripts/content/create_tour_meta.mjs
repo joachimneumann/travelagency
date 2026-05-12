@@ -312,9 +312,10 @@ function googleMapsUrl(place) {
 }
 
 function renderDayLocations(locations) {
-  if (!locations.length) return "";
+  if (!locations.length) return '<div class="day-locations-slot"></div>';
 
-  return `<div class="day-location-list">
+  return `<div class="day-locations-slot">
+          <div class="day-location-list">
           ${locations.map(({ id, place }) => {
             if (!place) {
               return `<div class="day-location is-missing">
@@ -334,22 +335,25 @@ function renderDayLocations(locations) {
               <div class="item-id">${escapeHtml(coordinates)}</div>
             </div>`;
           }).join("")}
+          </div>
         </div>`;
 }
 
 function renderDayHighlight(highlight) {
-  if (!highlight) return "";
+  if (!highlight) return '<div class="day-highlight-slot"></div>';
 
   const title = escapeHtml(highlight.title);
   const image = highlight.url
     ? `<img src="${escapeAttr(highlight.url)}" alt="${title}" loading="lazy">`
     : '<div class="missing-image">No image</div>';
 
-  return `<div class="day-highlight${highlight.known ? "" : " is-missing"}">
+  return `<div class="day-highlight-slot">
+          <div class="day-highlight${highlight.known ? "" : " is-missing"}">
           ${image}
           <div>
             <div class="highlight-title">${title}</div>
             <div class="item-id">${escapeHtml(highlight.id)}</div>
+          </div>
           </div>
         </div>`;
 }
@@ -358,9 +362,13 @@ function renderDayCell(day) {
   if (!day) return '<td class="empty-cell"></td>';
 
   return `<td class="day-cell">
-        <div class="day-title">${escapeHtml(day.title)}</div>
-        ${renderDayLocations(day.locations)}
-        ${renderDayHighlight(day.highlight)}
+        <div class="day-cell-inner">
+          <div class="day-title-slot">
+            <div class="day-title">${escapeHtml(day.title)}</div>
+          </div>
+          ${renderDayLocations(day.locations)}
+          ${renderDayHighlight(day.highlight)}
+        </div>
       </td>`;
 }
 
@@ -551,7 +559,6 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
 
     .day-title {
       font-weight: 700;
-      margin-bottom: 8px;
       max-width: 220px;
       overflow-wrap: anywhere;
     }
@@ -569,10 +576,19 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       padding: 10px 12px;
     }
 
+    .day-cell-inner {
+      display: grid;
+      gap: 8px;
+    }
+
+    .day-title-slot,
+    .day-locations-slot {
+      min-height: 0;
+    }
+
     .day-location-list {
       display: grid;
       gap: 8px;
-      margin-bottom: 8px;
     }
 
     .day-highlight {
@@ -655,13 +671,50 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
   </div>
   <script>
     (() => {
+      let alignmentFrame = 0;
+
+      const alignRowSections = () => {
+        document.querySelectorAll(".day-title-slot, .day-locations-slot").forEach((section) => {
+          section.style.minHeight = "";
+        });
+
+        document.querySelectorAll("tbody tr").forEach((row) => {
+          if (row.offsetParent === null) return;
+
+          for (const selector of [".day-title-slot", ".day-locations-slot"]) {
+            const sections = Array.from(row.querySelectorAll(selector));
+            if (!sections.length) continue;
+
+            const maxHeight = sections.reduce((max, section) => {
+              return Math.max(max, Math.ceil(section.getBoundingClientRect().height));
+            }, 0);
+
+            sections.forEach((section) => {
+              section.style.minHeight = maxHeight + "px";
+            });
+          }
+        });
+      };
+
+      const scheduleAlignment = () => {
+        window.cancelAnimationFrame(alignmentFrame);
+        alignmentFrame = window.requestAnimationFrame(alignRowSections);
+      };
+
       const button = document.querySelector("[data-toggle-unpublished]");
-      if (!button) return;
-      button.addEventListener("click", () => {
-        const showing = document.body.classList.toggle("show-unpublished");
-        button.setAttribute("aria-pressed", showing ? "true" : "false");
-        button.textContent = showing ? button.dataset.hideLabel : button.dataset.showLabel;
-      });
+      if (button) {
+        button.addEventListener("click", () => {
+          const showing = document.body.classList.toggle("show-unpublished");
+          button.setAttribute("aria-pressed", showing ? "true" : "false");
+          button.textContent = showing ? button.dataset.hideLabel : button.dataset.showLabel;
+          scheduleAlignment();
+        });
+      }
+
+      window.addEventListener("load", scheduleAlignment);
+      window.addEventListener("resize", scheduleAlignment);
+      if (document.fonts) document.fonts.ready.then(scheduleAlignment);
+      scheduleAlignment();
     })();
   </script>
 </body>
