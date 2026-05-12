@@ -1,8 +1,11 @@
 #!/usr/bin/env node
+import { execFile as execFileCallback } from "node:child_process";
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
+const execFile = promisify(execFileCallback);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -19,13 +22,22 @@ Images are copied into an img/ folder next to the HTML file and referenced with 
 Options:
   --tours DIR      Tours directory. Default: content/tours
   --output FILE    HTML output path. Default: /tmp/tour-photo-matrix/index.html
+  --zip FILE       Zip output path. Default: /tmp/tour-photo-matrix.zip
+  --no-zip         Do not create a zip archive
   --help           Show this help.`);
+}
+
+function getDefaultZipPath(outputPath) {
+  const outputDir = path.dirname(outputPath);
+  return `${outputDir}.zip`;
 }
 
 function parseArgs(argv) {
   const options = {
     toursDir: defaultToursDir,
-    outputPath: defaultOutputPath
+    outputPath: defaultOutputPath,
+    zipPath: null,
+    createZip: true
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -50,7 +62,23 @@ function parseArgs(argv) {
       continue;
     }
 
+    if (arg === "--zip") {
+      const value = argv[++index];
+      if (!value) throw new Error("--zip requires a file path.");
+      options.zipPath = path.resolve(value);
+      continue;
+    }
+
+    if (arg === "--no-zip") {
+      options.createZip = false;
+      continue;
+    }
+
     throw new Error(`Unknown option: ${arg}`);
+  }
+
+  if (options.createZip && !options.zipPath) {
+    options.zipPath = getDefaultZipPath(options.outputPath);
   }
 
   return options;
@@ -181,6 +209,56 @@ async function copyImagesForOutput({ tours, toursDir, outputPath }) {
 
     tour.images = copiedImages;
   }
+}
+
+function isMissingExecutableError(error) {
+  return error?.code === "ENOENT";
+}
+
+function quotePowerShellString(value) {
+  return `'${String(value).replaceAll("'", "''")}'`;
+}
+
+async function createZipWithPowerShell({ outputPath, zipPath }) {
+  const outputDir = path.dirname(outputPath);
+  const outputFileName = path.basename(outputPath);
+  const commands = process.platform === "win32"
+    ? ["powershell.exe", "powershell", "pwsh"]
+    : ["pwsh", "powershell"];
+  const script = [
+    "$ErrorActionPreference = 'Stop';",
+    `Set-Location -LiteralPath ${quotePowerShellString(outputDir)};`,
+    `Compress-Archive -LiteralPath @(${quotePowerShellString(outputFileName)}, ${quotePowerShellString("img")}) -DestinationPath ${quotePowerShellString(zipPath)} -Force;`
+  ].join(" ");
+
+  for (const command of commands) {
+    try {
+      await execFile(command, ["-NoProfile", "-Command", script]);
+      return true;
+    } catch (error) {
+      if (isMissingExecutableError(error)) continue;
+      throw error;
+    }
+  }
+
+  return false;
+}
+
+async function createZipArchive({ outputPath, zipPath }) {
+  const outputDir = path.dirname(outputPath);
+  const outputFileName = path.basename(outputPath);
+  await rm(zipPath, { force: true });
+
+  try {
+    await execFile("zip", ["-qr", zipPath, outputFileName, "img"], { cwd: outputDir });
+    return;
+  } catch (error) {
+    if (!isMissingExecutableError(error)) throw error;
+  }
+
+  if (await createZipWithPowerShell({ outputPath, zipPath })) return;
+
+  throw new Error("Could not create zip archive. Install zip or PowerShell.");
 }
 
 function renderImageCell(image) {
@@ -397,8 +475,15 @@ async function main() {
   });
 
   await writeFile(options.outputPath, html);
+  if (options.createZip) {
+    await createZipArchive({
+      outputPath: options.outputPath,
+      zipPath: options.zipPath
+    });
+  }
   console.log(`Wrote ${options.outputPath}`);
   console.log(`Copied images to ${path.join(path.dirname(options.outputPath), "img")}`);
+  if (options.createZip) console.log(`Wrote ${options.zipPath}`);
   console.log(`Included ${tours.length} tours and ${tours.reduce((total, tour) => total + tour.images.length, 0)} photos.`);
 }
 
