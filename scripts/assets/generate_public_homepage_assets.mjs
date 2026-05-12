@@ -423,6 +423,14 @@ function isAllowedAssetFile(filename) {
   return ALLOWED_ASSET_EXTENSIONS.has(path.extname(filename).toLowerCase());
 }
 
+function isTourRootAssetRelativePath(relativePath, tourId) {
+  const normalizedTourId = normalizeText(tourId);
+  const normalizedPath = normalizeText(relativePath).split("?")[0].replace(/^\/+/, "");
+  if (!normalizedTourId || !normalizedPath) return false;
+  const parts = normalizedPath.split("/").filter(Boolean);
+  return parts.length === 2 && parts[0] === normalizedTourId && isAllowedAssetFile(parts[1]);
+}
+
 async function copyAllowedFiles(sourceDir, destinationDir, { exclude = new Set() } = {}) {
   await ensureDirectory(destinationDir);
   const entries = await listDirectoryEntries(sourceDir);
@@ -477,6 +485,7 @@ async function generateHomepageTourAssets(sourceDir, destinationDir) {
       }
       if (!entry.isFile()) continue;
       if (!isAllowedAssetFile(entry.name)) continue;
+      if (!relativeDir) continue;
 
       const normalizedSourceRelativePath = sourceRelativePath.split(path.sep).join("/");
       if (!isRasterAssetFile(entry.name) || !sharp) {
@@ -858,7 +867,6 @@ function extractTourAssetRelativePath(imagePath, tourId) {
   if (!normalizedTourId) return "";
   const bareValue = withoutQuery.replace(/^\/+/, "");
   if (bareValue.startsWith(`${normalizedTourId}/`)) return bareValue;
-  if (isAllowedAssetFile(bareValue)) return `${normalizedTourId}/${path.basename(bareValue)}`;
   return "";
 }
 
@@ -895,6 +903,7 @@ async function optionalVersionedStaticAssetPath(relativePath, outputRoot, option
 async function publicHomepageTourAssetUrl(imagePath, tourId, generatedTourAssetPaths, outputRoot, version) {
   const assetRelativePath = extractTourAssetRelativePath(imagePath, tourId);
   if (!assetRelativePath) return "";
+  if (isTourRootAssetRelativePath(assetRelativePath, tourId)) return "";
   const generatedAssetRelativePath = generatedTourAssetPaths.get(assetRelativePath) || assetRelativePath;
   return optionalVersionedStaticAssetPath(generatedAssetRelativePath, outputRoot, {
     publicPrefix: "/assets/generated/homepage/tours",

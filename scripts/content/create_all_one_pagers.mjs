@@ -38,7 +38,6 @@ const onePagerExperienceHighlightCount = 4;
 const onePagerWebImageWidth = 600;
 const onePagerWebImageQuality = 82;
 const publicTourImagePrefix = "/public/v1/tour-images/";
-const tourImageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp"]);
 const preferredPdfColumnLanguages = Object.freeze(["en", "vi"]);
 const preferredPdfColumnLanguageSet = new Set(preferredPdfColumnLanguages);
 const defaultPdfColumnLanguages = Object.freeze(
@@ -180,6 +179,10 @@ function safeInt(value) {
   if (value === null || value === undefined || value === "") return null;
   const number = Number(value);
   return Number.isFinite(number) ? Math.trunc(number) : null;
+}
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
 }
 
 function slug(value) {
@@ -401,22 +404,6 @@ function collectVisibleTravelPlanImages(travelPlan) {
   return images;
 }
 
-async function collectTourDirectoryImages(tourId, fallbackLabel = "Tour") {
-  let entries = [];
-  try {
-    entries = await readdir(path.join(toursDir, tourId), { withFileTypes: true });
-  } catch {
-    return [];
-  }
-  return entries
-    .filter((entry) => entry.isFile() && tourImageExtensions.has(path.extname(entry.name).toLowerCase()))
-    .map((entry) => ({
-      id: `one-pager-random-${createHash("sha1").update(entry.name).digest("hex").slice(0, 12)}`,
-      storage_path: `${tourId}/${entry.name}`,
-      label: fallbackLabel
-    }));
-}
-
 function onePagerSelectionIds(rawTravelPlan) {
   const hero = textOrNull(rawTravelPlan?.one_pager_hero_image_id);
   const ids = Array.isArray(rawTravelPlan?.one_pager_image_ids)
@@ -431,9 +418,7 @@ function onePagerSelectionIds(rawTravelPlan) {
 }
 
 async function prepareScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourImageDiskPath = null } = {}) {
-  const fallbackLabel = textOrNull(tour?.title) || "Tour";
   const serviceImages = await filterExistingImages(collectVisibleTravelPlanImages(tour.travel_plan), resolveTourImageDiskPath);
-  const directoryImages = await filterExistingImages(await collectTourDirectoryImages(tour.id, fallbackLabel), resolveTourImageDiskPath);
   const serviceImagesById = new Map(serviceImages.filter((entry) => entry.id).map((entry) => [entry.id, entry]));
   const selectedImages = onePagerSelectionIds(rawTravelPlan)
     .map((imageId) => serviceImagesById.get(imageId))
@@ -445,14 +430,9 @@ async function prepareScriptFrameImages(tour, rawTravelPlan, seed, { resolveTour
     automaticServiceImages.filter((entry) => !selectedStoragePaths.has(entry.storage_path)),
     `${seed}:services`
   );
-  const randomDirectoryImages = deterministicShuffle(
-    directoryImages.filter((entry) => !selectedStoragePaths.has(entry.storage_path)),
-    `${seed}:directory`
-  );
   return uniqueImageEntries([
     ...selectedImages,
-    ...randomServiceImages,
-    ...randomDirectoryImages
+    ...randomServiceImages
   ]).slice(0, onePagerFrameImageCount);
 }
 

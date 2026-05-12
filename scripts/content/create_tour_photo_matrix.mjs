@@ -16,15 +16,18 @@ const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".web
 function printUsage() {
   console.log(`Usage: scripts/content/create_tour_photo_matrix.mjs [options]
 
-Creates a static HTML matrix of all photos found under content/tours/*.
+Creates a static HTML matrix of photos found below each content/tours/* subfolder.
 Images are copied into an img/ folder next to the HTML file and referenced with relative paths.
+Before creating the matrix, unused images in content/tours/*/travel-plan-services are deleted.
 
 Options:
-  --tours DIR      Tours directory. Default: content/tours
-  --output FILE    HTML output path. Default: /tmp/tour-photo-matrix/index.html
-  --zip FILE       Zip output path. Default: /tmp/tour-photo-matrix.zip
-  --no-zip         Do not create a zip archive
-  --help           Show this help.`);
+  --tours DIR                              Tours directory. Default: content/tours
+  --output FILE                            HTML output path. Default: /tmp/tour-photo-matrix/index.html
+  --zip FILE                               Zip output path. Default: /tmp/tour-photo-matrix.zip
+  --no-zip                                 Do not create a zip archive
+  --no-delete-unused-service-photos        Keep unused travel-plan service photos
+  --dry-run-delete-unused-service-photos   Report unused travel-plan service photos without deleting them
+  --help                                   Show this help.`);
 }
 
 function getDefaultZipPath(outputPath) {
@@ -37,7 +40,9 @@ function parseArgs(argv) {
     toursDir: defaultToursDir,
     outputPath: defaultOutputPath,
     zipPath: null,
-    createZip: true
+    createZip: true,
+    deleteUnusedServicePhotos: true,
+    dryRunDeleteUnusedServicePhotos: false
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -71,6 +76,18 @@ function parseArgs(argv) {
 
     if (arg === "--no-zip") {
       options.createZip = false;
+      continue;
+    }
+
+    if (arg === "--no-delete-unused-service-photos") {
+      options.deleteUnusedServicePhotos = false;
+      options.dryRunDeleteUnusedServicePhotos = false;
+      continue;
+    }
+
+    if (arg === "--dry-run-delete-unused-service-photos") {
+      options.deleteUnusedServicePhotos = true;
+      options.dryRunDeleteUnusedServicePhotos = true;
       continue;
     }
 
@@ -114,7 +131,126 @@ async function readJson(filePath) {
   return JSON.parse(await readFile(filePath, "utf8"));
 }
 
-async function listImageFiles(dir) {
+function normalizeRelativePath(value) {
+  return String(value || "").replaceAll("\\", "/").replace(/^\/+/, "");
+}
+
+function stripUrlParts(value) {
+  const normalized = String(value || "").trim();
+  if (!normalized) return "";
+  let pathValue = normalized;
+  if (/^https?:\/\//i.test(pathValue)) {
+    try {
+      pathValue = new URL(pathValue).pathname;
+    } catch {
+      return "";
+    }
+  }
+  return pathValue.split("?")[0].split("#")[0];
+}
+
+function decodePath(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function serviceImageRelativePathFromReference(value, currentTourId) {
+  let relativePath = normalizeRelativePath(decodePath(stripUrlParts(value)));
+  if (!relativePath) return "";
+
+  for (const prefix of [
+    "public/v1/tour-images/",
+    "assets/generated/homepage/tours/",
+    "assets/tours/"
+  ]) {
+    if (relativePath.startsWith(prefix)) {
+      relativePath = relativePath.slice(prefix.length);
+      break;
+    }
+  }
+
+  const normalizedTourId = normalizeRelativePath(currentTourId);
+  if (normalizedTourId && relativePath.startsWith("travel-plan-services/")) {
+    relativePath = `${normalizedTourId}/${relativePath}`;
+  }
+
+  if (!/^tour_[^/]+\/travel-plan-services\/.+/i.test(relativePath)) return "";
+  if (!imageExtensions.has(path.extname(relativePath).toLowerCase())) return "";
+  return relativePath;
+}
+
+function collectServiceImageReferences(value, currentTourId, output) {
+  if (typeof value === "string") {
+    const relativePath = serviceImageRelativePathFromReference(value, currentTourId);
+    if (relativePath) output.add(relativePath);
+    return;
+  }
+
+  if (!value || typeof value !== "object") return;
+  const values = Array.isArray(value) ? value : Object.values(value);
+  for (const item of values) {
+    collectServiceImageReferences(item, currentTourId, output);
+  }
+}
+
+async function getTourDirents(toursDir) {
+  const entries = await readdir(toursDir, { withFileTypes: true });
+  return entries
+    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
+    .sort((left, right) => naturalCompare(left.name, right.name));
+}
+
+async function collectReferencedServiceImagePaths(toursDir, tourDirs) {
+  const referencedPaths = new Set();
+  for (const dirent of tourDirs) {
+    const tourJsonPath = path.join(toursDir, dirent.name, "tour.json");
+    if (!(await pathExists(tourJsonPath))) continue;
+    const tourJson = await readJson(tourJsonPath);
+    collectServiceImageReferences(tourJson, dirent.name, referencedPaths);
+  }
+  return referencedPaths;
+}
+
+async function listTravelPlanServicePhotos(toursDir, tourDirent) {
+  const servicePhotosDir = path.join(toursDir, tourDirent.name, "travel-plan-services");
+  if (!(await pathExists(servicePhotosDir))) return [];
+  return listImageFiles(servicePhotosDir);
+}
+
+async function deleteUnusedTravelPlanServicePhotos(toursDir, { dryRun = false } = {}) {
+  const tourDirs = await getTourDirents(toursDir);
+  const referencedPaths = await collectReferencedServiceImagePaths(toursDir, tourDirs);
+  const unusedPhotos = [];
+
+  for (const dirent of tourDirs) {
+    const photos = await listTravelPlanServicePhotos(toursDir, dirent);
+    for (const photoPath of photos) {
+      const relativePath = normalizeRelativePath(path.relative(toursDir, photoPath));
+      if (referencedPaths.has(relativePath)) continue;
+      unusedPhotos.push({
+        path: photoPath,
+        relativePath
+      });
+    }
+  }
+
+  if (!dryRun) {
+    for (const photo of unusedPhotos) {
+      await rm(photo.path, { force: true });
+    }
+  }
+
+  return {
+    dryRun,
+    unusedPhotos,
+    referencedCount: referencedPaths.size
+  };
+}
+
+async function listImageFiles(dir, { includeImagesInCurrentDir = true } = {}) {
   const entries = await readdir(dir, { withFileTypes: true });
   const imagePaths = [];
 
@@ -128,6 +264,7 @@ async function listImageFiles(dir) {
     }
 
     if (!entry.isFile()) continue;
+    if (!includeImagesInCurrentDir) continue;
     if (imageExtensions.has(path.extname(entry.name).toLowerCase())) {
       imagePaths.push(entryPath);
     }
@@ -150,7 +287,7 @@ function getEnglishTitle(tourJson, tourId) {
 async function readTour(tourDir, dirent) {
   const tourId = dirent.name;
   const tourJsonPath = path.join(tourDir, "tour.json");
-  const images = await listImageFiles(tourDir);
+  const images = await listImageFiles(tourDir, { includeImagesInCurrentDir: false });
   let title = tourId;
 
   if (await pathExists(tourJsonPath)) {
@@ -166,11 +303,7 @@ async function readTour(tourDir, dirent) {
 }
 
 async function readTours(toursDir) {
-  const entries = await readdir(toursDir, { withFileTypes: true });
-  const tourDirs = entries
-    .filter((entry) => entry.isDirectory() && !entry.name.startsWith("."))
-    .sort((left, right) => naturalCompare(left.name, right.name));
-
+  const tourDirs = await getTourDirents(toursDir);
   const tours = [];
   for (const dirent of tourDirs) {
     const tour = await readTour(path.join(toursDir, dirent.name), dirent);
@@ -462,6 +595,9 @@ function renderHtml({ tours, toursDir, outputPath }) {
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  const cleanup = options.deleteUnusedServicePhotos
+    ? await deleteUnusedTravelPlanServicePhotos(options.toursDir, { dryRun: options.dryRunDeleteUnusedServicePhotos })
+    : null;
   const tours = await readTours(options.toursDir);
   await copyImagesForOutput({
     tours,
@@ -484,6 +620,10 @@ async function main() {
   console.log(`Wrote ${options.outputPath}`);
   console.log(`Copied images to ${path.join(path.dirname(options.outputPath), "img")}`);
   if (options.createZip) console.log(`Wrote ${options.zipPath}`);
+  if (cleanup) {
+    const action = cleanup.dryRun ? "Would delete" : "Deleted";
+    console.log(`${action} ${cleanup.unusedPhotos.length} unused travel-plan service photos.`);
+  }
   console.log(`Included ${tours.length} tours and ${tours.reduce((total, tour) => total + tour.images.length, 0)} photos.`);
 }
 

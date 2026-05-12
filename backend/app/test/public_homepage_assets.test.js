@@ -507,6 +507,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.ok(copiedTourAsset.isFile());
   assert.ok(copiedServiceAsset.isFile());
   assert.ok(copiedTeamAsset.isFile());
+  await assert.rejects(stat(path.join(tourOutputDir, "tour_alpha", "alpha.png")), { code: "ENOENT" });
+  await assert.rejects(stat(path.join(tourOutputDir, "tour_alpha", "alpha.webp")), { code: "ENOENT" });
 });
 
 test("generatePublicHomepageAssets fails when a tour destination is not listed in destinations", async () => {
