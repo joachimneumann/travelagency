@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeImageThumbnail } from "./image_thumbnails.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +10,7 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultOutputPath = "/tmp/tour-content-matrix/index.html";
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"]);
+const thumbnailMaxSize = 300;
 
 function printUsage() {
   console.log(`Usage: scripts/content/create_tour_content_matrix.mjs [options]
@@ -346,7 +348,7 @@ async function copyServiceImagesForOutput({ tours, outputPath }) {
     const outputImagePath = path.join(outputDir, outputRelativePath);
     if (!copied.has(image.sourceRelativePath)) {
       await mkdir(path.dirname(outputImagePath), { recursive: true });
-      await copyFile(image.sourcePath, outputImagePath);
+      await writeImageThumbnail(image.sourcePath, outputImagePath, { maxSize: thumbnailMaxSize });
       copied.add(image.sourceRelativePath);
     }
     image.url = toRelativeUrl(outputRelativePath);
@@ -691,6 +693,8 @@ function renderHtml({ tours, toursDir, outputPath }) {
       border: 1px solid var(--line);
       display: block;
       height: 90px;
+      max-height: 300px;
+      max-width: 300px;
       width: 120px;
     }
 
@@ -698,6 +702,8 @@ function renderHtml({ tours, toursDir, outputPath }) {
       background: #eef2f0;
       display: block;
       height: 88px;
+      max-height: 300px;
+      max-width: 300px;
       object-fit: contain;
       width: 118px;
     }

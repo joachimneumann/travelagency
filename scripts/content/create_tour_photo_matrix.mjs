@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeImageThumbnail } from "./image_thumbnails.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -9,6 +10,7 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultOutputPath = "/tmp/tour-photo-matrix/index.html";
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"]);
+const thumbnailMaxSize = 300;
 
 function printUsage() {
   console.log(`Usage: scripts/content/create_tour_photo_matrix.mjs [options]
@@ -288,7 +290,7 @@ function collectServiceTitleByImagePath(tourJson, tourId) {
   for (const day of days) {
     const services = Array.isArray(day?.services) ? day.services : [];
     for (const service of services) {
-      const serviceTitle = localizedText(service, "title") || normalizeText(service?.id);
+      const serviceTitle = localizedText(service, "title");
       if (!serviceTitle) continue;
 
       for (const image of imageCandidatesForService(service)) {
@@ -363,7 +365,7 @@ async function copyImagesForOutput({ tours, toursDir, outputPath }) {
       const copiedImagePath = path.join(outputDir, outputRelativePath);
 
       await mkdir(path.dirname(copiedImagePath), { recursive: true });
-      await copyFile(imagePath, copiedImagePath);
+      await writeImageThumbnail(imagePath, copiedImagePath, { maxSize: thumbnailMaxSize });
       copiedImages.push({
         fileName: path.basename(imagePath),
         sourceRelativePath,
@@ -380,13 +382,13 @@ function renderImageCell(image) {
   const serviceTitle = image.serviceTitle
     ? `<div class="service-title" title="${escapeHtml(image.serviceTitle)}">${escapeHtml(image.serviceTitle)}</div>`
     : "";
+  const imageLabel = image.serviceTitle || "Tour photo";
 
   return `<td class="photo-cell">
         <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener">
-          <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.sourceRelativePath)}" loading="lazy">
+          <img src="${escapeHtml(image.url)}" alt="${escapeHtml(imageLabel)}" loading="lazy">
         </a>
         ${serviceTitle}
-        <div class="file-name" title="${escapeHtml(image.sourceRelativePath)}">${escapeHtml(image.fileName)}</div>
       </td>`;
 }
 
@@ -560,8 +562,7 @@ function renderHtml({ tours, toursDir, outputPath }) {
     }
 
     .tour-id,
-    .photo-count,
-    .file-name {
+    .photo-count {
       color: var(--muted);
       font-size: 12px;
       overflow-wrap: anywhere;
@@ -582,13 +583,10 @@ function renderHtml({ tours, toursDir, outputPath }) {
       border: 1px solid var(--line);
       display: block;
       height: 132px;
+      max-height: 300px;
+      max-width: 300px;
       object-fit: contain;
       width: 200px;
-    }
-
-    .file-name {
-      margin-top: 6px;
-      max-width: 200px;
     }
 
     .service-title {
