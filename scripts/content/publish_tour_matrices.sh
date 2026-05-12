@@ -18,6 +18,7 @@ Generates and publishes the tour matrix HTML pages into a served directory.
 On staging, run this from /srv/asiatravelplan-staging to refresh:
   https://staging.asiatravelplan.com/photo_matrix.html
   https://staging.asiatravelplan.com/meta_matrix.html
+  https://staging.asiatravelplan.com/content_matrix.html
 
 Options:
   --output-dir DIR              Publish directory. Default: repo root, or TOUR_MATRIX_OUTPUT_DIR.
@@ -73,22 +74,26 @@ if [[ "$OUTPUT_DIR" == "/" ]]; then
 fi
 
 rm -rf "$OUTPUT_DIR/img"
-rm -f "$OUTPUT_DIR/photo_matrix.html" "$OUTPUT_DIR/meta_matrix.html"
+rm -f "$OUTPUT_DIR/photo_matrix.html" "$OUTPUT_DIR/meta_matrix.html" "$OUTPUT_DIR/content_matrix.html"
 
 echo "Generating and publishing tour photo matrix..."
 "$SCRIPT_DIR/create_tour_photo_matrix.sh" \
   --tours "$TOURS_DIR" \
-  --output "$OUTPUT_DIR/photo_matrix.html" \
-  --no-zip
+  --output "$OUTPUT_DIR/photo_matrix.html"
 
 echo "Generating and publishing tour metadata matrix..."
 "$SCRIPT_DIR/create_tour_meta.sh" \
   --tours "$TOURS_DIR" \
   --catalog "$CATALOG_PATH" \
   --highlight-manifest "$HIGHLIGHT_MANIFEST_PATH" \
-  --output "$OUTPUT_DIR/meta_matrix.html" \
-  --no-zip
+  --output "$OUTPUT_DIR/meta_matrix.html"
+
+echo "Generating and publishing tour content matrix..."
+"$SCRIPT_DIR/create_tour_content_matrix.sh" \
+  --tours "$TOURS_DIR" \
+  --output "$OUTPUT_DIR/content_matrix.html"
 
 echo "Published tour matrices:"
 echo "  $OUTPUT_DIR/photo_matrix.html"
 echo "  $OUTPUT_DIR/meta_matrix.html"
+echo "  $OUTPUT_DIR/content_matrix.html"

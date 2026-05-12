@@ -1,11 +1,8 @@
 #!/usr/bin/env node
-import { execFile as execFileCallback } from "node:child_process";
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
-const execFile = promisify(execFileCallback);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -23,24 +20,15 @@ Before creating the matrix, unused images in content/tours/*/travel-plan-service
 Options:
   --tours DIR                              Tours directory. Default: content/tours
   --output FILE                            HTML output path. Default: /tmp/tour-photo-matrix/index.html
-  --zip FILE                               Zip output path. Default: /tmp/tour-photo-matrix.zip
-  --no-zip                                 Do not create a zip archive
   --no-delete-unused-service-photos        Keep unused travel-plan service photos
   --dry-run-delete-unused-service-photos   Report unused travel-plan service photos without deleting them
   --help                                   Show this help.`);
-}
-
-function getDefaultZipPath(outputPath) {
-  const outputDir = path.dirname(outputPath);
-  return `${outputDir}.zip`;
 }
 
 function parseArgs(argv) {
   const options = {
     toursDir: defaultToursDir,
     outputPath: defaultOutputPath,
-    zipPath: null,
-    createZip: true,
     deleteUnusedServicePhotos: true,
     dryRunDeleteUnusedServicePhotos: false
   };
@@ -67,18 +55,6 @@ function parseArgs(argv) {
       continue;
     }
 
-    if (arg === "--zip") {
-      const value = argv[++index];
-      if (!value) throw new Error("--zip requires a file path.");
-      options.zipPath = path.resolve(value);
-      continue;
-    }
-
-    if (arg === "--no-zip") {
-      options.createZip = false;
-      continue;
-    }
-
     if (arg === "--no-delete-unused-service-photos") {
       options.deleteUnusedServicePhotos = false;
       options.dryRunDeleteUnusedServicePhotos = false;
@@ -92,10 +68,6 @@ function parseArgs(argv) {
     }
 
     throw new Error(`Unknown option: ${arg}`);
-  }
-
-  if (options.createZip && !options.zipPath) {
-    options.zipPath = getDefaultZipPath(options.outputPath);
   }
 
   return options;
@@ -284,22 +256,34 @@ function getEnglishTitle(tourJson, tourId) {
   return title?.trim() || tourId;
 }
 
+function isPublishedOnWebpage(tourJson) {
+  return tourJson?.published_on_webpage === true;
+}
+
 async function readTour(tourDir, dirent) {
   const tourId = dirent.name;
   const tourJsonPath = path.join(tourDir, "tour.json");
   const images = await listImageFiles(tourDir, { includeImagesInCurrentDir: false });
   let title = tourId;
+  let published = false;
 
   if (await pathExists(tourJsonPath)) {
     const tourJson = await readJson(tourJsonPath);
     title = getEnglishTitle(tourJson, tourId);
+    published = isPublishedOnWebpage(tourJson);
   }
 
   return {
     id: tourId,
     title,
+    published,
     images
   };
+}
+
+function compareTours(left, right) {
+  if (left.published !== right.published) return left.published ? -1 : 1;
+  return naturalCompare(left.title, right.title);
 }
 
 async function readTours(toursDir) {
@@ -310,7 +294,7 @@ async function readTours(toursDir) {
     if (tour.images.length > 0) tours.push(tour);
   }
 
-  return tours.sort((left, right) => naturalCompare(left.title, right.title));
+  return tours.sort(compareTours);
 }
 
 function toRelativeUrl(filePath) {
@@ -344,56 +328,6 @@ async function copyImagesForOutput({ tours, toursDir, outputPath }) {
   }
 }
 
-function isMissingExecutableError(error) {
-  return error?.code === "ENOENT";
-}
-
-function quotePowerShellString(value) {
-  return `'${String(value).replaceAll("'", "''")}'`;
-}
-
-async function createZipWithPowerShell({ outputPath, zipPath }) {
-  const outputDir = path.dirname(outputPath);
-  const outputFileName = path.basename(outputPath);
-  const commands = process.platform === "win32"
-    ? ["powershell.exe", "powershell", "pwsh"]
-    : ["pwsh", "powershell"];
-  const script = [
-    "$ErrorActionPreference = 'Stop';",
-    `Set-Location -LiteralPath ${quotePowerShellString(outputDir)};`,
-    `Compress-Archive -LiteralPath @(${quotePowerShellString(outputFileName)}, ${quotePowerShellString("img")}) -DestinationPath ${quotePowerShellString(zipPath)} -Force;`
-  ].join(" ");
-
-  for (const command of commands) {
-    try {
-      await execFile(command, ["-NoProfile", "-Command", script]);
-      return true;
-    } catch (error) {
-      if (isMissingExecutableError(error)) continue;
-      throw error;
-    }
-  }
-
-  return false;
-}
-
-async function createZipArchive({ outputPath, zipPath }) {
-  const outputDir = path.dirname(outputPath);
-  const outputFileName = path.basename(outputPath);
-  await rm(zipPath, { force: true });
-
-  try {
-    await execFile("zip", ["-qr", zipPath, outputFileName, "img"], { cwd: outputDir });
-    return;
-  } catch (error) {
-    if (!isMissingExecutableError(error)) throw error;
-  }
-
-  if (await createZipWithPowerShell({ outputPath, zipPath })) return;
-
-  throw new Error("Could not create zip archive. Install zip or PowerShell.");
-}
-
 function renderImageCell(image) {
   return `<td class="photo-cell">
         <a href="${escapeHtml(image.url)}" target="_blank" rel="noopener">
@@ -406,15 +340,21 @@ function renderImageCell(image) {
 function renderHtml({ tours, toursDir, outputPath }) {
   const maxImages = tours.reduce((max, tour) => Math.max(max, tour.images.length), 0);
   const imageCount = tours.reduce((total, tour) => total + tour.images.length, 0);
+  const publishedTourCount = tours.filter((tour) => tour.published).length;
+  const unpublishedTourCount = tours.length - publishedTourCount;
   const headerCells = Array.from({ length: maxImages }, (_, index) => `<th>Photo ${index + 1}</th>`).join("");
+  const visibilityControl = unpublishedTourCount
+    ? `<button class="publication-toggle" type="button" data-toggle-unpublished data-show-label="Not published tours (${unpublishedTourCount})" data-hide-label="Hide not published tours" aria-pressed="false">Not published tours (${unpublishedTourCount})</button>`
+    : "";
   const rows = tours
     .map((tour) => {
       const imageCells = tour.images.map((image) => renderImageCell(image)).join("");
       const emptyCells = Array.from({ length: maxImages - tour.images.length }, () => '<td class="empty-cell"></td>').join("");
 
-      return `<tr>
+      return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
         <div class="tour-title">${escapeHtml(tour.title)}</div>
+        <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
         <div class="tour-id">${escapeHtml(tour.id)}</div>
         <div class="photo-count">${tour.images.length} photos</div>
       </th>
@@ -474,6 +414,34 @@ function renderHtml({ tours, toursDir, outputPath }) {
       gap: 10px 18px;
     }
 
+    .header-row {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .publication-toggle {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      color: #29433e;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      min-height: 34px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .publication-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    body:not(.show-unpublished) tr[data-published="false"] {
+      display: none;
+    }
+
     .matrix-wrap {
       overflow: auto;
       height: calc(100vh - 86px);
@@ -527,6 +495,17 @@ function renderHtml({ tours, toursDir, outputPath }) {
       margin-bottom: 4px;
     }
 
+    .publication-badge {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .publication-badge.is-unpublished {
+      color: #a16207;
+    }
+
     .tour-id,
     .photo-count,
     .file-name {
@@ -567,9 +546,13 @@ function renderHtml({ tours, toursDir, outputPath }) {
 </head>
 <body>
   <header>
-    <h1>Tour Photo Matrix</h1>
+    <div class="header-row">
+      <h1>Tour Photo Matrix</h1>
+      ${visibilityControl}
+    </div>
     <div class="meta">
-      <span>${tours.length} tours</span>
+      <span>${publishedTourCount} published tours</span>
+      <span>${unpublishedTourCount} not published tours</span>
       <span>${imageCount} photos</span>
       <span>Source: ${escapeHtml(toursDir)}</span>
       <span>Output: ${escapeHtml(outputPath)}</span>
@@ -588,6 +571,17 @@ function renderHtml({ tours, toursDir, outputPath }) {
       </tbody>
     </table>
   </div>
+  <script>
+    (() => {
+      const button = document.querySelector("[data-toggle-unpublished]");
+      if (!button) return;
+      button.addEventListener("click", () => {
+        const showing = document.body.classList.toggle("show-unpublished");
+        button.setAttribute("aria-pressed", showing ? "true" : "false");
+        button.textContent = showing ? button.dataset.hideLabel : button.dataset.showLabel;
+      });
+    })();
+  </script>
 </body>
 </html>
 `;
@@ -611,15 +605,8 @@ async function main() {
   });
 
   await writeFile(options.outputPath, html);
-  if (options.createZip) {
-    await createZipArchive({
-      outputPath: options.outputPath,
-      zipPath: options.zipPath
-    });
-  }
   console.log(`Wrote ${options.outputPath}`);
   console.log(`Copied images to ${path.join(path.dirname(options.outputPath), "img")}`);
-  if (options.createZip) console.log(`Wrote ${options.zipPath}`);
   if (cleanup) {
     const action = cleanup.dryRun ? "Would delete" : "Deleted";
     console.log(`${action} ${cleanup.unusedPhotos.length} unused travel-plan service photos.`);

@@ -33,6 +33,7 @@ tmp/
 # Staging-only generated matrix pages.
 /photo_matrix.html
 /meta_matrix.html
+/content_matrix.html
 /img/
 
 # Runtime translation outputs are generated from content/translations.

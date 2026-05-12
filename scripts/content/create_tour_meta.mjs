@@ -1,11 +1,8 @@
 #!/usr/bin/env node
-import { execFile as execFileCallback } from "node:child_process";
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 
-const execFile = promisify(execFileCallback);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
@@ -26,14 +23,7 @@ Options:
   --catalog FILE               Destination catalog. Default: content/tours/destinations.json
   --highlight-manifest FILE    Experience highlight manifest. Default: assets/img/experience-highlights/manifest.json
   --output FILE                HTML output path. Default: /tmp/tour-meta/index.html
-  --zip FILE                   Zip output path. Default: /tmp/tour-meta.zip
-  --no-zip                     Do not create a zip archive
   --help                       Show this help.`);
-}
-
-function getDefaultZipPath(outputPath) {
-  const outputDir = path.dirname(outputPath);
-  return `${outputDir}.zip`;
 }
 
 function parseArgs(argv) {
@@ -41,9 +31,7 @@ function parseArgs(argv) {
     toursDir: defaultToursDir,
     catalogPath: defaultCatalogPath,
     highlightManifestPath: defaultHighlightManifestPath,
-    outputPath: defaultOutputPath,
-    zipPath: null,
-    createZip: true
+    outputPath: defaultOutputPath
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -82,23 +70,7 @@ function parseArgs(argv) {
       continue;
     }
 
-    if (arg === "--zip") {
-      const value = argv[++index];
-      if (!value) throw new Error("--zip requires a file path.");
-      options.zipPath = path.resolve(value);
-      continue;
-    }
-
-    if (arg === "--no-zip") {
-      options.createZip = false;
-      continue;
-    }
-
     throw new Error(`Unknown option: ${arg}`);
-  }
-
-  if (options.createZip && !options.zipPath) {
-    options.zipPath = getDefaultZipPath(options.outputPath);
   }
 
   return options;
@@ -155,6 +127,10 @@ function getEnglishTitle(tourJson, tourId) {
   ];
   const title = candidates.find((value) => typeof value === "string" && value.trim());
   return title?.trim() || tourId;
+}
+
+function isPublishedOnWebpage(tourJson) {
+  return tourJson?.published_on_webpage === true;
 }
 
 function localizedTitle(item) {
@@ -261,8 +237,14 @@ async function readTour(tourDir, dirent, highlightCatalog, placeCatalog) {
   return {
     id: tourId,
     title: getEnglishTitle(tourJson, tourId),
+    published: isPublishedOnWebpage(tourJson),
     days: collectDays(tourJson, highlightCatalog, placeCatalog)
   };
+}
+
+function compareTours(left, right) {
+  if (left.published !== right.published) return left.published ? -1 : 1;
+  return naturalCompare(left.title, right.title);
 }
 
 async function readTours(toursDir, highlightCatalog, placeCatalog) {
@@ -277,7 +259,7 @@ async function readTours(toursDir, highlightCatalog, placeCatalog) {
     if (tour) tours.push(tour);
   }
 
-  return tours.sort((left, right) => naturalCompare(left.title, right.title));
+  return tours.sort(compareTours);
 }
 
 function toRelativeUrl(filePath) {
@@ -319,56 +301,6 @@ async function copyHighlightImagesForOutput({ tours, highlightManifestPath, outp
         : "";
     }
   }
-}
-
-function isMissingExecutableError(error) {
-  return error?.code === "ENOENT";
-}
-
-function quotePowerShellString(value) {
-  return `'${String(value).replaceAll("'", "''")}'`;
-}
-
-async function createZipWithPowerShell({ outputPath, zipPath }) {
-  const outputDir = path.dirname(outputPath);
-  const outputFileName = path.basename(outputPath);
-  const commands = process.platform === "win32"
-    ? ["powershell.exe", "powershell", "pwsh"]
-    : ["pwsh", "powershell"];
-  const script = [
-    "$ErrorActionPreference = 'Stop';",
-    `Set-Location -LiteralPath ${quotePowerShellString(outputDir)};`,
-    `Compress-Archive -LiteralPath @(${quotePowerShellString(outputFileName)}, ${quotePowerShellString("img")}) -DestinationPath ${quotePowerShellString(zipPath)} -Force;`
-  ].join(" ");
-
-  for (const command of commands) {
-    try {
-      await execFile(command, ["-NoProfile", "-Command", script]);
-      return true;
-    } catch (error) {
-      if (isMissingExecutableError(error)) continue;
-      throw error;
-    }
-  }
-
-  return false;
-}
-
-async function createZipArchive({ outputPath, zipPath }) {
-  const outputDir = path.dirname(outputPath);
-  const outputFileName = path.basename(outputPath);
-  await rm(zipPath, { force: true });
-
-  try {
-    await execFile("zip", ["-qr", zipPath, outputFileName, "img"], { cwd: outputDir });
-    return;
-  } catch (error) {
-    if (!isMissingExecutableError(error)) throw error;
-  }
-
-  if (await createZipWithPowerShell({ outputPath, zipPath })) return;
-
-  throw new Error("Could not create zip archive. Install zip or PowerShell.");
 }
 
 function hasLatLong(place) {
@@ -437,13 +369,19 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
   const dayHeaderCells = Array.from({ length: maxDayNumber }, (_, index) => `<th>Day ${index + 1}</th>`).join("");
   const selectedHighlightCount = tours.reduce((total, tour) => total + tour.days.filter((day) => day.highlight).length, 0);
   const dayLocationCount = tours.reduce((total, tour) => total + tour.days.reduce((dayTotal, day) => dayTotal + day.locations.length, 0), 0);
+  const publishedTourCount = tours.filter((tour) => tour.published).length;
+  const unpublishedTourCount = tours.length - publishedTourCount;
+  const visibilityControl = unpublishedTourCount
+    ? `<button class="publication-toggle" type="button" data-toggle-unpublished data-show-label="Not published tours (${unpublishedTourCount})" data-hide-label="Hide not published tours" aria-pressed="false">Not published tours (${unpublishedTourCount})</button>`
+    : "";
   const rows = tours
     .map((tour) => {
       const daysByNumber = new Map(tour.days.map((day) => [day.dayNumber, day]));
       const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1))).join("");
-      return `<tr>
+      return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
         <div class="tour-title">${escapeHtml(tour.title)}</div>
+        <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
         <div class="tour-id">${escapeHtml(tour.id)}</div>
       </th>
       ${dayCells}
@@ -513,6 +451,34 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       gap: 10px 18px;
     }
 
+    .header-row {
+      align-items: flex-start;
+      display: flex;
+      gap: 12px;
+      justify-content: space-between;
+    }
+
+    .publication-toggle {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      color: #29433e;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 700;
+      min-height: 34px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .publication-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    body:not(.show-unpublished) tr[data-published="false"] {
+      display: none;
+    }
+
     .matrix-wrap {
       overflow: auto;
       height: calc(100vh - 86px);
@@ -570,6 +536,17 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
 
     .tour-title {
       margin-bottom: 4px;
+    }
+
+    .publication-badge {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .publication-badge.is-unpublished {
+      color: var(--warning);
     }
 
     .day-title {
@@ -647,9 +624,13 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
 </head>
 <body>
   <header>
-    <h1>Tour Meta Matrix</h1>
+    <div class="header-row">
+      <h1>Tour Meta Matrix</h1>
+      ${visibilityControl}
+    </div>
     <div class="meta">
-      <span>${tours.length} tours</span>
+      <span>${publishedTourCount} published tours</span>
+      <span>${unpublishedTourCount} not published tours</span>
       <span>${maxDayNumber} day columns</span>
       <span>${selectedHighlightCount} selected day highlights</span>
       <span>${dayLocationCount} day locations</span>
@@ -672,6 +653,17 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       </tbody>
     </table>
   </div>
+  <script>
+    (() => {
+      const button = document.querySelector("[data-toggle-unpublished]");
+      if (!button) return;
+      button.addEventListener("click", () => {
+        const showing = document.body.classList.toggle("show-unpublished");
+        button.setAttribute("aria-pressed", showing ? "true" : "false");
+        button.textContent = showing ? button.dataset.hideLabel : button.dataset.showLabel;
+      });
+    })();
+  </script>
 </body>
 </html>
 `;
@@ -702,15 +694,8 @@ async function main() {
   });
 
   await writeFile(options.outputPath, html);
-  if (options.createZip) {
-    await createZipArchive({
-      outputPath: options.outputPath,
-      zipPath: options.zipPath
-    });
-  }
   console.log(`Wrote ${options.outputPath}`);
   console.log(`Copied highlight images to ${path.join(path.dirname(options.outputPath), "img", "experience-highlights")}`);
-  if (options.createZip) console.log(`Wrote ${options.zipPath}`);
   console.log(`Included ${tours.length} tours, ${tours.reduce((total, tour) => total + tour.days.length, 0)} days, ${tours.reduce((total, tour) => total + tour.days.filter((day) => day.highlight).length, 0)} selected day highlights, and ${tours.reduce((total, tour) => total + tour.days.reduce((dayTotal, day) => dayTotal + day.locations.length, 0), 0)} day locations.`);
 }
 
