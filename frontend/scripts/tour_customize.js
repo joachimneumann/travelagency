@@ -4,6 +4,7 @@ const TOUR_CUSTOMIZE_TITLE_LOCATION_LIMIT = 3;
 const TOUR_CUSTOMIZE_REORDER_ANIMATION_MS = 170;
 const TOUR_CUSTOMIZE_DROP_ANIMATION_MS = 190;
 const TOUR_CUSTOMIZE_DELETE_ANIMATION_MS = 220;
+const TOUR_CUSTOMIZE_SMOKE_ANIMATION_MS = 460;
 const TOUR_CUSTOMIZE_TIMELINE_DELETE_DISTANCE_PX = 50;
 const TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX = 6;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER = 0;
@@ -926,6 +927,7 @@ export function createTourCustomizer({
           <h4>${escapeHTML(item.title)}</h4>
           ${item.summary ? `<p>${escapeHTML(item.summary)}</p>` : ""}
         </div>
+        <span class="tour-customize-option__drag-dots" aria-hidden="true"></span>
         ${controls}
       </article>
     `;
@@ -1115,6 +1117,51 @@ export function createTourCustomizer({
     }, duration + 30);
   }
 
+  function animateFloatingCardSmokeDissolve(card, {
+    duration = TOUR_CUSTOMIZE_SMOKE_ANIMATION_MS,
+    onComplete = null
+  } = {}) {
+    if (!(card instanceof HTMLElement)) {
+      onComplete?.();
+      return;
+    }
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+      card.remove();
+      onComplete?.();
+      return;
+    }
+    const rect = card.getBoundingClientRect();
+    card.style.left = `${rect.left}px`;
+    card.style.top = `${rect.top}px`;
+    card.style.width = `${rect.width}px`;
+    card.style.height = `${rect.height}px`;
+    card.style.transition = "none";
+    card.classList.remove("is-delete-target");
+    card.classList.add("is-smoke-dissolving");
+    [
+      ["-28px", "-16px", "1.25", "0ms"],
+      ["-8px", "-28px", "1.45", "35ms"],
+      ["18px", "-20px", "1.35", "65ms"],
+      ["31px", "2px", "1.18", "25ms"],
+      ["8px", "18px", "1.3", "80ms"],
+      ["-22px", "14px", "1.15", "55ms"]
+    ].forEach(([x, y, scale, delay], index) => {
+      const puff = document.createElement("span");
+      puff.className = "tour-customize-smoke-puff";
+      puff.style.setProperty("--smoke-x", x);
+      puff.style.setProperty("--smoke-y", y);
+      puff.style.setProperty("--smoke-scale", scale);
+      puff.style.animationDelay = delay;
+      puff.setAttribute("aria-hidden", "true");
+      puff.dataset.smokePuff = String(index + 1);
+      card.appendChild(puff);
+    });
+    window.setTimeout(() => {
+      card.remove();
+      onComplete?.();
+    }, duration + 40);
+  }
+
   function optionsReturnTargetRect() {
     const optionsList = modal?.querySelector?.(".tour-customize-options__list");
     if (!(optionsList instanceof HTMLElement)) return null;
@@ -1126,7 +1173,7 @@ export function createTourCustomizer({
       left: rect.left,
       top: rect.top,
       width: 100,
-      height: 120
+      height: 132
     };
   }
 
@@ -1176,7 +1223,7 @@ export function createTourCustomizer({
   }
 
   function closeModal({ restoreFocus = true, persistDraft = true } = {}) {
-    if (activePointerDrag) cleanupPointerDrag();
+    if (activePointerDrag) cleanupPointerDrag({ animateCancel: false });
     const shouldRefreshTrips = persistDraft ? persistDraftCustomization() : false;
     if (modal?.parentNode) modal.parentNode.removeChild(modal);
     modal = null;
@@ -1576,7 +1623,7 @@ export function createTourCustomizer({
     return true;
   }
 
-  function cleanupPointerDrag({ commit = false, event = null } = {}) {
+  function cleanupPointerDrag({ commit = false, event = null, animateCancel = true } = {}) {
     const pointerDrag = activePointerDrag;
     if (!pointerDrag) return;
     activePointerDrag = null;
@@ -1590,7 +1637,7 @@ export function createTourCustomizer({
       draft.timelineDays = pointerDrag.timelineDaysBeforeDrag;
       if (pointerDrag.timeline instanceof HTMLElement) syncTimelineDomOrder(pointerDrag.timeline);
     };
-    const resetPointerDragSource = () => {
+    const resetPointerDragSource = ({ hideSource = false, preserveDeleteCandidate = false } = {}) => {
       if (!(pointerDrag.source instanceof HTMLElement)) return;
       try {
         pointerDrag.source.releasePointerCapture?.(pointerDrag.pointerId);
@@ -1600,12 +1647,33 @@ export function createTourCustomizer({
       pointerDrag.source.classList.remove("is-dragging");
       pointerDrag.source.classList.remove("is-sticky-dragging");
       pointerDrag.source.classList.remove("is-move-placeholder");
-      pointerDrag.source.classList.remove("is-delete-candidate");
+      if (!preserveDeleteCandidate) pointerDrag.source.classList.remove("is-delete-candidate");
       pointerDrag.source.style.removeProperty("transform");
       pointerDrag.source.style.removeProperty("z-index");
       pointerDrag.source.style.removeProperty("transition");
-      pointerDrag.source.style.removeProperty("visibility");
+      if (hideSource) {
+        pointerDrag.source.style.visibility = "hidden";
+      } else {
+        pointerDrag.source.style.removeProperty("visibility");
+      }
       if (pointerDrag.timeline instanceof HTMLElement) updateTimelineDayLabels(pointerDrag.timeline);
+    };
+    const animateCancelReturn = () => {
+      if (!animateCancel || !(pointerDrag.ghost instanceof HTMLElement) || !(pointerDrag.source instanceof HTMLElement)) return false;
+      restoreCancelledTimelineDrag();
+      if (pointerDrag.timeline instanceof HTMLElement) clearDropSlot(pointerDrag.timeline);
+      resetPointerDragSource({ hideSource: true });
+      const targetRect = elementRectWithoutInlineTransform(pointerDrag.source);
+      if (!targetRect || !targetRect.width || !targetRect.height) {
+        pointerDrag.source.style.removeProperty("visibility");
+        return false;
+      }
+      animateFloatingCardToRect(pointerDrag.ghost, targetRect, {
+        onComplete: () => {
+          pointerDrag.source?.style?.removeProperty("visibility");
+        }
+      });
+      return true;
     };
     if (pointerDrag.timeline instanceof HTMLElement) {
       const shouldAddOption = commit
@@ -1619,6 +1687,13 @@ export function createTourCustomizer({
           : draft?.timelineDays.length || 0;
       if (commit && pointerDrag.kind === "timeline" && pointerDrag.deleteActive) {
         clearDropSlot(pointerDrag.timeline);
+        if (pointerDrag.ghost instanceof HTMLElement) {
+          resetPointerDragSource({ preserveDeleteCandidate: true });
+          animateFloatingCardSmokeDissolve(pointerDrag.ghost, {
+            onComplete: () => removeDay(pointerDrag.id)
+          });
+          return;
+        }
         resetPointerDragSource();
         pointerDrag.ghost?.remove();
         removeDay(pointerDrag.id);
@@ -1677,6 +1752,7 @@ export function createTourCustomizer({
       }
       clearDropSlot(pointerDrag.timeline);
     }
+    if (animateCancelReturn()) return;
     restoreCancelledTimelineDrag();
     resetPointerDragSource();
     pointerDrag.ghost?.remove();
@@ -1753,6 +1829,11 @@ export function createTourCustomizer({
     }
     event.preventDefault();
     event.stopPropagation();
+    if (pointerDrag.kind === "timeline" && pointerDrag.deleteActive) {
+      updatePointerDragFromEvent(event);
+      cleanupPointerDrag({ commit: true, event });
+      return;
+    }
     if (stickyDragSourceFromTarget(pointerDrag, event.target)) {
       cleanupPointerDrag();
       return;

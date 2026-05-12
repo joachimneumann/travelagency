@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Destination-first customizer mockup</title>
+  <style>
+    :root {
+      --ink: #263844;
+      --muted: #526a76;
+      --line: #dbe7ed;
+      --blue: #254f93;
+      --green: #477d69;
+      --soft-green: #edf6f2;
+      --sea: #c1dfe6;
+      --paper: #ffffff;
+      --page: #f2f6f8;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 2366px;
+      height: 1720px;
+      margin: 0;
+      overflow: hidden;
+      background: var(--page);
+      color: var(--ink);
+      font-family: Inter, Avenir Next, Helvetica Neue, Arial, sans-serif;
+    }
+
+    .modal {
+      position: absolute;
+      inset: 6px 8px 8px 8px;
+      overflow: hidden;
+      border: 1px solid #cfdbe2;
+      border-radius: 14px;
+      background: var(--paper);
+      box-shadow: 0 20px 60px rgba(25, 40, 50, 0.18);
+    }
+
+    .app-header {
+      height: 156px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 38px 0 40px;
+      border-bottom: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .app-header h1 {
+      margin: 0 0 6px 0;
+      font-size: 53px;
+      line-height: 1;
+      letter-spacing: 0;
+      font-weight: 850;
+    }
+
+    .app-header p {
+      margin: 0;
+      font-size: 27px;
+      line-height: 1.2;
+      color: #2f414b;
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .button {
+      min-width: 174px;
+      height: 96px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 18px;
+      border: 2px solid var(--line);
+      background: #fff;
+      color: #263844;
+      font-size: 29px;
+      font-weight: 780;
+    }
+
+    .button.primary {
+      min-width: 142px;
+      color: #fff;
+      border-color: #2f5ddd;
+      background: var(--green);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .workspace {
+      height: 1121px;
+      display: grid;
+      grid-template-columns: 548px 1fr;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .map-panel {
+      position: relative;
+      overflow: hidden;
+      background: var(--sea);
+      border-right: 1px solid var(--line);
+    }
+
+    .map-panel svg {
+      display: block;
+      width: 548px;
+      height: 1121px;
+    }
+
+    .library {
+      position: relative;
+      padding: 42px 42px 30px 34px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .library-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .library h2 {
+      margin: 0;
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .library-meta {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      color: var(--green);
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .pill {
+      height: 38px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 16px;
+      border: 1px solid #c7ded5;
+      border-radius: 999px;
+      background: var(--soft-green);
+    }
+
+    .destination-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px 16px;
+      align-content: flex-start;
+      padding-right: 24px;
+    }
+
+    .destination-card {
+      position: relative;
+      width: 200px;
+      height: 238px;
+      padding: 10px 10px 12px 10px;
+      border: 2px solid #d9e7ee;
+      border-radius: 14px;
+      background: #fff;
+      box-shadow: 0 1px 0 rgba(25, 40, 50, 0.02);
+    }
+
+    .destination-card.active {
+      border-color: #9bc9b9;
+      box-shadow: 0 10px 28px rgba(71, 125, 105, 0.16);
+    }
+
+    .thumb {
+      position: relative;
+      height: 132px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #d5e4e9;
+    }
+
+    .thumb:before,
+    .thumb:after {
+      content: "";
+      position: absolute;
+      inset: auto;
+      pointer-events: none;
+    }
+
+    .thumb:before {
+      left: -18px;
+      right: -18px;
+      bottom: -22px;
+      height: 72px;
+      border-radius: 60% 60% 0 0;
+      background: rgba(255, 255, 255, 0.38);
+    }
+
+    .thumb:after {
+      left: 22px;
+      right: 18px;
+      bottom: 18px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+      filter: blur(5px);
+    }
+
+    .sapa { background: linear-gradient(145deg, #426c86 0%, #8fae75 48%, #d0b46d 100%); }
+    .hanoi { background: linear-gradient(145deg, #f0b767 0%, #b85232 54%, #334c62 100%); }
+    .halong { background: linear-gradient(145deg, #79c8df 0%, #4f8fa1 42%, #285b5e 100%); }
+    .ninhbinh { background: linear-gradient(145deg, #7fc87a 0%, #c5d86a 50%, #506c42 100%); }
+    .hue { background: linear-gradient(145deg, #b78d66 0%, #774f45 52%, #354b58 100%); }
+    .hoian { background: linear-gradient(145deg, #f3b55c 0%, #b9653f 46%, #21344a 100%); }
+    .danang { background: linear-gradient(145deg, #8ed1e6 0%, #f4df9f 55%, #6f9d87 100%); }
+    .mekong { background: linear-gradient(145deg, #6da985 0%, #b5c46c 52%, #326b72 100%); }
+    .hcmc { background: linear-gradient(145deg, #75b8e6 0%, #e4d8b3 52%, #c25b48 100%); }
+    .phuquoc { background: linear-gradient(145deg, #56a7cf 0%, #f2cc7b 58%, #226d6a 100%); }
+
+    .drag-dots {
+      position: absolute;
+      top: 21px;
+      left: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, 4px);
+      gap: 4px;
+      z-index: 2;
+    }
+
+    .drag-dots span {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-copy {
+      height: 82px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0 4px;
+      text-align: center;
+    }
+
+    .place {
+      color: #263844;
+      font-size: 20px;
+      line-height: 1.06;
+      font-weight: 850;
+    }
+
+    .region {
+      margin-top: 5px;
+      color: var(--green);
+      font-size: 15px;
+      line-height: 1.1;
+      font-weight: 800;
+    }
+
+    .highlights {
+      margin-top: 4px;
+      color: #344d59;
+      font-size: 16px;
+      line-height: 1.08;
+      font-weight: 560;
+    }
+
+    .mini-label {
+      position: absolute;
+      right: 12px;
+      top: 116px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(38, 56, 68, 0.82);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 780;
+    }
+
+    .preview-card {
+      position: absolute;
+      right: 88px;
+      bottom: 88px;
+      width: 430px;
+      min-height: 184px;
+      padding: 20px;
+      border: 1px solid #d4e4eb;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 20px 60px rgba(25, 40, 50, 0.16);
+    }
+
+    .preview-title {
+      margin: 0 0 4px 0;
+      color: var(--green);
+      font-size: 19px;
+      font-weight: 840;
+      text-transform: uppercase;
+    }
+
+    .preview-heading {
+      margin: 0 0 12px 0;
+      font-size: 25px;
+      line-height: 1.1;
+      font-weight: 850;
+    }
+
+    .preview-line {
+      display: flex;
+      gap: 10px;
+      margin-top: 9px;
+      color: #39515d;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 620;
+    }
+
+    .preview-line:before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      margin-top: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      flex: 0 0 auto;
+    }
+
+    .scrollbar {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      width: 18px;
+      height: 400px;
+      border-radius: 999px;
+      background: #b8b8b8;
+    }
+
+    .itinerary {
+      height: 435px;
+      padding: 34px 34px 28px 34px;
+      background: #fff;
+    }
+
+    .itinerary-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 38px;
+    }
+
+    .itinerary h2 {
+      margin: 0;
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 850;
+      letter-spacing: 0;
+    }
+
+    .route-summary {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--green);
+      font-size: 20px;
+      font-weight: 840;
+    }
+
+    .timeline {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+      white-space: nowrap;
+    }
+
+    .day-column {
+      width: 200px;
+      flex: 0 0 200px;
+    }
+
+    .day-label {
+      margin: 0 0 12px 0;
+      text-align: center;
+      color: var(--green);
+      font-size: 19px;
+      line-height: 1;
+      font-weight: 850;
+    }
+
+    .day-card {
+      position: relative;
+      height: 238px;
+      padding: 10px 10px 12px 10px;
+      border: 2px solid #d9e7ee;
+      border-radius: 14px;
+      background: #fff;
+      overflow: hidden;
+    }
+
+    .day-card.selected {
+      border-color: var(--green);
+      box-shadow: 0 10px 26px rgba(71, 125, 105, 0.15);
+    }
+
+    .day-card .thumb {
+      height: 134px;
+    }
+
+    .delete {
+      position: absolute;
+      top: 13px;
+      right: 13px;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.86);
+      color: #263844;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      line-height: 1;
+      box-shadow: 0 1px 5px rgba(25, 40, 50, 0.14);
+    }
+
+    .ghost-slot {
+      height: 238px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      border: 2px dashed #85bea9;
+      border-radius: 14px;
+      background: #f7fbf9;
+      color: var(--green);
+      font-weight: 850;
+    }
+
+    .ghost-slot .plus {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      background: #52aa61;
+      color: #fff;
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .source {
+      margin-top: 4px;
+      color: #344d59;
+      font-size: 17px;
+      line-height: 1.08;
+      font-weight: 560;
+      text-align: center;
+      white-space: normal;
+    }
+  </style>
+</head>
+<body>
+  <main class="modal" aria-label="Destination-first customizer mockup">
+    <header class="app-header">
+      <div>
+        <h1>Customize this tour</h1>
+        <p>Choose destinations first, then shape the day-by-day route.</p>
+      </div>
+      <div class="header-actions">
+        <div class="button">Reset tour</div>
+        <div class="button primary">Close</div>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <aside class="map-panel" aria-label="Route map preview">
+        <svg viewBox="0 0 548 1121" role="img" aria-label="Vietnam route map">
+          <defs>
+            <filter id="pinShadow" x="-60%" y="-60%" width="220%" height="220%">
+              <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#19324c" flood-opacity="0.18"/>
+            </filter>
+          </defs>
+          <rect width="548" height="1121" fill="#bddde4"/>
+          <path d="M0 0h286c-46 75-58 154-28 235 26 70-12 131-88 170-88 45-110 123-62 232 28 64 21 118-20 161-57 59-59 148-6 213 28 35 37 70 28 110H0Z" fill="#fff" stroke="#d0d9dd" stroke-width="2"/>
+          <path d="M341 80c48 60 67 126 44 196-17 52 7 93 32 137 35 62 28 128-22 187-35 42-32 94 6 146 47 64 34 142-31 206-42 42-45 91-12 147 16 28 15 49-6 66-31 25-74 5-86-40-13-49 4-103 31-149 30-52 24-104-4-161-29-59-23-112 19-166 33-43 34-88 2-143-34-59-29-113 16-164 41-48 38-94 8-149-31-58-30-110 3-159Z" fill="#ffffff" stroke="#c8d3d7" stroke-width="2"/>
+          <path d="M336 98c44 57 58 119 35 187-17 51 6 91 29 132 31 57 25 115-20 170-34 42-31 91 5 143 44 63 29 136-31 197-43 44-47 90-14 146 14 24 13 44-7 57-24 16-50-1-56-35-9-48 10-96 34-137 30-52 22-102-4-157-26-55-19-105 19-156 32-43 33-86 2-138-31-53-26-101 14-148 38-45 36-88 9-139-30-55-31-103-15-122Z" fill="#f7fbfb" stroke="#e4ebee" stroke-width="1"/>
+          <path d="M313 244 C330 319 376 386 395 478 C415 572 420 661 399 738 C374 831 352 911 354 1020" fill="none" stroke="#254f93" stroke-width="6" stroke-linecap="round" stroke-dasharray="16 16"/>
+          <text x="138" y="198" fill="#a3aeb5" font-size="28" font-weight="800">LAOS</text>
+          <text x="72" y="616" fill="#a3aeb5" font-size="28" font-weight="800">CAMBODIA</text>
+          <text x="365" y="167" fill="#a3aeb5" font-size="24" font-weight="850">VIETNAM</text>
+          <text x="384" y="535" fill="#2c7da2" font-size="22" font-style="italic">South China Sea</text>
+
+          <g filter="url(#pinShadow)">
+            <circle cx="303" cy="244" r="33" fill="#254f93" stroke="#fff" stroke-width="5"/>
+            <text x="303" y="254" text-anchor="middle" fill="#fff" font-size="24" font-weight="850">1</text>
+          </g>
+          <text x="348" y="252" fill="#263844" font-size="24" font-weight="850">Hanoi</text>
+
+          <g filter="url(#pinShadow)">
+            <circle cx="327" cy="337" r="33" fill="#254f93" stroke="#fff" stroke-width="5"/>
+            <text x="327" y="347" text-anchor="middle" fill="#fff" font-size="24" font-weight="850">2</text>
+          </g>
+          <text x="370" y="345" fill="#263844" font-size="24" font-weight="850">Ninh Binh</text>
+
+          <g filter="url(#pinShadow)">
+            <circle cx="397" cy="626" r="33" fill="#254f93" stroke="#fff" stroke-width="5"/>
+            <text x="397" y="636" text-anchor="middle" fill="#fff" font-size="24" font-weight="850">5</text>
+          </g>
+          <text x="439" y="634" fill="#263844" font-size="24" font-weight="850">Hue</text>
+
+          <g filter="url(#pinShadow)">
+            <circle cx="417" cy="714" r="39" fill="#254f93" stroke="#fff" stroke-width="5"/>
+            <text x="417" y="724" text-anchor="middle" fill="#fff" font-size="24" font-weight="850">3-4</text>
+          </g>
+          <rect x="342" y="762" width="144" height="42" rx="21" fill="#477d69"/>
+          <text x="414" y="790" text-anchor="middle" fill="#fff" font-size="18" font-weight="850">Hoi An repeat</text>
+
+          <g filter="url(#pinShadow)">
+            <circle cx="354" cy="990" r="33" fill="#254f93" stroke="#fff" stroke-width="5"/>
+            <text x="354" y="1000" text-anchor="middle" fill="#fff" font-size="24" font-weight="850">6</text>
+          </g>
+          <text x="264" y="1050" fill="#263844" font-size="24" font-weight="850">Ho Chi Minh City</text>
+
+          <g filter="url(#pinShadow)">
+            <circle cx="329" cy="1080" r="33" fill="#254f93" stroke="#fff" stroke-width="5"/>
+            <text x="329" y="1090" text-anchor="middle" fill="#fff" font-size="24" font-weight="850">7</text>
+          </g>
+        </svg>
+      </aside>
+
+      <section class="library" aria-label="Destination library">
+        <div class="library-head">
+          <h2>Destination library</h2>
+          <div class="library-meta">
+            <span class="pill">Vietnam</span>
+            <span class="pill">Route-ready places</span>
+          </div>
+        </div>
+
+        <div class="destination-grid">
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb sapa"></div>
+            <div class="mini-label">North</div>
+            <div class="card-copy">
+              <div class="place">Sapa</div>
+              <div class="region">Northern Vietnam</div>
+              <div class="highlights">Terraces, mountain towns</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb hanoi"></div>
+            <div class="mini-label">North</div>
+            <div class="card-copy">
+              <div class="place">Hanoi</div>
+              <div class="region">Northern Vietnam</div>
+              <div class="highlights">Old Quarter, food walks</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb halong"></div>
+            <div class="mini-label">North</div>
+            <div class="card-copy">
+              <div class="place">Halong Bay</div>
+              <div class="region">Northern Vietnam</div>
+              <div class="highlights">Cruise, limestone karsts</div>
+            </div>
+          </article>
+
+          <article class="destination-card active">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb ninhbinh"></div>
+            <div class="mini-label">North</div>
+            <div class="card-copy">
+              <div class="place">Ninh Binh</div>
+              <div class="region">Northern Vietnam</div>
+              <div class="highlights">Tam Coc, pagodas</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb hue"></div>
+            <div class="mini-label">Central</div>
+            <div class="card-copy">
+              <div class="place">Hue</div>
+              <div class="region">Central Vietnam</div>
+              <div class="highlights">Citadel, royal tombs</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb hoian"></div>
+            <div class="mini-label">Central</div>
+            <div class="card-copy">
+              <div class="place">Hoi An</div>
+              <div class="region">Central Vietnam</div>
+              <div class="highlights">Ancient town, lanterns</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb danang"></div>
+            <div class="mini-label">Central</div>
+            <div class="card-copy">
+              <div class="place">Da Nang</div>
+              <div class="region">Central Vietnam</div>
+              <div class="highlights">Beaches, Marble Mountains</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb hcmc"></div>
+            <div class="mini-label">South</div>
+            <div class="card-copy">
+              <div class="place">Ho Chi Minh City</div>
+              <div class="region">Southern Vietnam</div>
+              <div class="highlights">Markets, history, food</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb mekong"></div>
+            <div class="mini-label">South</div>
+            <div class="card-copy">
+              <div class="place">Mekong Delta</div>
+              <div class="region">Southern Vietnam</div>
+              <div class="highlights">Floating markets, canals</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb phuquoc"></div>
+            <div class="mini-label">South</div>
+            <div class="card-copy">
+              <div class="place">Phu Quoc</div>
+              <div class="region">Southern Vietnam</div>
+              <div class="highlights">Island beaches, seafood</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb hue"></div>
+            <div class="mini-label">Central</div>
+            <div class="card-copy">
+              <div class="place">Phong Nha</div>
+              <div class="region">Central Vietnam</div>
+              <div class="highlights">Caves, rivers, jungle</div>
+            </div>
+          </article>
+
+          <article class="destination-card">
+            <div class="drag-dots"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+            <div class="thumb sapa"></div>
+            <div class="mini-label">North</div>
+            <div class="card-copy">
+              <div class="place">Ha Giang</div>
+              <div class="region">Northern Vietnam</div>
+              <div class="highlights">Loop roads, mountain passes</div>
+            </div>
+          </article>
+        </div>
+
+        <aside class="preview-card" aria-label="Read-only day preview">
+          <p class="preview-title">Selected day preview</p>
+          <h3 class="preview-heading">Day 4 - Hoi An lantern evening</h3>
+          <div class="preview-line">Ancient town walk and riverside dinner</div>
+          <div class="preview-line">Copied services are read-only in this tool</div>
+          <div class="preview-line">Destination can be repeated as another day</div>
+        </aside>
+
+        <div class="scrollbar" aria-hidden="true"></div>
+      </section>
+    </section>
+
+    <section class="itinerary" aria-label="Route timeline">
+      <div class="itinerary-head">
+        <h2>Your itinerary: One Trip, A Thousand Memories</h2>
+        <div class="route-summary">
+          <span class="pill">7 days</span>
+          <span class="pill">6 destinations</span>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <div class="day-column">
+          <div class="day-label">day 1</div>
+          <article class="day-card">
+            <div class="delete">x</div>
+            <div class="thumb hanoi"></div>
+            <div class="card-copy">
+              <div class="place">Hanoi</div>
+              <div class="source">Old Quarter and Hoan Kiem</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="day-column">
+          <div class="day-label">day 2</div>
+          <article class="day-card">
+            <div class="delete">x</div>
+            <div class="thumb ninhbinh"></div>
+            <div class="card-copy">
+              <div class="place">Ninh Binh</div>
+              <div class="source">Tam Coc and Bai Dinh</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="day-column">
+          <div class="day-label">day 3</div>
+          <article class="day-card">
+            <div class="delete">x</div>
+            <div class="thumb hoian"></div>
+            <div class="card-copy">
+              <div class="place">Hoi An</div>
+              <div class="source">Ancient town and markets</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="day-column">
+          <div class="day-label">day 4</div>
+          <article class="day-card selected">
+            <div class="delete">x</div>
+            <div class="thumb hoian"></div>
+            <div class="card-copy">
+              <div class="place">Hoi An</div>
+              <div class="source">Lantern evening and river walk</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="day-column">
+          <div class="day-label">day 5</div>
+          <article class="day-card">
+            <div class="delete">x</div>
+            <div class="thumb hue"></div>
+            <div class="card-copy">
+              <div class="place">Hue</div>
+              <div class="source">Imperial City and royal tombs</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="day-column">
+          <div class="day-label">day 6</div>
+          <article class="day-card">
+            <div class="delete">x</div>
+            <div class="thumb hcmc"></div>
+            <div class="card-copy">
+              <div class="place">Ho Chi Minh City</div>
+              <div class="source">Notre Dame and street food</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="day-column">
+          <div class="day-label">day 7</div>
+          <article class="day-card">
+            <div class="delete">x</div>
+            <div class="thumb mekong"></div>
+            <div class="card-copy">
+              <div class="place">Mekong Delta</div>
+              <div class="source">Floating market and canals</div>
+            </div>
+          </article>
+        </div>
+
+        <div class="day-column">
+          <div class="day-label">drop slot</div>
+          <div class="ghost-slot">
+            <div class="plus">+</div>
+            <div>destination</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
