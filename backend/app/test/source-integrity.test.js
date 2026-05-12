@@ -5745,6 +5745,26 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourCustomizerSource,
+    /function customerVisibleDayImageUrls\(day\)[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*image\.is_customer_visible === false[\s\S]*seen\.has\(src\)[\s\S]*urls\.push\(src\)/,
+    "Customizer day cards should collect every unique customer-visible image from the source day"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function renderDayCard\(item,[\s\S]*data-customize-card-image[\s\S]*data-customize-image-index="0"[\s\S]*draggable="false"/,
+    "Customizer day-card images should render as their own click target and opt out of native image dragging"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function cycleCardImage\(imageButton\)[\s\S]*urls\.length < 2[\s\S]*const nextIndex = \(currentIndex \+ 1\) % urls\.length;[\s\S]*animateCardImageSwap\(imageButton, img, nextUrl\)/,
+    "Clicking a customizer day-card image should advance to the next image for that day"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function bindCardImageCycleButtons\(element\)[\s\S]*"pointerdown"[\s\S]*event\.stopPropagation\(\)[\s\S]*"click"[\s\S]*cycleCardImage\(button\)/,
+    "Pointer starts inside the customizer card image should stay out of card dragging"
+  );
+  assert.match(
+    tourCustomizerSource,
     /\/public\/v1\/tours\/\$\{encodeURIComponent\(normalizedTourId\)\}\/one-pager-preview/,
     "Overview PDF should open the public customized one-page overview preview endpoint"
   );
@@ -5940,11 +5960,13 @@ test("homepage tour cards expand descriptions and align same-row cards without a
     "tour.customize.close",
     "tour.customize.confirm",
     "tour.customize.day",
+    "tour.customize.day_image",
     "tour.customize.drop_here",
     "tour.customize.empty_timeline",
     "tour.customize.map",
     "tour.customize.marker_label",
     "tour.customize.move_here",
+    "tour.customize.next_day_image",
     "tour.customize.no_optional_days",
     "tour.customize.optional_days",
     "tour.customize.pdf_loading",

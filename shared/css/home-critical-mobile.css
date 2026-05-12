@@ -2904,23 +2904,23 @@ html.tour-customize-modal-open {
 
 .tour-customize-options__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 100px);
-  gap: 0.48rem;
+  grid-template-columns: repeat(auto-fill, 116px);
+  gap: 0.56rem;
   justify-content: start;
   margin-top: 0.8rem;
 }
 
 .tour-customize-option {
-  width: 100px;
+  width: 116px;
   max-width: none;
-  height: 132px;
+  height: 154px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   align-items: start;
-  gap: 0.22rem;
+  gap: 0.26rem;
   min-height: 0;
-  padding: 0.3rem 0.3rem 0.82rem;
+  padding: 0.34rem 0.34rem 0.88rem;
   border: 2px solid var(--line-focus-strong);
   border-radius: 8px;
   background: #fff;
@@ -3141,13 +3141,70 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   }
 }
 
-.tour-customize-option img,
+.tour-customize-option__image,
 .tour-customize-option__thumb {
   width: 100%;
   aspect-ratio: 4 / 3;
-  object-fit: cover;
   border-radius: 6px;
   background: var(--surface-muted);
+}
+
+.tour-customize-option__image {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  appearance: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.tour-customize-option__image:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tour-customize-option__image img,
+.tour-customize-option__image-dissolve {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.tour-customize-option__image-dissolve {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  animation: tour-customize-image-dissolve 170ms ease-out forwards;
+}
+
+.tour-customize-option__image.is-swapping-image img {
+  animation: tour-customize-image-reveal 170ms ease-out both;
+}
+
+@keyframes tour-customize-image-dissolve {
+  100% {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+@keyframes tour-customize-image-reveal {
+  0% {
+    opacity: 0.72;
+    filter: saturate(0.94);
+  }
+
+  100% {
+    opacity: 1;
+    filter: saturate(1);
+  }
 }
 
 .tour-customize-option__thumb {
@@ -3164,9 +3221,9 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 .tour-customize-option h4 {
   display: -webkit-box;
   overflow: hidden;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: var(--font-weight-regular);
-  line-height: 1.08;
+  line-height: 1.12;
   text-align: center;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -3174,7 +3231,7 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
 .tour-customize-option p {
   overflow: hidden;
-  font-size: 0.64rem;
+  font-size: 0.72rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -3225,12 +3282,12 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 .tour-customize-timeline__day {
   position: absolute;
   z-index: 2;
-  top: -1.18rem;
+  top: -1.28rem;
   left: 50%;
   width: 100%;
   max-width: 100%;
   color: var(--accent);
-  font-size: 0.62rem;
+  font-size: 0.7rem;
   font-weight: var(--font-weight-bold);
   overflow: hidden;
   text-align: center;
@@ -3241,11 +3298,11 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 }
 
 .tour-customize-timeline__list {
-  --tour-customize-timeline-gap: 0.56rem;
+  --tour-customize-timeline-gap: 0.62rem;
   display: flex;
   flex-wrap: nowrap;
   gap: var(--tour-customize-timeline-gap);
-  min-height: 9rem;
+  min-height: 10.4rem;
   overflow-x: auto;
   overflow-y: hidden;
   position: relative;
@@ -3255,7 +3312,7 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 }
 
 .tour-customize-timeline__item {
-  flex: 0 0 100px;
+  flex: 0 0 116px;
   z-index: 1;
   scroll-snap-align: start;
 }
@@ -3311,9 +3368,9 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 }
 
 .tour-customize-timeline__drop-slot {
-  flex: 0 0 100px;
-  width: 100px;
-  height: 132px;
+  flex: 0 0 116px;
+  width: 116px;
+  height: 154px;
   display: grid;
   place-items: center;
   align-content: center;
@@ -3403,12 +3460,12 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   }
 
   .tour-customize-timeline__item {
-    flex-basis: 100px;
+    flex-basis: 116px;
     grid-template-columns: minmax(0, 1fr);
   }
 
   .tour-customize-timeline__drop-slot {
-    flex-basis: 100px;
+    flex-basis: 116px;
   }
 }
 

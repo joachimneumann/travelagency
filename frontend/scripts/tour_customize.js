@@ -5,8 +5,11 @@ const TOUR_CUSTOMIZE_REORDER_ANIMATION_MS = 170;
 const TOUR_CUSTOMIZE_DROP_ANIMATION_MS = 190;
 const TOUR_CUSTOMIZE_DELETE_ANIMATION_MS = 220;
 const TOUR_CUSTOMIZE_SMOKE_ANIMATION_MS = 460;
+const TOUR_CUSTOMIZE_IMAGE_DISSOLVE_MS = 170;
 const TOUR_CUSTOMIZE_TIMELINE_DELETE_DISTANCE_PX = 50;
 const TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX = 6;
+const TOUR_CUSTOMIZE_CARD_WIDTH_PX = 116;
+const TOUR_CUSTOMIZE_CARD_HEIGHT_PX = 154;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER = 0;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MAX_CENTER = 100;
 const TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS = Object.freeze({
@@ -190,7 +193,9 @@ function resolveRoutePoints(day, lang, catalog = null, { allowTextFallback = tru
   return match ? [{ lat: match.point.lat, lng: match.point.lng, label: match.point.label, role: "primary" }] : [];
 }
 
-function firstCustomerImage(day) {
+function customerVisibleDayImageUrls(day) {
+  const urls = [];
+  const seen = new Set();
   for (const service of Array.isArray(day?.services) ? day.services : []) {
     const images = [
       service?.image,
@@ -200,10 +205,12 @@ function firstCustomerImage(day) {
       if (!image || typeof image !== "object" || Array.isArray(image)) continue;
       if (image.is_customer_visible === false) continue;
       const src = normalizeText(image.storage_path || image.url || image.src || image.path);
-      if (src) return src;
+      if (!src || seen.has(src)) continue;
+      seen.add(src);
+      urls.push(src);
     }
   }
-  return "";
+  return urls;
 }
 
 function summarizeDay(day, lang) {
@@ -218,7 +225,8 @@ function summarizeDay(day, lang) {
 function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destinationCatalog = null }) {
   const sourceDayId = normalizeText(day?.id);
   const title = resolveLocalizedField(day, "title", lang);
-  const thumbnailUrl = firstCustomerImage(day);
+  const imageUrls = customerVisibleDayImageUrls(day);
+  const thumbnailUrl = imageUrls[0] || "";
   const routeBounds = customizerRouteBounds();
   const routePoints = resolveRoutePoints(day, lang, destinationCatalog, { allowTextFallback: false })
     .map((routePoint) => ({
@@ -244,6 +252,7 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
     routePoint,
     routePoints,
     mapPoint,
+    imageUrls,
     day: cloneJson(day)
   };
 }
@@ -917,10 +926,19 @@ export function createTourCustomizer({
     controls = ""
   } = {}) {
     const locationBreakClass = startsLocationGroup ? " tour-customize-option--location-break" : "";
+    const imageUrls = Array.isArray(item?.imageUrls)
+      ? item.imageUrls.map((url) => normalizeText(url)).filter(Boolean)
+      : (item?.thumbnailUrl ? [normalizeText(item.thumbnailUrl)] : []);
+    const imageCount = imageUrls.length;
+    const imageLabel = imageCount > 1
+      ? t("tour.customize.next_day_image", "Show next day image")
+      : t("tour.customize.day_image", "Day image");
     return `
       <article class="${escapeAttr(className)}${locationBreakClass}" ${dataAttributeName}="${escapeAttr(dataAttributeValue)}">
         ${item.thumbnailUrl
-          ? `<img src="${escapeAttr(item.thumbnailUrl)}" alt="" loading="lazy" />`
+          ? `<button class="tour-customize-option__image" type="button" data-customize-card-image data-customize-image-index="0" data-customize-image-count="${escapeAttr(String(imageCount))}" aria-label="${escapeAttr(imageLabel)}">
+              <img src="${escapeAttr(item.thumbnailUrl)}" alt="" loading="lazy" draggable="false" />
+            </button>`
           : `<span class="tour-customize-option__thumb" aria-hidden="true"></span>`}
         <div class="tour-customize-option__body">
           <p class="tour-customize-option__location">${escapeHTML(item.locationLabel)}</p>
@@ -1172,8 +1190,8 @@ export function createTourCustomizer({
     return {
       left: rect.left,
       top: rect.top,
-      width: 100,
-      height: 132
+      width: TOUR_CUSTOMIZE_CARD_WIDTH_PX,
+      height: TOUR_CUSTOMIZE_CARD_HEIGHT_PX
     };
   }
 
@@ -1544,6 +1562,89 @@ export function createTourCustomizer({
     return draft.timelineDays.find((item) => timelineItemKey(item) === id)
       || draft.modules.find((item) => item.id === id)
       || null;
+  }
+
+  function imageUrlsForItem(item) {
+    const sourceUrls = Array.isArray(item?.imageUrls) && item.imageUrls.length
+      ? item.imageUrls
+      : customerVisibleDayImageUrls(item?.day);
+    const seen = new Set();
+    const urls = [];
+    for (const sourceUrl of sourceUrls) {
+      const url = normalizeText(sourceUrl);
+      if (!url || seen.has(url)) continue;
+      seen.add(url);
+      urls.push(url);
+    }
+    return urls;
+  }
+
+  function itemForImageButton(imageButton) {
+    if (!(imageButton instanceof Element)) return null;
+    const card = imageButton.closest("[data-customize-option-id], [data-customize-timeline-id]");
+    if (!(card instanceof HTMLElement)) return null;
+    return itemById(
+      card.getAttribute("data-customize-option-id")
+      || card.getAttribute("data-customize-timeline-id")
+    );
+  }
+
+  function currentCardImageIndex(imageButton, urls, currentSrc) {
+    const storedIndex = Number.parseInt(imageButton?.dataset?.customizeImageIndex || "", 10);
+    if (Number.isInteger(storedIndex) && storedIndex >= 0 && storedIndex < urls.length) {
+      return storedIndex;
+    }
+    const currentIndex = urls.indexOf(normalizeText(currentSrc));
+    return currentIndex >= 0 ? currentIndex : 0;
+  }
+
+  function animateCardImageSwap(imageButton, img, nextUrl) {
+    if (!(imageButton instanceof HTMLElement) || !(img instanceof HTMLElement) || !nextUrl) return;
+    const previousSrc = normalizeText(img.getAttribute("src"));
+    imageButton.querySelectorAll(".tour-customize-option__image-dissolve").forEach((element) => {
+      element.remove();
+    });
+    const reduceMotion = typeof window !== "undefined"
+      && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+    if (!previousSrc || reduceMotion) {
+      img.setAttribute("src", nextUrl);
+      return;
+    }
+    const overlay = img.cloneNode(false);
+    if (overlay instanceof HTMLElement) {
+      overlay.className = "tour-customize-option__image-dissolve";
+      overlay.setAttribute("src", previousSrc);
+      overlay.setAttribute("aria-hidden", "true");
+      overlay.removeAttribute("alt");
+      overlay.removeAttribute("loading");
+      overlay.removeAttribute("draggable");
+      imageButton.appendChild(overlay);
+    }
+    imageButton.classList.add("is-swapping-image");
+    img.setAttribute("src", nextUrl);
+    const scheduleTimeout = typeof window !== "undefined" && typeof window.setTimeout === "function"
+      ? window.setTimeout.bind(window)
+      : setTimeout;
+    scheduleTimeout(() => {
+      overlay?.remove?.();
+      imageButton.classList.remove("is-swapping-image");
+    }, TOUR_CUSTOMIZE_IMAGE_DISSOLVE_MS + 40);
+  }
+
+  function cycleCardImage(imageButton) {
+    if (!(imageButton instanceof HTMLElement)) return false;
+    const item = itemForImageButton(imageButton);
+    const urls = imageUrlsForItem(item);
+    if (urls.length < 2) return false;
+    const img = imageButton.querySelector("img");
+    if (!(img instanceof HTMLElement)) return false;
+    const currentSrc = normalizeText(img.getAttribute("src"));
+    const currentIndex = currentCardImageIndex(imageButton, urls, currentSrc);
+    const nextIndex = (currentIndex + 1) % urls.length;
+    const nextUrl = urls[nextIndex];
+    imageButton.dataset.customizeImageIndex = String(nextIndex);
+    animateCardImageSwap(imageButton, img, nextUrl);
+    return true;
   }
 
   function highlightMapLocation(itemId) {
@@ -1918,13 +2019,35 @@ export function createTourCustomizer({
       "input",
       "select",
       "textarea",
-      "[contenteditable]"
+      "[contenteditable]",
+      "[data-customize-card-image]"
     ].join(",")));
+  }
+
+  function bindCardImageCycleButtons(element) {
+    if (!(element instanceof HTMLElement)) return;
+    element.querySelectorAll("[data-customize-card-image]").forEach((button) => {
+      if (!(button instanceof HTMLElement) || button.dataset.customizeImageCycleBound === "1") return;
+      button.dataset.customizeImageCycleBound = "1";
+      button.addEventListener("pointerdown", (event) => {
+        if (event.button !== 0) return;
+        event.stopPropagation();
+      });
+      button.addEventListener("dragstart", (event) => {
+        event.preventDefault();
+      });
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        cycleCardImage(button);
+      });
+    });
   }
 
   function bindDraggableElement(element, root) {
     if (!(element instanceof HTMLElement) || !(root instanceof HTMLElement) || element.dataset.customizeDragBound === "1") return;
     element.dataset.customizeDragBound = "1";
+    bindCardImageCycleButtons(element);
     if (element.matches("[data-customize-option-id], [data-customize-timeline-id]")) {
       element.addEventListener("pointerdown", (event) => {
         if (isCustomizeDragBlockedTarget(event.target)) return;
