@@ -21,10 +21,7 @@ import {
   normalizeDestinationScopeCatalog,
   validateTravelPlanDayLocationIdsAgainstCatalog
 } from "../../domain/destination_scope.js";
-import {
-  deriveTourExperienceHighlightIds,
-  normalizeExperienceHighlightIds
-} from "../../domain/tour_metadata.js";
+import { normalizeExperienceHighlightIds } from "../../domain/tour_metadata.js";
 import {
   applyMarketingTourTranslations,
   loadPublishedMarketingTourTranslations,
@@ -466,10 +463,6 @@ export function createTourHandlers(deps) {
     if (travelPlan && typeof travelPlan === "object" && !Array.isArray(travelPlan)) {
       delete travelPlan.destination_scope;
       delete travelPlan.destinations;
-      travelPlan.derived_experience_highlight_ids = deriveTourExperienceHighlightIds(
-        travelPlan,
-        experienceHighlightCatalog()
-      );
     }
     return true;
   }
@@ -663,11 +656,7 @@ export function createTourHandlers(deps) {
   }
 
   function buildTourTravelPlanEditorValue(tour) {
-    const travelPlan = normalizeTourTravelPlan(tour?.travel_plan);
-    return {
-      ...travelPlan,
-      derived_experience_highlight_ids: deriveTourExperienceHighlightIds(travelPlan, experienceHighlightCatalog())
-    };
+    return normalizeTourTravelPlan(tour?.travel_plan);
   }
 
   function primaryTravelPlanServiceImage(item) {

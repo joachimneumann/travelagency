@@ -73,6 +73,14 @@ export function migratePersistedTourState(tour) {
     delete travelPlan.video;
     changed = true;
   }
+  if (travelPlan && Object.prototype.hasOwnProperty.call(travelPlan, "one_pager_experience_highlight_ids")) {
+    delete travelPlan.one_pager_experience_highlight_ids;
+    changed = true;
+  }
+  if (travelPlan && Object.prototype.hasOwnProperty.call(travelPlan, "derived_experience_highlight_ids")) {
+    delete travelPlan.derived_experience_highlight_ids;
+    changed = true;
+  }
   return changed;
 }
 

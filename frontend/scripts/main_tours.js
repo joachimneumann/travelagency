@@ -40,6 +40,12 @@ const DESTINATION_REGION_MENU_ORDER = Object.freeze(new Map([
   ["south", 2]
 ]));
 const TOUR_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
+const TOUR_EXPERIENCE_HIGHLIGHT_FALLBACK_IDS = Object.freeze([
+  "local_experiences",
+  "delicious_cuisine",
+  "family_friendly_activities",
+  "shopping_souvenirs"
+]);
 const EXPERIENCE_HIGHLIGHTS_BASE_PATH = "/assets/img/experience-highlights";
 const TOUR_EXPERIENCE_HIGHLIGHTS = Object.freeze([
   { id: "iconic_landmarks", title: "Iconic Landmarks", image: "01.png" },
@@ -870,9 +876,6 @@ export function createFrontendToursController(ctx) {
       ? source.travel_plan
       : {};
     const onePagerPdfUrl = normalizeText(source.one_pager_pdf_url || travelPlan.one_pager_pdf_url);
-    const onePagerExperienceHighlightIds = Array.isArray(source.one_pager_experience_highlight_ids)
-      ? source.one_pager_experience_highlight_ids
-      : (Array.isArray(travelPlan.one_pager_experience_highlight_ids) ? travelPlan.one_pager_experience_highlight_ids : []);
     const onePagerExperienceHighlights = Array.isArray(source.one_pager_experience_highlights)
       ? source.one_pager_experience_highlights
       : (Array.isArray(travelPlan.one_pager_experience_highlights) ? travelPlan.one_pager_experience_highlights : []);
@@ -882,7 +885,6 @@ export function createFrontendToursController(ctx) {
       travel_plan_day_count: Array.isArray(travelPlan.days) ? travelPlan.days.length : 0,
       has_travel_plan_details: Array.isArray(travelPlan.days) && travelPlan.days.length > 0,
       ...(onePagerPdfUrl ? { one_pager_pdf_url: onePagerPdfUrl } : {}),
-      ...(onePagerExperienceHighlightIds.length ? { one_pager_experience_highlight_ids: onePagerExperienceHighlightIds } : {}),
       ...(onePagerExperienceHighlights.length ? { one_pager_experience_highlights: onePagerExperienceHighlights } : {})
     };
   }
@@ -1630,25 +1632,6 @@ export function createFrontendToursController(ctx) {
     return { id, title, src };
   }
 
-  function configuredTourExperienceHighlightIds(trip) {
-    const seen = new Set();
-    const sources = [
-      trip?.one_pager_experience_highlight_ids,
-      trip?.experience_highlight_ids,
-      trip?.travel_plan?.one_pager_experience_highlight_ids,
-      trip?.travel_plan?.experience_highlight_ids
-    ];
-    return sources
-      .flatMap((source) => Array.isArray(source) ? source : [])
-      .map((value) => normalizeExperienceHighlightId(value))
-      .filter((id) => {
-        if (!id || seen.has(id)) return false;
-        seen.add(id);
-        return true;
-      })
-      .slice(0, TOUR_EXPERIENCE_HIGHLIGHT_LIMIT);
-  }
-
   function stableHash(value) {
     let hash = 2166136261;
     const text = String(value ?? "");
@@ -1659,48 +1642,68 @@ export function createFrontendToursController(ctx) {
     return hash >>> 0;
   }
 
-  function completeTourExperienceHighlights(trip, highlights) {
-    const seen = new Set();
-    const selectedHighlights = [];
-    for (const highlight of Array.isArray(highlights) ? highlights : []) {
-      if (!highlight?.id || seen.has(highlight.id)) continue;
-      selectedHighlights.push(highlight);
-      seen.add(highlight.id);
-      if (selectedHighlights.length >= TOUR_EXPERIENCE_HIGHLIGHT_LIMIT) return selectedHighlights;
+  function selectedTourExperienceHighlightIds(trip) {
+    const catalogOrder = new Map(TOUR_EXPERIENCE_HIGHLIGHTS.map((item, index) => [item.id, index]));
+    const counts = new Map();
+    const firstSeen = new Map();
+    let sequence = 0;
+    for (const day of Array.isArray(trip?.travel_plan?.days) ? trip.travel_plan.days : []) {
+      const dayIds = Array.from(new Set((Array.isArray(day?.experience_highlight_ids) ? day.experience_highlight_ids : [])
+        .map((value) => normalizeExperienceHighlightId(value))
+        .filter((id) => id && catalogOrder.has(id))));
+      for (const id of dayIds) {
+        counts.set(id, (counts.get(id) || 0) + 1);
+        if (!firstSeen.has(id)) {
+          firstSeen.set(id, sequence);
+          sequence += 1;
+        }
+      }
     }
-
+    const selectedIds = Array.from(counts.keys())
+      .sort((left, right) => {
+        const countDelta = (counts.get(right) || 0) - (counts.get(left) || 0);
+        if (countDelta !== 0) return countDelta;
+        const catalogDelta = (catalogOrder.get(left) ?? Number.POSITIVE_INFINITY) - (catalogOrder.get(right) ?? Number.POSITIVE_INFINITY);
+        if (catalogDelta !== 0) return catalogDelta;
+        return (firstSeen.get(left) || 0) - (firstSeen.get(right) || 0);
+      })
+      .slice(0, TOUR_EXPERIENCE_HIGHLIGHT_LIMIT);
+    const seen = new Set(selectedIds);
     const tripSeed = normalizeText(trip?.id || trip?.title) || "tour";
-    const randomHighlights = TOUR_EXPERIENCE_HIGHLIGHTS
-      .filter((item) => item?.id && !seen.has(item.id))
-      .map((item) => ({
-        item,
-        rank: stableHash(`${tripSeed}:${item.id}`)
+    const fallbackIds = TOUR_EXPERIENCE_HIGHLIGHT_FALLBACK_IDS
+      .map((value) => normalizeExperienceHighlightId(value))
+      .filter((id) => id && catalogOrder.has(id) && !seen.has(id))
+      .map((id, index) => ({
+        id,
+        index,
+        rank: stableHash(`${tripSeed}:${id}`)
       }))
-      .sort((left, right) => left.rank - right.rank || left.item.id.localeCompare(right.item.id))
-      .map(({ item }) => normalizeExperienceHighlightItem(item))
-      .filter((item) => {
-        if (!item?.id || seen.has(item.id)) return false;
-        seen.add(item.id);
+      .sort((left, right) => left.rank - right.rank || left.index - right.index)
+      .map((entry) => entry.id);
+    return selectedIds.concat(fallbackIds).slice(0, TOUR_EXPERIENCE_HIGHLIGHT_LIMIT);
+  }
+
+  function completeTourExperienceHighlights(trip, highlightIds, explicitItems = []) {
+    const seen = new Set();
+    const explicitById = new Map((Array.isArray(explicitItems) ? explicitItems : [])
+      .map((item) => normalizeExperienceHighlightItem(item))
+      .filter(Boolean)
+      .map((item) => [item.id, item]));
+    return (Array.isArray(highlightIds) ? highlightIds : [])
+      .map((id) => explicitById.get(id) || normalizeExperienceHighlightItem({ id }))
+      .filter((highlight) => {
+        if (!highlight?.id || seen.has(highlight.id)) return false;
+        seen.add(highlight.id);
         return true;
-      });
-    return selectedHighlights.concat(randomHighlights).slice(0, TOUR_EXPERIENCE_HIGHLIGHT_LIMIT);
+      })
+      .slice(0, TOUR_EXPERIENCE_HIGHLIGHT_LIMIT);
   }
 
   function selectedTourExperienceHighlights(trip) {
     const explicitItems = Array.isArray(trip?.one_pager_experience_highlights)
       ? trip.one_pager_experience_highlights
       : (Array.isArray(trip?.travel_plan?.one_pager_experience_highlights) ? trip.travel_plan.one_pager_experience_highlights : []);
-    const normalizedExplicitItems = explicitItems
-      .map((item) => normalizeExperienceHighlightItem(item))
-      .filter(Boolean);
-    if (normalizedExplicitItems.length) return completeTourExperienceHighlights(trip, normalizedExplicitItems);
-
-    const configuredHighlights = configuredTourExperienceHighlightIds(trip)
-      .map((id) => normalizeExperienceHighlightItem({ id }))
-      .filter(Boolean);
-    if (configuredHighlights.length) return completeTourExperienceHighlights(trip, configuredHighlights);
-
-    return completeTourExperienceHighlights(trip, []);
+    return completeTourExperienceHighlights(trip, selectedTourExperienceHighlightIds(trip), explicitItems);
   }
 
   function renderTourExperienceHighlights(trip) {

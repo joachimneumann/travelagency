@@ -55,4 +55,5 @@ git pull --ff-only
 "$ROOT_DIR/scripts/assets/prepare_runtime_brand_logo.sh" staging
 generate_runtime_i18n
 run_public_homepage_asset_generator_quiet "$ROOT_DIR"
+"$ROOT_DIR/scripts/content/create_staging_tour_matrices.sh"
 print_deploy_runtime_i18n_warning

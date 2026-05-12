@@ -30,6 +30,11 @@ assets/generated/
 tmp/
 .playwright-cli/
 
+# Staging-only generated matrix pages.
+/photo_matrix.html
+/meta_matrix.html
+/img/
+
 # Runtime translation outputs are generated from content/translations.
 # Canonical English source catalogs live in scripts/i18n/source_catalogs.
 # Runtime compatibility dictionaries are generated and kept out of git.

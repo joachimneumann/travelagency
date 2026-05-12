@@ -17,7 +17,6 @@ import {
 const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
 const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
-const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
 
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);
@@ -420,10 +419,6 @@ function normalizeTravelPlanOnePagerHeroImageId(source, days) {
   return collectTravelPlanTourCardImageIds(days).includes(heroImageId) ? heroImageId : "";
 }
 
-function normalizeTravelPlanOnePagerExperienceHighlightIds(values) {
-  return normalizeExperienceHighlightIds(values, { limit: ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT });
-}
-
 function applyTravelPlanTourCardImageSelection(days, selectedIds) {
   const selectedSet = new Set(Array.isArray(selectedIds) ? selectedIds : []);
   return (Array.isArray(days) ? days : []).map((day) => ({
@@ -481,7 +476,6 @@ export function createTravelPlanHelpers() {
     const one_pager_image_ids = normalizeTravelPlanImageIdList(source.one_pager_image_ids, days)
       .filter((imageId) => imageId !== one_pager_hero_image_id)
       .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
-    const one_pager_experience_highlight_ids = normalizeTravelPlanOnePagerExperienceHighlightIds(source.one_pager_experience_highlight_ids);
     const normalizedDays = applyTravelPlanTourCardImageSelection(days, tour_card_image_ids);
     const tour_card_primary_image_id = tour_card_image_ids[0] || null;
     return normalizeTravelPlanTranslationMeta({
@@ -491,7 +485,6 @@ export function createTravelPlanHelpers() {
       ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),
       ...(hasExplicitOnePagerImageIds ? { one_pager_image_ids } : {}),
-      ...(one_pager_experience_highlight_ids.length ? { one_pager_experience_highlight_ids } : {}),
       days: normalizedDays,
       translation_meta: source.translation_meta
     });
@@ -520,7 +513,6 @@ export function createTravelPlanHelpers() {
     const one_pager_image_ids = normalizeTravelPlanImageIdList(source.one_pager_image_ids, days)
       .filter((imageId) => imageId !== one_pager_hero_image_id)
       .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
-    const one_pager_experience_highlight_ids = normalizeTravelPlanOnePagerExperienceHighlightIds(source.one_pager_experience_highlight_ids);
     const normalizedDays = applyTravelPlanTourCardImageSelection(days, tour_card_image_ids);
     const tour_card_primary_image_id = tour_card_image_ids[0] || null;
     return normalizeTravelPlanTranslationMeta({
@@ -530,7 +522,6 @@ export function createTravelPlanHelpers() {
       ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),
       ...(hasExplicitOnePagerImageIds ? { one_pager_image_ids } : {}),
-      ...(one_pager_experience_highlight_ids.length ? { one_pager_experience_highlight_ids } : {}),
       days: normalizedDays,
       attachments: normalizeTravelPlanAttachments(source.attachments),
       translation_meta: source.translation_meta

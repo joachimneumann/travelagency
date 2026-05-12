@@ -283,11 +283,6 @@
       "manual_override": "Mở rộng ngày"
     },
     {
-      "source_text": "Experience Highlights (4 required!)",
-      "target_lang": "vi",
-      "manual_override": "Điểm nhấn trải nghiệm (bắt buộc 4!)"
-    },
-    {
       "source_text": "Field translated to {lang}.",
       "target_lang": "vi",
       "manual_override": "Trường đã được dịch sang {lang}."

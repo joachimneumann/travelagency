@@ -13,6 +13,7 @@ import {
   createMarketingTourPdfBackgroundImageBuffer,
   drawMarketingTourPdfBackground
 } from "./marketing_tour_pdf_background.js";
+import { selectTourExperienceHighlightIds } from "../domain/tour_metadata.js";
 
 const MM_TO_POINTS = 72 / 25.4;
 // PDFKit's built-in "A4" preset rounds the page box and some viewers display it as
@@ -1461,22 +1462,16 @@ async function loadExperienceHighlightImageBuffer(imagePath, size = 42) {
   }
 }
 
-async function collectConfiguredExperienceHighlightItems(tour, lang, manifestPath) {
-  const selectedIds = safeArray(tour?.travel_plan?.one_pager_experience_highlight_ids)
-    .map((value) => textOrNull(value))
-    .filter(Boolean);
+async function collectSelectedExperienceHighlightItems(tour, lang, manifestPath) {
   const manifestItems = await readExperienceHighlightManifest(manifestPath);
   if (!manifestItems.length) return [];
   const itemById = new Map(manifestItems.map((item) => [item.id, item]));
-  const selectedItems = selectedIds
+  const selectedIds = selectTourExperienceHighlightIds(tour?.travel_plan, manifestItems, {
+    seed: normalizeText(tour?.id) || textOrNull(tour?.title) || "tour"
+  });
+  const configuredItems = selectedIds
     .map((id) => itemById.get(id))
     .filter(Boolean);
-  const selectedItemIds = new Set(selectedItems.map((item) => item.id));
-  const randomItems = deterministicShuffle(
-    manifestItems.filter((item) => !selectedItemIds.has(item.id)),
-    `${normalizeText(tour?.id) || textOrNull(tour?.title) || "tour"}:${lang}:experience-highlights`
-  );
-  const configuredItems = [...selectedItems, ...randomItems].slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
   if (configuredItems.length < ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) return [];
   return await Promise.all(configuredItems.map(async (item) => ({
     title: localizedMapValue(item.title_i18n, lang, item.title),
@@ -2127,7 +2122,7 @@ export function createMarketingTourOnePagerPdfWriter({
     };
     const frameImages = await timing.measure("frame_images", () => prepareFrameImages(tour, { resolveTourImageDiskPath, fallbackImagePath }, normalizedLang));
     const heroBackgroundBuffer = await timing.measure("background", () => createMarketingTourPdfBackgroundImageBuffer(frameImages[0]?.buffer));
-    const configuredHighlightItems = await timing.measure("experience_highlights", () => collectConfiguredExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath));
+    const configuredHighlightItems = await timing.measure("experience_highlights", () => collectSelectedExperienceHighlightItems(tour, normalizedLang, experienceHighlightsManifestPath));
     const highlightItems = configuredHighlightItems.length
       ? configuredHighlightItems
       : collectHighlightItems(tour, duration, normalizedLang);

@@ -196,6 +196,7 @@ mkdir -p frontend/data/generated/homepage assets/generated/homepage
 prepare_runtime_brand_logo
 generate_runtime_i18n
 generate_public_homepage_assets
+"$ROOT_DIR/scripts/content/create_staging_tour_matrices.sh"
 
 mkdir -p backend/app/data
 

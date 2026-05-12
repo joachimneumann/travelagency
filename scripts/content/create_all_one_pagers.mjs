@@ -12,6 +12,7 @@ import {
 } from "../../backend/app/src/config/runtime.js";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
 import { createTravelPlanHelpers } from "../../backend/app/src/domain/travel_plan.js";
+import { selectTourExperienceHighlightIds } from "../../backend/app/src/domain/tour_metadata.js";
 import {
   applyMarketingTourTranslations,
   loadPublishedMarketingTourTranslations
@@ -301,13 +302,13 @@ async function readTours() {
   return tours;
 }
 
-async function readExperienceHighlightIds() {
+async function readExperienceHighlightCatalog() {
   const raw = await readFile(experienceHighlightsManifestPath, "utf8");
   const parsed = JSON.parse(raw);
   const seen = new Set();
   return (Array.isArray(parsed) ? parsed : [])
-    .map((item) => textOrNull(item?.id))
-    .filter((id) => {
+    .filter((item) => {
+      const id = textOrNull(item?.id);
       if (!id || seen.has(id)) return false;
       seen.add(id);
       return true;
@@ -429,20 +430,6 @@ function onePagerSelectionIds(rawTravelPlan) {
   });
 }
 
-function onePagerExperienceHighlightIds(rawTravelPlan) {
-  const seen = new Set();
-  return (Array.isArray(rawTravelPlan?.one_pager_experience_highlight_ids)
-    ? rawTravelPlan.one_pager_experience_highlight_ids
-    : [])
-    .map((value) => textOrNull(value))
-    .filter((id) => {
-      if (!id || seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    })
-    .slice(0, onePagerExperienceHighlightCount);
-}
-
 async function prepareScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourImageDiskPath = null } = {}) {
   const fallbackLabel = textOrNull(tour?.title) || "Tour";
   const serviceImages = await filterExistingImages(collectVisibleTravelPlanImages(tour.travel_plan), resolveTourImageDiskPath);
@@ -490,28 +477,16 @@ async function applyScriptFrameImages(tour, rawTravelPlan, seed, { resolveTourIm
   };
 }
 
-function applyScriptExperienceHighlights(tour, rawTravelPlan, seed, availableHighlightIds) {
-  const selectedHighlightIds = onePagerExperienceHighlightIds(rawTravelPlan);
-  if (selectedHighlightIds.length || availableHighlightIds.length < onePagerExperienceHighlightCount) {
-    return {
-      tour,
-      randomExperienceHighlightsApplied: false,
-      selectedExperienceHighlightCount: selectedHighlightIds.length,
-      selectedExperienceHighlightIds: selectedHighlightIds
-    };
-  }
-  const randomHighlightIds = deterministicShuffle(availableHighlightIds, seed).slice(0, onePagerExperienceHighlightCount);
+function applyScriptExperienceHighlights(tour, seed, experienceHighlightCatalog) {
+  const selectedHighlightIds = selectTourExperienceHighlightIds(tour?.travel_plan, experienceHighlightCatalog, { seed });
+  const dayHighlightIds = new Set(safeArray(tour?.travel_plan?.days).flatMap((day) => (
+    safeArray(day?.experience_highlight_ids).map(textOrNull).filter(Boolean)
+  )));
   return {
-    tour: {
-      ...tour,
-      travel_plan: {
-        ...tour.travel_plan,
-        one_pager_experience_highlight_ids: randomHighlightIds
-      }
-    },
-    randomExperienceHighlightsApplied: true,
-    selectedExperienceHighlightCount: randomHighlightIds.length,
-    selectedExperienceHighlightIds: randomHighlightIds
+    tour,
+    randomExperienceHighlightsApplied: selectedHighlightIds.some((id) => !dayHighlightIds.has(id)),
+    selectedExperienceHighlightCount: selectedHighlightIds.length,
+    selectedExperienceHighlightIds: selectedHighlightIds
   };
 }
 
@@ -740,8 +715,8 @@ async function main() {
     experienceHighlightsManifestPath,
     companyProfile: COMPANY_PROFILE
   });
-  const experienceHighlightIds = await readExperienceHighlightIds();
-  if (experienceHighlightIds.length < onePagerExperienceHighlightCount) {
+  const experienceHighlightCatalog = await readExperienceHighlightCatalog();
+  if (experienceHighlightCatalog.length < onePagerExperienceHighlightCount) {
     throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${experienceHighlightsManifestPath}.`);
   }
   const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, options.languages, {
@@ -822,9 +797,8 @@ async function main() {
       );
       const highlighted = applyScriptExperienceHighlights(
         selected.tour,
-        tour.travel_plan,
-        `${tour.id}:experience-highlights`,
-        experienceHighlightIds
+        tour.id,
+        experienceHighlightCatalog
       );
       const tourDirName = slug(tour.id);
       const pdfDir = path.join(options.outputDir, "pdfs", tourDirName);

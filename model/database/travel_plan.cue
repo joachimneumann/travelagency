@@ -117,8 +117,6 @@ import (
 	tour_card_image_ids?: [...common.#Identifier]
 	one_pager_hero_image_id?: common.#Identifier
 	one_pager_image_ids?: [...common.#Identifier]
-	one_pager_experience_highlight_ids?: [...common.#Identifier]
-	derived_experience_highlight_ids?: [...common.#Identifier]
 	days?: [...#TravelPlanDay]
 	...
 }
@@ -128,8 +126,6 @@ import (
 	tour_card_image_ids?: [...common.#Identifier]
 	one_pager_hero_image_id?: common.#Identifier
 	one_pager_image_ids?: [...common.#Identifier]
-	one_pager_experience_highlight_ids?: [...common.#Identifier]
-	derived_experience_highlight_ids?: [...common.#Identifier]
 	days?: [...#TravelPlanDay]
 	...
 }

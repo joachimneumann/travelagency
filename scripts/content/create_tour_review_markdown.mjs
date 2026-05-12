@@ -5,6 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
+import { selectTourExperienceHighlightIds } from "../../backend/app/src/domain/tour_metadata.js";
 
 const execFile = promisify(execFileCallback);
 const __filename = fileURLToPath(import.meta.url);
@@ -311,16 +312,10 @@ function styleLabels(tour, styleLabelMap) {
 }
 
 function selectedExperienceHighlights(tour, experienceHighlightMap) {
-  const seen = new Set();
-  return (Array.isArray(tour?.travel_plan?.one_pager_experience_highlight_ids)
-    ? tour.travel_plan.one_pager_experience_highlight_ids
-    : [])
-    .map((id) => normalizeText(id))
-    .filter((id) => {
-      if (!id || seen.has(id)) return false;
-      seen.add(id);
-      return true;
-    })
+  const catalog = Array.from(experienceHighlightMap.keys()).map((id) => ({ id }));
+  return selectTourExperienceHighlightIds(tour?.travel_plan, catalog, {
+    seed: normalizeText(tour?.id) || normalizeText(tour?.title) || "tour"
+  })
     .map((id) => ({
       id,
       title: experienceHighlightMap.get(id) || id

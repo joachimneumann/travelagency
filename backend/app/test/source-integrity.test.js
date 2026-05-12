@@ -3788,8 +3788,13 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     travelPlanModelSource,
-    /one_pager_hero_image_id\?: common\.\#Identifier[\s\S]*one_pager_image_ids\?: \[\.\.\.common\.\#Identifier\][\s\S]*one_pager_experience_highlight_ids\?: \[\.\.\.common\.\#Identifier\]/,
-    "Travel plans should store one-pager PDF hero, body image, and experience-highlight selections separately from web-page images"
+    /one_pager_hero_image_id\?: common\.\#Identifier[\s\S]*one_pager_image_ids\?: \[\.\.\.common\.\#Identifier\]/,
+    "Travel plans should store one-pager PDF hero and body image selections separately from web-page images"
+  );
+  assert.doesNotMatch(
+    travelPlanModelSource,
+    /one_pager_experience_highlight_ids|derived_experience_highlight_ids/,
+    "Travel plans should not store tour-level experience-highlight selections now that highlights are day-level"
   );
   assert.match(
     tourHtmlSource,
@@ -3798,13 +3803,23 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     tourHtmlSource,
-    /id="tour_one_pager_image_selector"[\s\S]*id="tour_style_choices"[\s\S]*id="tour_one_pager_experience_highlights"[\s\S]*id="tour_seasonality_start_month"/,
-    "Marketing-tour detail should render styles, experience highlights, and seasonality below one-pager sections"
+    /id="tour_one_pager_image_selector"[\s\S]*id="tour_style_choices"[\s\S]*id="tour_seasonality_start_month"/,
+    "Marketing-tour detail should render styles and seasonality below one-pager sections"
+  );
+  assert.doesNotMatch(
+    tourHtmlSource,
+    /tour_one_pager_experience_highlights|Experience Highlights \(4 required!\)/,
+    "Marketing-tour detail should not render the removed tour-level four-highlight selector"
   );
   assert.match(
     tourPageSource,
-    /const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;[\s\S]*const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;[\s\S]*function renderOnePagerImageThumb[\s\S]*disabledTitle[\s\S]*data-one-pager-hero-image[\s\S]*data-one-pager-select-image[\s\S]*function renderOnePagerExperienceHighlightOption[\s\S]*data-one-pager-highlight-option[\s\S]*function renderOnePagerExperienceHighlightSelectors[\s\S]*const isHeroImage = image\.id === heroImageId;[\s\S]*&& !isHeroImage[\s\S]*selectedIds\.length < ONE_PAGER_SMALL_IMAGE_LIMIT[\s\S]*function selectOnePagerHeroImage/,
+    /const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;[\s\S]*function renderOnePagerImageThumb[\s\S]*disabledTitle[\s\S]*data-one-pager-hero-image[\s\S]*data-one-pager-select-image[\s\S]*const isHeroImage = image\.id === heroImageId;[\s\S]*&& !isHeroImage[\s\S]*selectedIds\.length < ONE_PAGER_SMALL_IMAGE_LIMIT[\s\S]*function selectOnePagerHeroImage/,
     "Marketing-tour detail should let staff select one-pager hero and up to four body images while showing the hero image disabled in the small-image row"
+  );
+  assert.doesNotMatch(
+    tourPageSource,
+    /ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT|data-one-pager-highlight-option|renderOnePagerExperienceHighlightSelectors/,
+    "Marketing-tour detail code should not keep the removed tour-level four-highlight selector"
   );
   assert.doesNotMatch(
     travelPlanEditorSource,
@@ -3901,10 +3916,10 @@ test("tour card images are selected from travel-plan service images", async () =
     /function syncTravelPlanDraftFromDom\(\)[\s\S]*draft\.tour_card_primary_image_id = state\.travelPlanDraft\?\.tour_card_primary_image_id \|\| null;[\s\S]*state\.travelPlanDraft = normalizeTravelPlanState\(draft\);/,
     "Travel-plan DOM sync should preserve the selected first card image through save"
   );
-  assert.match(
+  assert.doesNotMatch(
     travelPlanHelpersSource,
-    /function normalizeOnePagerExperienceHighlightIds\(values\)[\s\S]*ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT[\s\S]*one_pager_experience_highlight_ids = normalizeOnePagerExperienceHighlightIds\(source\.one_pager_experience_highlight_ids\)[\s\S]*one_pager_experience_highlight_ids,/,
-    "Travel-plan draft normalization should preserve one-pager experience-highlight selections through selector rerenders and save"
+    /normalizeOnePagerExperienceHighlightIds|one_pager_experience_highlight_ids/,
+    "Travel-plan draft normalization should not preserve removed tour-level experience-highlight selections"
   );
   assert.match(
     toursSupportSource,
@@ -3988,13 +4003,13 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerPdfSource,
-    /function collectConfiguredExperienceHighlightItems\(tour, lang, manifestPath\)[\s\S]*one_pager_experience_highlight_ids[\s\S]*title: localizedMapValue\(item\.title_i18n, lang, item\.title\)[\s\S]*body: ""[\s\S]*imageBuffer: await loadExperienceHighlightImageBuffer\(item\.imagePath\)/,
-    "The one-pager PDF should render the selected manifest-backed experience highlight images with localized captions and no subtitle"
+    /function collectSelectedExperienceHighlightItems\(tour, lang, manifestPath\)[\s\S]*selectTourExperienceHighlightIds\(tour\?\.travel_plan, manifestItems[\s\S]*title: localizedMapValue\(item\.title_i18n, lang, item\.title\)[\s\S]*body: ""[\s\S]*imageBuffer: await loadExperienceHighlightImageBuffer\(item\.imagePath\)/,
+    "The one-pager PDF should render day-derived manifest-backed experience highlight images with localized captions and no subtitle"
   );
   assert.match(
     onePagerScriptSource,
-    /function applyScriptExperienceHighlights\(tour, rawTravelPlan, seed, availableHighlightIds\)[\s\S]*onePagerExperienceHighlightIds\(rawTravelPlan\)[\s\S]*if \(selectedHighlightIds\.length[\s\S]*randomHighlightIds = deterministicShuffle\(availableHighlightIds, seed\)\.slice\(0, onePagerExperienceHighlightCount\)[\s\S]*one_pager_experience_highlight_ids: randomHighlightIds/,
-    "The one-pager batch script should choose four random experience highlights only when a marketing tour has none selected"
+    /function applyScriptExperienceHighlights\(tour, seed, experienceHighlightCatalog\)[\s\S]*selectTourExperienceHighlightIds\(tour\?\.travel_plan, experienceHighlightCatalog, \{ seed \}\)[\s\S]*randomExperienceHighlightsApplied: selectedHighlightIds\.some/,
+    "The one-pager batch script should derive experience highlights from days and flag when fallback highlights were used"
   );
   assert.match(
     onePagerScriptSource,

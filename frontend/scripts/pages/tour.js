@@ -144,7 +144,6 @@ const TOUR_DESCRIPTION_MIN_FONT_SIZE_PX = 9;
 const TOUR_DESCRIPTION_FIT_TOLERANCE_PX = 1;
 const TOUR_DESCRIPTION_FIT_ITERATIONS = 8;
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
-const ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT = 4;
 const TOUR_WEB_PAGE_MIN_IMAGE_COUNT = 2;
 const EXPERIENCE_HIGHLIGHTS_BASE_PATH = "/assets/img/experience-highlights";
 
@@ -182,7 +181,6 @@ const els = {
   onePagerImageSelector: document.getElementById("tour_one_pager_image_selector"),
   onePagerHeroImages: document.getElementById("tour_one_pager_hero_images"),
   onePagerBodyImages: document.getElementById("tour_one_pager_body_images"),
-  onePagerExperienceHighlights: document.getElementById("tour_one_pager_experience_highlights"),
   onePagerClearImagesBtn: document.getElementById("tour_one_pager_clear_images_btn"),
   tourCardImageSelector: document.getElementById("tour_card_image_selector"),
   reelVideoCard: document.getElementById("tour_reel_preview_slot"),
@@ -549,7 +547,7 @@ async function loadExperienceHighlights() {
   } catch (error) {
     state.experienceHighlights = [];
     state.experienceHighlightsLoadFailed = true;
-    console.error("[tour-page] Failed to load one-pager experience highlights.", error);
+    console.error("[tour-page] Failed to load experience highlights.", error);
   }
 }
 
@@ -1149,98 +1147,13 @@ function syncOnePagerImageSelectionAcrossState(plan) {
   }
 }
 
-function experienceHighlightOptions() {
-  return Array.isArray(state.experienceHighlights) ? state.experienceHighlights : [];
-}
-
-function experienceHighlightById(id) {
-  const normalizedId = normalizeText(id);
-  return experienceHighlightOptions().find((item) => item.id === normalizedId) || null;
-}
-
-function localizedExperienceHighlightTitle(item, lang = selectedOnePagerLang()) {
-  const titleMap = item?.title_i18n && typeof item.title_i18n === "object" && !Array.isArray(item.title_i18n)
-    ? item.title_i18n
-    : {};
-  const normalizedLang = normalizeLanguageCode(lang, {
-    allowedCodes: CUSTOMER_CONTENT_LANGUAGE_CODES,
-    fallback: "en"
-  });
-  return normalizeText(titleMap[normalizedLang])
-    || normalizeText(titleMap.en)
-    || normalizeText(item?.title)
-    || normalizeText(item?.id);
-}
-
-function onePagerExperienceHighlightSlots(plan) {
-  const source = Array.isArray(plan?.one_pager_experience_highlight_ids)
-    ? plan.one_pager_experience_highlight_ids
-    : [];
-  const slots = source.slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT).map((value) => normalizeText(value));
-  while (slots.length < ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) slots.push("");
-  return slots;
-}
-
-function selectedOnePagerExperienceHighlightIds(plan) {
-  const availableIds = new Set(experienceHighlightOptions().map((item) => item.id));
-  const seen = new Set();
-  return onePagerExperienceHighlightSlots(plan)
-    .filter((id) => {
-      if (!id || seen.has(id)) return false;
-      if (availableIds.size && !availableIds.has(id)) return false;
-      seen.add(id);
-      return true;
-    })
-    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT);
-}
-
-function applyOnePagerExperienceHighlightSelectionToPlan(plan, highlightIds = []) {
-  if (!plan || typeof plan !== "object" || Array.isArray(plan)) return;
-  const availableIds = new Set(experienceHighlightOptions().map((item) => item.id));
-  const seen = new Set();
-  plan.one_pager_experience_highlight_ids = (Array.isArray(highlightIds) ? highlightIds : [])
-    .slice(0, ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT)
-    .map((value) => {
-      const id = normalizeText(value);
-      if (!id) return "";
-      if (seen.has(id)) return "";
-      if (availableIds.size && !availableIds.has(id)) return "";
-      seen.add(id);
-      return id;
-    });
-  while (plan.one_pager_experience_highlight_ids.length < ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) {
-    plan.one_pager_experience_highlight_ids.push("");
-  }
-}
-
-function syncOnePagerExperienceHighlightSelectionAcrossState(plan) {
-  const slots = onePagerExperienceHighlightSlots(plan);
-  applyOnePagerExperienceHighlightSelectionToPlan(plan, slots);
-  if (state.travelPlanDraft && state.travelPlanDraft !== plan) {
-    applyOnePagerExperienceHighlightSelectionToPlan(state.travelPlanDraft, slots);
-  }
-  if (state.booking?.travel_plan && state.booking.travel_plan !== plan) {
-    applyOnePagerExperienceHighlightSelectionToPlan(state.booking.travel_plan, slots);
-  }
-  if (state.tour?.travel_plan && state.tour.travel_plan !== plan) {
-    applyOnePagerExperienceHighlightSelectionToPlan(state.tour.travel_plan, slots);
-  }
-}
-
-function hasRequiredOnePagerExperienceHighlights() {
-  return selectedOnePagerExperienceHighlightIds(currentTourTravelPlan()).length >= ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT;
-}
-
 function hasSelectedOnePagerSmallImage(plan = currentTourTravelPlan()) {
   const images = collectTourCardImageOptions(plan);
   const heroImageId = selectedOnePagerHeroImageId(plan, images);
   return selectedOnePagerImageIds(plan, images).some((imageId) => imageId !== heroImageId);
 }
 
-function onePagerButtonDisabledMessage({ highlightsReady = hasRequiredOnePagerExperienceHighlights(), smallImageReady = hasSelectedOnePagerSmallImage() } = {}) {
-  if (!highlightsReady) {
-    return backendT("tour.one_pager_experience_highlights_required", "Select 4 experience highlights to create the one-page PDF.");
-  }
+function onePagerButtonDisabledMessage({ smallImageReady = hasSelectedOnePagerSmallImage() } = {}) {
   if (!smallImageReady) {
     return backendT("tour.one_pager_small_image_required", "Select at least one small image to create the one-page PDF.");
   }
@@ -1303,92 +1216,6 @@ function renderOnePagerImageThumb(image, { selected = false, badge = "", selecta
       <span class="tour-card-image-selector__order" aria-hidden="true"${selected ? "" : " hidden"}>${escapeHtml(badgeText)}</span>
     </${tagName}>
   `;
-}
-
-function renderOnePagerExperienceHighlightSummary(item, placeholderLabel) {
-  if (!item) {
-    return `<span class="tour-experience-highlight-select__text">${escapeHtml(placeholderLabel)}</span>`;
-  }
-  const title = localizedExperienceHighlightTitle(item);
-  return `
-    <img class="tour-experience-highlight-select__icon" src="${escapeHtml(item.src)}" alt="" aria-hidden="true" loading="lazy" />
-    <span class="tour-experience-highlight-select__text">${escapeHtml(title)}</span>
-  `;
-}
-
-function renderOnePagerExperienceHighlightOption({ item = null, index, value = "", selected = false, disabled = false, label = "" } = {}) {
-  const optionLabel = item ? localizedExperienceHighlightTitle(item) : label;
-  const iconMarkup = item
-    ? `<img class="tour-experience-highlight-select__icon" src="${escapeHtml(item.src)}" alt="" aria-hidden="true" loading="lazy" />`
-    : "";
-  return `
-    <button
-      class="tour-experience-highlight-select__option${selected ? " is-selected" : ""}"
-      type="button"
-      data-one-pager-highlight-index="${escapeHtml(String(index))}"
-      data-one-pager-highlight-option="${escapeHtml(value)}"
-      ${disabled ? "disabled" : ""}
-      role="option"
-      aria-selected="${selected ? "true" : "false"}"
-    >
-      ${iconMarkup}
-      <span class="tour-experience-highlight-select__text">${escapeHtml(optionLabel)}</span>
-    </button>
-  `;
-}
-
-function renderOnePagerExperienceHighlightSelectors(plan = currentTourTravelPlan()) {
-  if (!(els.onePagerExperienceHighlights instanceof HTMLElement)) return;
-  const highlights = experienceHighlightOptions();
-  const slots = onePagerExperienceHighlightSlots(plan);
-  applyOnePagerExperienceHighlightSelectionToPlan(plan, slots);
-  const placeholderLabel = backendT("tour.one_pager_select_one", "select one");
-  if (!highlights.length) {
-    const message = state.experienceHighlightsLoadFailed
-      ? backendT("tour.one_pager_experience_highlights_load_failed", "Experience highlights could not be loaded.")
-      : backendT("tour.one_pager_experience_highlights_empty", "No experience highlights are available.");
-    setHtmlIfChanged(els.onePagerExperienceHighlights, `<span class="micro">${escapeHtml(message)}</span>`);
-    syncOnePagerButtonState();
-    return;
-  }
-
-  const selectedIds = new Set(slots.filter(Boolean));
-  const html = Array.from({ length: ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT }, (_, index) => {
-    const selectedId = slots[index] || "";
-    const selectedItem = experienceHighlightById(selectedId);
-    const optionsMarkup = [
-      renderOnePagerExperienceHighlightOption({
-        index,
-        value: "",
-        selected: !selectedId,
-        disabled: !state.permissions.canEditTours,
-        label: placeholderLabel
-      }),
-      ...highlights.map((item) => renderOnePagerExperienceHighlightOption({
-        item,
-        index,
-        value: item.id,
-        selected: item.id === selectedId,
-        disabled: !state.permissions.canEditTours || (selectedIds.has(item.id) && item.id !== selectedId)
-      }))
-    ].join("");
-    const label = selectedItem ? localizedExperienceHighlightTitle(selectedItem) : placeholderLabel;
-    return `
-      <div class="tour-experience-highlight-select">
-        <details class="tour-experience-highlight-select__details" data-one-pager-highlight-details>
-          <summary
-            class="tour-experience-highlight-select__summary"
-            aria-label="${escapeHtml(label)}"
-          >${renderOnePagerExperienceHighlightSummary(selectedItem, placeholderLabel)}</summary>
-          <div class="tour-experience-highlight-select__menu" role="listbox">
-            ${optionsMarkup}
-          </div>
-        </details>
-      </div>
-    `;
-  }).join("");
-  setHtmlIfChanged(els.onePagerExperienceHighlights, html);
-  syncOnePagerButtonState();
 }
 
 function setHtmlIfChanged(element, html) {
@@ -1503,8 +1330,6 @@ function renderOnePagerImageSelector() {
   if (els.onePagerClearImagesBtn) {
     els.onePagerClearImagesBtn.disabled = !state.permissions.canEditTours || !selectedIds.length;
   }
-  syncOnePagerExperienceHighlightSelectionAcrossState(plan);
-  renderOnePagerExperienceHighlightSelectors(plan);
 }
 
 function ensureTourCardImageSelectorShell() {
@@ -1567,7 +1392,6 @@ function syncTourCardImageSelectorFromEditor({ renderSelectors = true } = {}) {
     if (state.tour) state.tour.travel_plan = result.payload;
   }
   syncOnePagerImageSelectionAcrossState(currentTourTravelPlan());
-  syncOnePagerExperienceHighlightSelectionAcrossState(currentTourTravelPlan());
   syncTourCardImageSelectionAcrossState(currentTourTravelPlan());
   if (renderSelectors) {
     renderOnePagerImageSelector();
@@ -1635,28 +1459,6 @@ function clearOnePagerBodyImages() {
   renderOnePagerImageSelector();
   updateTourDirtyState();
   setStatus(backendT("tour.one_pager_images_cleared", "One-page PDF image selection cleared. Select images again, then save changes."));
-}
-
-function selectOnePagerExperienceHighlight(index, highlightId) {
-  if (!state.permissions.canEditTours) return;
-  const slotIndex = Number(index);
-  if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= ONE_PAGER_EXPERIENCE_HIGHLIGHT_LIMIT) return;
-  const normalizedHighlightId = normalizeText(highlightId);
-  if (normalizedHighlightId && !experienceHighlightById(normalizedHighlightId)) {
-    setStatus(backendT("tour.one_pager_experience_highlight_unavailable", "Only available experience highlights can be selected."));
-    return;
-  }
-  syncTourCardImageSelectorFromEditor({ renderSelectors: false });
-  const plan = currentTourTravelPlan();
-  const slots = onePagerExperienceHighlightSlots(plan);
-  slots[slotIndex] = normalizedHighlightId;
-  applyOnePagerExperienceHighlightSelectionToPlan(plan, slots);
-  syncOnePagerExperienceHighlightSelectionAcrossState(plan);
-  renderOnePagerImageSelector();
-  updateTourDirtyState();
-  setStatus(hasRequiredOnePagerExperienceHighlights()
-    ? backendT("tour.one_pager_experience_highlights_selected", "Experience highlights selected. Save changes to enable the one-page PDF.")
-    : backendT("tour.one_pager_experience_highlights_required", "Select 4 experience highlights to create the one-page PDF."));
 }
 
 function selectTourCardImageForWebPage(imageId) {
@@ -1850,7 +1652,6 @@ function handleBackendLanguageChanged() {
   tourTravelPlanAdapter?.renderTravelPlanPanel?.({ syncFromDom: true });
   renderTravelPlanDestinationSummary();
   renderOnePagerImageSelector();
-  renderOnePagerExperienceHighlightSelectors();
   renderTourCardImageSelector();
   renderTourDirtyBar();
 }
@@ -1973,25 +1774,11 @@ async function initTourPage() {
       setStatus("");
       if (event.target === els.onePagerLang) {
         els.onePagerLang.dataset.onePagerLangUserSelected = "true";
-        renderOnePagerExperienceHighlightSelectors();
         return;
       }
       scheduleTourDirtyState();
     });
     els.form.addEventListener("click", (event) => {
-      const onePagerHighlightOption = event.target instanceof Element
-        ? event.target.closest("[data-one-pager-highlight-option]")
-        : null;
-      if (onePagerHighlightOption) {
-        event.preventDefault();
-        const detail = onePagerHighlightOption.closest("[data-one-pager-highlight-details]");
-        if (detail instanceof HTMLDetailsElement) detail.open = false;
-        selectOnePagerExperienceHighlight(
-          onePagerHighlightOption.getAttribute("data-one-pager-highlight-index"),
-          onePagerHighlightOption.getAttribute("data-one-pager-highlight-option")
-        );
-        return;
-      }
       const onePagerHeroButton = event.target instanceof Element
         ? event.target.closest("[data-one-pager-hero-image]")
         : null;
@@ -2271,12 +2058,11 @@ function buildTourSaveValidationMessage({ title = "", styles = [] }) {
 
 function syncOnePagerButtonState() {
   const unavailable = !state.permissions.canReadTours || state.is_create_mode || !normalizeText(state.id);
-  const highlightsReady = hasRequiredOnePagerExperienceHighlights();
   const smallImageReady = hasSelectedOnePagerSmallImage();
-  const disabled = unavailable || !highlightsReady || !smallImageReady || state.formDirty === true;
+  const disabled = unavailable || !smallImageReady || state.formDirty === true;
   if (els.onePagerBtn) {
     const disabledMessage = disabled
-      ? onePagerButtonDisabledMessage({ highlightsReady, smallImageReady })
+      ? onePagerButtonDisabledMessage({ smallImageReady })
       : "";
     els.onePagerBtn.disabled = disabled;
     els.onePagerBtn.title = disabled

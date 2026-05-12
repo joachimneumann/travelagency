@@ -14,7 +14,7 @@ import {
   filterDestinationScopeByTourDestinations,
   mergeDestinationScopeWithTravelPlanLocations
 } from "../../backend/app/src/domain/destination_scope.js";
-import { deriveTourExperienceHighlightIds } from "../../backend/app/src/domain/tour_metadata.js";
+import { selectTourExperienceHighlightIds } from "../../backend/app/src/domain/tour_metadata.js";
 import {
   normalizeTourDestinationCode,
   normalizeTourLang
@@ -70,12 +70,6 @@ const ONE_PAGERS_PUBLIC_BASE_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_ON
 const EXPERIENCE_HIGHLIGHTS_MANIFEST_PATH = path.join(ROOT_DIR, "assets", "img", "experience-highlights", "manifest.json");
 const EXPERIENCE_HIGHLIGHTS_PUBLIC_BASE_PATH = "/assets/img/experience-highlights";
 const EXPERIENCE_HIGHLIGHT_LIMIT = 4;
-const EXPERIENCE_HIGHLIGHT_DISPLAY_ORDER = Object.freeze([
-  "iconic_landmarks",
-  "delicious_cuisine",
-  "cultural_heritage",
-  "local_experiences"
-]);
 const GENERATED_HOMEPAGE_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "homepage");
 const GENERATED_HOMEPAGE_ASSETS_DIR = path.join(ROOT_DIR, "assets", "generated", "homepage");
 const GENERATED_REELS_DATA_DIR = path.join(ROOT_DIR, "frontend", "data", "generated", "reels");
@@ -348,28 +342,7 @@ function localizedExperienceHighlightItem(item, lang) {
   };
 }
 
-function stableExperienceHighlightRank(seed, id) {
-  return createHash("sha256")
-    .update(`${normalizeText(seed) || "tour"}:${normalizeText(id)}`)
-    .digest("hex");
-}
-
-function orderedExperienceHighlightIds(highlightIds) {
-  return (Array.isArray(highlightIds) ? highlightIds : [])
-    .map((id, index) => ({
-      id,
-      index,
-      displayOrder: EXPERIENCE_HIGHLIGHT_DISPLAY_ORDER.indexOf(id)
-    }))
-    .sort((left, right) => {
-      const leftOrder = left.displayOrder >= 0 ? left.displayOrder : Number.MAX_SAFE_INTEGER;
-      const rightOrder = right.displayOrder >= 0 ? right.displayOrder : Number.MAX_SAFE_INTEGER;
-      return leftOrder - rightOrder || left.index - right.index;
-    })
-    .map((entry) => entry.id);
-}
-
-function publicOnePagerExperienceHighlightSelection(highlightIds, catalog, lang, seed) {
+function publicOnePagerExperienceHighlightSelection(highlightIds, catalog, lang) {
   const catalogById = new Map((Array.isArray(catalog) ? catalog : []).map((item) => [item.id, item]));
   const seen = new Set();
   const selectedIds = (Array.isArray(highlightIds) ? highlightIds : [])
@@ -381,22 +354,9 @@ function publicOnePagerExperienceHighlightSelection(highlightIds, catalog, lang,
     })
     .filter((id) => catalogById.has(id))
     .slice(0, EXPERIENCE_HIGHLIGHT_LIMIT);
-  const selectedIdSet = new Set(selectedIds);
-  const fillerIds = (Array.isArray(catalog) ? catalog : [])
-    .filter((item) => item?.id && !selectedIdSet.has(item.id))
-    .map((item, index) => ({
-      id: item.id,
-      index,
-      rank: stableExperienceHighlightRank(seed, item.id)
-    }))
-    .sort((left, right) => left.rank.localeCompare(right.rank) || left.index - right.index)
-    .map((entry) => entry.id);
-  const ids = orderedExperienceHighlightIds(
-    selectedIds.concat(fillerIds).slice(0, EXPERIENCE_HIGHLIGHT_LIMIT)
-  );
   return {
-    ids,
-    items: ids
+    ids: selectedIds,
+    items: selectedIds
       .map((id) => localizedExperienceHighlightItem(catalogById.get(id), lang))
       .filter(Boolean)
   };
@@ -1938,24 +1898,13 @@ async function generateTourAssets({
       );
       const pictures = selectedTravelTourCardImagePaths(travelPlan);
       const onePagerArtifact = onePagerArtifactForLang(onePagerArtifactsByTourId, readModel.id, normalizedLang);
-      const artifactExperienceHighlightIds = Array.isArray(onePagerArtifact?.selectedExperienceHighlightIds)
-        ? onePagerArtifact.selectedExperienceHighlightIds
-        : [];
-      const derivedExperienceHighlightIds = deriveTourExperienceHighlightIds(
-        readModel.travel_plan,
-        experienceHighlightCatalog
-      );
-      const configuredExperienceHighlightIds = Array.isArray(readModel.travel_plan?.one_pager_experience_highlight_ids)
-        ? readModel.travel_plan.one_pager_experience_highlight_ids
-        : [];
-      const onePagerExperienceHighlightIds = artifactExperienceHighlightIds.length
-        ? artifactExperienceHighlightIds
-        : (derivedExperienceHighlightIds.length ? derivedExperienceHighlightIds : configuredExperienceHighlightIds);
+      const onePagerExperienceHighlightIds = selectTourExperienceHighlightIds(readModel.travel_plan, experienceHighlightCatalog, {
+        seed: readModel.id
+      });
       const onePagerExperienceHighlightSelection = publicOnePagerExperienceHighlightSelection(
         onePagerExperienceHighlightIds,
         experienceHighlightCatalog,
-        normalizedLang,
-        `${readModel.id}:${normalizedLang}`
+        normalizedLang
       );
       const onePagerPdfUrl = onePagerArtifact?.pdf
         ? buildPublicPath(ONE_PAGERS_PUBLIC_BASE_PATH, onePagerArtifact.pdf)
@@ -1965,7 +1914,6 @@ async function generateTourAssets({
         title: readModel.title,
         travel_plan: travelPlan,
         ...(onePagerPdfUrl ? { one_pager_pdf_url: onePagerPdfUrl } : {}),
-        ...(onePagerExperienceHighlightSelection.ids.length ? { one_pager_experience_highlight_ids: onePagerExperienceHighlightSelection.ids } : {}),
         ...(onePagerExperienceHighlightSelection.items.length ? { one_pager_experience_highlights: onePagerExperienceHighlightSelection.items } : {})
       };
       const detailFilename = `public-tour-details.${normalizedLang}.${readModel.id}.json`;

@@ -388,23 +388,18 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[0].image.include_in_travel_tour_card, true);
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[2].image.include_in_travel_tour_card, false);
   assert.equal(publicTourDetailsEn.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/en.pdf");
-  assert.deepEqual(publicTourDetailsEn.one_pager_experience_highlight_ids, [
-    "iconic_landmarks",
-    "delicious_cuisine",
-    "cultural_heritage",
-    "local_experiences"
-  ]);
+  assert.equal("one_pager_experience_highlight_ids" in publicTourDetailsEn, false);
   assert.deepEqual(publicTourDetailsEn.one_pager_experience_highlights.map((item) => item.title), [
-    "Iconic Landmarks",
-    "Delicious Cuisine",
-    "Cultural Heritage",
-    "Local Experiences"
+    "Local Experiences",
+    "Shopping and Souvenirs",
+    "Family Friendly Activities",
+    "Delicious Cuisine"
   ]);
   assert.deepEqual(publicTourDetailsEn.one_pager_experience_highlights.map((item) => item.image_src), [
-    "/assets/img/experience-highlights/01.png",
-    "/assets/img/experience-highlights/04.png",
-    "/assets/img/experience-highlights/02.png",
-    "/assets/img/experience-highlights/03.png"
+    "/assets/img/experience-highlights/03.png",
+    "/assets/img/experience-highlights/20.png",
+    "/assets/img/experience-highlights/17.png",
+    "/assets/img/experience-highlights/04.png"
   ]);
   assert.equal("image" in publicToursEn.items[0], false);
 
@@ -412,19 +407,16 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicToursDe.items[0].seo_slug, "alpha-custom-route");
   assert.equal(publicToursDe.items[0].short_description, "Alpha Beschreibung");
   assert.equal(publicTourDetailsDe.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/de.pdf");
-  assert.equal(publicTourDetailsDe.one_pager_experience_highlight_ids.length, 4);
-  assert.equal(new Set(publicTourDetailsDe.one_pager_experience_highlight_ids).size, 4);
-  assert.ok(publicTourDetailsDe.one_pager_experience_highlight_ids.includes("iconic_landmarks"));
-  assert.ok(publicTourDetailsDe.one_pager_experience_highlight_ids.includes("delicious_cuisine"));
+  assert.equal("one_pager_experience_highlight_ids" in publicTourDetailsDe, false);
   assert.equal(publicTourDetailsDe.one_pager_experience_highlights.length, 4);
   assert.equal(publicToursVi.items[0].title, "Tour Alpha Manual");
   assert.equal(publicToursVi.items[0].short_description, "Mo ta Alpha");
   assert.equal(publicTourDetailsVi.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/vi.pdf");
   assert.deepEqual(publicTourDetailsVi.one_pager_experience_highlights.map((item) => item.title), [
-    "Địa danh biểu tượng",
-    "Ẩm thực đặc sắc",
-    "Di sản văn hóa",
-    "Trải nghiệm địa phương"
+    "Trải nghiệm địa phương",
+    "Mua sắm và quà lưu niệm",
+    "Hoạt động phù hợp gia đình",
+    "Ẩm thực đặc sắc"
   ]);
   assert.equal(publicTourDetailsVi.travel_plan.days[0].title_i18n.vi, "Ngay den");
   assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].title_i18n.vi, "Don san bay");

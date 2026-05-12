@@ -121,14 +121,11 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     travel_plan: {
       tour_card_primary_image_id: "image_card_selected",
       tour_card_image_ids: ["image_card_selected"],
-      one_pager_experience_highlight_ids: [
-        "iconic_landmarks",
-        "delicious_cuisine"
-      ],
       days: [
         {
           id: "day_1",
           day_number: 1,
+          experience_highlight_ids: ["iconic_landmarks"],
           title: "English day title",
           title_i18n: {
             de: "German day title"
@@ -1440,15 +1437,12 @@ test("expanded public tour details load into the refreshed language trip list", 
         return {
           title: "Tour tiếng Việt",
           one_pager_pdf_url: "/content/one-pagers/pdfs/tour_language_switch/vi.pdf",
-          one_pager_experience_highlight_ids: [
-            "iconic_landmarks",
-            "delicious_cuisine"
-          ],
           travel_plan: {
             days: [
               {
                 id: "day_vi_1",
                 day_number: 1,
+                experience_highlight_ids: ["iconic_landmarks"],
                 title: "Ngày tiếng Việt",
                 services: []
               }
@@ -1543,10 +1537,7 @@ test("expanded public tour details load into the refreshed language trip list", 
   assert.equal(state.trips[0].travel_plan.days.length, 1);
   assert.equal(state.trips[0].travel_plan.days[0].title, "Ngày tiếng Việt");
   assert.equal(state.trips[0].one_pager_pdf_url, "/content/one-pagers/pdfs/tour_language_switch/vi.pdf");
-  assert.deepEqual(state.trips[0].one_pager_experience_highlight_ids, [
-    "iconic_landmarks",
-    "delicious_cuisine"
-  ]);
+  assert.equal("one_pager_experience_highlight_ids" in state.trips[0], false);
   assert.equal(state.filteredTrips[0].travel_plan.days[0].title, "Old English day");
 });
 
