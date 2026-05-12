@@ -5745,17 +5745,22 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourCustomizerSource,
-    /function customerVisibleDayImageUrls\(day\)[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*image\.is_customer_visible === false[\s\S]*seen\.has\(src\)[\s\S]*urls\.push\(src\)/,
-    "Customizer day cards should collect every unique customer-visible image from the source day"
+    /function customerVisibleDayImages\(day, lang\)[\s\S]*resolveLocalizedField\(service, "title", lang\)[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*image\.is_customer_visible === false[\s\S]*seen\.has\(src\)[\s\S]*entries\.push\(\{ url: src, title \}\)/,
+    "Customizer day cards should collect every unique customer-visible image and its service title from the source day"
   );
   assert.match(
     tourCustomizerSource,
-    /function renderDayCard\(item,[\s\S]*data-customize-card-image[\s\S]*data-customize-image-index="0"[\s\S]*draggable="false"/,
+    /function renderDayCard\(item,[\s\S]*data-customize-card-image[\s\S]*data-customize-image-index="0"[\s\S]*draggable="false"[\s\S]*data-customize-card-title[\s\S]*data-customize-day-title/,
     "Customizer day-card images should render as their own click target and opt out of native image dragging"
   );
   assert.match(
     tourCustomizerSource,
-    /function cycleCardImage\(imageButton\)[\s\S]*urls\.length < 2[\s\S]*const nextIndex = \(currentIndex \+ 1\) % urls\.length;[\s\S]*animateCardImageSwap\(imageButton, img, nextUrl\)/,
+    /function showTemporaryCardImageTitle\(imageButton, item, imageTitle\)[\s\S]*titleElement\.textContent = compactText\(imageTitle\) \|\| dayTitle[\s\S]*scheduleTimeout\(\(\) => \{[\s\S]*titleElement\.textContent = normalizeText\(titleElement\.dataset\.customizeDayTitle\) \|\| dayTitle[\s\S]*\}, TOUR_CUSTOMIZE_IMAGE_TITLE_RESET_MS\)/,
+    "Clicking a customizer day-card image should temporarily show the matching service title before reverting to the day title"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function cycleCardImage\(imageButton\)[\s\S]*const entries = imageEntriesForItem\(item\)[\s\S]*const nextIndex = urls\.length > 1 \? \(currentIndex \+ 1\) % urls\.length : currentIndex;[\s\S]*animateCardImageSwap\(imageButton, img, nextUrl\)[\s\S]*showTemporaryCardImageTitle\(imageButton, item, nextEntry\?\.title\)/,
     "Clicking a customizer day-card image should advance to the next image for that day"
   );
   assert.match(
