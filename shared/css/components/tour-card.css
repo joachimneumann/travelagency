@@ -1511,6 +1511,12 @@ html.tour-customize-modal-open {
   opacity: 0.72;
 }
 
+.tour-customize-option.is-sticky-dragging,
+.tour-customize-timeline__item.is-sticky-dragging {
+  outline: 2px solid #2aa84a;
+  outline-offset: 2px;
+}
+
 .tour-customize-timeline__item.is-dragging {
   position: relative;
   z-index: 1300;
@@ -1547,13 +1553,6 @@ html.tour-customize-modal-open {
 html.tour-customize-pointer-dragging,
 html.tour-customize-pointer-dragging * {
   cursor: grabbing !important;
-}
-
-html.tour-customize-pointer-dragging .tour-customize__dialog,
-html.tour-customize-pointer-dragging .tour-customize__workspace,
-html.tour-customize-pointer-dragging .tour-customize-timeline,
-html.tour-customize-pointer-dragging .tour-customize-timeline__list {
-  overflow: visible;
 }
 
 html.tour-customize-pointer-dragging .tour-customize-timeline {

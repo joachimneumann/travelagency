@@ -5,6 +5,7 @@ const TOUR_CUSTOMIZE_REORDER_ANIMATION_MS = 170;
 const TOUR_CUSTOMIZE_DROP_ANIMATION_MS = 190;
 const TOUR_CUSTOMIZE_DELETE_ANIMATION_MS = 220;
 const TOUR_CUSTOMIZE_TIMELINE_DELETE_DISTANCE_PX = 50;
+const TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX = 6;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER = 0;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MAX_CENTER = 100;
 const TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS = Object.freeze({
@@ -1175,6 +1176,7 @@ export function createTourCustomizer({
   }
 
   function closeModal({ restoreFocus = true, persistDraft = true } = {}) {
+    if (activePointerDrag) cleanupPointerDrag();
     const shouldRefreshTrips = persistDraft ? persistDraftCustomization() : false;
     if (modal?.parentNode) modal.parentNode.removeChild(modal);
     modal = null;
@@ -1185,6 +1187,7 @@ export function createTourCustomizer({
     cleanupMapPan();
     document.documentElement.classList.remove("tour-customize-modal-open");
     document.documentElement.classList.remove("tour-customize-pointer-dragging");
+    document.documentElement.classList.remove("tour-customize-sticky-dragging");
     if (restoreFocus && lastFocusedElement instanceof HTMLElement) {
       lastFocusedElement.focus();
     }
@@ -1524,16 +1527,69 @@ export function createTourCustomizer({
     modal?.querySelector(".tour-customize-map")?.appendChild(marker);
   }
 
+  function removePointerDragListeners() {
+    document.removeEventListener("pointermove", handlePointerDragMove);
+    document.removeEventListener("pointerup", handlePointerDragEnd);
+    document.removeEventListener("pointercancel", handlePointerDragCancel);
+    document.removeEventListener("pointermove", handleStickyDragMove);
+    document.removeEventListener("pointerdown", handleStickyDragPointerDown, true);
+    document.removeEventListener("keydown", handleStickyDragKeydown, true);
+  }
+
+  function pointerDragMovedBeyondClick(pointerDrag, event) {
+    if (!pointerDrag || !event) return false;
+    const deltaX = Number(event.clientX) - Number(pointerDrag.startX);
+    const deltaY = Number(event.clientY) - Number(pointerDrag.startY);
+    return Math.hypot(deltaX, deltaY) >= TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX;
+  }
+
+  function stickyDragSourceFromTarget(pointerDrag, target) {
+    if (!(target instanceof Element) || !pointerDrag) return null;
+    const selector = pointerDrag.kind === "option"
+      ? "[data-customize-option-id]"
+      : "[data-customize-timeline-id]";
+    const element = target.closest(selector);
+    if (!(element instanceof HTMLElement)) return null;
+    const elementId = pointerDrag.kind === "option"
+      ? element.getAttribute("data-customize-option-id")
+      : element.getAttribute("data-customize-timeline-id");
+    return normalizeText(elementId) === normalizeText(pointerDrag.id) ? element : null;
+  }
+
+  function activateStickyPointerDrag(event) {
+    const pointerDrag = activePointerDrag;
+    if (!pointerDrag) return false;
+    removePointerDragListeners();
+    pointerDrag.sticky = true;
+    pointerDrag.hasMoved = true;
+    pointerDrag.source?.classList?.add("is-sticky-dragging");
+    try {
+      pointerDrag.source?.releasePointerCapture?.(pointerDrag.pointerId);
+    } catch {
+      // Pointer capture may already be released by the browser.
+    }
+    document.documentElement.classList.add("tour-customize-sticky-dragging");
+    moveDragGhost(event);
+    document.addEventListener("pointermove", handleStickyDragMove, { passive: false });
+    document.addEventListener("pointerdown", handleStickyDragPointerDown, true);
+    document.addEventListener("keydown", handleStickyDragKeydown, true);
+    return true;
+  }
+
   function cleanupPointerDrag({ commit = false, event = null } = {}) {
     const pointerDrag = activePointerDrag;
     if (!pointerDrag) return;
     activePointerDrag = null;
     activeDragPayload = null;
     clearMapDragHighlight();
-    document.removeEventListener("pointermove", handlePointerDragMove);
-    document.removeEventListener("pointerup", handlePointerDragEnd);
-    document.removeEventListener("pointercancel", handlePointerDragCancel);
+    removePointerDragListeners();
     document.documentElement.classList.remove("tour-customize-pointer-dragging");
+    document.documentElement.classList.remove("tour-customize-sticky-dragging");
+    const restoreCancelledTimelineDrag = () => {
+      if (commit || pointerDrag.kind !== "timeline" || !Array.isArray(pointerDrag.timelineDaysBeforeDrag) || !draft) return;
+      draft.timelineDays = pointerDrag.timelineDaysBeforeDrag;
+      if (pointerDrag.timeline instanceof HTMLElement) syncTimelineDomOrder(pointerDrag.timeline);
+    };
     const resetPointerDragSource = () => {
       if (!(pointerDrag.source instanceof HTMLElement)) return;
       try {
@@ -1542,6 +1598,7 @@ export function createTourCustomizer({
         // Pointer capture may already be released by the browser.
       }
       pointerDrag.source.classList.remove("is-dragging");
+      pointerDrag.source.classList.remove("is-sticky-dragging");
       pointerDrag.source.classList.remove("is-move-placeholder");
       pointerDrag.source.classList.remove("is-delete-candidate");
       pointerDrag.source.style.removeProperty("transform");
@@ -1620,12 +1677,13 @@ export function createTourCustomizer({
       }
       clearDropSlot(pointerDrag.timeline);
     }
+    restoreCancelledTimelineDrag();
     resetPointerDragSource();
     pointerDrag.ghost?.remove();
   }
 
-  function handlePointerDragMove(event) {
-    if (!activePointerDrag || event.pointerId !== activePointerDrag.pointerId) return;
+  function updatePointerDragFromEvent(event) {
+    if (!activePointerDrag) return;
     event.preventDefault();
     moveDragGhost(event);
     const timeline = activePointerDrag.timeline;
@@ -1655,14 +1713,62 @@ export function createTourCustomizer({
     renderDropSlot(timeline, insertIndex);
   }
 
+  function handlePointerDragMove(event) {
+    if (!activePointerDrag || activePointerDrag.sticky || event.pointerId !== activePointerDrag.pointerId) return;
+    if (!activePointerDrag.hasMoved && pointerDragMovedBeyondClick(activePointerDrag, event)) {
+      activePointerDrag.hasMoved = true;
+    }
+    updatePointerDragFromEvent(event);
+  }
+
   function handlePointerDragEnd(event) {
-    if (!activePointerDrag || event.pointerId !== activePointerDrag.pointerId) return;
+    if (!activePointerDrag || activePointerDrag.sticky || event.pointerId !== activePointerDrag.pointerId) return;
     event.preventDefault();
+    if (!activePointerDrag.hasMoved && pointerDragMovedBeyondClick(activePointerDrag, event)) {
+      activePointerDrag.hasMoved = true;
+    }
+    if (!activePointerDrag.hasMoved) {
+      activateStickyPointerDrag(event);
+      return;
+    }
     cleanupPointerDrag({ commit: true, event });
   }
 
   function handlePointerDragCancel(event) {
     if (!activePointerDrag || event.pointerId !== activePointerDrag.pointerId) return;
+    cleanupPointerDrag();
+  }
+
+  function handleStickyDragMove(event) {
+    if (!activePointerDrag?.sticky) return;
+    updatePointerDragFromEvent(event);
+  }
+
+  function handleStickyDragPointerDown(event) {
+    const pointerDrag = activePointerDrag;
+    if (!pointerDrag?.sticky || event.button !== 0) return;
+    if (isCustomizeDragBlockedTarget(event.target)) {
+      cleanupPointerDrag();
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    if (stickyDragSourceFromTarget(pointerDrag, event.target)) {
+      cleanupPointerDrag();
+      return;
+    }
+    if (pointerDrag.timeline instanceof HTMLElement && isNearTimeline(pointerDrag.timeline, event)) {
+      updatePointerDragFromEvent(event);
+      cleanupPointerDrag({ commit: true, event });
+      return;
+    }
+    cleanupPointerDrag();
+  }
+
+  function handleStickyDragKeydown(event) {
+    if (!activePointerDrag?.sticky || event.key !== "Escape") return;
+    event.preventDefault();
+    event.stopPropagation();
     cleanupPointerDrag();
   }
 
@@ -1696,9 +1802,14 @@ export function createTourCustomizer({
       ghost,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
+      startX: event.clientX,
+      startY: event.clientY,
+      hasMoved: false,
+      sticky: false,
       timelineDropVisible: false,
       deleteActive: false,
-      timeline
+      timeline,
+      timelineDaysBeforeDrag: kind === "timeline" && draft ? [...draft.timelineDays] : null
     };
     activeDragPayload = { kind, id };
     element.classList.remove("is-reordering");
