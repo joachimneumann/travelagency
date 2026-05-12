@@ -2954,14 +2954,7 @@ html.tour-customize-modal-open {
 
 .tour-customize-timeline__item.is-move-placeholder,
 .tour-customize-timeline__item.is-move-placeholder.is-dragging {
-  border-color: #2aa84a;
-  border-style: dashed;
-  background: rgba(42, 168, 74, 0.07);
-  opacity: 1;
-}
-
-.tour-customize-timeline__item.is-move-placeholder > :not(.tour-customize-timeline__move-placeholder) {
-  visibility: hidden;
+  display: none;
 }
 
 .tour-customize-timeline__item.is-delete-candidate {

@@ -1304,18 +1304,40 @@ export function createTourCustomizer({
 
   function renderDropSlot(timeline, insertIndex, variant = "day") {
     if (!draft || !(timeline instanceof HTMLElement)) return;
-    const boundedIndex = Math.min(Math.max(0, insertIndex), draft.timelineDays.length);
     const existing = timeline.querySelector(".tour-customize-timeline__drop-slot");
     const slot = existing instanceof HTMLElement ? existing : document.createElement("div");
     const normalizedVariant = variant === "day" ? "day" : "move";
+    let boundedIndex = Math.min(Math.max(0, insertIndex), draft.timelineDays.length);
     if (normalizedVariant === "move") {
-      renderTimelineMovePlaceholder(timeline, insertIndex);
-      return;
+      const draggedId = activePointerDrag?.kind === "timeline"
+        ? activePointerDrag.id
+        : activeDragPayload?.kind === "timeline"
+          ? activeDragPayload.id
+          : "";
+      const source = draggedId
+        ? timeline.querySelector(`[data-customize-timeline-id="${CSS.escape(draggedId)}"]`)
+        : null;
+      if (!(source instanceof HTMLElement)) {
+        renderDropSlot(timeline, insertIndex, "day");
+        return;
+      }
+      timeline.querySelectorAll(".tour-customize-timeline__item.is-move-placeholder").forEach((element) => {
+        if (element !== source) element.classList.remove("is-move-placeholder");
+      });
+      source.classList.add("is-move-placeholder");
+      source.style.removeProperty("transform");
+      source.style.removeProperty("z-index");
+      ensureDragGhostCardVisible(activePointerDrag);
+      const currentIndex = draft.timelineDays.findIndex((item) => timelineItemKey(item) === draggedId);
+      boundedIndex = currentIndex >= 0 ? currentIndex : boundedIndex;
     }
     slot.className = "tour-customize-timeline__drop-slot";
     if (!existing || slot.getAttribute("data-customize-drop-variant") !== normalizedVariant) {
+      const label = normalizedVariant === "move"
+        ? t("tour.customize.move_here", "Move here")
+        : t("tour.customize.drop_here", "Drop here");
       slot.setAttribute("aria-hidden", "true");
-      slot.innerHTML = `<span>+</span><strong>${escapeHTML(t("tour.customize.drop_here", "Drop here"))}</strong>`;
+      slot.innerHTML = `<span>+</span><strong>${escapeHTML(label)}</strong>`;
     }
     slot.setAttribute("data-customize-drop-index", String(boundedIndex));
     slot.setAttribute("data-customize-drop-variant", normalizedVariant);
@@ -1323,35 +1345,6 @@ export function createTourCustomizer({
     timeline.insertBefore(slot, items[boundedIndex] || null);
     timeline.closest(".tour-customize-timeline")?.classList.add("tour-customize-timeline--drop-active");
     activeDropIndex = boundedIndex;
-  }
-
-  function renderTimelineMovePlaceholder(timeline, insertIndex) {
-    if (!draft || !(timeline instanceof HTMLElement)) return;
-    const draggedId = activePointerDrag?.kind === "timeline"
-      ? activePointerDrag.id
-      : activeDragPayload?.kind === "timeline"
-        ? activeDragPayload.id
-        : "";
-    const source = draggedId
-      ? timeline.querySelector(`[data-customize-timeline-id="${CSS.escape(draggedId)}"]`)
-      : null;
-    if (!(source instanceof HTMLElement)) {
-      renderDropSlot(timeline, insertIndex, "day");
-      return;
-    }
-    timeline.querySelector(".tour-customize-timeline__drop-slot")?.remove();
-    timeline.querySelectorAll(".tour-customize-timeline__item.is-move-placeholder").forEach((element) => {
-      if (element !== source) element.classList.remove("is-move-placeholder");
-    });
-    source.classList.add("is-move-placeholder");
-    source.style.removeProperty("transform");
-    source.style.removeProperty("z-index");
-    ensureDragGhostCardVisible(activePointerDrag);
-    timeline.closest(".tour-customize-timeline")?.classList.add("tour-customize-timeline--drop-active");
-    const currentIndex = draft.timelineDays.findIndex((item) => timelineItemKey(item) === draggedId);
-    activeDropIndex = currentIndex >= 0
-      ? currentIndex
-      : Math.min(Math.max(0, insertIndex), draft.timelineDays.length);
   }
 
   function updateTimelineDayLabels(timeline) {
@@ -1720,6 +1713,7 @@ export function createTourCustomizer({
       }
       if (commit && pointerDrag.kind === "timeline") {
         const target = pointerDrag.timeline.querySelector(`[data-customize-timeline-id="${CSS.escape(pointerDrag.id)}"]`);
+        const dropSlot = pointerDrag.timeline.querySelector(".tour-customize-timeline__drop-slot");
         const startRect = pointerDrag.ghost instanceof HTMLElement
           ? pointerDrag.ghost.getBoundingClientRect()
           : pointerDrag.source instanceof HTMLElement
@@ -1734,17 +1728,22 @@ export function createTourCustomizer({
           pointerDrag.ghost.style.visibility = "visible";
         }
         if (pointerDrag.source instanceof HTMLElement) pointerDrag.source.style.visibility = "hidden";
-        clearDropSlot(pointerDrag.timeline);
-        const targetRect = target instanceof HTMLElement ? elementRectWithoutInlineTransform(target) : null;
+        const targetRect = dropSlot instanceof HTMLElement
+          ? dropSlot.getBoundingClientRect()
+          : target instanceof HTMLElement
+            ? elementRectWithoutInlineTransform(target)
+            : null;
         if (targetRect && pointerDrag.ghost instanceof HTMLElement) {
           animateFloatingCardToRect(pointerDrag.ghost, targetRect, {
             onComplete: () => {
+              clearDropSlot(pointerDrag.timeline);
               resetPointerDragSource();
               refreshAfterTimelineChange();
             }
           });
           return;
         }
+        clearDropSlot(pointerDrag.timeline);
         resetPointerDragSource();
         pointerDrag.ghost?.remove();
         refreshAfterTimelineChange();
