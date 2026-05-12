@@ -26,12 +26,6 @@
     "one_pager_image_ids": [
       "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b"
     ],
-    "one_pager_experience_highlight_ids": [
-      "iconic_landmarks",
-      "local_experiences",
-      "delicious_cuisine",
-      "scenic_landscapes"
-    ],
     "days": [
       {
         "id": "travel_plan_day_994e22ed-7f3f-49dd-9ccd-4da7da91f780",
@@ -170,8 +164,7 @@
         }
       }
     ],
-    "translation_meta": {},
-    "derived_experience_highlight_ids": []
+    "translation_meta": {}
   },
   "title_i18n": {
     "vi": "Bái Đính và Tràng An"
