@@ -18,7 +18,7 @@ function printUsage() {
   console.log(`Usage: scripts/content/create_tour_meta.mjs [options]
 
 Creates a static HTML matrix of tour metadata.
-Rows are tours. Columns are tour name, locations, and one column per itinerary day.
+Rows are tours. Columns are tour name and one column per itinerary day with title, location, and highlight.
 Experience highlight images are copied into an img/ folder next to the HTML file.
 
 Options:
@@ -199,46 +199,16 @@ function addUnique(output, seen, value) {
   output.push(normalized);
 }
 
-function collectDestinationScopePlaceIds(destinationScope) {
+function collectDayLocations(day, placeCatalog) {
   const ids = [];
   const seen = new Set();
+  addUnique(ids, seen, day?.primary_location_id);
+  addUnique(ids, seen, day?.secondary_location_id);
 
-  for (const destinationEntry of Array.isArray(destinationScope) ? destinationScope : []) {
-    for (const place of Array.isArray(destinationEntry?.places) ? destinationEntry.places : []) {
-      addUnique(ids, seen, place?.place_id || place?.id);
-    }
-
-    const regionEntries = [
-      ...(Array.isArray(destinationEntry?.regions) ? destinationEntry.regions : []),
-      ...(Array.isArray(destinationEntry?.areas) ? destinationEntry.areas : [])
-    ];
-    for (const region of regionEntries) {
-      for (const place of Array.isArray(region?.places) ? region.places : []) {
-        addUnique(ids, seen, place?.place_id || place?.id);
-      }
-    }
-  }
-
-  return ids;
-}
-
-function collectLocationIds(tourJson) {
-  const ids = [];
-  const seen = new Set();
-  const travelPlan = tourJson?.travel_plan;
-
-  for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
-    addUnique(ids, seen, day?.primary_location_id);
-    addUnique(ids, seen, day?.secondary_location_id);
-  }
-
-  if (ids.length === 0) {
-    for (const id of collectDestinationScopePlaceIds(travelPlan?.destination_scope)) {
-      addUnique(ids, seen, id);
-    }
-  }
-
-  return ids;
+  return ids.map((id) => ({
+    id,
+    place: placeCatalog.get(id) || null
+  }));
 }
 
 function normalizeDayNumber(day, index) {
@@ -267,14 +237,15 @@ function getSelectedDayHighlight(day, highlightCatalog) {
   };
 }
 
-function collectDays(tourJson, highlightCatalog) {
+function collectDays(tourJson, highlightCatalog, placeCatalog) {
   return (Array.isArray(tourJson?.travel_plan?.days) ? tourJson.travel_plan.days : [])
     .map((day, index) => {
       const dayNumber = normalizeDayNumber(day, index);
       return {
         dayNumber,
         title: getDayTitle(day, dayNumber),
-        highlight: getSelectedDayHighlight(day, highlightCatalog)
+        highlight: getSelectedDayHighlight(day, highlightCatalog),
+        locations: collectDayLocations(day, placeCatalog)
       };
     })
     .sort((left, right) => left.dayNumber - right.dayNumber);
@@ -286,16 +257,11 @@ async function readTour(tourDir, dirent, highlightCatalog, placeCatalog) {
   if (!(await pathExists(tourJsonPath))) return null;
 
   const tourJson = await readJson(tourJsonPath);
-  const locationIds = collectLocationIds(tourJson);
 
   return {
     id: tourId,
     title: getEnglishTitle(tourJson, tourId),
-    locations: locationIds.map((id) => ({
-      id,
-      place: placeCatalog.get(id) || null
-    })),
-    days: collectDays(tourJson, highlightCatalog)
+    days: collectDays(tourJson, highlightCatalog, placeCatalog)
   };
 }
 
@@ -413,14 +379,13 @@ function googleMapsUrl(place) {
   return `https://www.google.com/maps?q=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
 }
 
-function renderLocationCell(locations) {
-  if (!locations.length) return '<td class="empty-cell">No locations set</td>';
+function renderDayLocations(locations) {
+  if (!locations.length) return "";
 
-  return `<td class="location-cell">
-        <div class="location-list">
+  return `<div class="day-location-list">
           ${locations.map(({ id, place }) => {
             if (!place) {
-              return `<div class="location-item is-missing">
+              return `<div class="day-location is-missing">
                 <div class="location-title">${escapeHtml(id)}</div>
                 <div class="item-id">Not found in destination catalog</div>
               </div>`;
@@ -432,13 +397,12 @@ function renderLocationCell(locations) {
               ? `<a href="${escapeAttr(googleMapsUrl(place))}" target="_blank" rel="noopener">${name}</a>`
               : name;
 
-            return `<div class="location-item">
+            return `<div class="day-location">
               <div class="location-title">${title}</div>
               <div class="item-id">${escapeHtml(coordinates)}</div>
             </div>`;
           }).join("")}
-        </div>
-      </td>`;
+        </div>`;
 }
 
 function renderDayHighlight(highlight) {
@@ -463,6 +427,7 @@ function renderDayCell(day) {
 
   return `<td class="day-cell">
         <div class="day-title">${escapeHtml(day.title)}</div>
+        ${renderDayLocations(day.locations)}
         ${renderDayHighlight(day.highlight)}
       </td>`;
 }
@@ -471,7 +436,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
   const maxDayNumber = tours.reduce((max, tour) => Math.max(max, ...tour.days.map((day) => day.dayNumber), 0), 0);
   const dayHeaderCells = Array.from({ length: maxDayNumber }, (_, index) => `<th>Day ${index + 1}</th>`).join("");
   const selectedHighlightCount = tours.reduce((total, tour) => total + tour.days.filter((day) => day.highlight).length, 0);
-  const locationCount = tours.reduce((total, tour) => total + tour.locations.length, 0);
+  const dayLocationCount = tours.reduce((total, tour) => total + tour.days.reduce((dayTotal, day) => dayTotal + day.locations.length, 0), 0);
   const rows = tours
     .map((tour) => {
       const daysByNumber = new Map(tour.days.map((day) => [day.dayNumber, day]));
@@ -481,7 +446,6 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
         <div class="tour-title">${escapeHtml(tour.title)}</div>
         <div class="tour-id">${escapeHtml(tour.id)}</div>
       </th>
-      ${renderLocationCell(tour.locations)}
       ${dayCells}
     </tr>`;
     })
@@ -622,16 +586,16 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       overflow-wrap: anywhere;
     }
 
-    .location-cell,
     .day-cell {
       background: #ffffff;
       min-width: 240px;
       padding: 10px 12px;
     }
 
-    .location-list {
+    .day-location-list {
       display: grid;
       gap: 8px;
+      margin-bottom: 8px;
     }
 
     .day-highlight {
@@ -663,7 +627,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       text-align: center;
     }
 
-    .location-item {
+    .day-location {
       border: 1px solid var(--line);
       min-height: 52px;
       padding: 8px 10px;
@@ -688,7 +652,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       <span>${tours.length} tours</span>
       <span>${maxDayNumber} day columns</span>
       <span>${selectedHighlightCount} selected day highlights</span>
-      <span>${locationCount} locations</span>
+      <span>${dayLocationCount} day locations</span>
       <span>Source: ${escapeHtml(toursDir)}</span>
       <span>Catalog: ${escapeHtml(catalogPath)}</span>
       <span>Highlights: ${escapeHtml(highlightManifestPath)}</span>
@@ -700,7 +664,6 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       <thead>
         <tr>
           <th>Tour name</th>
-          <th>Location</th>
           ${dayHeaderCells}
         </tr>
       </thead>
@@ -748,7 +711,7 @@ async function main() {
   console.log(`Wrote ${options.outputPath}`);
   console.log(`Copied highlight images to ${path.join(path.dirname(options.outputPath), "img", "experience-highlights")}`);
   if (options.createZip) console.log(`Wrote ${options.zipPath}`);
-  console.log(`Included ${tours.length} tours, ${tours.reduce((total, tour) => total + tour.days.length, 0)} days, ${tours.reduce((total, tour) => total + tour.days.filter((day) => day.highlight).length, 0)} selected day highlights, and ${tours.reduce((total, tour) => total + tour.locations.length, 0)} locations.`);
+  console.log(`Included ${tours.length} tours, ${tours.reduce((total, tour) => total + tour.days.length, 0)} days, ${tours.reduce((total, tour) => total + tour.days.filter((day) => day.highlight).length, 0)} selected day highlights, and ${tours.reduce((total, tour) => total + tour.days.reduce((dayTotal, day) => dayTotal + day.locations.length, 0), 0)} day locations.`);
 }
 
 main().catch((error) => {
