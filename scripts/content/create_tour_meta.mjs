@@ -3,6 +3,7 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  matrixMarketingTourHref,
   matrixPageControlScript,
   matrixPageControlStyles,
   renderMatrixHeaderActions
@@ -312,11 +313,11 @@ function hasLatLong(place) {
   return Number.isFinite(Number(place?.latitude)) && Number.isFinite(Number(place?.longitude));
 }
 
-function googleMapsUrl(place) {
-  return `https://www.google.com/maps?q=${encodeURIComponent(`${place.latitude},${place.longitude}`)}`;
+function matrixMarketingTourAnchor(href, markup, className = "matrix-marketing-tour-click") {
+  return `<a class="${className}" href="${escapeAttr(href)}" target="_blank" rel="noopener" data-open-marketing-tour>${markup}</a>`;
 }
 
-function renderDayLocations(locations) {
+function renderDayLocations(locations, marketingTourHref) {
   if (!locations.length) return '<div class="day-locations-slot"></div>';
 
   return `<div class="day-locations-slot">
@@ -324,55 +325,51 @@ function renderDayLocations(locations) {
           ${locations.map(({ id, place }) => {
             if (!place) {
               return `<div class="day-location is-missing">
-                <div class="location-title">${escapeHtml(id)}</div>
-                <div class="item-id">Not found in destination catalog</div>
+                <div class="location-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(id))}</div>
+                <div class="item-id">${matrixMarketingTourAnchor(marketingTourHref, "Not found in destination catalog")}</div>
               </div>`;
             }
 
-            const name = escapeHtml(place.name);
             const coordinates = hasLatLong(place) ? `${place.latitude}, ${place.longitude}` : "No latitude/longitude";
-            const title = hasLatLong(place)
-              ? `<a href="${escapeAttr(googleMapsUrl(place))}" target="_blank" rel="noopener">${name}</a>`
-              : name;
 
             return `<div class="day-location">
-              <div class="location-title">${title}</div>
-              <div class="item-id">${escapeHtml(coordinates)}</div>
+              <div class="location-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(place.name))}</div>
+              <div class="item-id">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(coordinates))}</div>
             </div>`;
           }).join("")}
           </div>
         </div>`;
 }
 
-function renderDayHighlight(highlight) {
+function renderDayHighlight(highlight, marketingTourHref) {
   if (!highlight) return '<div class="day-highlight-slot"></div>';
 
   const title = escapeHtml(highlight.title);
   const image = highlight.url
-    ? `<img src="${escapeAttr(highlight.url)}" alt="${title}" loading="lazy">`
-    : '<div class="missing-image">No image</div>';
+    ? matrixMarketingTourAnchor(marketingTourHref, `<img src="${escapeAttr(highlight.url)}" alt="${title}" loading="lazy">`)
+    : matrixMarketingTourAnchor(marketingTourHref, '<div class="missing-image">No image</div>');
 
   return `<div class="day-highlight-slot">
           <div class="day-highlight${highlight.known ? "" : " is-missing"}">
           ${image}
           <div>
-            <div class="highlight-title">${title}</div>
-            <div class="item-id">${escapeHtml(highlight.id)}</div>
+            <div class="highlight-title">${matrixMarketingTourAnchor(marketingTourHref, title)}</div>
+            <div class="item-id">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(highlight.id))}</div>
           </div>
           </div>
         </div>`;
 }
 
-function renderDayCell(day) {
+function renderDayCell(day, marketingTourHref) {
   if (!day) return '<td class="empty-cell"></td>';
 
   return `<td class="day-cell">
         <div class="day-cell-inner">
           <div class="day-title-slot">
-            <div class="day-title">${escapeHtml(day.title)}</div>
+            <div class="day-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.title))}</div>
           </div>
-          ${renderDayLocations(day.locations)}
-          ${renderDayHighlight(day.highlight)}
+          ${renderDayLocations(day.locations, marketingTourHref)}
+          ${renderDayHighlight(day.highlight, marketingTourHref)}
         </div>
       </td>`;
 }
@@ -390,13 +387,15 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
   const headerActions = renderMatrixHeaderActions({ visibilityControl });
   const rows = tours
     .map((tour) => {
+      const marketingTourHref = matrixMarketingTourHref(tour.id);
       const daysByNumber = new Map(tour.days.map((day) => [day.dayNumber, day]));
-      const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1))).join("");
+      const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1), marketingTourHref)).join("");
       return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
-        <div class="tour-title">${escapeHtml(tour.title)}</div>
+        <div class="tour-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.title))}</div>
         <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
-        <div class="tour-id">${escapeHtml(tour.id)}</div>
+        <div class="tour-id">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.id))}</div>
+        <a class="matrix-tour-link" href="${escapeAttr(marketingTourHref)}" target="_blank" rel="noopener" data-open-marketing-tour>Open marketing tour</a>
       </th>
       ${dayCells}
     </tr>`;

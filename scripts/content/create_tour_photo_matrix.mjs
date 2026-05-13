@@ -437,17 +437,24 @@ function renderMissingPhoto(message) {
         </div>`;
 }
 
-function renderServiceCell(service) {
+function matrixMarketingTourAnchor(href, markup, className = "matrix-marketing-tour-click") {
+  return `<a class="${className}" href="${escapeHtml(href)}" target="_blank" rel="noopener" data-open-marketing-tour>${markup}</a>`;
+}
+
+function renderServiceCell(service, marketingTourHref) {
   const imageLabel = service.title;
   const imageHtml = service.image?.url
-    ? `<a href="${escapeHtml(service.image.url)}" target="_blank" rel="noopener">
+    ? matrixMarketingTourAnchor(marketingTourHref, `
           <img src="${escapeHtml(service.image.url)}" alt="${escapeHtml(imageLabel)}" loading="lazy">
-        </a>`
-    : renderMissingPhoto(service.image?.missing ? "Photo file missing" : "No photo selected");
+        `)
+    : matrixMarketingTourAnchor(
+        marketingTourHref,
+        renderMissingPhoto(service.image?.missing ? "Photo file missing" : "No photo selected")
+      );
 
   return `<td class="photo-cell${service.image?.url ? "" : " is-missing-photo"}">
         ${imageHtml}
-        <div class="service-title" title="${escapeHtml(service.title)}">${escapeHtml(service.title)}</div>
+        <div class="service-title" title="${escapeHtml(service.title)}">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(service.title))}</div>
       </td>`;
 }
 
@@ -461,15 +468,15 @@ function renderHtml({ tours }) {
   const headerActions = renderMatrixHeaderActions({ visibilityControl });
   const rows = tours
     .map((tour) => {
-      const serviceCells = tour.services.map((service) => renderServiceCell(service)).join("");
-      const emptyCells = Array.from({ length: maxServices - tour.services.length }, () => '<td class="empty-cell"></td>').join("");
       const marketingTourHref = matrixMarketingTourHref(tour.id);
+      const serviceCells = tour.services.map((service) => renderServiceCell(service, marketingTourHref)).join("");
+      const emptyCells = Array.from({ length: maxServices - tour.services.length }, () => '<td class="empty-cell"></td>').join("");
 
       return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
-        <div class="tour-title">${escapeHtml(tour.title)}</div>
+        <div class="tour-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.title))}</div>
         <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
-        <div class="tour-id">${escapeHtml(tour.id)}</div>
+        <div class="tour-id">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.id))}</div>
         <div class="service-count">${tour.services.length} services</div>
         <a class="matrix-tour-link" href="${escapeHtml(marketingTourHref)}" target="_blank" rel="noopener" data-open-marketing-tour>Open marketing tour</a>
       </th>
@@ -631,6 +638,10 @@ ${matrixPageControlStyles}
 
     .photo-cell a {
       display: block;
+    }
+
+    .photo-cell .service-title a {
+      display: inline;
     }
 
     .photo-cell img {

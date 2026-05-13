@@ -186,6 +186,7 @@ git pull --ff-only
 validate_runtime_i18n_snapshots
 
 mkdir -p matrix-pages
+chmod -R u+rwX,g+rwX,o+rwX matrix-pages
 
 if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests
@@ -198,6 +199,8 @@ mkdir -p frontend/data/generated/homepage assets/generated/homepage
 prepare_runtime_brand_logo
 generate_runtime_i18n
 generate_public_homepage_assets
+scripts/content/create_staging_tour_matrices.sh
+chmod -R u+rwX,g+rwX,o+rwX matrix-pages
 
 mkdir -p backend/app/data
 

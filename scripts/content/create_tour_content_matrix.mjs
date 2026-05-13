@@ -369,36 +369,42 @@ async function copyServiceImagesForOutput({ tours, outputPath }) {
   }
 }
 
-function renderImage(image) {
-  const label = image.altText || image.fileName || "Service image";
-  if (image.url) {
-    return `<a class="service-image" href="${escapeAttr(image.url)}" target="_blank" rel="noopener">
-              <img src="${escapeAttr(image.url)}" alt="${escapeAttr(label)}" loading="lazy">
-            </a>`;
-  }
-
-  return `<div class="service-image is-missing">
-            <span>${escapeHtml(image.missing ? "Missing image" : "No image")}</span>
-            <small>${escapeHtml(image.fileName)}</small>
-          </div>`;
+function matrixMarketingTourAnchor(href, markup, className = "matrix-marketing-tour-click") {
+  return `<a class="${className}" href="${escapeAttr(href)}" target="_blank" rel="noopener" data-open-marketing-tour>${markup}</a>`;
 }
 
-function renderService(service) {
+function renderImage(image, marketingTourHref) {
+  const label = image.altText || image.fileName || "Service image";
+  if (image.url) {
+    return matrixMarketingTourAnchor(marketingTourHref, `
+              <img src="${escapeAttr(image.url)}" alt="${escapeAttr(label)}" loading="lazy">
+            `, "service-image matrix-marketing-tour-click");
+  }
+
+  return matrixMarketingTourAnchor(marketingTourHref, `<span>${escapeHtml(image.missing ? "Missing image" : "No image")}</span>
+            <small>${escapeHtml(image.fileName)}</small>`, "service-image is-missing matrix-marketing-tour-click");
+}
+
+function renderEmptyImage(marketingTourHref) {
+  return matrixMarketingTourAnchor(marketingTourHref, "<span>No picture</span>", "service-image is-empty matrix-marketing-tour-click");
+}
+
+function renderService(service, marketingTourHref) {
   const details = service.details
-    ? `<div class="service-details">${escapeHtml(service.details)}</div>`
+    ? `<div class="service-details">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(service.details))}</div>`
     : "";
   const meta = [service.timing, service.location, service.imageSubtitle].filter(Boolean);
   const metaHtml = meta.length
-    ? `<div class="service-meta">${meta.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}</div>`
+    ? `<div class="service-meta">${meta.map((item) => `<span>${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(item))}</span>`).join("")}</div>`
     : "";
   const imageHtml = service.images.length
-    ? `<div class="service-images">${service.images.map((image) => renderImage(image)).join("")}</div>`
-    : '<div class="service-images"><div class="service-image is-empty"><span>No picture</span></div></div>';
+    ? `<div class="service-images">${service.images.map((image) => renderImage(image, marketingTourHref)).join("")}</div>`
+    : `<div class="service-images">${renderEmptyImage(marketingTourHref)}</div>`;
 
   return `<div class="service">
           <div class="service-heading">
             <span class="service-number">${service.order}</span>
-            <span class="service-title">${escapeHtml(service.title)}</span>
+            <span class="service-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(service.title))}</span>
           </div>
           ${metaHtml}
           ${details}
@@ -406,21 +412,21 @@ function renderService(service) {
         </div>`;
 }
 
-function renderDayCell(days) {
+function renderDayCell(days, marketingTourHref) {
   if (!days.length) return '<td class="empty-cell"></td>';
 
   return `<td class="day-cell">
         ${days.map((day) => {
-          const details = day.details ? `<div class="day-details">${escapeHtml(day.details)}</div>` : "";
+          const details = day.details ? `<div class="day-details">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.details))}</div>` : "";
           const overnight = day.overnightLocation
-            ? `<div class="day-overnight">Overnight: ${escapeHtml(day.overnightLocation)}</div>`
+            ? `<div class="day-overnight">${matrixMarketingTourAnchor(marketingTourHref, `Overnight: ${escapeHtml(day.overnightLocation)}`)}</div>`
             : "";
           const services = day.services.length
-            ? day.services.map((service) => renderService(service)).join("")
-            : '<div class="no-services">No services</div>';
+            ? day.services.map((service) => renderService(service, marketingTourHref)).join("")
+            : `<div class="no-services">${matrixMarketingTourAnchor(marketingTourHref, "No services")}</div>`;
 
           return `<section class="day-section">
-            <div class="day-title">${escapeHtml(day.title)}</div>
+            <div class="day-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.title))}</div>
             ${details}
             ${overnight}
             <div class="services">${services}</div>
@@ -442,23 +448,23 @@ function renderHtml({ tours, toursDir, outputPath }) {
   const headerActions = renderMatrixHeaderActions({ visibilityControl });
   const rows = tours
     .map((tour) => {
+      const marketingTourHref = matrixMarketingTourHref(tour.id);
       const daysByNumber = new Map();
       for (const day of tour.days) {
         const existing = daysByNumber.get(day.dayNumber) || [];
         existing.push(day);
         daysByNumber.set(day.dayNumber, existing);
       }
-      const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1) || [])).join("");
-      const description = tour.description ? `<div class="tour-description">${escapeHtml(tour.description)}</div>` : "";
-      const marketingTourHref = matrixMarketingTourHref(tour.id);
+      const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1) || [], marketingTourHref)).join("");
+      const description = tour.description ? `<div class="tour-description">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.description))}</div>` : "";
 
       return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
-        <div class="tour-name">${escapeHtml(tour.name)}</div>
-        <div class="tour-title">${escapeHtml(tour.title)}</div>
+        <div class="tour-name">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.name))}</div>
+        <div class="tour-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.title))}</div>
         <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
         ${description}
-        <div class="tour-id">${escapeHtml(tour.id)}</div>
+        <div class="tour-id">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.id))}</div>
         <a class="matrix-tour-link" href="${escapeAttr(marketingTourHref)}" target="_blank" rel="noopener" data-open-marketing-tour>Open marketing tour</a>
       </th>
       ${dayCells}

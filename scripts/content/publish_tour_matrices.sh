@@ -73,6 +73,11 @@ if [[ "$OUTPUT_DIR" == "/" ]]; then
   exit 1
 fi
 
+if [[ ! -w "$OUTPUT_DIR" ]]; then
+  echo "Tour matrix output directory is not writable by uid $(id -u):gid $(id -g): $OUTPUT_DIR" >&2
+  exit 1
+fi
+
 rm -rf "$OUTPUT_DIR/img"
 rm -f "$OUTPUT_DIR/photo_matrix.html" "$OUTPUT_DIR/meta_matrix.html" "$OUTPUT_DIR/content_matrix.html"
 

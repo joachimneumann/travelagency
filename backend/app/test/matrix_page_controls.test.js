@@ -19,7 +19,7 @@ function restoreGlobal(name, snapshot) {
   }
 }
 
-test("matrix page update redirects unauthorized publish attempts to backend login", async () => {
+test("matrix page update checks login before publishing matrices", async () => {
   const documentSnapshot = snapshotGlobal("document");
   const windowSnapshot = snapshotGlobal("window");
   const fetchSnapshot = snapshotGlobal("fetch");
@@ -67,11 +67,11 @@ test("matrix page update redirects unauthorized publish attempts to backend logi
   globalThis.fetch = async (...args) => {
     fetchCalls.push(args);
     return {
-      ok: false,
-      status: 401,
-      statusText: "Unauthorized",
+      ok: true,
+      status: 200,
+      statusText: "OK",
       headers: { get: () => "application/json" },
-      json: async () => ({ error: "Unauthorized" }),
+      json: async () => ({ authenticated: false }),
       text: async () => ""
     };
   };
@@ -87,10 +87,11 @@ test("matrix page update redirects unauthorized publish attempts to backend logi
     restoreGlobal("fetch", fetchSnapshot);
   }
 
-  assert.equal(fetchCalls[0][0], "/api/v1/tour-matrices/publish");
-  assert.equal(fetchCalls[0][1].method, "POST");
+  assert.equal(fetchCalls[0][0], "https://staging.asiatravelplan.com/auth/me");
+  assert.equal(fetchCalls[0][1].method, "GET");
   assert.equal(fetchCalls[0][1].credentials, "include");
   assert.equal(fetchCalls[0][1].cache, "no-store");
+  assert.equal(fetchCalls.length, 1);
   assert.equal(updateStatus.hidden, false);
   assert.equal(updateStatus.textContent, "Sign in required. Redirecting...");
   assert.equal(statusClasses.get("is-error"), true);
@@ -100,7 +101,94 @@ test("matrix page update redirects unauthorized publish attempts to backend logi
   );
 });
 
-test("matrix marketing tour links show not logged in instead of opening when auth is missing", async () => {
+test("matrix page update surfaces matrix publish failure details", async () => {
+  const documentSnapshot = snapshotGlobal("document");
+  const windowSnapshot = snapshotGlobal("window");
+  const fetchSnapshot = snapshotGlobal("fetch");
+
+  const listeners = new Map();
+  const updateButton = {
+    disabled: false,
+    textContent: "Update",
+    addEventListener: (eventName, listener) => {
+      listeners.set(eventName, listener);
+    }
+  };
+  const statusClasses = new Map();
+  const updateStatus = {
+    hidden: true,
+    textContent: "",
+    classList: {
+      toggle: (className, isActive) => {
+        statusClasses.set(className, isActive);
+      }
+    }
+  };
+  const fetchCalls = [];
+
+  globalThis.document = {
+    querySelector: (selector) => {
+      if (selector === "[data-update-matrices]") return updateButton;
+      if (selector === "[data-update-matrices-status]") return updateStatus;
+      return null;
+    },
+    querySelectorAll: () => []
+  };
+  globalThis.window = {
+    location: {
+      origin: "https://staging.asiatravelplan.com",
+      href: "https://staging.asiatravelplan.com/content_matrix.html"
+    }
+  };
+  globalThis.fetch = async (...args) => {
+    fetchCalls.push(args);
+    if (String(args[0]).endsWith("/auth/me")) {
+      return {
+        ok: true,
+        status: 200,
+        statusText: "OK",
+        headers: { get: () => "application/json" },
+        json: async () => ({ authenticated: true, user: { sub: "user_1" } }),
+        text: async () => ""
+      };
+    }
+    return {
+      ok: false,
+      status: 500,
+      statusText: "Internal Server Error",
+      headers: { get: () => "application/json" },
+      json: async () => ({
+        error: "Tour matrix publish failed.",
+        detail: "Tour matrix output directory is not writable by uid 1000:gid 1000: /srv/matrix-pages"
+      }),
+      text: async () => ""
+    };
+  };
+
+  try {
+    (0, eval)(matrixPageControlScript);
+    const clickListener = listeners.get("click");
+    assert.equal(typeof clickListener, "function");
+    await clickListener();
+  } finally {
+    restoreGlobal("document", documentSnapshot);
+    restoreGlobal("window", windowSnapshot);
+    restoreGlobal("fetch", fetchSnapshot);
+  }
+
+  assert.equal(fetchCalls[0][0], "https://staging.asiatravelplan.com/auth/me");
+  assert.equal(fetchCalls[1][0], "/api/v1/tour-matrices/publish");
+  assert.equal(fetchCalls[1][1].method, "POST");
+  assert.equal(updateButton.disabled, false);
+  assert.equal(updateButton.textContent, "Update");
+  assert.equal(
+    updateStatus.textContent,
+    "Tour matrix publish failed. Tour matrix output directory is not writable by uid 1000:gid 1000: /srv/matrix-pages"
+  );
+  assert.equal(statusClasses.get("is-error"), true);
+});
+
+test("matrix marketing tour links show not logged on instead of opening when auth is missing", async () => {
   const documentSnapshot = snapshotGlobal("document");
   const windowSnapshot = snapshotGlobal("window");
   const fetchSnapshot = snapshotGlobal("fetch");
@@ -184,7 +272,7 @@ test("matrix marketing tour links show not logged in instead of opening when aut
   assert.equal(fetchCalls[0][1].credentials, "include");
   assert.equal(fetchCalls[0][1].cache, "no-store");
   assert.equal(updateStatus.hidden, false);
-  assert.equal(updateStatus.textContent, "not logged in");
+  assert.equal(updateStatus.textContent, "not logged on");
   assert.equal(statusClasses.get("is-error"), true);
   assert.deepEqual(openedUrls, []);
   assert.equal(attributes.has("aria-disabled"), false);

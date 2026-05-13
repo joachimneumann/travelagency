@@ -56,7 +56,23 @@ export const matrixPageControlStyles = `
       border-color: var(--accent);
     }
 
-    .matrix-tour-link[aria-disabled="true"] {
+    .matrix-marketing-tour-click {
+      color: inherit;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .matrix-marketing-tour-click:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    .matrix-marketing-tour-click img {
+      cursor: pointer;
+    }
+
+    .matrix-tour-link[aria-disabled="true"],
+    .matrix-marketing-tour-click[aria-disabled="true"] {
       cursor: wait;
       opacity: 0.65;
     }
@@ -109,7 +125,13 @@ export const matrixPageControlScript = `
         const contentType = response.headers.get("content-type") || "";
         if (contentType.includes("application/json")) {
           const payload = await response.json().catch(() => null);
-          return payload?.error || payload?.detail || response.statusText || "Update failed.";
+          const error = String(payload?.error || "").trim();
+          const detail = String(payload?.detail || "").trim();
+          if (error && detail && detail !== error) {
+            const separator = /[.!?]$/.test(error) ? " " : ": ";
+            return error + separator + detail;
+          }
+          return error || detail || response.statusText || "Update failed.";
         }
         const text = await response.text().catch(() => "");
         return text.trim() || response.statusText || "Update failed.";
@@ -152,13 +174,13 @@ export const matrixPageControlScript = `
           setStatus("");
           try {
             if (!(await isLoggedIn())) {
-              setStatus("not logged in", "error");
+              setStatus("not logged on", "error");
               return;
             }
 
             window.open(link.href, "_blank", "noopener");
           } catch {
-            setStatus("not logged in", "error");
+            setStatus("not logged on", "error");
           } finally {
             link.removeAttribute("aria-disabled");
           }
@@ -171,6 +193,11 @@ export const matrixPageControlScript = `
         setStatus("Publishing matrices...");
 
         try {
+          if (!(await isLoggedIn())) {
+            redirectToLogin();
+            return;
+          }
+
           const response = await fetch("/api/v1/tour-matrices/publish", {
             method: "POST",
             credentials: "include",
@@ -183,6 +210,10 @@ export const matrixPageControlScript = `
           if (response.status === 401) {
             redirectToLogin();
             return;
+          }
+
+          if (response.status === 403) {
+            throw new Error("Not authorized to update tour matrices. Sign in with an admin or tour editor account.");
           }
 
           if (!response.ok) {

@@ -19,6 +19,9 @@ class FakeElement {
     this.dataset = {};
     this.style = {};
     this.attributes = {};
+    this.listeners = {};
+    this.children = [];
+    this.parentElement = null;
     this.classList = {
       add() {},
       remove() {},
@@ -26,10 +29,17 @@ class FakeElement {
     };
   }
 
-  addEventListener() {}
+  addEventListener(type, listener) {
+    if (!this.listeners[type]) this.listeners[type] = [];
+    this.listeners[type].push(listener);
+  }
 
   setAttribute(name, value) {
     this.attributes[name] = String(value);
+  }
+
+  removeAttribute(name) {
+    delete this.attributes[name];
   }
 
   getAttribute(name) {
@@ -37,6 +47,23 @@ class FakeElement {
   }
 
   focus() {}
+
+  append(...children) {
+    children.forEach((child) => {
+      if (child instanceof FakeElement) child.parentElement = this;
+      this.children.push(child);
+    });
+  }
+
+  remove() {}
+
+  closest() {
+    return null;
+  }
+
+  querySelector() {
+    return null;
+  }
 
   querySelectorAll() {
     return [];
@@ -94,6 +121,64 @@ async function loadTourCustomizer() {
 async function loadFrontendDictionary(lang) {
   const dictionaryPath = path.join(repoRoot, "frontend", "data", "i18n", "frontend", `${lang}.json`);
   return JSON.parse(await readFile(dictionaryPath, "utf8"));
+}
+
+function installTourDetailsModalDocument() {
+  const previousDocument = global.document;
+  const modal = new FakeElement();
+  const content = new FakeElement();
+  const dialog = new FakeElement();
+  const closeButton = new FakeElement();
+  let appendedModal = null;
+
+  modal.querySelector = (selector) => {
+    if (selector === "[data-tour-details-modal-content]") return content;
+    if (selector === ".tour-details-modal__dialog") return dialog;
+    if (selector === "[data-tour-details-close]") return closeButton;
+    return null;
+  };
+
+  global.document = {
+    querySelector(selector) {
+      if (selector === "[data-tour-details-modal]") return appendedModal;
+      return null;
+    },
+    createElement() {
+      return modal;
+    },
+    addEventListener() {},
+    body: {
+      classList: {
+        add() {},
+        remove() {}
+      },
+      append(element) {
+        appendedModal = element;
+      }
+    }
+  };
+
+  return {
+    content,
+    restore() {
+      global.document = previousDocument;
+    }
+  };
+}
+
+function bindFakeTourDetailsTrigger(els, tripId) {
+  const button = new FakeElement();
+  button.setAttribute("data-trip-id", tripId);
+  els.tourGrid.querySelectorAll = (selector) => (
+    selector === "[data-tour-card-show-more][data-trip-id]" ? [button] : []
+  );
+  return button;
+}
+
+async function clickFakeTourDetailsTrigger(button) {
+  const handler = button.listeners.click?.[0];
+  assert.equal(typeof handler, "function");
+  await handler({ preventDefault() {} });
 }
 
 test("public tour travel-plan content and detail chrome follow the frontend language", async () => {
@@ -213,7 +298,7 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     filteredTrips: [trip],
     trips: [trip],
     visibleToursCount: 1,
-    expandedTourIds: new Set([trip.id]),
+    expandedTourIds: new Set(),
     filterOptions: {
       destinations: [],
       styles: [],
@@ -232,6 +317,8 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     tourActions: null,
     showMoreTours: null
   };
+  const modalDocument = installTourDetailsModalDocument();
+  const detailsButton = bindFakeTourDetailsTrigger(els, trip.id);
   const frontendDict = await loadFrontendDictionary("de");
   const frontendT = (id, fallback, vars = {}) => String(frontendDict[id] ?? fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
     Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
@@ -259,81 +346,89 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     prefillBookingFormWithFilters() {}
   });
 
-  controller.renderVisibleTrips();
+  try {
+    controller.renderVisibleTrips();
 
-  const cardMediaStart = els.tourGrid.innerHTML.indexOf('class="tour-card__media"');
-  const cardBodyStart = els.tourGrid.innerHTML.indexOf('class="tour-body"', cardMediaStart);
-  const cardMediaMarkup = els.tourGrid.innerHTML.slice(cardMediaStart, cardBodyStart);
-  assert.match(cardMediaMarkup, /\/assets\/img\/service-detail\.webp/);
-  assert.doesNotMatch(cardMediaMarkup, /\/assets\/img\/service-detail-extra\.webp/);
-  assert.match(els.tourGrid.innerHTML, /\/assets\/img\/service-detail-extra\.webp/);
-  assert.match(els.tourGrid.innerHTML, /German extra service image/);
-  assert.match(els.tourGrid.innerHTML, /\/assets\/img\/service-detail-2\.webp/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /\/assets\/img\/service-detail-hidden\.webp/);
+    const cardMediaStart = els.tourGrid.innerHTML.indexOf('class="tour-card__media"');
+    const cardBodyStart = els.tourGrid.innerHTML.indexOf('class="tour-body"', cardMediaStart);
+    const cardMediaMarkup = els.tourGrid.innerHTML.slice(cardMediaStart, cardBodyStart);
+    assert.match(cardMediaMarkup, /\/assets\/img\/service-detail\.webp/);
+    assert.doesNotMatch(cardMediaMarkup, /\/assets\/img\/service-detail-extra\.webp/);
+    assert.doesNotMatch(els.tourGrid.innerHTML, /\/assets\/img\/service-detail-extra\.webp/);
+    const cardActionsStart = els.tourGrid.innerHTML.indexOf('class="tour-card__actions"');
+    const cardActionsEnd = els.tourGrid.innerHTML.indexOf("</div>", cardActionsStart);
+    const cardActionsMarkup = els.tourGrid.innerHTML.slice(cardActionsStart, cardActionsEnd);
+    assert.match(cardActionsMarkup, /tour-card__show-more[\s\S]*tour-card__plan-trip/);
+    assert.match(cardActionsMarkup, />Angebot anfragen<\/button>/);
+    assert.doesNotMatch(cardActionsMarkup, />Get a Quote<\/button>/);
 
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Tag 1 - German day title/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Day 1 - English day title/);
-  assert.match(els.tourGrid.innerHTML, /German day title/);
-  assert.match(els.tourGrid.innerHTML, /German day notes/);
-  assert.match(els.tourGrid.innerHTML, /German service title/);
-  assert.match(els.tourGrid.innerHTML, /German service details/);
-  assert.match(els.tourGrid.innerHTML, /German second service title/);
-  assert.match(els.tourGrid.innerHTML, /German second service details/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /English day notes/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /English service title/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /English service details/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-highlights/);
-  assert.equal((els.tourGrid.innerHTML.match(/class="tour-plan-highlight"/g) || []).length, 4);
-  assert.match(els.tourGrid.innerHTML, /Iconic Landmarks/);
-  assert.match(els.tourGrid.innerHTML, /Delicious Cuisine/);
-  assert.match(els.tourGrid.innerHTML, /\/assets\/img\/experience-highlights\/01\.png/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-pdf/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-overview-pdf/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-travel-plan-pdf/);
-  assert.match(els.tourGrid.innerHTML, />Überblick \(Einseiter\)<\/button>/);
-  assert.match(els.tourGrid.innerHTML, />Tagesplan<\/button>/);
-  assert.match(els.tourGrid.innerHTML, /Ein PDF mit einem Überblick über diese Reise/);
-  assert.match(els.tourGrid.innerHTML, /Ein PDF mit allen Aktivitäten dieser Reise/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, />Overview \(one-pager\)<\/button>/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, />Day-by-Day Travel Plan<\/button>/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /A PDF that gives you an overview of this tour/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /A PDF that shows you all activities of this tour/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan-pdf__badge/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /\/content\/one-pagers\/pdfs\/tour_localized_plan\/de\.pdf/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /\/api\/v1\/tours\/tour_localized_plan\/one-pager\.pdf/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-summary/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-summary-day/);
-  assert.match(els.tourGrid.innerHTML, /Ihre Reiseroute/);
-  const cardActionsStart = els.tourGrid.innerHTML.indexOf('class="tour-card__actions"');
-  const cardActionsEnd = els.tourGrid.innerHTML.indexOf("</div>", cardActionsStart);
-  const cardActionsMarkup = els.tourGrid.innerHTML.slice(cardActionsStart, cardActionsEnd);
-  assert.match(cardActionsMarkup, /tour-card__show-more[\s\S]*tour-card__plan-trip/);
-  assert.match(cardActionsMarkup, />Angebot anfragen<\/button>/);
-  assert.doesNotMatch(cardActionsMarkup, />Get a Quote<\/button>/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-actions/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-itinerary"[^>]+hidden/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle[\s\S]*Reiseverlauf[\s\S]*<\/button>/);
-  assert.match(els.tourGrid.innerHTML, />Angebot anfragen<\/button>/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, />Itinerary<\/button>/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, />Get a Quote<\/button>/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-toggle/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-summary-details hidden/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-full-itinerary/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan__footer-cta/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-plan__footer-plan-trip/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-service-card--has-details/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-indicator/);
-  assert.match(els.tourGrid.innerHTML, /tour-plan-service-card__details-text/);
-  assert.match(els.tourGrid.innerHTML, />Einzelheiten<\/span>/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, />Details<\/span>/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-details-toggle/);
-  assert.equal((els.tourGrid.innerHTML.match(/data-tour-plan-service-details-toggle/g) || []).length, 1);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-service-collapse/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /data-tour-plan-service-flip/);
-  assert.doesNotMatch(els.tourGrid.innerHTML, /Tap again to see the image/);
-  assert.match(els.tourGrid.innerHTML, /data-tour-plan-service-swap/);
+    await clickFakeTourDetailsTrigger(detailsButton);
+    const detailsMarkup = modalDocument.content.innerHTML;
+    assert.match(detailsMarkup, /\/assets\/img\/service-detail-extra\.webp/);
+    assert.match(detailsMarkup, /German extra service image/);
+    assert.match(detailsMarkup, /\/assets\/img\/service-detail-2\.webp/);
+    assert.doesNotMatch(detailsMarkup, /\/assets\/img\/service-detail-hidden\.webp/);
+
+    assert.doesNotMatch(detailsMarkup, /Tag 1 - German day title/);
+    assert.doesNotMatch(detailsMarkup, /Day 1 - English day title/);
+    assert.match(detailsMarkup, /German day title/);
+    assert.match(detailsMarkup, /German day notes/);
+    assert.match(detailsMarkup, /German service title/);
+    assert.match(detailsMarkup, /German service details/);
+    assert.match(detailsMarkup, /German second service title/);
+    assert.match(detailsMarkup, /German second service details/);
+    assert.doesNotMatch(detailsMarkup, /English day notes/);
+    assert.doesNotMatch(detailsMarkup, /English service title/);
+    assert.doesNotMatch(detailsMarkup, /English service details/);
+    assert.match(detailsMarkup, /tour-plan-highlights/);
+    assert.equal((detailsMarkup.match(/class="tour-plan-highlight"/g) || []).length, 4);
+    assert.match(detailsMarkup, /Iconic Landmarks/);
+    assert.match(detailsMarkup, /Delicious Cuisine/);
+    assert.match(detailsMarkup, /\/assets\/img\/experience-highlights\/01\.png/);
+    assert.match(detailsMarkup, /tour-plan-pdf/);
+    assert.match(detailsMarkup, /data-tour-overview-pdf/);
+    assert.match(detailsMarkup, /data-tour-travel-plan-pdf/);
+    assert.match(detailsMarkup, />Überblick \(Einseiter\)<\/button>/);
+    assert.match(detailsMarkup, />Tagesplan<\/button>/);
+    assert.match(detailsMarkup, /Ein PDF mit einem Überblick über diese Reise/);
+    assert.match(detailsMarkup, /Ein PDF mit allen Aktivitäten dieser Reise/);
+    assert.doesNotMatch(detailsMarkup, />Overview \(one-pager\)<\/button>/);
+    assert.doesNotMatch(detailsMarkup, />Day-by-Day Travel Plan<\/button>/);
+    assert.doesNotMatch(detailsMarkup, /A PDF that gives you an overview of this tour/);
+    assert.doesNotMatch(detailsMarkup, /A PDF that shows you all activities of this tour/);
+    assert.doesNotMatch(detailsMarkup, /tour-plan-pdf__badge/);
+    assert.doesNotMatch(detailsMarkup, /\/public\/v1\/tours\/tour_localized_plan\/one-pager\.pdf\?lang=de/);
+    assert.doesNotMatch(detailsMarkup, /\/content\/one-pagers\/pdfs\/tour_localized_plan\/de\.pdf/);
+    assert.doesNotMatch(detailsMarkup, /\/api\/v1\/tours\/tour_localized_plan\/one-pager\.pdf/);
+    assert.match(detailsMarkup, /tour-plan-summary/);
+    assert.match(detailsMarkup, /tour-plan-summary-day/);
+    assert.match(detailsMarkup, /Ihre Reiseroute/);
+    assert.match(detailsMarkup, /tour-plan-actions/);
+    assert.match(detailsMarkup, /data-tour-plan-itinerary-toggle/);
+    assert.match(detailsMarkup, /tour-plan-itinerary"[^>]+hidden/);
+    assert.match(detailsMarkup, /data-tour-plan-itinerary-toggle[\s\S]*Reiseverlauf[\s\S]*<\/button>/);
+    assert.match(detailsMarkup, />Angebot anfragen<\/button>/);
+    assert.doesNotMatch(detailsMarkup, />Itinerary<\/button>/);
+    assert.doesNotMatch(detailsMarkup, />Get a Quote<\/button>/);
+    assert.match(detailsMarkup, /data-tour-plan-summary-toggle/);
+    assert.match(detailsMarkup, /data-tour-plan-summary-details hidden/);
+    assert.doesNotMatch(detailsMarkup, /data-tour-plan-full-itinerary/);
+    assert.doesNotMatch(detailsMarkup, /tour-plan__footer-cta/);
+    assert.doesNotMatch(detailsMarkup, /tour-plan__footer-plan-trip/);
+    assert.match(detailsMarkup, /tour-plan-service-card--has-details/);
+    assert.match(detailsMarkup, /tour-plan-service-card__details-indicator/);
+    assert.match(detailsMarkup, /tour-plan-service-card__details-text/);
+    assert.match(detailsMarkup, />Einzelheiten<\/span>/);
+    assert.doesNotMatch(detailsMarkup, />Details<\/span>/);
+    assert.match(detailsMarkup, /data-tour-plan-service-details-toggle/);
+    assert.equal((detailsMarkup.match(/data-tour-plan-service-details-toggle/g) || []).length, 1);
+    assert.doesNotMatch(detailsMarkup, /data-tour-plan-service-collapse/);
+    assert.doesNotMatch(detailsMarkup, /data-tour-plan-service-flip/);
+    assert.doesNotMatch(detailsMarkup, /Tap again to see the image/);
+    assert.match(detailsMarkup, /data-tour-plan-service-swap/);
+  } finally {
+    modalDocument.restore();
+  }
 });
 
 test("collapsed public tour cards use swipe-only mobile galleries for multi-image tours", async () => {
@@ -474,7 +569,7 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
     filteredTrips: [trip],
     trips: [trip],
     visibleToursCount: 1,
-    expandedTourIds: new Set([trip.id]),
+    expandedTourIds: new Set(),
     customizeFeatureEnabled: true,
     filterOptions: {
       destinations: [],
@@ -508,8 +603,10 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
       tourActions: null,
       showMoreTours: null
     };
+    const detailsButton = bindFakeTourDetailsTrigger(els, trip.id);
     return {
       els,
+      detailsButton,
       controller: createFrontendToursController({
         state,
         els,
@@ -535,6 +632,12 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
       })
     };
   };
+  const modalDocument = installTourDetailsModalDocument();
+  const renderAndOpenDetails = async (instance) => {
+    instance.controller.renderVisibleTrips();
+    await clickFakeTourDetailsTrigger(instance.detailsButton);
+    return modalDocument.content.innerHTML;
+  };
 
   global.window = {
     localStorage: {
@@ -556,68 +659,75 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
       return { matches: query === "(max-width: 760px)" };
     }
   };
-  const mobile = createController(baseState());
-  mobile.controller.renderVisibleTrips();
+  try {
+    const mobile = createController(baseState());
+    mobile.controller.renderVisibleTrips();
 
-  assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /data-tour-customize/);
-  assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /Customize this Trip/);
+    assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /data-tour-customize/);
+    assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /Customize this Trip/);
+    const mobileDetails = await renderAndOpenDetails(mobile);
+    assert.doesNotMatch(mobileDetails, /data-tour-customize/);
+    assert.doesNotMatch(mobileDetails, /Customize this Trip/);
 
-  global.window.matchMedia = () => ({ matches: false });
-  const inactiveDesktop = createController({
-    ...baseState(),
-    customizeFeatureEnabled: false
-  });
-  inactiveDesktop.controller.renderVisibleTrips();
+    global.window.matchMedia = () => ({ matches: false });
+    const inactiveDesktop = createController({
+      ...baseState(),
+      customizeFeatureEnabled: false
+    });
+    const inactiveDetails = await renderAndOpenDetails(inactiveDesktop);
 
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /tour-plan-pdf/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-overview-pdf/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-travel-plan-pdf/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />Overview \(one-pager\)<\/button>/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />Day-by-Day Travel Plan<\/button>/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /tour-plan-actions/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-plan-itinerary-toggle/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />\s*Itinerary\s*<\/button>/);
-  assert.match(inactiveDesktop.els.tourGrid.innerHTML, />Get a Quote<\/button>/);
-  assert.doesNotMatch(inactiveDesktop.els.tourGrid.innerHTML, /data-tour-customize/);
-  assert.doesNotMatch(inactiveDesktop.els.tourGrid.innerHTML, /Customize this Trip/);
+    assert.match(inactiveDetails, /tour-plan-pdf/);
+    assert.match(inactiveDetails, /data-tour-overview-pdf/);
+    assert.match(inactiveDetails, /data-tour-travel-plan-pdf/);
+    assert.match(inactiveDetails, />Overview \(one-pager\)<\/button>/);
+    assert.match(inactiveDetails, />Day-by-Day Travel Plan<\/button>/);
+    assert.match(inactiveDetails, /tour-plan-actions/);
+    assert.match(inactiveDetails, /data-tour-plan-itinerary-toggle/);
+    assert.match(inactiveDetails, />\s*Itinerary\s*<\/button>/);
+    assert.match(inactiveDetails, />Get a Quote<\/button>/);
+    assert.doesNotMatch(inactiveDetails, /data-tour-customize/);
+    assert.doesNotMatch(inactiveDetails, /Customize this Trip/);
 
-  const desktop = createController(baseState());
-  desktop.controller.renderVisibleTrips();
+    const desktop = createController(baseState());
+    const desktopDetails = await renderAndOpenDetails(desktop);
 
-  assert.match(desktop.els.tourGrid.innerHTML, /data-tour-customize/);
-  assert.match(desktop.els.tourGrid.innerHTML, /Customize this Trip/);
-  assert.doesNotMatch(desktop.els.tourGrid.innerHTML, /tour-details-overview__customize-summary/);
+    assert.match(desktopDetails, /data-tour-customize/);
+    assert.match(desktopDetails, /Customize this Trip/);
+    assert.doesNotMatch(desktopDetails, /tour-details-overview__customize-summary/);
 
-  storage.set("asiatravelplan.custom_tour.tour_customize_mobile", JSON.stringify({
-    originalTourId: "tour_customize_mobile",
-    timelineDays: [
-      {
-        sourceTourId: "tour_customize_mobile",
-        sourceDayId: "day_1",
-        day: trip.travel_plan.days[0]
-      },
-      {
-        sourceTourId: "tour_customize_mobile",
-        sourceDayId: "day_1",
-        day: trip.travel_plan.days[0]
-      }
-    ]
-  }));
-  const customizedDesktop = createController(baseState());
-  customizedDesktop.controller.renderVisibleTrips();
+    storage.set("asiatravelplan.custom_tour.tour_customize_mobile", JSON.stringify({
+      originalTourId: "tour_customize_mobile",
+      timelineDays: [
+        {
+          sourceTourId: "tour_customize_mobile",
+          sourceDayId: "day_1",
+          day: trip.travel_plan.days[0]
+        },
+        {
+          sourceTourId: "tour_customize_mobile",
+          sourceDayId: "day_1",
+          day: trip.travel_plan.days[0]
+        }
+      ]
+    }));
+    const customizedDesktop = createController(baseState());
+    const customizedDetails = await renderAndOpenDetails(customizedDesktop);
 
-  assert.match(customizedDesktop.els.tourGrid.innerHTML, /tour-details-overview__customize-button[\s\S]*tour-details-overview__customize-summary/);
-  assert.match(customizedDesktop.els.tourGrid.innerHTML, /Customized: 2 days via Hanoi/);
+    assert.match(customizedDetails, /tour-details-overview__customize-button[\s\S]*tour-details-overview__customize-summary/);
+    assert.match(customizedDetails, /Customized: 2 days via Hanoi/);
 
-  const localizedDesktop = createController({
-    ...baseState(),
-    lang: "de"
-  });
-  localizedDesktop.controller.renderVisibleTrips();
+    const localizedDesktop = createController({
+      ...baseState(),
+      lang: "de"
+    });
+    const localizedDetails = await renderAndOpenDetails(localizedDesktop);
 
-  assert.match(localizedDesktop.els.tourGrid.innerHTML, /data-tour-customize/);
-  assert.match(localizedDesktop.els.tourGrid.innerHTML, />Diese Reise anpassen<\/button>/);
-  assert.doesNotMatch(localizedDesktop.els.tourGrid.innerHTML, /Customize this Trip/);
+    assert.match(localizedDetails, /data-tour-customize/);
+    assert.match(localizedDetails, />Diese Reise anpassen<\/button>/);
+    assert.doesNotMatch(localizedDetails, /Customize this Trip/);
+  } finally {
+    modalDocument.restore();
+  }
 });
 
 test("tour customizer names the original itinerary with the tour title before customization", async () => {
@@ -1678,12 +1788,13 @@ test("public tour details render only one expanded tour at a time", async () => 
   controller.renderVisibleTrips();
 
   assert.deepEqual([...state.expandedTourIds], [secondTrip.id]);
-  assert.equal((els.tourGrid.innerHTML.match(/data-expanded-tour-id=/g) || []).length, 1);
+  assert.equal((els.tourGrid.innerHTML.match(/data-expanded-tour-id=/g) || []).length, 0);
   assert.doesNotMatch(els.tourGrid.innerHTML, /data-expanded-tour-id="tour_first_open"/);
-  assert.match(els.tourGrid.innerHTML, /data-expanded-tour-id="tour_second_open"/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-card-id="tour_second_open"[\s\S]*aria-expanded="true"/);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-details-row/);
 });
 
-test("desktop public tour details center below the initiating card row", async () => {
+test("desktop public tour details do not render inline rows from expanded state", async () => {
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;
   global.window = {
@@ -1770,14 +1881,11 @@ test("desktop public tour details center below the initiating card row", async (
 
   controller.renderVisibleTrips();
 
-  assert.match(
-    els.tourGrid.innerHTML,
-    /tour-details-row--below-grid tour-details-row--columns-3 tour-details-row--align-center/
-  );
-  assert.match(els.tourGrid.innerHTML, /--tour-details-column: 3;/);
+  assert.match(els.tourGrid.innerHTML, /data-tour-card-id="tour_right_open"[\s\S]*aria-expanded="true"/);
+  assert.equal((els.tourGrid.innerHTML.match(/data-expanded-tour-id=/g) || []).length, 0);
+  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-details-row/);
   assert.doesNotMatch(
     els.tourGrid.innerHTML,
     /tour-details-row__connector|tour-details-row__connector-path/
   );
-  assert.doesNotMatch(els.tourGrid.innerHTML, /tour-details-row--align-(left|right)/);
 });
