@@ -7,6 +7,7 @@ import {
   serviceImageDerivativeRelativePath
 } from "../lib/service_image_derivatives.mjs";
 import {
+  matrixMarketingTourHref,
   matrixPageControlScript,
   matrixPageControlStyles,
   renderMatrixHeaderActions
@@ -449,6 +450,7 @@ function renderHtml({ tours, toursDir, outputPath }) {
       }
       const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1) || [])).join("");
       const description = tour.description ? `<div class="tour-description">${escapeHtml(tour.description)}</div>` : "";
+      const marketingTourHref = matrixMarketingTourHref(tour.id);
 
       return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
@@ -457,6 +459,7 @@ function renderHtml({ tours, toursDir, outputPath }) {
         <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
         ${description}
         <div class="tour-id">${escapeHtml(tour.id)}</div>
+        <a class="matrix-tour-link" href="${escapeAttr(marketingTourHref)}" target="_blank" rel="noopener" data-open-marketing-tour>Open marketing tour</a>
       </th>
       ${dayCells}
     </tr>`;
