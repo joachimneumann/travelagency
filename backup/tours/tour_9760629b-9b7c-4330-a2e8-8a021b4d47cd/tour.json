@@ -11,7 +11,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-09T07:42:58.443Z",
+  "updated_at": "2026-05-13T05:17:36.301Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -22,11 +22,9 @@
       "travel_plan_service_image_1a910cc9-11c8-4677-8d9f-d0492c21cd32",
       "travel_plan_service_image_abb4e53c-3fe1-4a3e-b682-72f12ac90bdd",
       "travel_plan_service_image_df359c81-b9b3-4f71-88f1-ffc25d34c03e",
-      "travel_plan_service_image_55b197b5-1cb3-4194-9f7f-b38d445eee38",
       "travel_plan_service_image_f10e319f-7984-4c4b-8a9e-56f2b5029638",
       "travel_plan_service_image_2060a43c-35fd-45fd-8aee-cd1c085dc442",
       "travel_plan_service_image_410cf949-7758-49a6-b9c3-cb185a03d099",
-      "travel_plan_service_image_8b38b2a1-80b0-4764-81b6-fbaed33d2bab",
       "travel_plan_service_image_dce06d5c-8758-406a-af1a-bf0cb509a294",
       "travel_plan_service_image_85621b1c-f84f-4154-9226-f21d1db45dd5",
       "travel_plan_service_image_18e5590a-ff46-48ca-b011-9aab979815dd",
@@ -37,7 +35,6 @@
     "one_pager_hero_image_id": "travel_plan_service_image_86bbf895-82e5-4bd6-b827-3c0c3fde2acd",
     "one_pager_image_ids": [
       "travel_plan_service_image_214ed290-6f14-46b4-9f2b-dd32f66b818e",
-      "travel_plan_service_image_55b197b5-1cb3-4194-9f7f-b38d445eee38",
       "travel_plan_service_image_430f6a05-17fd-4aa0-a2e5-f15af47f8d9e",
       "travel_plan_service_image_18e5590a-ff46-48ca-b011-9aab979815dd"
     ],
@@ -296,8 +293,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_55b197b5-1cb3-4194-9f7f-b38d445eee38",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_21bb62f9-936b-4319-8429-7d267478875c-1778121421891-77ea5093-f687-40ad-aed9-a17e53d5639a.webp",
+              "id": "travel_plan_service_image_28021e25-1c9b-4c3d-bc52-17001f91cd9b",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_21bb62f9-936b-4319-8429-7d267478875c-1778649286323-4804b8ca-fb7f-48be-a9f9-df9866363ed5.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -305,12 +302,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-07T02:37:02.025Z"
+              "created_at": "2026-05-13T05:14:46.445Z"
             }
           }
         ],
@@ -337,7 +334,7 @@
             "kind": "other",
             "title": "Cu Chi Tunnels",
             "title_i18n": {},
-            "details": "Located approximately 60 kilometers northwest of Ho Chi Minh City, the Cu Chi Tunnels are an immense network of connecting underground tunnels that played a pivotal role during the Vietnam War. This \"underground city\" is not only a symbol of the resilience and ingenuity of the Vietnamese people but also one of the most iconic historical destinations in the country.",
+            "details": "About 60 km northwest of Ho Chi Minh City, the Cu Chi Tunnels are a vast underground network and an iconic Vietnam War site, symbolizing Vietnamese resilience and ingenuity.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -372,7 +369,7 @@
             "kind": "other",
             "title": "Ben Thanh Market",
             "title_i18n": {},
-            "details": "Located in the very center of District 1, Ben Thanh Market is more than just a place to shop—it is a historic landmark and a symbol of the bustling energy of Ho Chi Minh City. Built in 1914, the market's iconic clock tower at the South Gate is recognized worldwide as an emblem of the city",
+            "details": "Ben Thanh Market, built in 1914 in central District 1, is a historic Ho Chi Minh City landmark known for its iconic South Gate clock tower.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -466,8 +463,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_8b38b2a1-80b0-4764-81b6-fbaed33d2bab",
-              "storage_path": "/public/v1/tour-images/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22/travel-plan-services/travel_plan_service_793161bd-f12c-4a23-95ee-f5a58599377d-1778084043466-31540394-2248-4c8d-bb6e-0ce5d04e72e8.webp",
+              "id": "travel_plan_service_image_2fca0b64-ab35-49b0-b017-6e8cedfeee89",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_f6ac54c9-1492-4644-a3b7-ce2ffa4c4589-1778649158960-1d244265-be12-4e6d-b7a2-d7a9284e5a64.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -475,12 +472,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-06T16:14:03.868Z"
+              "created_at": "2026-05-13T05:12:39.374Z"
             }
           },
           {

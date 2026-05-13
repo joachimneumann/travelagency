@@ -1,6 +1,6 @@
 {
   "id": "tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb",
-  "title": "Discovering the Romance Of Dalat",
+  "title": "Discover the Romance of Dalat",
   "short_description": "Cool air, flower gardens and misty streets give Da Lat its gentle romance, a highland pause shaped by color, nostalgia and slow wandering.",
   "styles": [
     "budget",
@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-14T01:35:35.203Z",
-  "updated_at": "2026-05-10T14:36:29.912Z",
+  "updated_at": "2026-05-13T04:54:49.233Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -251,7 +251,7 @@
             "kind": "other",
             "title": "Datanla Waterfal",
             "title_i18n": {},
-            "details": "Experience the excitement of Datanala Waterfall! Ride the alpine coaster through lush forests, admire the cascading falls, and enjoy canyoning adventures in one of Da Lat’s most popular natural spots",
+            "details": "Experience the excitement of Datanla Waterfall! Ride the alpine coaster through lush forests, admire the cascading falls, and enjoy canyoning adventures in one of Da Lat’s most popular natural spots",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},

@@ -14,49 +14,44 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T10:18:33.599Z",
-  "updated_at": "2026-05-04T09:43:31.010Z",
+  "updated_at": "2026-05-13T05:12:09.429Z",
   "published_on_webpage": false,
   "travel_plan": {
-    "destination_scope": [],
     "one_pager_image_ids": [],
     "days": [
       {
         "id": "travel_plan_day_1d712640-cda9-42ff-8656-eaf6fa505e5c",
         "day_number": 1,
         "title": "Hoa Lu, Trang An and Hang Mua",
+        "title_i18n": {},
         "overnight_location": null,
+        "overnight_location_i18n": {},
+        "primary_location_id": "place_df5d50a9-cd0a-4059-a470-3360c46da58f",
+        "secondary_location_id": null,
+        "experience_highlight_ids": [],
         "services": [
           {
             "id": "travel_plan_service_931c9bc4-3ebc-4684-9fa9-510a36485046",
             "timing_kind": "label",
             "time_label": null,
+            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Ninh Binh scenic day",
+            "title_i18n": {},
             "details": "Explore Hoa Lu, Trang An and Hang Mua, three classic stops combining history, caves, rivers and karst views.",
+            "details_i18n": {},
             "image_subtitle": null,
+            "image_subtitle_i18n": {},
             "location": null,
+            "location_i18n": {},
             "start_time": null,
             "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_62dbfb5a-3bf5-4e92-862f-324252ce7725",
-              "storage_path": "/public/v1/tour-images/tour_f76f8004-3244-40f6-9477-918dfecb1658/travel-plan-services/travel_plan_service_931c9bc4-3ebc-4684-9fa9-510a36485046-1777887810885-6a9cc258-d4d0-4f63-8cbc-78d671f9e52a.webp",
-              "caption": null,
-              "alt_text": null,
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-05-04T09:43:31.010Z"
-            }
+            "image": null
           }
         ],
         "notes": "A compact Ninh Binh route through ancient capital history, UNESCO boat scenery and the viewpoint climb at Hang Mua.",
-        "primary_location_id": "place_df5d50a9-cd0a-4059-a470-3360c46da58f"
+        "notes_i18n": {}
       }
     ],
     "translation_meta": {}

@@ -13,7 +13,7 @@
   "seasonality_end_month": "oct",
   "priority": 80,
   "created_at": "2026-04-15T03:58:02.218Z",
-  "updated_at": "2026-05-13T01:51:46.489Z",
+  "updated_at": "2026-05-13T05:01:12.714Z",
   "published_on_webpage": false,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -172,7 +172,7 @@
             "kind": "other",
             "title": "An Ma Temple",
             "title_i18n": {},
-            "details": "An Ma Temple is a sacred site on an islet in Ba Be Lake, dedicated to loyal Mac Dynasty generals and offering a peaceful atmosphere for spiritual reflectio",
+            "details": "An Ma Temple is a sacred site on an islet in Ba Be Lake, dedicated to loyal Mac Dynasty generals and offering a peaceful atmosphere for spiritual reflection",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -239,11 +239,5 @@
       }
     ],
     "translation_meta": {}
-  },
-  "title_i18n": {
-    "vi": "Khu nghỉ dưỡng hồ Ba Bể"
-  },
-  "short_description_i18n": {
-    "vi": "Hồ Ba Bể nằm giữa những vách đá vôi và rừng sâu, một lối thoát yên bình giữa dòng nước núi bên trong một trong những công viên trù phú nhất miền Bắc Việt Nam."
   }
 }

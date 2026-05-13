@@ -1,6 +1,6 @@
 {
   "id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28",
-  "title": "Ha Noi To Ha Giang Loop Discovery",
+  "title": "Hanoi to Ha Giang Loop Discovery",
   "short_description": "Travel north to Ha Giang's limestone plateau, Ma Pi Leng Pass and ethnic highland villages, where every bend opens a wider view.",
   "styles": [
     "grand-expeditions",
@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 80,
   "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-05-13T01:03:28.931Z",
+  "updated_at": "2026-05-13T04:56:00.561Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -205,7 +205,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Mapileng Pass.",
+            "title": "Ma Pi Leng Pass",
             "title_i18n": {},
             "details": "Ma Pi Leng, one of Vietnam’s \"four great passes,\" offers jaw-dropping views of deep canyons and the emerald Nho Que River. It’s a must-see masterpiece of nature and a dream for every adventurer",
             "details_i18n": {},
