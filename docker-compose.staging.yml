@@ -34,11 +34,13 @@ services:
       - ./content:/srv/content
       - ./frontend/data/generated/homepage:/srv/frontend/data/generated/homepage
       - ./assets/generated/homepage:/srv/assets/generated/homepage
+      - ./matrix-pages:/srv/matrix-pages
     env_file:
       - .env
     environment:
       PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: /srv/frontend/data/generated/homepage
       PUBLIC_HOMEPAGE_ASSETS_DIR: /srv/assets/generated/homepage
+      TOUR_MATRIX_OUTPUT_DIR: /srv/matrix-pages
       ONE_PAGER_FONT_DIR: /srv/content/fonts
       TRANSLATION_OVERRIDE_WRITES_ENABLED: "true"
     depends_on:

@@ -9,6 +9,7 @@ const TOUR_CUSTOMIZE_IMAGE_DISSOLVE_MS = 170;
 const TOUR_CUSTOMIZE_IMAGE_TITLE_RESET_MS = 5000;
 const TOUR_CUSTOMIZE_TIMELINE_DELETE_DISTANCE_PX = 50;
 const TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX = 6;
+const TOUR_CUSTOMIZE_DOUBLE_CLICK_DRAG_GRACE_MS = 360;
 const TOUR_CUSTOMIZE_CARD_WIDTH_PX = 116;
 const TOUR_CUSTOMIZE_CARD_HEIGHT_PX = 154;
 const TOUR_CUSTOMIZE_MAP_ZOOM_MIN_CENTER = 0;
@@ -347,6 +348,8 @@ export function createTourCustomizer({
   let activePointerDrag = null;
   let activeMapPan = null;
   let timelineInstanceCounter = 0;
+  let lastStickyDragReleaseAt = Number.NEGATIVE_INFINITY;
+  let lastStickyDragReleaseTargetKey = "";
   const cardTitleResetTimers = new WeakMap();
 
   function t(key, fallback, vars) {
@@ -1728,6 +1731,43 @@ export function createTourCustomizer({
     return Math.hypot(deltaX, deltaY) >= TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX;
   }
 
+  function dragEventTimestamp(event) {
+    const timestamp = Number(event?.timeStamp);
+    return Number.isFinite(timestamp) ? timestamp : Date.now();
+  }
+
+  function dragTargetKeyFromElement(element) {
+    if (!(element instanceof HTMLElement)) return "";
+    const optionId = normalizeText(element.getAttribute("data-customize-option-id"));
+    if (optionId) return `option:${optionId}`;
+    const timelineId = normalizeText(element.getAttribute("data-customize-timeline-id"));
+    return timelineId ? `timeline:${timelineId}` : "";
+  }
+
+  function dragTargetKeyFromTarget(target) {
+    if (!(target instanceof Element)) return "";
+    const element = target.closest("[data-customize-option-id], [data-customize-timeline-id]");
+    return element instanceof HTMLElement ? dragTargetKeyFromElement(element) : "";
+  }
+
+  function isFreshStickyDragSecondPress(pointerDrag, event, sourceElement) {
+    if (!pointerDrag?.sticky || !(sourceElement instanceof HTMLElement)) return false;
+    const elapsed = dragEventTimestamp(event) - Number(pointerDrag.stickyActivatedAt || 0);
+    return elapsed >= 0 && elapsed <= TOUR_CUSTOMIZE_DOUBLE_CLICK_DRAG_GRACE_MS;
+  }
+
+  function noteStickyDragRelease(event) {
+    lastStickyDragReleaseAt = dragEventTimestamp(event);
+    lastStickyDragReleaseTargetKey = dragTargetKeyFromTarget(event?.target);
+  }
+
+  function shouldSuppressDragStartAfterStickyRelease(event) {
+    const elapsed = dragEventTimestamp(event) - lastStickyDragReleaseAt;
+    if (elapsed < 0 || elapsed > TOUR_CUSTOMIZE_DOUBLE_CLICK_DRAG_GRACE_MS) return false;
+    const targetKey = dragTargetKeyFromTarget(event?.target);
+    return Boolean(targetKey && targetKey === lastStickyDragReleaseTargetKey);
+  }
+
   function stickyDragSourceFromTarget(pointerDrag, target) {
     if (!(target instanceof Element) || !pointerDrag) return null;
     const selector = pointerDrag.kind === "option"
@@ -1746,6 +1786,7 @@ export function createTourCustomizer({
     if (!pointerDrag) return false;
     removePointerDragListeners();
     pointerDrag.sticky = true;
+    pointerDrag.stickyActivatedAt = dragEventTimestamp(event);
     pointerDrag.hasMoved = true;
     pointerDrag.source?.classList?.add("is-sticky-dragging");
     try {
@@ -1968,17 +2009,24 @@ export function createTourCustomizer({
     const pointerDrag = activePointerDrag;
     if (!pointerDrag?.sticky || event.button !== 0) return;
     if (isCustomizeDragBlockedTarget(event.target)) {
+      noteStickyDragRelease(event);
       cleanupPointerDrag();
       return;
     }
     event.preventDefault();
     event.stopPropagation();
+    const sourceElement = stickyDragSourceFromTarget(pointerDrag, event.target);
+    if (isFreshStickyDragSecondPress(pointerDrag, event, sourceElement)) {
+      moveDragGhost(event);
+      return;
+    }
+    noteStickyDragRelease(event);
     if (pointerDrag.kind === "timeline" && pointerDrag.deleteActive) {
       updatePointerDragFromEvent(event);
       cleanupPointerDrag({ commit: true, event });
       return;
     }
-    if (stickyDragSourceFromTarget(pointerDrag, event.target)) {
+    if (sourceElement) {
       cleanupPointerDrag();
       return;
     }
@@ -2094,6 +2142,11 @@ export function createTourCustomizer({
     bindCardImageCycleButtons(element);
     if (element.matches("[data-customize-option-id], [data-customize-timeline-id]")) {
       element.addEventListener("pointerdown", (event) => {
+        if (shouldSuppressDragStartAfterStickyRelease(event)) {
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
         if (isCustomizeDragBlockedTarget(event.target)) return;
         startPointerDrag(element, event, root);
       });

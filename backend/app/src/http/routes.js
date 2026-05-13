@@ -107,6 +107,7 @@ const OPERATIONAL_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", pattern: /^\/api\/v1\/public-site\/publish-status$/, handlerKey: "handleGetPublicSitePublishStatus" },
   { method: "POST", pattern: /^\/api\/v1\/public-site\/publish$/, handlerKey: "handleStartPublicSitePublish" },
   { method: "GET", pattern: /^\/api\/v1\/public-site\/publish\/([^/]+)$/, handlerKey: "handleGetPublicSitePublishJob" },
+  { method: "POST", pattern: /^\/api\/v1\/tour-matrices\/publish$/, handlerKey: "handlePublishTourMatrices" },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)\/one-pager\.pdf$/, handlerKey: "handleGetTourOnePagerPdf" },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)\/travel-plan\.pdf$/, handlerKey: "handleGetTourTravelPlanPdf" },
   { method: "GET", pattern: /^\/public\/v1\/tours\/([^/]+)\/one-pager\.pdf$/, handlerKey: "handleGetPublicTourOnePagerPdf" },

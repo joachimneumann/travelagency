@@ -3,6 +3,11 @@ import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { writeImageThumbnail } from "./image_thumbnails.mjs";
+import {
+  matrixPageControlScript,
+  matrixPageControlStyles,
+  renderMatrixHeaderActions
+} from "./matrix_page_controls.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -444,6 +449,7 @@ function renderHtml({ tours }) {
   const visibilityControl = unpublishedTourCount
     ? `<button class="publication-toggle" type="button" data-toggle-unpublished data-show-label="Not published tours (${unpublishedTourCount})" data-hide-label="Hide not published tours" aria-pressed="false">Not published tours (${unpublishedTourCount})</button>`
     : "";
+  const headerActions = renderMatrixHeaderActions({ visibilityControl });
   const rows = tours
     .map((tour) => {
       const serviceCells = tour.services.map((service) => renderServiceCell(service)).join("");
@@ -511,6 +517,8 @@ function renderHtml({ tours }) {
       gap: 12px;
       justify-content: space-between;
     }
+
+${matrixPageControlStyles}
 
     .publication-toggle {
       background: #ffffff;
@@ -658,7 +666,7 @@ function renderHtml({ tours }) {
   <header>
     <div class="header-row">
       <h1>Tour Photo Matrix</h1>
-      ${visibilityControl}
+      ${headerActions}
     </div>
   </header>
   <div class="matrix-wrap">
@@ -684,6 +692,7 @@ function renderHtml({ tours }) {
         button.textContent = showing ? button.dataset.hideLabel : button.dataset.showLabel;
       });
     })();
+${matrixPageControlScript}
   </script>
 </body>
 </html>

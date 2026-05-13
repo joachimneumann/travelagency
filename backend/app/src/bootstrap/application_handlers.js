@@ -18,6 +18,7 @@ import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStaticTranslationHandlers } from "../http/handlers/static_translations.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 import { createPublicSitePublishHandlers } from "../http/handlers/public_site_publish.js";
+import { createTourMatrixHandlers } from "../http/handlers/tour_matrices.js";
 
 export function createApplicationRoutes({
   auth,
@@ -425,6 +426,16 @@ export function createApplicationRoutes({
     publicSitePublishService
   });
 
+  const tourMatrixHandlers = createTourMatrixHandlers({
+    sendJson: httpHelpers.sendJson,
+    getPrincipal,
+    canPublishTourMatrices: canEditTours,
+    execFile: runtime.execFile,
+    path,
+    repoRoot: runtime.paths.repoRoot,
+    nowIso: support.nowIso
+  });
+
   return buildApiRoutes({
     authRoutes: auth.routes,
     handlers: {
@@ -447,6 +458,7 @@ export function createApplicationRoutes({
       ...destinationScopeHandlers,
       ...staticTranslationHandlers,
       ...publicSitePublishHandlers,
+      ...tourMatrixHandlers,
       ...tourHandlers
     }
   });

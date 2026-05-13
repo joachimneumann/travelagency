@@ -5785,6 +5785,21 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourCustomizerSource,
+    /TOUR_CUSTOMIZE_DOUBLE_CLICK_DRAG_GRACE_MS[\s\S]*function dragTargetKeyFromTarget\(target\)[\s\S]*data-customize-option-id[\s\S]*data-customize-timeline-id[\s\S]*function isFreshStickyDragSecondPress\(pointerDrag, event, sourceElement\)[\s\S]*stickyActivatedAt/,
+    "Double-clicking a customizer day card should keep the fresh sticky drag without relying on pointerdown click-count metadata"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function handleStickyDragPointerDown\(event\)[\s\S]*const sourceElement = stickyDragSourceFromTarget\(pointerDrag, event\.target\)[\s\S]*isFreshStickyDragSecondPress\(pointerDrag, event, sourceElement\)[\s\S]*moveDragGhost\(event\)[\s\S]*noteStickyDragRelease\(event\)[\s\S]*cleanupPointerDrag/,
+    "Customizer sticky drags should release by click while preserving double-click grabs"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function shouldSuppressDragStartAfterStickyRelease\(event\)[\s\S]*lastStickyDragReleaseAt[\s\S]*dragTargetKeyFromTarget\(event\?\.target\)[\s\S]*targetKey === lastStickyDragReleaseTargetKey[\s\S]*element\.addEventListener\("pointerdown", \(event\) => \{[\s\S]*shouldSuppressDragStartAfterStickyRelease\(event\)[\s\S]*startPointerDrag\(element, event, root\)/,
+    "The second click of a release double-click should not start a fresh drag on the same card"
+  );
+  assert.match(
+    tourCustomizerSource,
     /\/public\/v1\/tours\/\$\{encodeURIComponent\(normalizedTourId\)\}\/one-pager-preview/,
     "Overview PDF should open the public customized one-page overview preview endpoint"
   );
@@ -6490,7 +6505,7 @@ test("booking travel-plan templates only use marketing-tour routes and UI", asyn
   assert.doesNotMatch(routesSource, /\/api\/v1\/standard-tours|travel-plan\/standard-tours/, "HTTP routes should not expose removed standard-tour endpoints");
 });
 
-test("marketing tour editor imports days and services only from other marketing tours", async () => {
+test("marketing tour editor hides day and service copy actions while keeping tour-backed import plumbing", async () => {
   const marketingTourPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
   const tourAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
   const tourPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour.js");
@@ -6528,8 +6543,8 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourAdapterSource, /tourTravelPlanServiceImportRequest/, "Marketing tour editor should import services through tour endpoints");
   assert.match(tourAdapterSource, /target_travel_plan:\s*omitDerivedTravelPlanDestinations\(targetTravelPlan\)/, "Marketing tour editor should send dirty draft travel plans with import mutations");
   assert.match(tourAdapterSource, /travelPlanLibrarySource:\s*"marketing_tour"/, "Marketing tour editor should mark the library source as marketing tours");
-  assert.match(tourAdapterSource, /dayImport:\s*true/, "Marketing tour editor should expose day import");
-  assert.match(tourAdapterSource, /serviceImport:\s*true/, "Marketing tour editor should expose service import");
+  assert.match(tourAdapterSource, /dayImport:\s*false/, "Marketing tour editor should hide day import");
+  assert.match(tourAdapterSource, /serviceImport:\s*false/, "Marketing tour editor should hide service import");
   assert.match(tourAdapterSource, /serviceDetails:\s*true/, "Marketing tour editor should expose service details");
   assert.match(staticTranslationsSource, /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(service\?\.details_i18n,\s*service\?\.details\)/, "Marketing tour translation memory should include service details");
   assert.match(travelPlanLibrarySource, /buildTravelPlanDaySearchRequest/, "Shared library should accept entity-specific day search builders");
@@ -6555,7 +6570,7 @@ test("marketing tour editor imports days and services only from other marketing 
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
 });
 
-test("marketing tour editor exposes a full travel-plan PDF without guide or closing sections", async () => {
+test("marketing tour travel-plan PDF endpoint stays backend-only without an editor action", async () => {
   const tourAdapterPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_travel_plan_adapter.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
   const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
@@ -6578,9 +6593,9 @@ test("marketing tour editor exposes a full travel-plan PDF without guide or clos
     readFile(servicesPath, "utf8")
   ]);
 
-  assert.match(tourAdapterSource, /data-tour-travel-plan-pdf[\s\S]*Create full travel plan PDF/, "Marketing tour editor should expose a full travel-plan PDF action in the travel-plan footer");
-  assert.match(tourAdapterSource, /\/api\/v1\/tours\/\$\{encodeURIComponent\(tourId\)\}\/travel-plan\.pdf/, "Marketing tour PDF action should open the private tour travel-plan endpoint");
-  assert.match(tourAdapterSource, /saveCurrentTravelPlanBeforePdf[\s\S]*buildTourTravelPlanSaveRequest[\s\S]*openTourTravelPlanPdf[\s\S]*saveCurrentTravelPlanBeforePdf\(instance\)/, "Marketing tour PDF action should save the current draft before opening the PDF");
+  assert.doesNotMatch(tourAdapterSource, /data-tour-travel-plan-pdf|Create full travel plan PDF/, "Marketing tour editor should not expose a full travel-plan PDF action in the travel-plan footer");
+  assert.doesNotMatch(tourAdapterSource, /\/api\/v1\/tours\/\$\{encodeURIComponent\(tourId\)\}\/travel-plan\.pdf/, "Marketing tour editor should not open the private tour travel-plan PDF endpoint directly");
+  assert.doesNotMatch(tourAdapterSource, /saveCurrentTravelPlanBeforePdf|openTourTravelPlanPdf/, "Marketing tour editor should not wire a save-before-open full PDF action");
   assert.match(routesSource, /\/api\\\/v1\\\/tours\\\/\(\[\^\/\]\+\)\\\/travel-plan\\\.pdf[\s\S]*handleGetTourTravelPlanPdf/, "Routes should expose a private marketing tour travel-plan PDF endpoint");
   assert.match(tourHandlersSource, /handleGetTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*writeTravelPlanPdf\(bookingLikeTour, travelPlan,[\s\S]*includeMarketingTourBackground: true,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/, "Marketing tour PDF handler should reuse the shared travel-plan PDF writer, use the overview background, and disable guide and closing sections");
   assert.match(travelPlanPdfSource, /includeGuideSection = options\?\.includeGuideSection !== false[\s\S]*includeEndingSection = options\?\.includeEndingSection !== false[\s\S]*if \(includeGuideSection\) \{[\s\S]*drawGuideSection[\s\S]*if \(includeEndingSection\) \{[\s\S]*drawClosing/, "Shared travel-plan PDF writer should allow callers to omit guide and closing sections");
@@ -6758,13 +6773,28 @@ test("staging backend bakes dependencies into the image and mounts only the writ
   );
   assert.match(
     backendComposeBlock,
+    /- \.\/matrix-pages:\/srv\/matrix-pages/,
+    "Staging backend should mount the generated matrix page output root Caddy serves through staging symlinks"
+  );
+  assert.match(
+    backendComposeBlock,
     /PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: \/srv\/frontend\/data\/generated\/homepage[\s\S]*PUBLIC_HOMEPAGE_ASSETS_DIR: \/srv\/assets\/generated\/homepage/,
     "Staging backend should point homepage generation at the same generated roots Caddy serves"
   );
   assert.match(
     backendComposeBlock,
+    /TOUR_MATRIX_OUTPUT_DIR: \/srv\/matrix-pages/,
+    "Staging backend should publish refreshed tour matrices into the mounted matrix output root"
+  );
+  assert.match(
+    backendComposeBlock,
     /ONE_PAGER_FONT_DIR: \/srv\/content\/fonts/,
     "Staging backend should point one-pager PDF rendering at the container-mounted private font directory"
+  );
+  assert.match(
+    updateStagingSource,
+    /mkdir -p matrix-pages/,
+    "Staging deploy should create the matrix output root before docker compose can bind-mount it"
   );
   assert.match(
     updateStagingSource,

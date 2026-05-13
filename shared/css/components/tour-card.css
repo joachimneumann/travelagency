@@ -1751,6 +1751,18 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   border-radius: inherit;
 }
 
+.tour-customize-option__image > img:not(.tour-customize-option__image-dissolve) {
+  transform: scale(1);
+  transform-origin: center bottom;
+  transition: transform 0.9s cubic-bezier(0.16, 0.88, 0.2, 1), filter 0.45s ease;
+  will-change: transform;
+}
+
+.tour-customize-option__image[data-customize-image-count]:not([data-customize-image-count="0"]):not([data-customize-image-count="1"]):hover > img:not(.tour-customize-option__image-dissolve) {
+  transform: scale(1.05);
+  filter: saturate(1.03);
+}
+
 .tour-customize-option__image-dissolve {
   position: absolute;
   inset: 0;

@@ -64,6 +64,31 @@ import {
   renderDestinationScopeEditor
 } from "./destination_scope_editor.js";
 
+export function resolveTravelPlanExperienceHighlightTitle(item, {
+  displayLang = "en",
+  sourceLang = "en",
+  fallbackTitle = ""
+} = {}) {
+  const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+  const titleMap = source.title_i18n && typeof source.title_i18n === "object" && !Array.isArray(source.title_i18n)
+    ? source.title_i18n
+    : {};
+  const normalizedDisplayLang = normalizeBookingContentLang(displayLang || "en");
+  const normalizedSourceLang = normalizeBookingContentLang(sourceLang || "en");
+  const candidates = [
+    titleMap[normalizedDisplayLang],
+    titleMap[normalizedSourceLang],
+    titleMap.en,
+    source.title,
+    fallbackTitle
+  ];
+  for (const value of candidates) {
+    const normalized = String(value || "").trim();
+    if (normalized) return normalized;
+  }
+  return "";
+}
+
 export function createBookingTravelPlanModule(ctx) {
   const {
     state,
@@ -165,6 +190,11 @@ export function createBookingTravelPlanModule(ctx) {
   function shouldMarkEnglishDestinationScopeInputs() {
     const lang = typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
     return String(lang || "").trim().toLowerCase() === "vi";
+  }
+
+  function travelPlanExperienceHighlightDisplayLang() {
+    const backendLang = typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
+    return normalizeBookingContentLang(backendLang || bookingContentLang());
   }
 
   function destinationScopeEnglishInputLabel(label) {
@@ -1885,24 +1915,21 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function travelPlanExperienceHighlightOptions() {
+    const displayLang = travelPlanExperienceHighlightDisplayLang();
+    const sourceLang = bookingSourceLang();
     return (Array.isArray(state.experienceHighlights) ? state.experienceHighlights : [])
       .map((item) => {
         const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
         const id = String(source.id || item || "").trim();
         if (!id) return null;
-        const titleMap = source.title_i18n && typeof source.title_i18n === "object" && !Array.isArray(source.title_i18n)
-          ? source.title_i18n
-          : {};
         return {
           ...source,
           id,
-          title: String(
-            titleMap[bookingContentLang()]
-            || titleMap[bookingSourceLang()]
-            || titleMap.en
-            || source.title
-            || id
-          ).trim()
+          title: resolveTravelPlanExperienceHighlightTitle(source, {
+            displayLang,
+            sourceLang,
+            fallbackTitle: id
+          })
         };
       })
       .filter(Boolean);

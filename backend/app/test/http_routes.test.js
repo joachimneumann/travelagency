@@ -93,6 +93,24 @@ test("buildApiRoutes includes central public-site publish routes", () => {
   assert.equal(jobRoute.handler, handlerFns.get("handleGetPublicSitePublishJob"));
 });
 
+test("buildApiRoutes includes tour matrix publish route", () => {
+  const handlerFns = new Map();
+  const handlers = new Proxy({}, {
+    get: (_target, prop) => {
+      if (!handlerFns.has(prop)) handlerFns.set(prop, () => {});
+      return handlerFns.get(prop);
+    }
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  const route = routes.find((candidate) => {
+    return candidate.method === "POST" && candidate.pattern.test("/api/v1/tour-matrices/publish");
+  });
+
+  assert.ok(route);
+  assert.equal(route.handler, handlerFns.get("handlePublishTourMatrices"));
+});
+
 test("buildApiRoutes includes tour reel video editor routes", () => {
   const handlers = new Proxy({}, {
     get: () => () => {}

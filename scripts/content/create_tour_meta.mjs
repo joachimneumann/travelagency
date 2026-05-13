@@ -2,6 +2,11 @@
 import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  matrixPageControlScript,
+  matrixPageControlStyles,
+  renderMatrixHeaderActions
+} from "./matrix_page_controls.mjs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -382,6 +387,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
   const visibilityControl = unpublishedTourCount
     ? `<button class="publication-toggle" type="button" data-toggle-unpublished data-show-label="Not published tours (${unpublishedTourCount})" data-hide-label="Hide not published tours" aria-pressed="false">Not published tours (${unpublishedTourCount})</button>`
     : "";
+  const headerActions = renderMatrixHeaderActions({ visibilityControl });
   const rows = tours
     .map((tour) => {
       const daysByNumber = new Map(tour.days.map((day) => [day.dayNumber, day]));
@@ -465,6 +471,8 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       gap: 12px;
       justify-content: space-between;
     }
+
+${matrixPageControlStyles}
 
     .publication-toggle {
       background: #ffffff;
@@ -642,7 +650,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
   <header>
     <div class="header-row">
       <h1>Tour Meta Matrix</h1>
-      ${visibilityControl}
+      ${headerActions}
     </div>
     <div class="meta">
       <span>${publishedTourCount} published tours</span>
@@ -716,6 +724,7 @@ function renderHtml({ tours, toursDir, catalogPath, highlightManifestPath, outpu
       if (document.fonts) document.fonts.ready.then(scheduleAlignment);
       scheduleAlignment();
     })();
+${matrixPageControlScript}
   </script>
 </body>
 </html>

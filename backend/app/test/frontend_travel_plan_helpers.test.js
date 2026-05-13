@@ -6,6 +6,7 @@ import { pathToFileURL } from "node:url";
 const repoRoot = path.resolve(new URL("../../..", import.meta.url).pathname);
 const helperPath = path.join(repoRoot, "frontend", "scripts", "booking", "travel_plan_helpers.js");
 const imagesModulePath = path.join(repoRoot, "frontend", "scripts", "booking", "travel_plan_images.js");
+const editorCorePath = path.join(repoRoot, "frontend", "scripts", "shared", "travel_plan_editor_core.js");
 
 async function loadHelpers() {
   global.window = {
@@ -21,6 +22,14 @@ async function loadImagesModule() {
     __BOOKING_CONTENT_LANG: "en"
   };
   return await import(`${pathToFileURL(imagesModulePath).href}?test=${Date.now()}`);
+}
+
+async function loadEditorCore() {
+  global.window = {
+    ...(global.window || {}),
+    __BOOKING_CONTENT_LANG: "en"
+  };
+  return await import(`${pathToFileURL(editorCorePath).href}?test=${Date.now()}`);
 }
 
 test("normalizeTravelPlanDraft preserves localized maps while keeping flat source text authoritative", async () => {
@@ -227,6 +236,28 @@ test("normalizeTravelPlanDraft ignores legacy destinations without explicit scop
   });
   assert.deepEqual(scoped.destination_scope, [{ destination: "VN", regions: [], places: [] }]);
   assert.deepEqual(scoped.destinations, ["VN"]);
+});
+
+test("experience highlight labels follow the display language while preserving English ids", async () => {
+  const { resolveTravelPlanExperienceHighlightTitle } = await loadEditorCore();
+  const highlight = {
+    id: "beaches_islands",
+    title: "Beaches and Islands",
+    title_i18n: {
+      en: "Beaches and Islands",
+      vi: "Bãi biển và đảo"
+    }
+  };
+
+  assert.equal(
+    resolveTravelPlanExperienceHighlightTitle(highlight, {
+      displayLang: "vi",
+      sourceLang: "en",
+      fallbackTitle: highlight.id
+    }),
+    "Bãi biển và đảo"
+  );
+  assert.equal(highlight.id, "beaches_islands");
 });
 
 test("travel-plan image module can use entity-specific delete request builders", async () => {

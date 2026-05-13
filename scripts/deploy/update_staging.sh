@@ -185,6 +185,8 @@ git pull --ff-only
 
 validate_runtime_i18n_snapshots
 
+mkdir -p matrix-pages
+
 if should_run_tests "${SERVICES[@]}"; then
   run_staging_tests
 elif [[ "$SKIP_TESTS" == "1" ]]; then
@@ -196,7 +198,6 @@ mkdir -p frontend/data/generated/homepage assets/generated/homepage
 prepare_runtime_brand_logo
 generate_runtime_i18n
 generate_public_homepage_assets
-"$ROOT_DIR/scripts/content/create_staging_tour_matrices.sh"
 
 mkdir -p backend/app/data
 
