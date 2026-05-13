@@ -803,7 +803,6 @@ body.tour-details-modal-open {
 .tour-plan-highlights,
 .tour-plan-pdf,
 .tour-plan__customize,
-.tour-plan-actions,
 .tour-plan-itinerary,
 .tour-plan-summary,
 .tour-details-overview,
@@ -1024,56 +1023,9 @@ body.tour-details-modal-open {
   transform: translateY(-1px);
 }
 
-.tour-plan-actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
-  justify-content: stretch;
-  gap: 0.55rem;
-  align-items: stretch;
-  margin-top: 1.15rem;
-  padding: 0.15rem 0 0;
-}
-
-.tour-plan-actions__button {
-  width: 100%;
-  min-width: 0;
-  min-height: 2.58rem;
-  justify-content: center;
-  padding-inline: 0.55rem;
-  border-radius: 12px;
-  white-space: normal;
-  text-align: center;
-  line-height: 1.16;
-  overflow-wrap: break-word;
-}
-
-.tour-plan-actions__button.is-active,
-.tour-plan-actions__button[aria-expanded="true"] {
-  border-color: var(--accent);
-  background: var(--surface-accent);
-  color: var(--accent);
-}
-
-.tour-plan-itinerary[hidden] {
-  display: none;
-}
-
-.tour-plan-itinerary {
-  overflow: hidden;
-  opacity: 1;
-  transition:
-    height 0.3s cubic-bezier(0.2, 0.82, 0.2, 1),
-    opacity 0.22s ease;
-  will-change: height, opacity;
-}
-
 .tour-plan-itinerary .tour-plan-summary {
   width: 100%;
   margin-top: 1rem;
-}
-
-.tour-plan-itinerary[data-tour-plan-itinerary-animating="collapsing"] {
-  pointer-events: none;
 }
 
 .tour-plan__customize {
@@ -2806,15 +2758,6 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
   .tour-plan-pdf__download {
     justify-self: start;
-  }
-
-  .tour-plan-actions {
-    grid-template-columns: repeat(auto-fit, minmax(6.1rem, 1fr));
-    gap: 0.45rem;
-  }
-
-  .tour-plan-actions__button {
-    padding-inline: 0.45rem;
   }
 
   .tour-plan-summary {

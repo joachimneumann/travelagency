@@ -403,10 +403,10 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     assert.match(detailsMarkup, /tour-plan-summary/);
     assert.match(detailsMarkup, /tour-plan-summary-day/);
     assert.match(detailsMarkup, /Ihre Reiseroute/);
-    assert.match(detailsMarkup, /tour-plan-actions/);
-    assert.match(detailsMarkup, /data-tour-plan-itinerary-toggle/);
-    assert.match(detailsMarkup, /tour-plan-itinerary"[^>]+hidden/);
-    assert.match(detailsMarkup, /data-tour-plan-itinerary-toggle[\s\S]*Reiseverlauf[\s\S]*<\/button>/);
+    assert.match(detailsMarkup, /class="tour-plan-itinerary"[^>]*data-tour-plan-itinerary/);
+    assert.doesNotMatch(detailsMarkup, /tour-plan-itinerary"[^>]+hidden/);
+    assert.doesNotMatch(detailsMarkup, /tour-plan-actions/);
+    assert.doesNotMatch(detailsMarkup, /data-tour-plan-itinerary-toggle/);
     assert.match(detailsMarkup, />Angebot anfragen<\/button>/);
     assert.doesNotMatch(detailsMarkup, />Itinerary<\/button>/);
     assert.doesNotMatch(detailsMarkup, />Get a Quote<\/button>/);
@@ -681,10 +681,11 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
     assert.match(inactiveDetails, /data-tour-travel-plan-pdf/);
     assert.match(inactiveDetails, />Overview \(one-pager\)<\/button>/);
     assert.match(inactiveDetails, />Day-by-Day Travel Plan<\/button>/);
-    assert.match(inactiveDetails, /tour-plan-actions/);
-    assert.match(inactiveDetails, /data-tour-plan-itinerary-toggle/);
-    assert.match(inactiveDetails, />\s*Itinerary\s*<\/button>/);
-    assert.match(inactiveDetails, />Get a Quote<\/button>/);
+    assert.match(inactiveDetails, /class="tour-plan-itinerary"[^>]*data-tour-plan-itinerary/);
+    assert.doesNotMatch(inactiveDetails, /tour-plan-actions/);
+    assert.doesNotMatch(inactiveDetails, /data-tour-plan-itinerary-toggle/);
+    assert.doesNotMatch(inactiveDetails, />\s*Itinerary\s*<\/button>/);
+    assert.equal((inactiveDetails.match(/>Get a Quote<\/button>/g) || []).length, 1);
     assert.doesNotMatch(inactiveDetails, /data-tour-customize/);
     assert.doesNotMatch(inactiveDetails, /Customize this Trip/);
 

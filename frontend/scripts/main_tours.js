@@ -53,7 +53,6 @@ const TOUR_EXPERIENCE_HIGHLIGHTS = Object.freeze([
 const TOUR_EXPERIENCE_HIGHLIGHT_BY_ID = new Map(TOUR_EXPERIENCE_HIGHLIGHTS.map((item) => [item.id, item]));
 const tourCardImageTransitionTimers = new WeakMap();
 const tourPlanSummaryDetailsAnimations = new WeakMap();
-const tourPlanItineraryAnimations = new WeakMap();
 
 export function createFrontendToursController(ctx) {
   const {
@@ -984,11 +983,6 @@ export function createFrontendToursController(ctx) {
     return `tour-details-${normalizedTripId || "unknown"}`;
   }
 
-  function tourPlanItineraryPanelId(tripId) {
-    const normalizedTripId = normalizeText(tripId).replace(/[^a-zA-Z0-9_-]+/g, "-");
-    return `tour-itinerary-${normalizedTripId || "unknown"}`;
-  }
-
   function getTourGridColumnCount() {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return 3;
     if (window.matchMedia("(max-width: 760px)").matches) return 1;
@@ -1693,7 +1687,7 @@ export function createFrontendToursController(ctx) {
     const titleLabel = frontendT("tour.plan.details_title", "Tour Details");
     const stylesLabel = frontendT("tour.plan.travel_style_label", "Travel Style");
     const tripId = normalizeText(trip?.id);
-    const customizeLabel = frontendT("tour.plan.customize_cta", "Customize");
+    const customizeLabel = frontendT("tour.plan.customize_trip", "Customize this Trip");
     const canCustomize = canCustomizeTour(trip);
     const customizationSummary = canCustomize
       ? tourCustomizer?.customizationSummaryForTrip(trip) || ""
@@ -1869,26 +1863,6 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
-  function renderTourPlanActions(trip, days) {
-    const tripId = normalizeText(trip?.id);
-    if (!tripId || !days.length) return "";
-    const itineraryId = tourPlanItineraryPanelId(tripId);
-    const itineraryLabel = frontendT("tour.plan.your_itinerary", "Itinerary");
-    const quoteLabel = frontendT("tour.card.get_quote", "Get a Quote");
-    const customizeLabel = frontendT("tour.plan.customize_trip", "Customize this Trip");
-    const customizeAction = canCustomizeTour(trip)
-      ? `<button class="btn btn-secondary tour-plan-actions__button" type="button" data-tour-customize data-trip-id="${escapeAttr(tripId)}">${escapeHTML(customizeLabel)}</button>`
-      : "";
-
-    return `
-      <div class="tour-plan-actions">
-        <button class="btn btn-secondary tour-plan-actions__button" type="button" data-tour-plan-itinerary-toggle aria-controls="${escapeAttr(itineraryId)}" aria-expanded="false">${escapeHTML(itineraryLabel)}</button>
-        ${customizeAction}
-        <button class="btn btn-primary tour-plan-actions__button" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(quoteLabel)}</button>
-      </div>
-    `;
-  }
-
   function canCustomizeTour(trip) {
     const tripId = normalizeText(trip?.id);
     if (!tripId || !customizeFeatureEnabled()) return false;
@@ -1898,9 +1872,8 @@ export function createFrontendToursController(ctx) {
 
   function renderTourPlanItineraryPanel(days, tripId) {
     if (!days.length) return "";
-    const itineraryId = tourPlanItineraryPanelId(tripId);
     return `
-      <div class="tour-plan-itinerary" id="${escapeAttr(itineraryId)}" data-tour-plan-itinerary hidden>
+      <div class="tour-plan-itinerary" data-tour-plan-itinerary>
         ${renderTourPlanDaySummary(days, tripId)}
       </div>
     `;
@@ -1922,7 +1895,6 @@ export function createFrontendToursController(ctx) {
       ${renderTourDetailsHeader(trip)}
       ${renderTourExperienceHighlights(trip)}
       ${renderTourPdfActions(trip)}
-      ${renderTourPlanActions(trip, days)}
       ${renderTourPlanItineraryPanel(days, tripId)}
     `;
   }
@@ -2181,15 +2153,6 @@ export function createFrontendToursController(ctx) {
         toggleTourPlanSummaryDay(button);
       });
       button.dataset.tourPlanSummaryBound = "1";
-    });
-
-    const itineraryButtons = root.querySelectorAll("[data-tour-plan-itinerary-toggle]");
-    itineraryButtons.forEach((button) => {
-      if (!(button instanceof HTMLElement) || button.dataset.tourPlanItineraryBound === "1") return;
-      button.addEventListener("click", () => {
-        toggleTourPlanItinerary(button);
-      });
-      button.dataset.tourPlanItineraryBound = "1";
     });
 
     const tourDetailsCloseButtons = root.querySelectorAll("[data-tour-details-close][data-trip-id]");
@@ -2463,79 +2426,6 @@ export function createFrontendToursController(ctx) {
       animateTourPlanSummaryDetails(summaryDay, details, willExpand);
       return;
     }
-  }
-
-  function clearTourPlanItineraryAnimation(panel) {
-    const activeAnimation = tourPlanItineraryAnimations.get(panel);
-    if (!activeAnimation) return;
-    if (typeof window !== "undefined" && typeof window.clearTimeout === "function") {
-      window.clearTimeout(activeAnimation.timer);
-    } else {
-      clearTimeout(activeAnimation.timer);
-    }
-    panel.removeEventListener("transitionend", activeAnimation.onTransitionEnd);
-    tourPlanItineraryAnimations.delete(panel);
-  }
-
-  function finishTourPlanItineraryAnimation(panel, expanded) {
-    clearTourPlanItineraryAnimation(panel);
-    panel.style.height = "";
-    panel.style.opacity = "";
-    delete panel.dataset.tourPlanItineraryAnimating;
-    if (!expanded) {
-      panel.hidden = true;
-    }
-  }
-
-  function animateTourPlanItinerary(panel, expanded) {
-    if (!(panel instanceof HTMLElement)) return;
-    clearTourPlanItineraryAnimation(panel);
-
-    if (prefersReducedMotion()) {
-      panel.hidden = !expanded;
-      panel.style.height = "";
-      panel.style.opacity = "";
-      delete panel.dataset.tourPlanItineraryAnimating;
-      return;
-    }
-
-    panel.hidden = false;
-    panel.dataset.tourPlanItineraryAnimating = expanded ? "expanding" : "collapsing";
-    if (expanded) {
-      panel.style.height = "0px";
-      panel.style.opacity = "0";
-      void panel.offsetHeight;
-      panel.style.height = `${panel.scrollHeight}px`;
-      panel.style.opacity = "1";
-    } else {
-      panel.style.height = `${panel.scrollHeight}px`;
-      panel.style.opacity = "1";
-      void panel.offsetHeight;
-      panel.style.height = "0px";
-      panel.style.opacity = "0";
-    }
-
-    const done = () => finishTourPlanItineraryAnimation(panel, expanded);
-    const onTransitionEnd = (event) => {
-      if (event.target !== panel || event.propertyName !== "height") return;
-      done();
-    };
-    panel.addEventListener("transitionend", onTransitionEnd);
-    const timer = typeof window !== "undefined" && typeof window.setTimeout === "function"
-      ? window.setTimeout(done, TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 120)
-      : setTimeout(done, TOUR_PLAN_DAY_DETAILS_TRANSITION_MS + 120);
-    tourPlanItineraryAnimations.set(panel, { onTransitionEnd, timer });
-  }
-
-  function toggleTourPlanItinerary(trigger) {
-    if (!(trigger instanceof HTMLElement)) return;
-    const panelId = normalizeText(trigger.getAttribute("aria-controls"));
-    const panel = panelId ? document.getElementById(panelId) : null;
-    if (!(panel instanceof HTMLElement)) return;
-    const willExpand = trigger.getAttribute("aria-expanded") !== "true";
-    trigger.setAttribute("aria-expanded", willExpand ? "true" : "false");
-    trigger.classList.toggle("is-active", willExpand);
-    animateTourPlanItinerary(panel, willExpand);
   }
 
   function tourPlanServiceMediaFromEvent(event) {
