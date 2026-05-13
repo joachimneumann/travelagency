@@ -113,6 +113,8 @@
   "tour.customize.pdf_loading_title": "Creating Tour PDF",
   "tour.customize.reset": "Reset tour",
   "tour.customize.subtitle": "Adapt the day-by-day route before previewing your trip.",
+  "tour.customize.summary": "Customized: {duration} via {route}",
+  "tour.customize.summary_no_route": "Customized: {duration}",
   "tour.customize.timeline": "Your Itinerary",
   "tour.customize.timeline_named": "Your Itinerary: {name}",
   "tour.customize.title": "Customize this tour",

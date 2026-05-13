@@ -360,6 +360,7 @@ export function createTourCustomizer({
   let lastStickyDragReleaseAt = Number.NEGATIVE_INFINITY;
   let modalCloseCallback = null;
   let lastStickyDragReleaseTargetKey = "";
+  let forceTripRefreshOnClose = false;
   const cardTitleResetTimers = new WeakMap();
 
   function t(key, fallback, vars) {
@@ -589,12 +590,17 @@ export function createTourCustomizer({
     const days = Array.isArray(timelineDays) ? timelineDays : [];
     const dayCount = days.length;
     if (!dayCount) return [];
-    const routeLabel = humanList(
+    const routeLabel = customizedTimelineRouteLabel(days);
+    const proposal = routeLabel || t("tour.customize.title_proposal_custom", "Custom Tour");
+    return uniqueOrderedTexts([proposal]).slice(0, TOUR_CUSTOMIZE_TITLE_PROPOSAL_LIMIT);
+  }
+
+  function customizedTimelineRouteLabel(timelineDays) {
+    const days = Array.isArray(timelineDays) ? timelineDays : [];
+    return humanList(
       uniqueOrderedTexts(days.flatMap(titleLocationLabelsFromItem))
         .slice(0, TOUR_CUSTOMIZE_TITLE_LOCATION_LIMIT)
     );
-    const proposal = routeLabel || t("tour.customize.title_proposal_custom", "Custom Tour");
-    return uniqueOrderedTexts([proposal]).slice(0, TOUR_CUSTOMIZE_TITLE_PROPOSAL_LIMIT);
   }
 
   function draftHasCustomizedTimeline() {
@@ -652,6 +658,23 @@ export function createTourCustomizer({
     const originalTimelineDays = originalTimelineFromTrip(trip);
     if (timelineSignature(timelineDays) === timelineSignature(originalTimelineDays)) return "";
     return buildCustomizedTourTitleProposals(timelineDays)[0] || "";
+  }
+
+  function customizationSummaryForTrip(trip) {
+    const tourId = normalizeText(trip?.id);
+    const customization = loadStoredCustomization(tourId);
+    if (!customization) return "";
+    const timelineDays = customization.timelineDays.map((item) => ({
+      ...item,
+      day: rehydratedTimelineDay(item, trip)
+    })).filter((item) => item.day);
+    const originalTimelineDays = originalTimelineFromTrip(trip);
+    if (!timelineDays.length || timelineSignature(timelineDays) === timelineSignature(originalTimelineDays)) return "";
+    const duration = t("tour.card.days", "{days} days", { days: String(timelineDays.length) });
+    const route = customizedTimelineRouteLabel(timelineDays);
+    return route
+      ? t("tour.customize.summary", "Customized: {duration} via {route}", { duration, route })
+      : t("tour.customize.summary_no_route", "Customized: {duration}", { duration });
   }
 
   function routePreviewForTrip(trip) {
@@ -1306,11 +1329,12 @@ export function createTourCustomizer({
     if (activePointerDrag) cleanupPointerDrag({ animateCancel: false });
     const onClose = modalCloseCallback;
     const closedTourId = normalizeText(draft?.tourId);
-    const shouldRefreshTrips = persistDraft ? persistDraftCustomization() : false;
+    const shouldRefreshTrips = (persistDraft ? persistDraftCustomization() : false) || forceTripRefreshOnClose;
     if (modal?.parentNode) modal.parentNode.removeChild(modal);
     modal = null;
     draft = null;
     modalCloseCallback = null;
+    forceTripRefreshOnClose = false;
     activeDragPayload = null;
     activeDropIndex = null;
     activePointerDrag = null;
@@ -1334,7 +1358,7 @@ export function createTourCustomizer({
 
   function resetDraftToOriginal() {
     if (!draft) return;
-    clearCustomization(draft.tourId);
+    if (clearCustomization(draft.tourId)) forceTripRefreshOnClose = true;
     draft.originalTimelineDays = originalTimelineFromTrip({ id: draft.tourId }, draft.modules);
     draft.timelineDays = draft.originalTimelineDays;
     renderModal();
@@ -2419,6 +2443,7 @@ export function createTourCustomizer({
     if (!timelineDays.length) return false;
     lastFocusedElement = document.activeElement;
     modalCloseCallback = typeof options?.onClose === "function" ? options.onClose : null;
+    forceTripRefreshOnClose = false;
     draft = {
       tourId: normalizedTourId,
       tourTitle: tourTitleForTimeline(trip),
@@ -2535,6 +2560,7 @@ export function createTourCustomizer({
     activeDaysForTrip,
     selectedDaysForPdf,
     customizedTitleForTrip,
+    customizationSummaryForTrip,
     routePreviewForTrip,
     open,
     openCustomizedOverviewPdf,

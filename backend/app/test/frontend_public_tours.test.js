@@ -1214,6 +1214,8 @@ test("tour customizer proposes a route-based title for saved customized days", a
   });
 
   assert.equal(customizer.customizedTitleForTrip(trip), "Hanoi and Hue");
+  assert.equal(customizer.customizationSummaryForTrip(trip), "Customized: 2 days via Hanoi and Hue");
+  assert.equal(customizer.customizationSummaryForTrip({ id: "tour_without_customization" }), "");
 });
 
 test("public tour controller exposes saved custom tour day refs for booking submission", async () => {

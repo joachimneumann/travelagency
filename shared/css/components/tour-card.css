@@ -1053,8 +1053,9 @@ body.tour-details-modal-open {
 
 .tour-details-overview__customize {
   grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  gap: 0.48rem;
+  justify-items: center;
   margin: -0.35rem 0 0.15rem;
 }
 
@@ -1063,6 +1064,15 @@ body.tour-details-modal-open {
   min-height: 2.72rem;
   border-radius: 12px;
   box-shadow: none;
+}
+
+.tour-details-overview__customize-summary {
+  max-width: 32rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .tour-details-overview__facts {

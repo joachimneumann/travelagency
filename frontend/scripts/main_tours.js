@@ -1767,9 +1767,14 @@ export function createFrontendToursController(ctx) {
     const stylesLabel = frontendT("tour.plan.travel_style_label", "Travel Style");
     const tripId = normalizeText(trip?.id);
     const customizeLabel = frontendT("tour.plan.customize_cta", "Customize");
-    const customizeCta = canCustomizeTour(trip)
+    const canCustomize = canCustomizeTour(trip);
+    const customizationSummary = canCustomize
+      ? tourCustomizer?.customizationSummaryForTrip(trip) || ""
+      : "";
+    const customizeCta = canCustomize
       ? `<div class="tour-details-overview__customize">
           <button class="btn btn-primary tour-details-overview__customize-button" type="button" data-tour-customize data-trip-id="${escapeAttr(tripId)}">${escapeHTML(customizeLabel)}</button>
+          ${customizationSummary ? `<p class="tour-details-overview__customize-summary">${escapeHTML(customizationSummary)}</p>` : ""}
         </div>`
       : "";
 
@@ -1937,6 +1942,26 @@ export function createFrontendToursController(ctx) {
     `;
   }
 
+  function renderTourPlanActions(trip, days) {
+    const tripId = normalizeText(trip?.id);
+    if (!tripId || !days.length) return "";
+    const itineraryId = tourPlanItineraryPanelId(tripId);
+    const itineraryLabel = frontendT("tour.plan.your_itinerary", "Itinerary");
+    const quoteLabel = frontendT("tour.card.get_quote", "Get a Quote");
+    const customizeLabel = frontendT("tour.plan.customize_trip", "Customize this Trip");
+    const customizeAction = canCustomizeTour(trip)
+      ? `<button class="btn btn-secondary tour-plan-actions__button" type="button" data-tour-customize data-trip-id="${escapeAttr(tripId)}">${escapeHTML(customizeLabel)}</button>`
+      : "";
+
+    return `
+      <div class="tour-plan-actions">
+        <button class="btn btn-secondary tour-plan-actions__button" type="button" data-tour-plan-itinerary-toggle aria-controls="${escapeAttr(itineraryId)}" aria-expanded="false">${escapeHTML(itineraryLabel)}</button>
+        ${customizeAction}
+        <button class="btn btn-primary tour-plan-actions__button" type="button" data-open-modal data-trip-id="${escapeAttr(tripId)}">${escapeHTML(quoteLabel)}</button>
+      </div>
+    `;
+  }
+
   function canCustomizeTour(trip) {
     const tripId = normalizeText(trip?.id);
     if (!tripId || !customizeFeatureEnabled()) return false;
@@ -1948,7 +1973,7 @@ export function createFrontendToursController(ctx) {
     if (!days.length) return "";
     const itineraryId = tourPlanItineraryPanelId(tripId);
     return `
-      <div class="tour-plan-itinerary" id="${escapeAttr(itineraryId)}" data-tour-plan-itinerary>
+      <div class="tour-plan-itinerary" id="${escapeAttr(itineraryId)}" data-tour-plan-itinerary hidden>
         ${renderTourPlanDaySummary(days, tripId)}
       </div>
     `;
@@ -1970,6 +1995,7 @@ export function createFrontendToursController(ctx) {
       ${renderTourDetailsHeader(trip)}
       ${renderTourExperienceHighlights(trip)}
       ${renderTourPdfActions(trip)}
+      ${renderTourPlanActions(trip, days)}
       ${renderTourPlanItineraryPanel(days, tripId)}
     `;
   }
@@ -2306,9 +2332,32 @@ export function createFrontendToursController(ctx) {
     const parts = [];
     for (let index = 0; index < items.length; index += renderedTourGridColumnCount) {
       const row = items.slice(index, index + renderedTourGridColumnCount);
-      parts.push(...row.map(({ trip, index: itemIndex }) => (
-        renderTourCard(trip, { index: itemIndex, expanded: isTourExpanded(trip) })
-      )));
+      let expandedBelowGridRow = "";
+
+      for (let rowIndex = 0; rowIndex < row.length; rowIndex += 1) {
+        const { trip, index: itemIndex } = row[rowIndex];
+        const columnIndex = rowIndex;
+
+        if (renderedTourGridColumnCount > 1) {
+          const cardMarkup = renderTourCard(trip, { index: itemIndex, expanded: isTourExpanded(trip) });
+          parts.push(cardMarkup);
+          if (isTourExpanded(trip)) {
+            expandedBelowGridRow = renderBelowGridTourDetailsRow(trip, columnIndex, renderedTourGridColumnCount);
+          }
+          continue;
+        }
+
+        if (isTourExpanded(trip)) {
+          const expandedRowMarkup = renderExpandedTourRow(trip, itemIndex, columnIndex);
+          parts.push(expandedRowMarkup);
+          continue;
+        }
+
+        const cardMarkup = renderTourCard(trip, { index: itemIndex, expanded: false });
+        parts.push(cardMarkup);
+      }
+
+      if (expandedBelowGridRow) parts.push(expandedBelowGridRow);
     }
 
     els.tourGrid.innerHTML = parts.join("");
@@ -3094,14 +3143,25 @@ export function createFrontendToursController(ctx) {
     const normalizedTripId = normalizeText(tripId);
     if (!normalizedTripId) return;
 
+    const transitionToken = beginTourDetailsTransition();
     if (willOpen) {
-      beginTourDetailsTransition();
-      openTourDetailsModal(normalizedTripId);
+      closeOtherExpandedTourDetails(normalizedTripId);
+    }
+
+    if (isSingleColumnTourLayout()) {
+      if (willOpen) {
+        animateSingleColumnTourDetailsOpen(normalizedTripId, transitionToken);
+        return;
+      }
+      animateSingleColumnTourDetailsClose(normalizedTripId, transitionToken);
       return;
     }
 
-    beginTourDetailsTransition();
-    closeTourDetailsModal();
+    if (willOpen) {
+      animateBelowGridTourDetailsOpen(normalizedTripId, transitionToken);
+      return;
+    }
+    animateBelowGridTourDetailsClose(normalizedTripId, transitionToken);
   }
 
   async function animateSingleColumnTourDetailsOpen(tripId, transitionToken) {

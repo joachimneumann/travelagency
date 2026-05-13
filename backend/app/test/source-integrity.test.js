@@ -6018,6 +6018,8 @@ test("homepage tour cards expand descriptions and align same-row cards without a
     "tour.customize.pdf_loading_title",
     "tour.customize.reset",
     "tour.customize.subtitle",
+    "tour.customize.summary",
+    "tour.customize.summary_no_route",
     "tour.customize.timeline",
     "tour.customize.timeline_named",
     "tour.customize.title",
