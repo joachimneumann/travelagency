@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-14T01:35:35.203Z",
-  "updated_at": "2026-05-13T04:54:49.233Z",
+  "updated_at": "2026-05-13T14:04:04.504Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -45,12 +45,16 @@
         "id": "travel_plan_day_b256c7e4-a348-45d9-9818-06612635f908",
         "day_number": 1,
         "title": "Airport pick-up - Xuan Huong Lake - Lam Vien Square - Night Market",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đón sân bay - Hồ Xuân Hương - Quảng trường Lâm Viên - Chợ đêm"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "local_experiences"
+        ],
         "services": [
           {
             "id": "travel_plan_service_46a0e3d7-0f03-4b58-9cff-277f68157d27",
@@ -60,9 +64,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Xuan Huong Lake",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Hồ Xuân Hương"
+            },
             "details": "Stroll around Xuan Huong Lake, the poetic heart of Da Lat. Surrounded by pine trees and gardens, this crescent-shaped lake is perfect for a relaxing walk, swan boat rides, or sunset views",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dạo quanh Hồ Xuân Hương, trái tim thơ mộng của Đà Lạt. Được bao quanh bởi những cây thông và khu vườn, hồ hình lưỡi liềm này là nơi lý tưởng để đi dạo thư giãn, đi thuyền thiên nga hoặc ngắm cảnh hoàng hôn"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -95,9 +103,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Lam Vien Square",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Quảng Trường Lâm Viên"
+            },
             "details": "Visit Lam Vien Square, the vibrant heart of Da Lat. Featuring the iconic giant wild sunflower and artichoke bud glass structures, it's a popular spot for photos, events, and cool mountain breezes",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan Quảng trường Lâm Viên, trái tim sôi động của Đà Lạt. Nổi bật với cấu trúc thủy tinh hình hoa hướng dương dại và nụ atisô khổng lồ mang tính biểu tượng, đây là địa điểm nổi tiếng để chụp ảnh, tổ chức sự kiện và tận hưởng làn gió núi mát mẻ"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -130,9 +142,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Da Lat night market",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "chợ đêm Đà Lạt"
+            },
             "details": "Experience the vibrant Da Lat Night Market! A bustling hub of local street food, unique souvenirs, and warm woolens. Taste grilled rice paper and hot soy milk in the cool mountain air",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Trải nghiệm chợ đêm Đà Lạt sôi động! Một trung tâm nhộn nhịp của ẩm thực đường phố địa phương, đồ lưu niệm độc đáo và đồ len ấm áp. Thưởng thức bánh tráng nướng và sữa đậu nành nóng trong không khí núi rừng mát mẻ"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -159,18 +175,24 @@
           }
         ],
         "notes": "Welcome to Da Lat! Enjoy a seamless airport pick-up followed by visits to scenic Xuan Huong Lake, iconic Lam Vien Square, and the vibrant Night Market. A perfect start to your highland escape",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Chào mừng đến với Đà Lạt! Tận hưởng dịch vụ đón tại sân bay liền mạch, sau đó tham quan Hồ Xuân Hương tuyệt đẹp, Quảng trường Lâm Viên mang tính biểu tượng và Chợ đêm sôi động. Một khởi đầu hoàn hảo cho chuyến trốn thoát vùng cao của bạn"
+        }
       },
       {
         "id": "travel_plan_day_4203dcb7-1794-47c8-80a9-62e722fae097",
         "day_number": 2,
         "title": "Da Lat - Bao Dai Palace - Truc Lam Zen Monastery - Datanla Waterfall - Crazy House",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đà Lạt - Dinh Bảo Đại - Thiền Viện Trúc Lâm - Thác Datanla - Crazy House"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_be4300a4-cb6c-425d-91ec-b34ea6f61e0d",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "art_architecture"
+        ],
         "services": [
           {
             "id": "travel_plan_service_81173400-f852-4e37-ad8b-1b523a0410b0",
@@ -180,9 +202,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Bao Dai Palace",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Dinh Bảo Đại"
+            },
             "details": "Step back in time at Bao Dai Palace, the elegant summer residence of Vietnam’s last emperor. Explore its preserved Art Deco architecture and royal artifacts amidst beautiful hilltop gardens.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Quay ngược thời gian tại Dinh Bảo Đại, dinh thự mùa hè trang nhã của vị hoàng đế cuối cùng của Việt Nam. Khám phá kiến ​​trúc Art Deco được bảo tồn và các hiện vật hoàng gia giữa những khu vườn xinh đẹp trên đỉnh đồi."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -215,9 +241,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Truc Lam Zen Monastery",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Thiền Viện Trúc Lâm"
+            },
             "details": "Visit Truc Lam Zen Monastery, a peaceful sanctuary overlooking Tuyen Lam Lake. Discover beautiful gardens, intricate wood carvings, and a serene atmosphere perfect for meditation and scenic views",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan Thiền Viện Trúc Lâm, một nơi tôn nghiêm yên bình nhìn ra Hồ Tuyền Lâm. Khám phá những khu vườn xinh đẹp, những tác phẩm chạm khắc bằng gỗ phức tạp và bầu không khí thanh bình hoàn hảo cho việc thiền định và ngắm cảnh"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -250,7 +280,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Datanla Waterfal",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Thác Datanla"
+            },
             "details": "Experience the excitement of Datanla Waterfall! Ride the alpine coaster through lush forests, admire the cascading falls, and enjoy canyoning adventures in one of Da Lat’s most popular natural spots",
             "details_i18n": {},
             "image_subtitle": null,
@@ -285,9 +317,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Crazy House",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Ngôi nhà điên"
+            },
             "details": "Explore the Crazy House, an architectural wonderland. With its organic shapes, winding tunnels, and tree-like structures, this surreal guesthouse is one of the world’s most unique works of art.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá Crazy House, một xứ sở kiến ​​trúc thần tiên. Với hình dạng hữu cơ, đường hầm quanh co và cấu trúc giống cây, nhà khách siêu thực này là một trong những tác phẩm nghệ thuật độc đáo nhất thế giới."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -314,18 +350,24 @@
           }
         ],
         "notes": "Explore Da Lat's highlights: Discover the royal Bao Dai Palace, serene Truc Lam Zen Monastery, thrilling Datanla Waterfall, and the surreal Crazy House. A perfect blend of history, nature, and art",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Khám phá những điểm nổi bật của Đà Lạt: Khám phá Cung Bảo Đại hoàng gia, Thiền viện Trúc Lâm thanh bình, Thác Datanla ly kỳ và Ngôi nhà điên siêu thực. Sự kết hợp hoàn hảo giữa lịch sử, thiên nhiên và nghệ thuật"
+        }
       },
       {
         "id": "travel_plan_day_74342044-b41b-4dc0-9104-e289b798259e",
         "day_number": 3,
         "title": "Da Lat - Cau Dat Tea Hill - Hanging Rose Garden - Linh Phuoc Pagoda - Da Lat Train Station",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đà Lạt - Đồi Chè Cầu Đất - Vườn Hồng Treo - Chùa Linh Phước - Ga Đà Lạt"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_2492b05e-15d4-4ed6-9253-d17e08792a63",
@@ -335,9 +377,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Cau Dat Tea Hill",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Đồi Chè Cầu Đất"
+            },
             "details": "Visit Cau Dat Tea Hill to witness endless rolling carpets of green. Established in 1927, this scenic spot offers fresh highland air, ancient tea trees, and breathtaking views for photography lovers.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ghé thăm đồi chè Cầu Đất để chứng kiến ​​những thảm xanh trải dài bất tận. Được thành lập vào năm 1927, danh lam thắng cảnh này mang đến không khí vùng cao trong lành, những cây trà cổ thụ và khung cảnh ngoạn mục cho những người yêu thích chụp ảnh."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -370,9 +416,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hanging Rose Garden",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Vườn hồng treo"
+            },
             "details": "Step into the Hanging Rose Garden, a floral paradise in Da Lat. Admire stunning roses and vibrant blooms suspended in the air, creating a dreamlike space perfect for nature lovers and photography",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Bước vào Vườn Hồng Treo, thiên đường hoa ở Đà Lạt. Chiêm ngưỡng những bông hồng tuyệt đẹp và những bông hoa rực rỡ lơ lửng trong không trung, tạo nên một không gian thơ mộng hoàn hảo cho những người yêu thiên nhiên và chụp ảnh"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -405,9 +455,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Linh Phuoc Pagoda",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chùa Linh Phước"
+            },
             "details": "Marvel at Linh Phuoc Pagoda, a mosaic masterpiece crafted from colorful glass and ceramic shards. Home to a massive dragon sculpture and intricate shrines, it’s a stunning spiritual site in Da Lat",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ngạc nhiên trước chùa Linh Phước, một kiệt tác khảm được chế tác từ các mảnh gốm và thủy tinh đầy màu sắc. Là nơi có tác phẩm điêu khắc rồng khổng lồ và những ngôi đền phức tạp, đây là một địa điểm tâm linh tuyệt đẹp ở Đà Lạt"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -440,9 +494,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Da Lat Train Station",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Ga Đà Lạt"
+            },
             "details": "Step into history at Da Lat Train Station. Built in 1932, this Art Deco gem features unique Cog Railway tracks and vintage steam engines, offering a nostalgic glimpse into Vietnam’s colonial past.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Bước vào lịch sử tại Ga Đà Lạt. Được xây dựng vào năm 1932, viên ngọc Art Deco này có đường ray xe lửa răng cưa độc đáo và động cơ hơi nước cổ điển, mang đến cái nhìn hoài niệm về quá khứ thuộc địa của Việt Nam."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -469,18 +527,24 @@
           }
         ],
         "notes": "Discover Da Lat’s gems: Marvel at the lush Cau Dat Tea Hill, the unique Hanging Rose Garden, the mosaic-tiled Linh Phuoc Pagoda, and the historic Train Station. A journey of color and heritage",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Khám phá những viên ngọc quý của Đà Lạt: Ngạc nhiên trước Đồi chè Cầu Đất tươi tốt, Vườn hồng treo độc đáo, Chùa Linh Phước lát gạch khảm và Nhà ga xe lửa lịch sử. Hành trình của màu sắc và di sản"
+        }
       },
       {
         "id": "travel_plan_day_6d8f0a5e-f224-46bb-866c-e70d5858d624",
         "day_number": 4,
         "title": "Da Lat - Langbiang - Mongolia Land - Valley of Love",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đà Lạt - Langbiang - Xứ Mông Cổ - Thung Lũng Tình Yêu"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_73a4b20a-acb6-42a5-8f0d-92370f72c07e",
@@ -490,9 +554,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Langbiang Mountain",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Núi Lang Biang"
+            },
             "details": "Visit Langbiang Mountain for pine forests, highland air and wide views across the Da Lat plateau.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ghé thăm núi Langbiang để tận hưởng rừng thông, không khí vùng cao và ngắm nhìn bao quát cao nguyên Đà Lạt."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -525,9 +593,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Mongolia Land",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Đất Mông Cổ"
+            },
             "details": "Escape to Mongolia Land, a unique themed destination in Da Lat. Experience nomadic life with colorful tents, vast meadows, and friendly animals. A picturesque spot perfect for stunning photos!",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đến với Mông Cổ Land, một điểm đến theo chủ đề độc đáo ở Đà Lạt. Trải nghiệm cuộc sống du mục với những căn lều đầy màu sắc, những đồng cỏ rộng lớn và những loài động vật thân thiện. Một địa điểm đẹp như tranh vẽ hoàn hảo cho những bức ảnh tuyệt đẹp!"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -560,9 +632,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Valley of Love",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Thung lũng tình yêu"
+            },
             "details": "Explore the Valley of Love, with pine hills, gardens, lakeside views and Da Lat's soft highland atmosphere.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá Thung lũng Tình Yêu với những đồi thông, những khu vườn, khung cảnh ven hồ và bầu không khí vùng cao êm dịu của Đà Lạt."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -589,23 +665,34 @@
           }
         ],
         "notes": "Experience the best of Da Lat: Conquer the heights of Langbiang Mountain, explore the scenic Mongolia Land, and wander through the romantic Valley of Love. A perfect blend of adventure and beauty",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Trải nghiệm những điều tuyệt vời nhất của Đà Lạt: Chinh phục đỉnh núi Langbiang, khám phá vùng đất Mông Cổ tuyệt đẹp và lang thang qua Thung lũng Tình Yêu thơ mộng. Sự kết hợp hoàn hảo giữa phiêu lưu và vẻ đẹp"
+        }
       },
       {
         "id": "travel_plan_day_a7b4af5d-e2b0-4101-8740-be0c214bad49",
         "day_number": 5,
         "title": "Da Lat - Shopping - Departure",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đà Lạt - Mua Sắm - Khởi Hành"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "traditional_markets"
+        ],
         "services": [],
         "notes": "Farewell, dreamy Da Lat! Thank you for the cool mountain air, misty pine forests, and colorful blooms. You leave us with beautiful memories and a longing to return to your romantic charm very soon",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Tạm biệt Đà Lạt thơ mộng! Cảm ơn không khí miền núi mát mẻ, rừng thông mù sương và những bông hoa rực rỡ. Bạn để lại cho chúng tôi những kỷ niệm đẹp và niềm khao khát được sớm trở lại với vẻ quyến rũ lãng mạn của bạn"
+        }
       }
     ],
     "translation_meta": {}
+  },
+  "short_description_i18n": {
+    "vi": "Không khí mát mẻ, những vườn hoa và những con đường mù sương mang đến cho Đà Lạt sự lãng mạn nhẹ nhàng, một khoảng dừng vùng cao được tạo nên bởi màu sắc, nỗi nhớ và sự lang thang chậm rãi."
   }
 }

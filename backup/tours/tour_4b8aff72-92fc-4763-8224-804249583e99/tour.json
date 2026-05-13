@@ -16,7 +16,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-14T02:15:56.438Z",
-  "updated_at": "2026-05-13T05:18:45.128Z",
+  "updated_at": "2026-05-13T14:07:55.231Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -51,12 +51,16 @@
         "id": "travel_plan_day_aa48919f-2139-4e51-a951-f7df3312a41c",
         "day_number": 1,
         "title": "Old Quarter and Hoan Kiem",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Phố cổ và Hoàn Kiếm"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "historic_sites"
+        ],
         "services": [
           {
             "id": "travel_plan_service_f5c39a81-ed7a-43c8-915d-ed6f958d5599",
@@ -66,9 +70,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hotel arrival transfer",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Đưa đón khách sạn"
+            },
             "details": "Meet your driver on arrival and transfer to the hotel before starting the Hanoi city experience.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Gặp tài xế của bạn khi đến và chuyển đến khách sạn trước khi bắt đầu trải nghiệm thành phố Hà Nội."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -101,9 +109,13 @@
             "time_point": null,
             "kind": "other",
             "title": "St. Joseph's Cathedral",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Nhà thờ Thánh Joseph"
+            },
             "details": "See Hanoi's neo-Gothic cathedral, a French-era landmark surrounded by cafes, narrow lanes and Old Quarter street life.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ngắm nhìn nhà thờ tân Gothic của Hà Nội, một địa danh thời Pháp được bao quanh bởi các quán cà phê, những con đường hẹp và cuộc sống đường phố ở Phố Cổ."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -136,9 +148,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hanoi Old Quarter",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Phố cổ Hà Nội"
+            },
             "details": "Explore the 36 Streets, where old craft names, shopfronts and dense daily life keep Hanoi's trading heritage visible.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá 36 Phố, nơi những tên nghề thủ công cũ, mặt tiền cửa hàng và cuộc sống đông đúc hàng ngày giúp lưu giữ di sản thương mại của Hà Nội."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -171,9 +187,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hoan Kiem Lake",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Hồ Hoàn Kiếm"
+            },
             "details": "Pause by Hoan Kiem Lake, a calm center of Hanoi life with Turtle Tower, shaded paths and local routines around the water.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dừng chân bên Hồ Hoàn Kiếm, một trung tâm yên tĩnh của cuộc sống Hà Nội với Tháp Rùa, những con đường rợp bóng mát và những thói quen địa phương quanh mặt nước."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -200,18 +220,24 @@
           }
         ],
         "notes": "Begin in Hanoi with a gentle city route through its cathedral quarter, craft streets, railway lane and the lake at the heart of the capital.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Bắt đầu ở Hà Nội với một tuyến đường thành phố nhẹ nhàng xuyên qua khu nhà thờ, phố thủ công, tuyến đường sắt và hồ nước ở trung tâm thủ đô."
+        }
       },
       {
         "id": "travel_plan_day_d9ca29f5-4299-4926-87a9-e19c96b3810f",
         "day_number": 2,
         "title": "Ha Noi - Ha Long Bay - Overnight Stay In Ha Long",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hà Nội - Vịnh Hạ Long - Nghỉ đêm tại Hạ Long"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "beaches_islands"
+        ],
         "services": [
           {
             "id": "travel_plan_service_98ba1585-185a-4565-a9f7-f6420776ca7c",
@@ -221,9 +247,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ha Long Bay",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Vịnh Hạ Long"
+            },
             "details": "Ha Long Bay, a UNESCO World Heritage site, features thousands of limestone karsts and isles in emerald waters. It’s a must-visit for cruising, kayaking, and exploring stunning caves in Vietnam",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Vịnh Hạ Long, Di sản Thế giới được UNESCO công nhận, có hàng ngàn núi đá vôi và đảo nhỏ trong vùng nước màu ngọc lục bảo. Đây là địa điểm không thể bỏ qua để du lịch trên biển, chèo thuyền kayak và khám phá những hang động tuyệt đẹp ở Việt Nam"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -250,18 +280,24 @@
           }
         ],
         "notes": "Ha Long Bay, a UNESCO World Heritage site, features thousands of limestone karsts and isles in emerald waters. It’s a must-visit for cruising, kayaking, and exploring stunning caves in Vietnam",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Vịnh Hạ Long, Di sản Thế giới được UNESCO công nhận, có hàng ngàn núi đá vôi và đảo nhỏ trong vùng nước màu ngọc lục bảo. Đây là địa điểm không thể bỏ qua để du lịch trên biển, chèo thuyền kayak và khám phá những hang động tuyệt đẹp ở Việt Nam"
+        }
       },
       {
         "id": "travel_plan_day_c42433fd-7f7e-485f-8ee4-2eb5d9f1781b",
         "day_number": 3,
         "title": "Ha Long Bay - Ha Noi",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Vịnh Hạ Long - Hà Nội"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "hidden_gems"
+        ],
         "services": [
           {
             "id": "travel_plan_service_b907a323-2e05-4e2c-8426-518ecffadcbe",
@@ -271,7 +307,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Sung Sot Cave",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Hang Sửng Sốt"
+            },
             "details": "Located on Bo Hon Island, Sung Sot Cave is Ha Long Bay’s largest and most striking cave, famed for its vast chambers and dramatic natural beauty.",
             "details_i18n": {},
             "image_subtitle": null,
@@ -300,18 +338,24 @@
           }
         ],
         "notes": "Explore the islands in Ha Long Bay.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Khám phá các hòn đảo ở Vịnh Hạ Long."
+        }
       },
       {
         "id": "travel_plan_day_cbc2f236-ca49-4302-a273-0c8ea9cc9a4a",
         "day_number": 4,
         "title": "Ha Noi To Da Nang - Son Tra Peninsula - Dragon & Love Bridge - Church  - Night Market",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hà Nội Đi Đà Nẵng - Bán Đảo Sơn Trà - Cầu Rồng & Tình Yêu - Nhà Thờ - Chợ Đêm"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_6f613b22-b548-42a9-a9a8-773001b129ef",
@@ -321,9 +365,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Son Tra Peninsula",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bán đảo Sơn Trà"
+            },
             "details": "Son Tra Peninsula is a stunning green lung of Da Nang, home to the giant Lady Buddha statue, lush forests, and rare monkeys. It offers breathtaking ocean views and a peaceful escape into nature",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Bán đảo Sơn Trà là lá phổi xanh tuyệt đẹp của Đà Nẵng, nơi có tượng Phật Bà khổng lồ, những khu rừng tươi tốt và những loài khỉ quý hiếm. Nơi đây có khung cảnh đại dương ngoạn mục và một lối thoát yên bình vào thiên nhiên"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -356,9 +404,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Da Nang Cathedral",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Nhà thờ Đà Nẵng"
+            },
             "details": "Pause at Da Nang Cathedral, known for its pink facade, colonial lines and rooster-topped spire in the city center.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dừng chân tại Nhà thờ Đà Nẵng, nổi tiếng với mặt tiền màu hồng, các đường nét thuộc địa và ngọn tháp có hình con gà trống ở trung tâm thành phố."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -391,9 +443,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Dragon Bridge",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Cầu Rồng"
+            },
             "details": "See Da Nang's golden Dragon Bridge, a bold modern landmark crossing the Han River and a symbol of the city's energy.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ngắm nhìn Cầu Rồng Vàng của Đà Nẵng, một địa danh hiện đại đậm nét bắc qua sông Hàn và là biểu tượng cho năng lượng của thành phố."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -426,9 +482,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Love Bridge",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Cầu Tình Yêu"
+            },
             "details": "The Love Bridge in Da Nang is a romantic spot inspired by world-famous bridges. Adorned with heart-shaped lanterns and thousands of love locks, it offers a stunning view of the Han River at night",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Cầu Tình Yêu Đà Nẵng là địa điểm lãng mạn được lấy cảm hứng từ những cây cầu nổi tiếng thế giới. Được trang trí bằng những chiếc đèn lồng hình trái tim và hàng nghìn ổ khóa tình yêu, nơi đây mang đến tầm nhìn tuyệt đẹp ra sông Hàn về đêm"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -461,9 +521,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Night Market",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chợ đêm"
+            },
             "details": "Experience the vibrant Night Market in Da Nang! A paradise for foodies and shoppers, offering fresh seafood, local street food, and unique souvenirs in a bustling, colorful atmosphere by the river",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Trải nghiệm chợ đêm sôi động ở Đà Nẵng! Thiên đường cho người sành ăn và mua sắm, cung cấp hải sản tươi sống, ẩm thực đường phố địa phương và quà lưu niệm độc đáo trong bầu không khí nhộn nhịp, đầy màu sắc bên bờ sông"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -490,18 +554,24 @@
           }
         ],
         "notes": "Hanoi to Da Nang: Explore Son Tra Peninsula, visit the pink Church, and see Dragon & Love Bridge. End your day at the vibrant Night Market. A perfect journey from the capital to the coastal city",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Hà Nội đến Đà Nẵng: Khám phá bán đảo Sơn Trà, tham quan Nhà thờ hồng và cầu Rồng & Cầu Tình Yêu. Kết thúc một ngày của bạn tại Chợ đêm sôi động. Hành trình hoàn hảo từ thủ đô đến thành phố biển"
+        }
       },
       {
         "id": "travel_plan_day_d33ca792-6ac8-4d49-9fb4-308e4f95df73",
         "day_number": 5,
         "title": "Da Nang – Marble Mountains- Coconut Forest - Hoi An",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đà Nẵng – Ngũ Hành Sơn- Rừng Dừa - Hội An"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "festivals_events"
+        ],
         "services": [
           {
             "id": "travel_plan_service_1e69ff39-ad8f-42bc-a686-31acc4caaae6",
@@ -511,9 +581,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Marble Mountains",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Ngũ Hành Sơn"
+            },
             "details": "Explore the limestone and marble hills south of Da Nang, where caves, pagodas and viewpoints sit close to the coast.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá những ngọn đồi đá vôi và đá cẩm thạch ở phía nam Đà Nẵng, nơi có các hang động, chùa chiền và điểm ngắm cảnh nằm sát bờ biển."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -546,9 +620,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hoi An Ancient Town",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Phố cổ Hội An"
+            },
             "details": "Wander Hoi An's preserved trading streets, golden facades and riverside lanes as lanterns bring the old town into its evening glow.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi lang thang trên những con phố buôn bán được bảo tồn của Hội An, những mặt tiền vàng và những con đường ven sông khi những chiếc đèn lồng đưa phố cổ vào ánh sáng buổi tối."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -581,9 +659,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Cam Thanh Coconut Forest",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Rừng dừa Cẩm Thanh"
+            },
             "details": "Glide through Cam Thanh's water coconut palms by basket boat, a playful look at rural life close to Hoi An.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Lướt qua những rặng dừa nước Cẩm Thanh bằng thuyền thúng, một cái nhìn vui tươi về cuộc sống nông thôn gần Hội An."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -616,12 +698,16 @@
         "id": "travel_plan_day_54a19c07-ea42-4129-a3ac-ee7a0c1dce17",
         "day_number": 6,
         "title": "Hoi An – Bana Hill – Da Nang",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hội An – Bà Nà Hill – Đà Nẵng"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_ba_na_hills",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "art_architecture"
+        ],
         "services": [
           {
             "id": "travel_plan_service_67e03aa2-1875-482e-8aee-b9d10930cea0",
@@ -631,9 +717,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ba Na Hills",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bà Nà Hills"
+            },
             "details": "Ride into the mountain air of Ba Na Hills for the Golden Bridge, French Village and wide forest views above Da Nang.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Hòa mình vào không khí miền núi của Bà Nà Hills để đến Cầu Vàng, Làng Pháp và ngắm nhìn khung cảnh rừng rộng lớn phía trên Đà Nẵng."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -660,7 +750,9 @@
           }
         ],
         "notes": "Sun World Ba Na Hills is a fairy-tale resort featuring the iconic Golden Bridge, a French Village, and world-class cable cars. It offers cool weather and stunning views from 1,487m above sea level",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Sun World Ba Na Hills là khu nghỉ dưỡng cổ tích với Cầu Vàng biểu tượng, Làng Pháp và cáp treo đẳng cấp thế giới. Nơi đây có thời tiết mát mẻ và tầm nhìn tuyệt đẹp từ độ cao 1.487m so với mực nước biển"
+        }
       },
       {
         "id": "travel_plan_day_9602cb0f-8b4c-44b4-8dbf-1b96291f7716",
@@ -671,7 +763,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "spiritual_places"
+        ],
         "services": [
           {
             "id": "travel_plan_service_df9b2598-cfe7-49de-aaae-419188d74e59",
@@ -681,9 +775,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Lang Co Bay",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Vịnh Lăng Cô"
+            },
             "details": "Pause at Lang Co Bay, where pale sand, mountains and lagoon water mark the scenic approach to Hue.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dừng lại ở Vịnh Lăng Cô, nơi có cát trắng, núi và nước đầm phá tạo nên khung cảnh tuyệt đẹp cho Huế."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -716,9 +814,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Thien Mu Pagoda",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chùa Thiên Mụ"
+            },
             "details": "Visit Hue's riverside Thien Mu Pagoda, a graceful tower and garden complex linked closely with the Perfume River.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan chùa Thiên Mụ ven sông Huế, một quần thể tháp và vườn duyên dáng gắn liền với sông Hương."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -751,9 +853,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Imperial Citadel",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Hoàng Thành"
+            },
             "details": "Walk through the gates of Hue's Imperial Citadel, where palaces, courtyards and walls recall Vietnam's Nguyen emperors.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi qua cổng Hoàng thành Huế, nơi có cung điện, sân và tường gợi nhớ các hoàng đế nhà Nguyễn của Việt Nam."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -788,7 +894,9 @@
             "title": "Hoi An old town",
             "title_i18n": {},
             "details": "Hoi An is a charming ancient town famous for its golden-walled houses and mossy roofs. Its poetic beauty and peaceful alleys create a unique cultural space that attracts visitors from all over the world.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Hội An là một phố cổ quyến rũ nổi tiếng với những ngôi nhà tường vàng và mái rêu. Vẻ đẹp thơ mộng và những con hẻm yên bình tạo nên một không gian văn hóa độc đáo thu hút du khách từ khắp nơi trên thế giới."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -821,9 +929,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Dong Ba Market",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chợ Đông Ba"
+            },
             "details": "Explore Dong Ba Market for Hue flavors, local produce and everyday trade beside the Perfume River.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá Chợ Đông Ba để tìm hương vị Huế, sản phẩm địa phương và hoạt động buôn bán hàng ngày bên cạnh Sông Hương."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -856,12 +968,16 @@
         "id": "travel_plan_day_8376570b-676b-4858-ac53-12b1e457f91b",
         "day_number": 8,
         "title": "Da Nang To Ho Chi Minh - Notre Dame Cathedral - Post Office",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đà Nẵng Đến Hồ Chí Minh - Nhà thờ Đức Bà - Bưu điện"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "city_life"
+        ],
         "services": [
           {
             "id": "travel_plan_service_d9290fb2-f990-4b46-9ff1-31d9d3d1c382",
@@ -871,9 +987,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Notre-Dame Cathedral",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Nhà thờ Đức Bà"
+            },
             "details": "See Saigon's red-brick cathedral, a French-era landmark whose twin towers still anchor the old city center.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ngắm nhìn nhà thờ gạch đỏ của Sài Gòn, một địa danh thời Pháp có tòa tháp đôi vẫn giữ vững trung tâm thành phố cổ."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -906,9 +1026,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Central Post Office",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bưu điện trung tâm"
+            },
             "details": "Step inside the vaulted Central Post Office, where colonial details and daily city life meet beside the cathedral.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Bước vào bên trong Bưu điện Trung tâm hình vòm, nơi các chi tiết thuộc địa và cuộc sống hàng ngày của thành phố gặp nhau bên cạnh nhà thờ."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -935,18 +1059,24 @@
           }
         ],
         "notes": "Fly from Da Nang to Ho Chi Minh City to visit the historic Notre Dame Cathedral and the iconic Central Post Office. Discover stunning French colonial architecture in the heart of this vibrant city",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Bay từ Đà Nẵng đến Thành phố Hồ Chí Minh để tham quan Nhà thờ Đức Bà lịch sử và Bưu điện Trung tâm mang tính biểu tượng. Khám phá kiến ​​trúc thuộc địa Pháp tuyệt đẹp ở trung tâm thành phố sôi động này"
+        }
       },
       {
         "id": "travel_plan_day_4c297ed0-ffd5-438f-8488-d0d207562ee6",
         "day_number": 9,
         "title": "Ho Chi Minh – Mekong Delta – Ho Chi Minh",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hồ Chí Minh – Đồng bằng sông Cửu Long – Hồ Chí Minh"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "nature_wildlife"
+        ],
         "services": [
           {
             "id": "travel_plan_service_f89eeec5-f200-4b27-a85d-e94cb2d55510",
@@ -958,7 +1088,9 @@
             "title": "Vam Co Dong River",
             "title_i18n": {},
             "details": "Vam Co Dong River is a poetic symbol of Southern Vietnam. Famous for its emerald water and lush banks, it offers a peaceful escape and deep insights into the region’s heroic history and culture",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Sông Vàm Cỏ Đông là biểu tượng thơ mộng của miền Nam Việt Nam. Nổi tiếng với làn nước màu ngọc lục bảo và bờ sông tươi tốt, nơi đây mang đến một lối thoát yên bình và những hiểu biết sâu sắc về lịch sử và văn hóa hào hùng của khu vực"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -991,9 +1123,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Vinh Trang Pagoda",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chùa Vĩnh Tràng"
+            },
             "details": "Vinh Trang Pagoda is the largest temple in Tiền Giang, blending Asian and European architecture. It features majestic Buddha statues and peaceful gardens, a spiritual gem of the Mekong Delta",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Chùa Vĩnh Tràng là ngôi chùa lớn nhất ở Tiền Giang, có sự pha trộn giữa kiến ​​trúc châu Á và châu Âu. Nơi đây có những bức tượng Phật uy nghi và những khu vườn yên bình, viên ngọc tâm linh của đồng bằng sông Cửu Long"
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1026,7 +1162,9 @@
             "time_point": null,
             "kind": "other",
             "title": "Bee farm",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Trang trại ong"
+            },
             "details": null,
             "details_i18n": {},
             "image_subtitle": null,
@@ -1061,9 +1199,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ben Tre coconut canals",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "kênh dừa Bến Tre"
+            },
             "details": "Continue into Ben Tre for coconut workshops and a small-boat ride through narrow canals under water palms.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tiếp tục đến Bến Tre để tham quan các xưởng dừa và đi thuyền nhỏ qua những con kênh hẹp dưới những hàng cọ nước."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1090,18 +1232,24 @@
           }
         ],
         "notes": "Explore the lush Mekong Delta from Ho Chi Minh City. Cruise through winding canals, visit floating markets, and enjoy local fruits. A perfect day trip to experience Southern Vietnam's rustic charm",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Khám phá đồng bằng sông Cửu Long xanh tươi từ Thành phố Hồ Chí Minh. Đi thuyền qua những con kênh quanh co, tham quan chợ nổi và thưởng thức trái cây địa phương. Một chuyến đi trong ngày hoàn hảo để trải nghiệm nét quyến rũ mộc mạc của miền Nam Việt Nam"
+        }
       },
       {
         "id": "travel_plan_day_5ed8ac84-df0e-4400-bac3-729a6d18ec04",
         "day_number": 10,
         "title": "Ho Chi Minh - Shopping – See You Again",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hồ Chí Minh - Mua sắm - Hẹn gặp lại"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "city_life"
+        ],
         "services": [
           {
             "id": "travel_plan_service_cbbb4f9b-69cc-4c82-9086-88e039e23728",
@@ -1111,9 +1259,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Shopping and airport transfer",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Mua sắm và đưa đón sân bay"
+            },
             "details": "Stop for last purchases before continuing to the airport for departure.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dừng mua hàng lần cuối trước khi tiếp tục ra sân bay khởi hành."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -1144,5 +1296,11 @@
       }
     ],
     "translation_meta": {}
+  },
+  "title_i18n": {
+    "vi": "Một chuyến đi, ngàn kỷ niệm"
+  },
+  "short_description_i18n": {
+    "vi": "Một Hà Nội tập trung chào đón qua thánh đường đá, phố buôn bán phố cổ, tuyến đường sắt và nhịp điệu địa phương của hồ Hoàn Kiếm."
   }
 }

@@ -15,7 +15,7 @@
   "seasonality_end_month": "apr",
   "priority": 100,
   "created_at": "2026-04-09T04:30:04.537Z",
-  "updated_at": "2026-05-13T09:08:28.879Z",
+  "updated_at": "2026-05-13T14:04:05.400Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_6b1cce87-be10-4851-91e5-e3366253493c",
@@ -49,7 +49,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "iconic_landmarks"
+        ],
         "services": [
           {
             "id": "travel_plan_service_826c564e-02ca-4afe-a5bc-4cecddf09cbb",
@@ -239,7 +241,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_0612b13f-6f41-4bbc-9bf7-5e361bf9a4aa",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "spiritual_places"
+        ],
         "services": [
           {
             "id": "travel_plan_service_9310d463-fc11-4827-8086-f28e3533a506",
@@ -289,7 +293,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "historic_sites"
+        ],
         "services": [
           {
             "id": "travel_plan_service_806d50bd-5381-4c1a-8746-1e84f97539c1",
@@ -444,7 +450,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_793161bd-f12c-4a23-95ee-f5a58599377d",
@@ -599,7 +607,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "beaches_islands"
+        ],
         "services": [
           {
             "id": "travel_plan_service_d0ddb675-b94a-49e0-8e54-e2e3d809a29c",

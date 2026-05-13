@@ -13,7 +13,7 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-05-13T01:06:08.212Z",
+  "updated_at": "2026-05-13T14:06:45.071Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
@@ -236,7 +236,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "art_architecture"
+        ],
         "services": [
           {
             "id": "travel_plan_service_04d68780-1dc1-4713-87fb-897905dc5444",
@@ -321,7 +323,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_baf76224-bda3-44fd-bd0a-9c098626f9b3",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "beaches_islands"
+        ],
         "services": [
           {
             "id": "travel_plan_service_36d3ddec-7130-4b26-86c4-478385e33bdd",
@@ -406,7 +410,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "cultural_heritage"
+        ],
         "services": [
           {
             "id": "travel_plan_service_a07b41dc-ad8e-4682-9a02-5e4585d75b13",

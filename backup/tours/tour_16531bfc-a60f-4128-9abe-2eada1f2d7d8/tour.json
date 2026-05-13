@@ -14,7 +14,7 @@
   "seasonality_end_month": "oct",
   "priority": 97,
   "created_at": "2026-04-06T02:54:41.519Z",
-  "updated_at": "2026-05-13T00:33:39.016Z",
+  "updated_at": "2026-05-13T14:03:42.205Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
@@ -38,12 +38,16 @@
         "id": "travel_plan_day_0cc434a5-139d-4ab7-944f-6adc04c534db",
         "day_number": 1,
         "title": "Marble caves to Hoi An",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hang đá cẩm thạch đến Hội An"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "art_architecture"
+        ],
         "services": [
           {
             "id": "travel_plan_service_49d8c8ba-650a-4ff7-89f0-37cbafdeab77",
@@ -53,9 +57,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Da Nang airport welcome",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Đón sân bay Đà Nẵng"
+            },
             "details": "Meet your driver on arrival in Da Nang and start the journey smoothly with a private transfer into the first day of sightseeing.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Gặp tài xế của bạn khi đến Đà Nẵng và bắt đầu cuộc hành trình một cách suôn sẻ với dịch vụ đưa đón riêng vào ngày tham quan đầu tiên."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -88,9 +96,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Marble Mountains",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Ngũ Hành Sơn"
+            },
             "details": "Explore limestone peaks above Da Nang, where cave shrines, pagodas and sea views reveal the spiritual side of the central coast.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá những đỉnh núi đá vôi phía trên Đà Nẵng, nơi có những ngôi đền hang động, chùa chiền và quang cảnh biển cho thấy khía cạnh tâm linh của bờ biển miền Trung."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -123,9 +135,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Huyen Khong Cave",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Động Huyền Không"
+            },
             "details": "Step into a quiet cave sanctuary where daylight falls through the rock onto altars, statues and the cool marble walls around you.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Bước vào khu bảo tồn hang động yên tĩnh, nơi ánh sáng ban ngày xuyên qua tảng đá chiếu lên bàn thờ, tượng và những bức tường đá cẩm thạch mát mẻ xung quanh bạn."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -158,9 +174,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hoi An Ancient Town",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Phố cổ Hội An"
+            },
             "details": "Wander Hoi An's preserved trading streets, golden facades and riverside lanes as lanterns bring the old town into its evening glow.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi lang thang trên những con phố buôn bán được bảo tồn của Hội An, những mặt tiền vàng và những con đường ven sông khi những chiếc đèn lồng đưa phố cổ vào ánh sáng buổi tối."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -187,18 +207,24 @@
           }
         ],
         "notes": "Arrive in Da Nang, then ease into Central Vietnam with sacred marble caves before reaching Hoi An's warm lantern-lit streets for the night.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Đến Đà Nẵng, sau đó khám phá miền Trung Việt Nam với những hang động bằng đá cẩm thạch linh thiêng trước khi đến những con phố ấm áp dưới ánh đèn lồng của Hội An để nghỉ đêm."
+        }
       },
       {
         "id": "travel_plan_day_6dbca279-5dcc-40e9-9c44-a631225970b7",
         "day_number": 2,
         "title": "Coconut forest and Da Nang",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Rừng dừa và Đà Nẵng"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_b8367ba6-cfd1-4bb2-9b9d-6f54fac35eaa",
@@ -208,9 +234,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Son Tra Peninsula",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bán đảo Sơn Trà"
+            },
             "details": "Follow the road around Son Tra, where forested slopes, sea views and quiet bays give Da Nang a wilder edge beyond the city.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi theo con đường quanh Sơn Trà, nơi những sườn dốc có rừng, quang cảnh biển và vịnh yên tĩnh mang đến cho Đà Nẵng một vẻ ngoài hoang sơ hơn ngoài thành phố."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -243,9 +273,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Linh Ung Pagoda",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chùa Linh Ứng"
+            },
             "details": "Visit Linh Ung Pagoda on Son Tra, home to the towering Lady Buddha and open views across Da Nang's coastline.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan chùa Linh Ứng trên Sơn Trà, nơi có tượng Phật Bà cao chót vót và tầm nhìn rộng mở ra bờ biển Đà Nẵng."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -278,9 +312,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Dragon Bridge",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Cầu Rồng"
+            },
             "details": "See Da Nang's golden Dragon Bridge, a bold modern landmark crossing the Han River and a symbol of the city's energy.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ngắm nhìn Cầu Rồng Vàng của Đà Nẵng, một địa danh hiện đại đậm nét bắc qua sông Hàn và là biểu tượng cho năng lượng của thành phố."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -313,9 +351,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Da Nang Cathedral",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Nhà thờ Đà Nẵng"
+            },
             "details": "Pause at Da Nang Cathedral, known for its pink facade, colonial lines and rooster-topped spire in the city center.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dừng chân tại Nhà thờ Đà Nẵng, nổi tiếng với mặt tiền màu hồng, các đường nét thuộc địa và ngọn tháp có hình con gà trống ở trung tâm thành phố."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -348,9 +390,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Cam Thanh Coconut Forest",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Rừng dừa Cẩm Thanh"
+            },
             "details": "Glide through Cam Thanh's water coconut palms by basket boat, a playful look at rural life close to Hoi An.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Lướt qua những rặng dừa nước Cẩm Thanh bằng thuyền thúng, một cái nhìn vui tươi về cuộc sống nông thôn gần Hội An."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -377,18 +423,24 @@
           }
         ],
         "notes": "Move from Hoi An's countryside waterways to Da Nang's coastal viewpoints, spiritual landmarks and lively bridges in one varied day.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Di chuyển từ các tuyến đường thủy nông thôn của Hội An đến các điểm ngắm cảnh ven biển, địa danh tâm linh và những cây cầu sống động của Đà Nẵng trong một ngày."
+        }
       },
       {
         "id": "travel_plan_day_4d9d797e-9a7d-445f-957c-df9c6abfb4ed",
         "day_number": 3,
         "title": "Ba Na Hills and night market",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Bà Nà Hills và chợ đêm"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_ba_na_hills",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "festivals_events"
+        ],
         "services": [
           {
             "id": "travel_plan_service_6b86390f-929d-4d25-b119-6a048a10a190",
@@ -398,9 +450,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ba Na Hills",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bà Nà Hills"
+            },
             "details": "Ride into the mountain air of Ba Na Hills for the Golden Bridge, French Village and wide forest views above Da Nang.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Hòa mình vào không khí miền núi của Bà Nà Hills để đến Cầu Vàng, Làng Pháp và ngắm nhìn khung cảnh rừng rộng lớn phía trên Đà Nẵng."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -433,9 +489,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Da Nang night market",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "chợ đêm Đà Nẵng"
+            },
             "details": "End the day among food stalls, souvenirs and bright evening crowds, a relaxed way to taste Da Nang after dark.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Kết thúc một ngày giữa các quầy hàng thực phẩm, đồ lưu niệm và đám đông buổi tối rực rỡ, một cách thoải mái để thưởng thức hương vị Đà Nẵng sau khi trời tối."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -462,18 +522,24 @@
           }
         ],
         "notes": "Spend the day in the cool heights of Ba Na Hills, then return to Da Nang for the flavors and local bustle of the night market.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Dành cả ngày trên đỉnh cao mát mẻ của Bà Nà Hills, sau đó quay trở lại Đà Nẵng để tận hưởng hương vị và sự nhộn nhịp của chợ đêm địa phương."
+        }
       },
       {
         "id": "travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531",
         "day_number": 4,
         "title": "Lang Co Bay to imperial Hue",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Vịnh Lăng Cô tới cố đô Huế"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_e182e7a4-a6a6-4884-ab35-710cc4c254bc",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_f1b85595-ecdd-4732-b283-d9e2b3c31241",
@@ -483,9 +549,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Lang Co Bay",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Vịnh Lăng Cô"
+            },
             "details": "Pause by Lang Co Bay, where pale sand, green mountains and lagoon water soften the journey between Da Nang and Hue.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dừng chân bên vịnh Lăng Cô, nơi cát trắng, núi xanh và nước đầm làm dịu đi hành trình giữa Đà Nẵng và Huế."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -518,9 +588,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Thien Mu Pagoda",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chùa Thiên Mụ"
+            },
             "details": "Visit Hue's riverside Thien Mu Pagoda, a graceful tower and garden complex linked closely with the Perfume River.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan chùa Thiên Mụ ven sông Huế, một quần thể tháp và vườn duyên dáng gắn liền với sông Hương."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -553,9 +627,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Imperial Citadel",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Hoàng Thành"
+            },
             "details": "Walk through the gates of Hue's Imperial Citadel, where palaces, courtyards and walls recall Vietnam's Nguyen emperors.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi qua cổng Hoàng thành Huế, nơi có cung điện, sân và tường gợi nhớ các hoàng đế nhà Nguyễn của Việt Nam."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -588,9 +666,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Thuy Xuan incense village",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Làng hương Thụy Xuân"
+            },
             "details": "See bundles of colorful incense drying in Thuy Xuan, a craft village that adds scent and color to Hue's cultural day.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Xem những bó nhang đầy màu sắc ở Thủy Xuân, một làng nghề góp thêm hương thơm và màu sắc cho ngày văn hóa Huế."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -623,9 +705,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Dong Ba Market",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chợ Đông Ba"
+            },
             "details": "Explore Dong Ba Market for Hue flavors, local produce and everyday trade beside the Perfume River.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá Chợ Đông Ba để tìm hương vị Huế, sản phẩm địa phương và hoạt động buôn bán hàng ngày bên cạnh Sông Hương."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -652,18 +738,24 @@
           }
         ],
         "notes": "Travel north by coast and lagoon scenery to Hue, where pagodas, royal walls, incense craft and market life tell the story of the former capital.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Du lịch về phía bắc theo bờ biển và phong cảnh đầm phá đến Huế, nơi có chùa, tường thành, nghề hương và đời sống chợ kể câu chuyện về cố đô."
+        }
       },
       {
         "id": "travel_plan_day_c7b84d7b-b6ad-4a04-bb85-fc2430f1f72b",
         "day_number": 5,
         "title": "Da Nang shopping and farewell",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đà Nẵng mua sắm và chia tay"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_2db9c791-6d7f-4396-be8a-195eb5d3d164",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "city_life"
+        ],
         "services": [
           {
             "id": "travel_plan_service_d82c1d9f-d49c-431a-be8e-56cff8fa6e25",
@@ -673,9 +765,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Airport transfer",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Đưa đón sân bay"
+            },
             "details": "After checkout and a final shopping stop, continue to the airport for your departure from Da Nang.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Sau khi thanh toán và dừng mua sắm cuối cùng, tiếp tục đến sân bay để khởi hành từ Đà Nẵng."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -702,7 +798,9 @@
           }
         ],
         "notes": "Use the final morning for a relaxed checkout and souvenir stop before the airport transfer closes the Central Vietnam route.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Hãy dành buổi sáng cuối cùng để thanh toán thư giãn và dừng chân mua quà lưu niệm trước khi xe đưa đón sân bay kết thúc tuyến miền Trung Việt Nam."
+        }
       }
     ],
     "translation_meta": {
@@ -804,5 +902,11 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "vi": "Đà Nẵng, Hội An và Huế"
+  },
+  "short_description_i18n": {
+    "vi": "Di chuyển từ các hang động đá cẩm thạch và các con đường đèn lồng đến bờ biển Đà Nẵng, Bà Nà Hills và cố đô Huế, với miền Trung Việt Nam đang mở ra với tốc độ dễ dàng."
+  }
 }

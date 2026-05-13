@@ -11,7 +11,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-13T05:17:36.301Z",
+  "updated_at": "2026-05-13T14:02:49.551Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -48,7 +48,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "historic_sites"
+        ],
         "services": [
           {
             "id": "travel_plan_service_c77d3498-2e3c-43ad-8458-f5091b9e997f",
@@ -238,7 +240,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_b0095ac7-9d86-454c-9ede-ba3ea71a84d4",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "iconic_landmarks"
+        ],
         "services": [
           {
             "id": "travel_plan_service_88121474-0af2-4b25-9a57-0a669fb16f46",
@@ -323,7 +327,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_7adf0a6c-2425-49fd-9f3a-6cdf37240ceb",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "historic_sites"
+        ],
         "services": [
           {
             "id": "travel_plan_service_b13b2d2f-f532-4367-9ea3-345d543d6780",
@@ -408,7 +414,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_1153a14c-4693-4cbf-bc6e-d5cb433c7411",
@@ -528,7 +536,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "beaches_islands"
+        ],
         "services": [
           {
             "id": "travel_plan_service_4f962c44-22fd-4f2d-ab93-c51619b8a383",
@@ -582,7 +592,23 @@
             "location_i18n": {},
             "start_time": null,
             "end_time": null,
-            "image": null
+            "image": {
+              "id": "travel_plan_service_image_21cc93bb-c8f6-40b2-9252-e5c5960753ce",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-05-scenic-da-lat-transfer.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-13T11:17:51.305Z"
+            }
           }
         ],
         "notes": "Move from sea level to the highlands, stopping at RD Wine Castle before the road climbs into pine forests and Da Lat's cooler air.",
@@ -597,7 +623,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_2b2214cb-a20a-4d50-bc78-8aee0ef9e7cd",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "scenic_landscapes"
+        ],
         "services": [
           {
             "id": "travel_plan_service_d8c2ac57-0552-4f37-89e0-e39b32fa65bd",
@@ -717,7 +745,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_be4300a4-cb6c-425d-91ec-b34ea6f61e0d",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "spiritual_places"
+        ],
         "services": [
           {
             "id": "travel_plan_service_7cad64f5-a922-4e37-99ef-9eb152099641",
@@ -837,7 +867,9 @@
         "overnight_location_i18n": {},
         "primary_location_id": "place_5da10678-f8e2-4f2b-97f7-7b2a41017036",
         "secondary_location_id": null,
-        "experience_highlight_ids": [],
+        "experience_highlight_ids": [
+          "city_life"
+        ],
         "services": [],
         "notes": "Use the final morning for Da Lat coffee, tea, jams and souvenirs before the transfer toward Nha Trang airport closes the route.",
         "notes_i18n": {}

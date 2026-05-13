@@ -14,27 +14,8 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-05-08T07:54:11.534Z",
+  "updated_at": "2026-05-13T14:04:39.652Z",
   "travel_plan": {
-    "destination_scope": [
-      {
-        "destination": "VN",
-        "areas": [
-          {
-            "area_id": "area_3fa05b42-97ab-495d-b16d-4691e66e0434",
-            "places": [
-              {
-                "place_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0"
-              }
-            ]
-          },
-          {
-            "area_id": "area_024155db-da17-4cdb-ae0e-a01fd1e77f58",
-            "places": []
-          }
-        ]
-      }
-    ],
     "tour_card_image_ids": [
       "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
       "travel_plan_service_image_66239309-9b58-458d-92a9-265a203b1492",
@@ -55,11 +36,16 @@
         "id": "travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e",
         "day_number": 1,
         "title": "Hanoi heritage day",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Ngày di sản Hà Nội"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
+        "experience_highlight_ids": [
+          "historic_sites"
+        ],
         "services": [
           {
             "id": "travel_plan_service_476f6933-0c46-4005-965b-c21668d9d529",
@@ -69,9 +55,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hotel arrival transfer",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Đưa đón khách sạn"
+            },
             "details": "Arrive in Hanoi and transfer to your hotel, giving the day a calm start before sightseeing begins.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đến Hà Nội và chuyển đến khách sạn của bạn, bắt đầu một ngày thật yên tĩnh trước khi bắt đầu tham quan."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -104,9 +94,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hoa Lo Prison",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Nhà tù Hỏa Lò"
+            },
             "details": "Visit Hoa Lo Prison for a sobering look at colonial-era detention, wartime memory and Vietnam's long struggle for independence.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ghé thăm Nhà tù Hỏa Lò để có cái nhìn sâu sắc về sự giam giữ thời thuộc địa, ký ức thời chiến và cuộc đấu tranh giành độc lập lâu dài của Việt Nam."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -139,9 +133,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ho Chi Minh Mausoleum",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Lăng Hồ Chí Minh"
+            },
             "details": "See the solemn mausoleum at Ba Dinh Square, a key national site connected to modern Vietnam's independence story.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Xem lăng mộ trang trọng tại Quảng trường Ba Đình, một địa điểm quốc gia quan trọng kết nối với câu chuyện độc lập của Việt Nam hiện đại."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -174,9 +172,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Temple of Literature",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Văn Miếu"
+            },
             "details": "Walk through Vietnam's first university, where courtyards, stone steles and old pavilions honor Hanoi's scholarly tradition.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi bộ qua trường đại học đầu tiên của Việt Nam, nơi có sân, bia đá và các gian nhà cổ tôn vinh truyền thống học thuật của Hà Nội."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -209,9 +211,13 @@
             "time_point": null,
             "kind": "other",
             "title": "One Pillar Pagoda",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chùa Một Cột"
+            },
             "details": "Visit the small lotus-shaped One Pillar Pagoda, one of Hanoi's most distinctive historic Buddhist landmarks.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan chùa Một Cột hình hoa sen nhỏ, một trong những địa danh Phật giáo lịch sử đặc biệt nhất của Hà Nội."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -238,17 +244,24 @@
           }
         ],
         "notes": "Spend the day with Hanoi's layered history, from Hoa Lo Prison and Ho Chi Minh's memorial sites to Confucian courtyards and a lotus-shaped pagoda.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Dành cả ngày để khám phá lịch sử nhiều tầng của Hà Nội, từ Nhà tù Hỏa Lò và đài tưởng niệm Hồ Chí Minh đến sân Nho giáo và ngôi chùa hình hoa sen."
+        }
       },
       {
         "id": "travel_plan_day_aba484c1-bf58-44ac-a62c-17d04eabba24",
         "day_number": 2,
         "title": "Hanoi to Ha Long Bay",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hà Nội tới Vịnh Hạ Long"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
+        "experience_highlight_ids": [
+          "beaches_islands"
+        ],
         "services": [
           {
             "id": "travel_plan_service_7e9a2950-e544-4131-8cc4-84b8055186d7",
@@ -258,9 +271,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ha Long Bay transfer",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Đưa đón Vịnh Hạ Long"
+            },
             "details": "Depart Hanoi for Ha Long Bay, crossing the Red River Delta before the karst seascape comes into view.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khởi hành từ Hà Nội đến Vịnh Hạ Long, băng qua Đồng bằng sông Hồng trước khi chiêm ngưỡng cảnh biển núi đá vôi."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -293,9 +310,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ha Long Bay",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Vịnh Hạ Long"
+            },
             "details": "Enter Ha Long Bay's emerald water, where limestone towers rise in layers around the cruise route.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Bước vào làn nước ngọc lục bảo của Vịnh Hạ Long, nơi có những tháp đá vôi mọc thành từng lớp xung quanh tuyến đường du ngoạn."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -328,9 +349,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ha Long Bay cruise",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Du thuyền Vịnh Hạ Long"
+            },
             "details": "Cruise between the islands with time for classic bay activities such as cave scenery, kayaking routes or deck views where scheduled.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Du ngoạn giữa các hòn đảo và dành thời gian tham gia các hoạt động cổ điển trên vịnh như ngắm cảnh hang động, tuyến chèo thuyền kayak hoặc ngắm cảnh boong tàu theo lịch trình."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -363,9 +388,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Cruise lunch",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bữa trưa trên du thuyền"
+            },
             "details": "Enjoy lunch on board while the boat moves through Ha Long's limestone scenery and open water.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Thưởng thức bữa trưa trên tàu trong khi thuyền di chuyển qua khung cảnh đá vôi và vùng nước rộng mở của Hạ Long."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -392,17 +421,24 @@
           }
         ],
         "notes": "Leave the capital for Ha Long Bay and spend the day on the water among limestone islands, cave scenery and lunch aboard the cruise.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Rời thủ đô đến Vịnh Hạ Long và dành cả ngày trên mặt nước giữa những hòn đảo đá vôi, phong cảnh hang động và ăn trưa trên du thuyền."
+        }
       },
       {
         "id": "travel_plan_day_56a905e0-b4a3-497c-913f-c23666ce0388",
         "day_number": 3,
         "title": "Shopping and departure",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Mua sắm và khởi hành"
+        },
         "overnight_location": null,
         "overnight_location_i18n": {},
         "primary_location_id": "place_halong_bay",
         "secondary_location_id": null,
+        "experience_highlight_ids": [
+          "city_life"
+        ],
         "services": [
           {
             "id": "travel_plan_service_6bee599f-8443-4f52-8203-789a6da99cf2",
@@ -412,9 +448,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Shopping and airport transfer",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Mua sắm và đưa đón sân bay"
+            },
             "details": "Stop for last purchases before continuing to the airport for departure.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Dừng mua hàng lần cuối trước khi tiếp tục ra sân bay khởi hành."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "location": null,
@@ -441,7 +481,9 @@
           }
         ],
         "notes": "Use the final day for a simple shopping stop and airport send-off after the Hanoi and Ha Long route.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Sử dụng ngày cuối cùng để dừng mua sắm đơn giản và ra sân bay sau tuyến Hà Nội và Hạ Long."
+        }
       }
     ],
     "translation_meta": {
@@ -543,5 +585,11 @@
       }
     }
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "vi": "Hà Nội và Vịnh Hạ Long"
+  },
+  "short_description_i18n": {
+    "vi": "Theo dõi trung tâm lịch sử của Hà Nội trước khi du ngoạn đến Vịnh Hạ Long, nơi những hòn đảo đá vôi, hang động và hải sản biến thành phố hướng ra biển."
+  }
 }
