@@ -450,6 +450,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.doesNotMatch(homepageInitialBundle, /function frontendT\(/);
   assert.match(homepageInitialBundle, /const frontendT = \(id, fallback, vars\) => \{/);
   assert.match(homepageInitialBundle, /<a class="btn tour-card__show-more/);
+  assert.match(homepageInitialBundle, /frontendT\("tour\.card\.details", "Explore"\)/);
+  assert.doesNotMatch(homepageInitialBundle, /frontendT\("tour\.card\.details", "Details"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_booking_form_options\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/main_reels\.js"\)/);
   assert.match(homepageInitialBundle, /import\("\/frontend\/scripts\/shared\/auth\.js"\)/);

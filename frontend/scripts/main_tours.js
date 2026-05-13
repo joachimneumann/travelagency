@@ -1054,7 +1054,7 @@ export function createFrontendToursController(ctx) {
   function tourShowMoreLabel(expanded) {
     return expanded
       ? frontendT("modal.nav.close", "Close")
-      : frontendT("tour.card.details", "Details");
+      : frontendT("tour.card.details", "Explore");
   }
 
   function renderTourShowMoreLabel(label, { expanded = false } = {}) {
