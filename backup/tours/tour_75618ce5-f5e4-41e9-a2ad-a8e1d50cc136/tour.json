@@ -14,7 +14,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-14T09:47:49.907Z",
-  "updated_at": "2026-05-08T05:49:29.636Z",
+  "updated_at": "2026-05-13T09:06:12.430Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -63,7 +63,7 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_74027d6c-f45a-46b2-a02c-6f10ce270fb2",
+              "id": "travel_plan_service_image_2e661a10-3043-4459-94c6-dd2be6390a32",
               "storage_path": "/public/v1/tour-images/tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136/travel-plan-services/day-01-hotel-arrival-transfer.webp",
               "caption": null,
               "caption_i18n": {},
@@ -77,7 +77,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-05T09:22:04.442Z"
+              "created_at": "2026-05-13T09:06:12.429Z"
             }
           },
           {

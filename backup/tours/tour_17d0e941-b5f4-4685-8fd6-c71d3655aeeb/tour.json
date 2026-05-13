@@ -11,7 +11,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-02T13:58:46.560Z",
-  "updated_at": "2026-05-12T12:06:35.545Z",
+  "updated_at": "2026-05-13T09:03:35.991Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_e7e4b9a7-7097-4f05-86d6-e40e02a2fb93",
@@ -42,7 +42,7 @@
             "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
-            "title": "Da Nang airport welcome",
+            "title": "Danang airport welcome",
             "title_i18n": {},
             "details": "Begin with airport pickup in Da Nang and a comfortable start to your Central Vietnam itinerary.",
             "details_i18n": {},
@@ -53,8 +53,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_f36867ec-54c2-4e0d-a909-aa454133945a",
-              "storage_path": "/public/v1/tour-images/tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb/travel-plan-services/day-01-da-nang-airport-welcome.webp",
+              "id": "travel_plan_service_image_11d3e7b3-0638-423e-a9a6-16d5d12c902e",
+              "storage_path": "/public/v1/tour-images/tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb/travel-plan-services/day-01-danang-airport-welcome.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -67,7 +67,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-04T11:07:12.092Z"
+              "created_at": "2026-05-13T09:03:20.290Z"
             }
           },
           {
