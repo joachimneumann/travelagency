@@ -7,6 +7,7 @@ import {
   serviceImageDerivativeRelativePath
 } from "../lib/service_image_derivatives.mjs";
 import {
+  matrixMarketingTourHref,
   matrixPageControlScript,
   matrixPageControlStyles,
   renderMatrixHeaderActions
@@ -462,6 +463,7 @@ function renderHtml({ tours }) {
     .map((tour) => {
       const serviceCells = tour.services.map((service) => renderServiceCell(service)).join("");
       const emptyCells = Array.from({ length: maxServices - tour.services.length }, () => '<td class="empty-cell"></td>').join("");
+      const marketingTourHref = matrixMarketingTourHref(tour.id);
 
       return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
@@ -469,6 +471,7 @@ function renderHtml({ tours }) {
         <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
         <div class="tour-id">${escapeHtml(tour.id)}</div>
         <div class="service-count">${tour.services.length} services</div>
+        <a class="matrix-tour-link" href="${escapeHtml(marketingTourHref)}" target="_blank" rel="noopener" data-open-marketing-tour>Open marketing tour</a>
       </th>
       ${serviceCells}${emptyCells}
     </tr>`;

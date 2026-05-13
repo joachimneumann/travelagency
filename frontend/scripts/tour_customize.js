@@ -358,6 +358,7 @@ export function createTourCustomizer({
   let activeMapPan = null;
   let timelineInstanceCounter = 0;
   let lastStickyDragReleaseAt = Number.NEGATIVE_INFINITY;
+  let modalCloseCallback = null;
   let lastStickyDragReleaseTargetKey = "";
   const cardTitleResetTimers = new WeakMap();
 
@@ -1303,10 +1304,13 @@ export function createTourCustomizer({
 
   function closeModal({ restoreFocus = true, persistDraft = true } = {}) {
     if (activePointerDrag) cleanupPointerDrag({ animateCancel: false });
+    const onClose = modalCloseCallback;
+    const closedTourId = normalizeText(draft?.tourId);
     const shouldRefreshTrips = persistDraft ? persistDraftCustomization() : false;
     if (modal?.parentNode) modal.parentNode.removeChild(modal);
     modal = null;
     draft = null;
+    modalCloseCallback = null;
     activeDragPayload = null;
     activeDropIndex = null;
     activePointerDrag = null;
@@ -1319,6 +1323,13 @@ export function createTourCustomizer({
     }
     lastFocusedElement = null;
     if (shouldRefreshTrips) renderVisibleTrips?.();
+    if (typeof onClose === "function") {
+      try {
+        onClose({ tourId: closedTourId, refreshedTrips: shouldRefreshTrips });
+      } catch (error) {
+        console.error("Tour customizer close callback failed.", error);
+      }
+    }
   }
 
   function resetDraftToOriginal() {
@@ -2396,17 +2407,18 @@ export function createTourCustomizer({
     bindDragAndDrop(modal);
   }
 
-  async function open(tourId) {
-    if (typeof document === "undefined") return;
+  async function open(tourId, options = {}) {
+    if (typeof document === "undefined") return false;
     const normalizedTourId = normalizeText(tourId);
     let trip = typeof findTripById === "function" ? findTripById(normalizedTourId) : null;
-    if (!trip) return;
+    if (!trip) return false;
     trip = await ensureTourDetailsLoaded?.(normalizedTourId) || trip;
     const modules = await candidateModulesForTrip(trip);
     const originalTimelineDays = originalTimelineFromTrip(trip, modules);
     const timelineDays = initialTimelineFromTrip(trip, modules);
-    if (!timelineDays.length) return;
+    if (!timelineDays.length) return false;
     lastFocusedElement = document.activeElement;
+    modalCloseCallback = typeof options?.onClose === "function" ? options.onClose : null;
     draft = {
       tourId: normalizedTourId,
       tourTitle: tourTitleForTimeline(trip),
@@ -2422,6 +2434,7 @@ export function createTourCustomizer({
     renderModal();
     const closeButton = modal.querySelector("[data-customize-close]");
     if (closeButton instanceof HTMLElement) closeButton.focus();
+    return true;
   }
 
   async function createCustomizedOverviewPdfPreview(tourId, selectedDays, title = "") {

@@ -2314,6 +2314,125 @@ textarea:focus-visible {
   clip-path: inset(0 0 100% 0);
 }
 
+body.tour-details-modal-open {
+  overflow: hidden;
+}
+
+.tour-details-modal[hidden] {
+  display: none !important;
+}
+
+.tour-details-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  display: grid;
+  place-items: center;
+  padding: clamp(0.85rem, 3vw, 2rem);
+}
+
+.tour-details-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(14, 28, 32, 0.48);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.tour-details-modal__dialog {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, 92vw);
+  height: min(88vh, 900px);
+  max-height: min(88vh, 900px);
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-accent) 56%, #fff 44%);
+  box-shadow: 0 34px 90px rgba(12, 30, 36, 0.34);
+  padding: clamp(0.9rem, 2vw, 1.5rem);
+}
+
+.tour-details-modal__dialog:focus {
+  outline: none;
+}
+
+.tour-details-modal__content {
+  height: 100%;
+  max-height: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.tour-details-modal__layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 357px) minmax(0, 1fr);
+  gap: clamp(1rem, 2vw, 1.5rem);
+  align-items: start;
+}
+
+.tour-details-modal__card {
+  min-width: 0;
+}
+
+.tour-details-modal__card .tour-card {
+  width: 100%;
+  max-width: 357.33px;
+  height: auto;
+  outline: 0;
+}
+
+.tour-details-modal__panel.tour-details-row__panel {
+  width: 100%;
+  min-width: 0;
+  max-height: calc(min(88vh, 900px) - clamp(1.8rem, 4vw, 3rem));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: var(--radius);
+  padding: 1.1rem 0;
+  transform: none;
+  clip-path: none;
+  transition: none;
+  scrollbar-width: thin;
+}
+
+.tour-details-modal__panel .tour-details-row__close {
+  top: 1rem;
+  right: 1rem;
+}
+
+@media (max-width: 760px) {
+  .tour-details-modal {
+    padding: 0.75rem;
+    align-items: start;
+  }
+
+  .tour-details-modal__dialog {
+    width: min(100%, 92vw);
+    height: calc(100vh - 1.5rem);
+    max-height: calc(100vh - 1.5rem);
+    padding: 0.75rem;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  .tour-details-modal__content {
+    height: 100%;
+    max-height: none;
+  }
+
+  .tour-details-modal__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tour-details-modal__card .tour-card {
+    max-width: none;
+  }
+
+  .tour-details-modal__panel.tour-details-row__panel {
+    max-height: none;
+  }
+}
+
 .tour-plan-highlights,
 .tour-plan-pdf,
 .tour-plan__customize,
@@ -2357,10 +2476,24 @@ textarea:focus-visible {
   letter-spacing: 0;
 }
 
+.tour-details-overview__customize {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  margin: -0.35rem 0 0.15rem;
+}
+
+.tour-details-overview__customize-button {
+  min-width: 11rem;
+  min-height: 2.72rem;
+  border-radius: 12px;
+  box-shadow: none;
+}
+
 .tour-details-overview__facts {
   display: grid;
-  grid-template-columns: minmax(4.6rem, 0.38fr) minmax(5.2rem, 0.45fr) minmax(0, 2.6fr);
-  column-gap: clamp(1rem, 2.8vw, 2rem);
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: 0;
   row-gap: 1rem;
   align-items: start;
 }
@@ -2652,18 +2785,21 @@ html.tour-customize-modal-open {
 .tour-customize {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 2300;
   display: grid;
   place-items: center;
-  padding: clamp(0.5rem, 2vw, 1.25rem);
-  background: rgba(16, 27, 43, 0.46);
+  padding: clamp(0.85rem, 3vw, 2rem);
+  background: rgba(14, 28, 32, 0.48);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
 }
 
 .tour-customize__dialog {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  width: min(1180px, 100%);
-  max-height: min(900px, calc(100vh - 1rem));
+  width: min(1120px, 92vw);
+  height: min(88vh, 900px);
+  max-height: min(88vh, 900px);
   overflow: hidden;
   border: 1px solid rgba(16, 27, 43, 0.14);
   border-radius: 8px;
@@ -2981,7 +3117,7 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
 .tour-customize-drag-ghost {
   position: fixed;
-  z-index: 2000;
+  z-index: 2400;
   margin: 0;
   pointer-events: none;
   opacity: 0.98;
@@ -2992,14 +3128,14 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
 .tour-customize-drag-ghost.tour-customize-timeline__item,
 .tour-customize-drag-ghost.tour-customize-timeline__item.is-dragging {
-  z-index: 2000;
+  z-index: 2400;
   opacity: 1;
   visibility: visible;
 }
 
 .tour-customize-drag-ghost.tour-customize-drag-ghost--card,
 .tour-customize-drag-ghost.tour-customize-drag-ghost--card.is-dragging {
-  z-index: 2000;
+  z-index: 2400;
   border-color: var(--line);
   border-style: solid;
   background: #fff;
@@ -3433,14 +3569,15 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
 @media (max-width: 760px) {
   .tour-customize {
-    padding: 0;
+    padding: 0.75rem;
+    align-items: start;
   }
 
   .tour-customize__dialog {
-    width: 100%;
-    height: 100dvh;
-    max-height: none;
-    border-radius: 0;
+    width: min(100%, 92vw);
+    height: calc(100vh - 1.5rem);
+    max-height: calc(100vh - 1.5rem);
+    border-radius: calc(var(--radius) - 4px);
   }
 
   .tour-customize__header {
