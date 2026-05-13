@@ -194,7 +194,7 @@ function imageBoxHeight(doc, entry, contentWidth, fonts, deps) {
 
 function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
   const textWidth = contentWidth;
-  const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
+  const metaParts = [formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
   const title = textOrNull(item?.title) || deps.pdfT(lang, "offer.item_fallback", "Planned service");
   const details = textOrNull(item?.details);
   let textHeight = 0;
@@ -263,7 +263,7 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
   const textWidth = width;
   let innerY = y;
 
-  const metaParts = [textOrNull(item?.location), formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
+  const metaParts = [formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
   if (metaParts.length) {
     doc
       .font(deps.pdfFontName("regular", fonts))
@@ -644,18 +644,6 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
   }
   const titleBlockGap = separateDayLabel ? 8 : 4;
   let nextY = titleY + Math.max(titleHeight, dateHeight) + titleBlockGap;
-
-  const overnight = textOrNull(day?.overnight_location);
-  if (overnight) {
-    doc
-      .font(deps.pdfFontName("regular", fonts))
-      .fontSize(10)
-      .fillColor(deps.colors.textMutedStrong)
-      .text(deps.pdfT(lang, "offer.overnight", "Overnight: {location}", { location: overnight }), deps.pageMargin, nextY, deps.pdfTextOptions(lang, {
-        width: doc.page.width - deps.pageMargin * 2
-      }));
-    nextY = doc.y + 4;
-  }
 
   const accommodationTitle = resolveDayAccommodationTitle(day);
   if (accommodationTitle) {

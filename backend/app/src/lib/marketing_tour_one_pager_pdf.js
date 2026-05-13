@@ -1304,7 +1304,7 @@ function collectTourImages(tour, lang) {
           ? webImageIds.indexOf(imageId)
           : (image.include_in_travel_tour_card === true ? webImageIds.length : webImageIds.length + 1),
         order: dayIndex * 100 + serviceIndex,
-        label: textOrNull(service?.title) || textOrNull(service?.location) || textOrNull(day?.overnight_location) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour"),
+        label: textOrNull(service?.title) || textOrNull(day?.title) || onePagerT(lang, "tour", "Tour"),
         isMiddleDayImage: dayIndex > 0 && dayIndex < lastDayIndex,
         skipAutomaticOnePagerSelection: edgeServiceKeys.has(`${dayIndex}:${serviceIndex}`)
       });
@@ -2092,8 +2092,7 @@ export function createMarketingTourOnePagerPdfWriter({
       ...safeArray(tour?.styles),
       ...days.flatMap((day) => [
         day?.title,
-        day?.overnight_location,
-        ...safeArray(day?.services).flatMap((service) => [service?.title, service?.location, service?.details])
+        ...safeArray(day?.services).flatMap((service) => [service?.title, service?.details])
       ])
     ].map((value) => normalizeText(value)).filter(Boolean).join(" ");
     const onePagerFontDir = normalizeText(process.env.ONE_PAGER_FONT_DIR);

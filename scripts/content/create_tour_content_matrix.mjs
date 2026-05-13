@@ -242,7 +242,6 @@ function collectServices(day, tourId, toursDir) {
       order: index + 1,
       title: localizedText(service, "title") || `Service ${index + 1}`,
       details: localizedText(service, "details"),
-      location: localizedText(service, "location"),
       timing: serviceTiming(service),
       imageSubtitle: localizedText(service, "image_subtitle"),
       images: collectServiceImages(service, tourId, toursDir)
@@ -264,7 +263,6 @@ function collectDays(tourJson, tourId, toursDir) {
         dayNumber,
         title: localizedText(day, "title") || `Day ${dayNumber}`,
         details: localizedText(day, "notes") || localizedText(day, "details") || localizedText(day, "description"),
-        overnightLocation: localizedText(day, "overnight_location"),
         services: collectServices(day, tourId, toursDir)
       };
     })
@@ -393,7 +391,7 @@ function renderService(service, marketingTourHref) {
   const details = service.details
     ? `<div class="service-details">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(service.details))}</div>`
     : "";
-  const meta = [service.timing, service.location, service.imageSubtitle].filter(Boolean);
+  const meta = [service.timing, service.imageSubtitle].filter(Boolean);
   const metaHtml = meta.length
     ? `<div class="service-meta">${meta.map((item) => `<span>${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(item))}</span>`).join("")}</div>`
     : "";
@@ -418,9 +416,6 @@ function renderDayCell(days, marketingTourHref) {
   return `<td class="day-cell">
         ${days.map((day) => {
           const details = day.details ? `<div class="day-details">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.details))}</div>` : "";
-          const overnight = day.overnightLocation
-            ? `<div class="day-overnight">${matrixMarketingTourAnchor(marketingTourHref, `Overnight: ${escapeHtml(day.overnightLocation)}`)}</div>`
-            : "";
           const services = day.services.length
             ? day.services.map((service) => renderService(service, marketingTourHref)).join("")
             : `<div class="no-services">${matrixMarketingTourAnchor(marketingTourHref, "No services")}</div>`;
@@ -428,7 +423,6 @@ function renderDayCell(days, marketingTourHref) {
           return `<section class="day-section">
             <div class="day-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.title))}</div>
             ${details}
-            ${overnight}
             <div class="services">${services}</div>
           </section>`;
         }).join("")}

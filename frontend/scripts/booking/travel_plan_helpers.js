@@ -263,8 +263,6 @@ export function createEmptyTravelPlanService() {
     details_i18n: {},
     image_subtitle: "",
     image_subtitle_i18n: {},
-    location: "",
-    location_i18n: {},
     start_time: "",
     end_time: "",
     image: null
@@ -279,8 +277,6 @@ export function createEmptyTravelPlanDay(index = 0) {
     date_string: "",
     title: "",
     title_i18n: {},
-    overnight_location: "",
-    overnight_location_i18n: {},
     primary_location_id: "",
     secondary_location_id: "",
     experience_highlight_ids: [],
@@ -424,7 +420,6 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
       const rawDay = day && typeof day === "object" ? day : {};
       const normalizedDate = normalizeOptionalText(rawDay.date);
       const titleField = normalizeDraftLocalizedPayload(rawDay, "title", sourceLang, targetLang);
-      const overnightLocationField = normalizeDraftLocalizedPayload(rawDay, "overnight_location", sourceLang, targetLang);
       const notesField = normalizeDraftLocalizedPayload(rawDay, "notes", sourceLang, targetLang);
       return {
         id: String(rawDay.id || travelPlanId("travel_plan_day")),
@@ -433,8 +428,6 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
         date_string: normalizedDate ? "" : normalizeOptionalText(rawDay.date_string),
         title: titleField.text,
         title_i18n: titleField.map,
-        overnight_location: overnightLocationField.text,
-        overnight_location_i18n: overnightLocationField.map,
         primary_location_id: normalizeOptionalText(rawDay.primary_location_id),
         secondary_location_id: normalizeOptionalText(rawDay.secondary_location_id),
         experience_highlight_ids: normalizeTravelPlanExperienceHighlightIds(rawDay.experience_highlight_ids),
@@ -448,7 +441,6 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
           const timeLabelField = normalizeDraftLocalizedPayload(rawItem, "time_label", sourceLang, targetLang);
           const titleField = normalizeDraftLocalizedPayload(rawItem, "title", sourceLang, targetLang);
           const detailsField = normalizeDraftLocalizedPayload(rawItem, "details", sourceLang, targetLang);
-          const locationField = normalizeDraftLocalizedPayload(rawItem, "location", sourceLang, targetLang);
           const imageSubtitleField = normalizeDraftLocalizedPayload(rawItem, "image_subtitle", sourceLang, targetLang);
           return {
             id: String(rawItem.id || travelPlanId("travel_plan_service")),
@@ -463,8 +455,6 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
             details_i18n: detailsField.map,
             image_subtitle: imageSubtitleField.text,
             image_subtitle_i18n: imageSubtitleField.map,
-            location: locationField.text,
-            location_i18n: locationField.map,
             start_time: timing.start_time,
             end_time: timing.end_time,
             image: normalizeItemImage(rawItem.image ?? rawItem.images, sourceLang, targetLang)

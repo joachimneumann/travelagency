@@ -170,18 +170,6 @@ export function createBookingTravelPlanHandlers(deps) {
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
-            const nextOvernightField = mergeEditableLocalizedTextField(
-              existingDay?.overnight_location_i18n,
-              day.overnight_location,
-              day.overnight_location_i18n,
-              normalizedLang,
-              {
-                existingText: existingDay?.overnight_location,
-                sourceLang: normalizedSourceLang,
-                defaultLang: normalizedSourceLang,
-                pruneExtraTranslationsOnSourceChange: true
-              }
-            );
             const nextNotesField = mergeEditableLocalizedTextField(
               existingDay?.notes_i18n,
               day.notes,
@@ -199,8 +187,6 @@ export function createBookingTravelPlanHandlers(deps) {
           ...day,
           title: nextTitleField.text,
           title_i18n: nextTitleField.map,
-          overnight_location: nextOvernightField.text || null,
-          overnight_location_i18n: nextOvernightField.map,
           notes: nextNotesField.text || null,
           notes_i18n: nextNotesField.map,
           services: (Array.isArray(day?.services) ? day.services : []).map((item) => {
@@ -241,18 +227,6 @@ export function createBookingTravelPlanHandlers(deps) {
                 pruneExtraTranslationsOnSourceChange: true
               }
             );
-            const locationField = mergeEditableLocalizedTextField(
-              existingItem?.location_i18n,
-              item.location,
-              item.location_i18n,
-              normalizedLang,
-              {
-                existingText: existingItem?.location,
-                sourceLang: normalizedSourceLang,
-                defaultLang: normalizedSourceLang,
-                pruneExtraTranslationsOnSourceChange: true
-              }
-            );
             return {
               ...item,
               time_label: item.timing_kind === "label" ? (timeLabelField.text || null) : null,
@@ -260,9 +234,7 @@ export function createBookingTravelPlanHandlers(deps) {
               title: titleItemField.text,
               title_i18n: titleItemField.map,
               details: detailsField.text || null,
-              details_i18n: detailsField.map,
-              location: locationField.text || null,
-              location_i18n: locationField.map
+              details_i18n: detailsField.map
             };
           })
         };

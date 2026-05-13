@@ -119,8 +119,6 @@ function cloneTourMarketingServiceForLocalImport({ searchResult }) {
     details_i18n: normalizeLocalizedMap(sourceService.details_i18n),
     image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
     image_subtitle_i18n: normalizeLocalizedMap(sourceService.image_subtitle_i18n),
-    location: preferredEnglishImportText(sourceService.location_i18n, sourceService.location) || null,
-    location_i18n: normalizeLocalizedMap(sourceService.location_i18n),
     start_time: sourceService.start_time,
     end_time: sourceService.end_time,
     id: undefined,
@@ -143,8 +141,6 @@ function cloneTourMarketingDayForLocalImport({ searchResult, targetDayIndex = 0 
     date_string: sourceDay.date_string,
     title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
     title_i18n: normalizeLocalizedMap(sourceDay.title_i18n),
-    overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
-    overnight_location_i18n: normalizeLocalizedMap(sourceDay.overnight_location_i18n),
     primary_location_id: normalizeText(sourceDay.primary_location_id),
     secondary_location_id: normalizeText(sourceDay.secondary_location_id),
     experience_highlight_ids: normalizeUniqueTextList(sourceDay.experience_highlight_ids).slice(0, 1),
@@ -421,6 +417,7 @@ export function createTourTravelPlanAdapter({
         destinationScope: false,
         destinationScopeCreate: false,
         allPrimaryMapPointOptions: true,
+        dayDetailsAfterTitle: true,
         pruneEmptyTravelPlanContentOnCollect: true
       }
     });

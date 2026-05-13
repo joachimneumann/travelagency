@@ -1755,8 +1755,6 @@ function cloneBookingMarketingTourServiceForLocalImport({ searchResult }) {
     details_i18n: {},
     image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
     image_subtitle_i18n: {},
-    location: null,
-    location_i18n: {},
     start_time: null,
     end_time: null,
     image: cloneMarketingTourSourceImageForLocalBookingInsert(sourceService.image)
@@ -1774,8 +1772,6 @@ function cloneBookingMarketingTourDayForLocalImport({ searchResult, targetDayInd
     date_string: null,
     title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
     title_i18n: {},
-    overnight_location: preferredEnglishImportText(sourceDay.overnight_location_i18n, sourceDay.overnight_location) || null,
-    overnight_location_i18n: {},
     primary_location_id: normalizeText(sourceDay.primary_location_id),
     secondary_location_id: normalizeText(sourceDay.secondary_location_id),
     experience_highlight_ids: normalizeUniqueTextList(sourceDay.experience_highlight_ids).slice(0, 1),

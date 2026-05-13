@@ -147,6 +147,7 @@ export function createBookingTravelPlanModule(ctx) {
   const allowTourCardImageSelection = isFeatureEnabled("tourCardImageSelection", false);
   const pruneEmptyTravelPlanContentOnCollect = isFeatureEnabled("pruneEmptyTravelPlanContentOnCollect", false);
   const allowAllPrimaryMapPointOptions = isFeatureEnabled("allPrimaryMapPointOptions", false);
+  const showDayDetailsAfterTitle = isFeatureEnabled("dayDetailsAfterTitle", false);
 
   function destinationScopeEditorRoot() {
     if (els.travel_plan_destination_scope_editor instanceof HTMLElement) {
@@ -503,8 +504,7 @@ export function createBookingTravelPlanModule(ctx) {
       "time_label",
       "title",
       "details",
-      "image_subtitle",
-      "location"
+      "image_subtitle"
     ].some((fieldName) => localizedTravelPlanFieldHasContent(item, fieldName))
       || hasTravelPlanTextContent(item.time_point)
       || hasTravelPlanTextContent(item.start_time)
@@ -517,7 +517,6 @@ export function createBookingTravelPlanModule(ctx) {
     if (!day || typeof day !== "object" || Array.isArray(day)) return false;
     return [
       "title",
-      "overnight_location",
       "notes"
     ].some((fieldName) => localizedTravelPlanFieldHasContent(day, fieldName))
       || hasTravelPlanTextContent(day.date)
@@ -1954,6 +1953,41 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
+  function renderTravelPlanDayDetailsField(day) {
+    return `
+      <div class="field">
+        ${renderTravelPlanLocalizedField({
+          label: bookingT("booking.travel_plan.day_notes", "Day Details"),
+          idBase: `travel_plan_day_notes_${day.id}`,
+          dataScope: "travel-plan-day-field",
+          dayId: day.id,
+          field: "notes",
+          type: "textregion",
+          rows: 3,
+          sourceValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingSourceLang(), ""),
+          localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
+        })}
+      </div>
+    `;
+  }
+
+  function renderTravelPlanDayTitleField(day) {
+    return `
+      <div class="field">
+        ${renderTravelPlanLocalizedField({
+          label: bookingT("booking.travel_plan.day_title", "Day Title"),
+          idBase: `travel_plan_day_title_${day.id}`,
+          dataScope: "travel-plan-day-field",
+          dayId: day.id,
+          field: "title",
+          type: "input",
+          sourceValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingSourceLang(), ""),
+          localizedValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingContentLang(), "")
+        })}
+      </div>
+    `;
+  }
+
   function renderTravelPlanDay(day, dayIndex) {
     const items = Array.isArray(day.services) ? day.services : [];
     const collapsed = isTravelPlanDayCollapsed(day.id);
@@ -1964,6 +1998,8 @@ export function createBookingTravelPlanModule(ctx) {
     const dateStringValue = normalizeTravelPlanDayDateString(day?.date_string);
     const nextDaySuggestion = !String(day?.date || "").trim() ? suggestedNextTravelPlanDayDate(dayIndex) : "";
     const nextDayButtonLabel = nextDaySuggestion || bookingT("booking.travel_plan.next_day_button", "Next day");
+    const dayDetailsField = renderTravelPlanDayDetailsField(day);
+    const dayTitleField = renderTravelPlanDayTitleField(day);
     return `
       <section class="travel-plan-day${collapsed ? " travel-plan-day--collapsed" : ""}" data-travel-plan-day="${escapeHtml(day.id)}">
         <div class="travel-plan-day__rail">
@@ -2010,67 +2046,33 @@ export function createBookingTravelPlanModule(ctx) {
                   </div>`
                 : ""}
               <div class="travel-plan-grid">
-              <div class="field">
-                ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.day_title", "Day Title"),
-                  idBase: `travel_plan_day_title_${day.id}`,
-                  dataScope: "travel-plan-day-field",
-                  dayId: day.id,
-                  field: "title",
-                  type: "input",
-                  sourceValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingSourceLang(), ""),
-                  localizedValue: resolveLocalizedDraftBranchText(day.title_i18n ?? day.title, bookingContentLang(), "")
-                })}
+                ${dayTitleField}
               </div>
-              <div class="field">
-                ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.location_optional", "Location (optional)"),
-                  idBase: `travel_plan_day_overnight_${day.id}`,
-                  dataScope: "travel-plan-day-field",
-                  dayId: day.id,
-                  field: "overnight_location",
-                  type: "input",
-                  sourceValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingSourceLang(), ""),
-                  localizedValue: resolveLocalizedDraftBranchText(day.overnight_location_i18n ?? day.overnight_location, bookingContentLang(), "")
-                })}
+              ${showDayDetailsAfterTitle ? dayDetailsField : ""}
+              <div class="travel-plan-grid travel-plan-grid--map-locations">
+                <div class="field">
+                  ${renderTravelPlanLocationSelect({
+                    id: `travel_plan_day_primary_location_${day.id}`,
+                    field: "primary_location_id",
+                    value: day.primary_location_id,
+                    label: bookingT("booking.travel_plan.primary_location", "Primary map point"),
+                    includeAllLocations: allowAllPrimaryMapPointOptions
+                  })}
+                </div>
+                <div class="field">
+                  ${renderTravelPlanLocationSelect({
+                    id: `travel_plan_day_secondary_location_${day.id}`,
+                    field: "secondary_location_id",
+                    value: day.secondary_location_id,
+                    label: bookingT("booking.travel_plan.secondary_location", "Secondary map point")
+                  })}
+                </div>
               </div>
-            </div>
-            <div class="travel-plan-grid travel-plan-grid--map-locations">
-              <div class="field">
-                ${renderTravelPlanLocationSelect({
-                  id: `travel_plan_day_primary_location_${day.id}`,
-                  field: "primary_location_id",
-                  value: day.primary_location_id,
-                  label: bookingT("booking.travel_plan.primary_location", "Primary map point"),
-                  includeAllLocations: allowAllPrimaryMapPointOptions
-                })}
+              ${renderTravelPlanDayExperienceHighlights(day)}
+              ${showDayDetailsAfterTitle ? "" : dayDetailsField}
+              <div class="travel-plan-day__services">
+                ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
               </div>
-              <div class="field">
-                ${renderTravelPlanLocationSelect({
-                  id: `travel_plan_day_secondary_location_${day.id}`,
-                  field: "secondary_location_id",
-                  value: day.secondary_location_id,
-                  label: bookingT("booking.travel_plan.secondary_location", "Secondary map point")
-                })}
-              </div>
-            </div>
-            ${renderTravelPlanDayExperienceHighlights(day)}
-            <div class="field">
-              ${renderTravelPlanLocalizedField({
-                label: bookingT("booking.travel_plan.day_notes", "Day Details"),
-                idBase: `travel_plan_day_notes_${day.id}`,
-                dataScope: "travel-plan-day-field",
-                dayId: day.id,
-                field: "notes",
-                type: "textregion",
-                rows: 3,
-                sourceValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingSourceLang(), ""),
-                localizedValue: resolveLocalizedDraftBranchText(day.notes_i18n ?? day.notes, bookingContentLang(), "")
-              })}
-            </div>
-            <div class="travel-plan-day__services">
-              ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
-            </div>
             </div>
             <div class="travel-plan-service-footer">
               <div class="travel-plan-service-footer__actions">
@@ -2153,14 +2155,6 @@ export function createBookingTravelPlanModule(ctx) {
         delete day.date;
         delete day.date_string;
       }
-      const overnight = readLocalizedFieldPayload(
-        dayNode,
-        "travel-plan-day-field",
-        "overnight_location",
-        previousDay?.overnight_location_i18n ?? previousDay?.overnight_location
-      );
-      day.overnight_location = overnight.text;
-      day.overnight_location_i18n = overnight.map;
       day.primary_location_id = String(dayNode.querySelector('[data-travel-plan-day-location-field="primary_location_id"]')?.value || "").trim();
       day.secondary_location_id = String(dayNode.querySelector('[data-travel-plan-day-location-field="secondary_location_id"]')?.value || "").trim();
       const highlightInput = dayNode.querySelector("[data-travel-plan-day-highlight]");
@@ -2213,14 +2207,6 @@ export function createBookingTravelPlanModule(ctx) {
         );
         item.title = itemTitle.text;
         item.title_i18n = itemTitle.map;
-        const itemLocation = readLocalizedFieldPayload(
-          itemNode,
-          "travel-plan-service-field",
-          "location",
-          previousItem?.location_i18n ?? previousItem?.location
-        );
-        item.location = itemLocation.text;
-        item.location_i18n = itemLocation.map;
         if (allowServiceDetails) {
           const itemDetails = readLocalizedFieldPayload(
             itemNode,
@@ -3083,13 +3069,6 @@ export function createBookingTravelPlanModule(ctx) {
       });
       addField({
         holder: day,
-        mapField: "overnight_location_i18n",
-        plainField: "overnight_location",
-        key: `travel_plan.${dayId}.overnight_location`,
-        label: `${dayLabel} · ${bookingT("booking.travel_plan.location_optional", "Location (optional)")}`
-      });
-      addField({
-        holder: day,
         mapField: "notes_i18n",
         plainField: "notes",
         key: `travel_plan.${dayId}.notes`,
@@ -3125,13 +3104,6 @@ export function createBookingTravelPlanModule(ctx) {
             label: `${serviceLabel} · ${bookingT("booking.travel_plan.item_notes", "Service Details")}`
           });
         }
-        addField({
-          holder: service,
-          mapField: "location_i18n",
-          plainField: "location",
-          key: `travel_plan.${dayId}.${serviceId}.location`,
-          label: `${serviceLabel} · ${bookingT("booking.travel_plan.location_optional", "Location (optional)")}`
-        });
         addField({
           holder: service,
           mapField: "image_subtitle_i18n",

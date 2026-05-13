@@ -750,14 +750,12 @@ export function createStaticTranslationService({
     const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
     for (const day of days) {
       addSourceText(targetSet, localizedSource(day?.title_i18n, day?.title));
-      addSourceText(targetSet, localizedSource(day?.overnight_location_i18n, day?.overnight_location));
       addSourceText(targetSet, localizedSource(day?.notes_i18n, day?.notes));
       const services = Array.isArray(day?.services) ? day.services : [];
       for (const service of services) {
         addSourceText(targetSet, localizedSource(service?.time_label_i18n, service?.time_label));
         addSourceText(targetSet, localizedSource(service?.title_i18n, service?.title));
         addSourceText(targetSet, localizedSource(service?.details_i18n, service?.details));
-        addSourceText(targetSet, localizedSource(service?.location_i18n, service?.location));
         addSourceText(targetSet, localizedSource(service?.image_subtitle_i18n, service?.image_subtitle));
         const images = [
           service?.image,

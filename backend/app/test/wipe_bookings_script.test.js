@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import os from "node:os";
 import path from "node:path";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { wipeBookingsData } from "../scripts/wipe_bookings.js";
 
 test("wipe bookings script clears booking-owned store collections and artifacts", async () => {
@@ -17,6 +17,10 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
     path.join(dataDir, "booking_images"),
     path.join(dataDir, "booking_person_photos"),
     path.join(dataDir, "tmp", "travel_plan_previews"),
+    path.join(dataDir, "tmp", "public-tour-pdf-previews", "one-pagers"),
+    path.join(dataDir, "tmp", "public-tour-pdf-previews", "travel-plans")
+  ];
+  const legacyArtifactDirs = [
     path.join(dataDir, "payment_documents"),
     path.join(dataDir, "generated_offers"),
     path.join(dataDir, "booking_travel_plan_attachments")
@@ -25,6 +29,10 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
   try {
     await mkdir(dataDir, { recursive: true });
     for (const directory of artifactDirs) {
+      await mkdir(directory, { recursive: true });
+      await writeFile(path.join(directory, "stale.txt"), "stale\n", "utf8");
+    }
+    for (const directory of legacyArtifactDirs) {
       await mkdir(directory, { recursive: true });
       await writeFile(path.join(directory, "stale.txt"), "stale\n", "utf8");
     }
@@ -66,6 +74,14 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
         () => []
       );
       assert.deepEqual(entries, []);
+    }
+    for (const directory of legacyArtifactDirs) {
+      const entries = await readFile(path.join(directory, "stale.txt"), "utf8").then(
+        () => ["stale.txt"],
+        () => []
+      );
+      assert.deepEqual(entries, []);
+      await assert.rejects(stat(directory), { code: "ENOENT" });
     }
   } finally {
     await rm(rootDir, { recursive: true, force: true });

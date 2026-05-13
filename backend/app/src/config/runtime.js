@@ -73,6 +73,14 @@ export const TRANSLATIONS_SNAPSHOT_DIR = resolveConfigPathFromRepoRoot(
 export const BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR = path.join(PDFS_ROOT, "attachments");
 export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 export const TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "travel_plan_previews");
+export const PUBLIC_TOUR_PDF_CACHE_DIR = path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-cache");
+export const PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR = path.join(PUBLIC_TOUR_PDF_CACHE_DIR, "one-pagers");
+export const PUBLIC_TOUR_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-previews");
+export const PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR = path.join(PUBLIC_TOUR_PDF_PREVIEW_DIR, "one-pagers");
+export const PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(PUBLIC_TOUR_PDF_PREVIEW_DIR, "travel-plans");
+export const CONTENT_ONE_PAGERS_DIR = path.join(CONTENT_ROOT, "one-pagers");
+export const CONTENT_ONE_PAGER_PDFS_DIR = path.join(CONTENT_ONE_PAGERS_DIR, "pdfs");
+export const CONTENT_ONE_PAGER_IMAGES_DIR = path.join(CONTENT_ONE_PAGERS_DIR, "images");
 export const LOGO_PNG_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "logo-asiatravelplan.large.png");
 export const FALLBACK_BOOKING_IMAGE_PATH = path.resolve(APP_ROOT, "..", "..", "assets", "img", "happy_tourists.webp");
 export const MOBILE_CONTRACT_META_PATH = path.resolve(APP_ROOT, "..", "..", "api", "generated", "mobile-api.meta.json");
@@ -334,6 +342,14 @@ export const RUNTIME_PATHS = Object.freeze({
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   tempUploadDir: TEMP_UPLOAD_DIR,
   travelPlanPdfPreviewDir: TRAVEL_PLAN_PDF_PREVIEW_DIR,
+  publicTourPdfCacheDir: PUBLIC_TOUR_PDF_CACHE_DIR,
+  publicTourOnePagerPdfCacheDir: PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR,
+  publicTourPdfPreviewDir: PUBLIC_TOUR_PDF_PREVIEW_DIR,
+  publicTourOnePagerPdfPreviewDir: PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR,
+  publicTourTravelPlanPdfPreviewDir: PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR,
+  contentOnePagersDir: CONTENT_ONE_PAGERS_DIR,
+  contentOnePagerPdfsDir: CONTENT_ONE_PAGER_PDFS_DIR,
+  contentOnePagerImagesDir: CONTENT_ONE_PAGER_IMAGES_DIR,
   legacyGeneratedOffersDir: LEGACY_GENERATED_OFFERS_DIR,
   legacyBookingTravelPlanAttachmentsDir: LEGACY_BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
   logoPngPath: LOGO_PNG_PATH,

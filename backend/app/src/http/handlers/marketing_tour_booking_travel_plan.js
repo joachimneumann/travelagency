@@ -197,8 +197,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       details_i18n: details.map,
       image_subtitle: imageSubtitle.text || null,
       image_subtitle_i18n: imageSubtitle.map,
-      location: null,
-      location_i18n: {},
       start_time: null,
       end_time: null,
       image: nextImage
@@ -212,12 +210,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     createdAt
   }) {
     const title = cloneLocalizedTextField(day, "title", "title_i18n", normalizeText);
-    const overnightLocation = cloneLocalizedTextField(
-      day,
-      "overnight_location",
-      "overnight_location_i18n",
-      normalizeText
-    );
     const notes = cloneLocalizedTextField(day, "notes", "notes_i18n", normalizeText);
     return {
       id: `travel_plan_day_${randomUUID()}`,
@@ -226,8 +218,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       date_string: null,
       title: title.text,
       title_i18n: title.map,
-      overnight_location: overnightLocation.text || null,
-      overnight_location_i18n: overnightLocation.map,
       primary_location_id: normalizeText(day?.primary_location_id) || null,
       secondary_location_id: normalizeText(day?.secondary_location_id) || null,
       experience_highlight_ids: normalizeExperienceHighlightIds(day?.experience_highlight_ids, { limit: 1 }),

@@ -1029,15 +1029,11 @@ function resolveOfferDayDateLabel(day, lang) {
 function resolveOfferDaySummary(day, lang) {
   const title = textOrNull(day?.title);
   const items = resolveTravelPlanDayItems(day);
-  const firstItem = items.find((item) => textOrNull(item?.title) || textOrNull(item?.location)) || null;
-  const firstItemLabel = textOrNull(firstItem?.title) || textOrNull(firstItem?.location);
-  const overnightLocation = textOrNull(day?.overnight_location);
+  const firstItem = items.find((item) => textOrNull(item?.title)) || null;
+  const firstItemLabel = textOrNull(firstItem?.title);
   const parts = [
     title,
-    firstItemLabel && firstItemLabel !== title ? firstItemLabel : "",
-    overnightLocation
-      ? pdfT(lang, "offer.overnight_in", "Overnight in {location}", { location: overnightLocation })
-      : ""
+    firstItemLabel && firstItemLabel !== title ? firstItemLabel : ""
   ].filter(Boolean);
   return parts.join(" · ") || pdfT(lang, "offer.itinerary_day_fallback", "Detailed routing will be confirmed with you.");
 }

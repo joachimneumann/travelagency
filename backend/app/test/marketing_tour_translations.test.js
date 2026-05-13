@@ -64,7 +64,6 @@ function createSampleTour() {
             fr: "Embedded French service title"
           },
           details: "English service details",
-          location: "English service location",
           image: {
             id: "image_1",
             storage_path: "tour_test/image.webp",

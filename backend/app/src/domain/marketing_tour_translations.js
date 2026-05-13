@@ -151,14 +151,12 @@ function applyTranslationsToTravelPlan(travelPlan, lang, translations) {
   for (const day of Array.isArray(travelPlan.days) ? travelPlan.days : []) {
     if (!day || typeof day !== "object" || Array.isArray(day)) continue;
     changed = applyTranslationToLocalizedPair(day, "title", "title_i18n", lang, translations) || changed;
-    changed = applyTranslationToLocalizedPair(day, "overnight_location", "overnight_location_i18n", lang, translations) || changed;
     changed = applyTranslationToLocalizedPair(day, "notes", "notes_i18n", lang, translations) || changed;
     for (const service of Array.isArray(day.services) ? day.services : []) {
       if (!service || typeof service !== "object" || Array.isArray(service)) continue;
       changed = applyTranslationToLocalizedPair(service, "time_label", "time_label_i18n", lang, translations) || changed;
       changed = applyTranslationToLocalizedPair(service, "title", "title_i18n", lang, translations) || changed;
       changed = applyTranslationToLocalizedPair(service, "details", "details_i18n", lang, translations) || changed;
-      changed = applyTranslationToLocalizedPair(service, "location", "location_i18n", lang, translations) || changed;
       changed = applyTranslationToLocalizedPair(service, "image_subtitle", "image_subtitle_i18n", lang, translations) || changed;
       changed = applyTranslationsToTravelPlanImage(service.image, lang, translations) || changed;
       for (const image of Array.isArray(service.images) ? service.images : []) {
@@ -230,12 +228,6 @@ export function collectMarketingTourTranslationDescriptors(tour) {
     });
     addTourTranslationDescriptor(descriptors, {
       holder: day,
-      mapField: "overnight_location_i18n",
-      plainField: "overnight_location",
-      key: `travel_plan.${dayId}.overnight_location`
-    });
-    addTourTranslationDescriptor(descriptors, {
-      holder: day,
       mapField: "notes_i18n",
       plainField: "notes",
       key: `travel_plan.${dayId}.notes`
@@ -262,12 +254,6 @@ export function collectMarketingTourTranslationDescriptors(tour) {
         mapField: "details_i18n",
         plainField: "details",
         key: `travel_plan.${dayId}.${serviceId}.details`
-      });
-      addTourTranslationDescriptor(descriptors, {
-        holder: service,
-        mapField: "location_i18n",
-        plainField: "location",
-        key: `travel_plan.${dayId}.${serviceId}.location`
       });
       addTourTranslationDescriptor(descriptors, {
         holder: service,

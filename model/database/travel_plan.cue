@@ -54,8 +54,6 @@ import (
 	details_i18n?:   [string]: string
 	image_subtitle?: string
 	image_subtitle_i18n?: [string]: string
-	location?:       string
-	location_i18n?:  [string]: string
 	start_time?:     string
 	end_time?:       string
 	image?:          #TravelPlanServiceImage
@@ -78,8 +76,6 @@ import (
 	day_number:          >0 & int
 	title?:              string
 	title_i18n?:         [string]: string
-	overnight_location?: string
-	overnight_location_i18n?: [string]: string
 	primary_location_id?: common.#Identifier
 	secondary_location_id?: common.#Identifier
 	experience_highlight_ids?: [...common.#Identifier]

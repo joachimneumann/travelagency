@@ -124,7 +124,6 @@ function migrateTravelPlan(travelPlan, conflicts) {
     if (!isRecord(day)) return;
     const dayPath = `travel_plan.days[${dayIndex}]`;
     migrateLocalizedPair(day, "title", "title_i18n", `${dayPath}.title`, conflicts);
-    migrateLocalizedPair(day, "overnight_location", "overnight_location_i18n", `${dayPath}.overnight_location`, conflicts);
     migrateLocalizedPair(day, "notes", "notes_i18n", `${dayPath}.notes`, conflicts);
     const services = Array.isArray(day.services) ? day.services : [];
     services.forEach((service, serviceIndex) => {
@@ -134,7 +133,6 @@ function migrateTravelPlan(travelPlan, conflicts) {
       migrateLocalizedPair(service, "title", "title_i18n", `${servicePath}.title`, conflicts);
       migrateLocalizedPair(service, "details", "details_i18n", `${servicePath}.details`, conflicts);
       migrateLocalizedPair(service, "image_subtitle", "image_subtitle_i18n", `${servicePath}.image_subtitle`, conflicts);
-      migrateLocalizedPair(service, "location", "location_i18n", `${servicePath}.location`, conflicts);
       if (isRecord(service.image)) {
         migrateLocalizedPair(service.image, "caption", "caption_i18n", `${servicePath}.image.caption`, conflicts);
         migrateLocalizedPair(service.image, "alt_text", "alt_text_i18n", `${servicePath}.image.alt_text`, conflicts);

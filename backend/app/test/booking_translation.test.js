@@ -18,8 +18,6 @@ test("travel plan translation status counts customer-facing fields only", () => 
         id: "day_1",
         title: "Arrival in Hanoi",
         title_i18n: {},
-        overnight_location: "Hanoi",
-        overnight_location_i18n: {},
         notes: "Easy evening walk in the old quarter.",
         notes_i18n: {},
         services: [
@@ -30,8 +28,6 @@ test("travel plan translation status counts customer-facing fields only", () => 
             time_label_i18n: {},
             title: "Airport transfer",
             title_i18n: {},
-            location: "Noi Bai Airport",
-            location_i18n: {},
             image_subtitle: "Driver at arrival hall",
             image_subtitle_i18n: {},
             image: {
@@ -54,9 +50,9 @@ test("travel plan translation status counts customer-facing fields only", () => 
   travelPlan.days[0].title_i18n.fr = "Arrivee a Hanoi";
 
   const status = buildTravelPlanTranslationStatus(travelPlan, "fr");
-  assert.equal(status.total_fields, 10);
+  assert.equal(status.total_fields, 8);
   assert.equal(status.translated_fields, 1);
-  assert.equal(status.missing_fields, 9);
+  assert.equal(status.missing_fields, 7);
   assert.equal(status.status, "partial");
 });
 
@@ -68,10 +64,6 @@ test("travel plan manual target edits are tracked per field", () => {
         title: "Arrival in Hanoi",
         title_i18n: {
           fr: "Arrivee a Hanoi"
-        },
-        overnight_location: "Hanoi",
-        overnight_location_i18n: {
-          fr: "Hanoi"
         },
         services: [
           {
@@ -108,10 +100,6 @@ test("travel plan manual field locks survive future auto-translation", async () 
         title_i18n: {
           fr: "Arrivee a Hanoi"
         },
-        overnight_location: "Hanoi",
-        overnight_location_i18n: {
-          fr: "Hanoi"
-        },
         notes: "Relax after check-in.",
         notes_i18n: {
           fr: "Detendez-vous apres l'enregistrement."
@@ -147,10 +135,6 @@ test("travel plan manual field locks survive future auto-translation", async () 
               alt_text_i18n: {
                 fr: "Chauffeur tenant un panneau de bienvenue"
               }
-            },
-            location: "Noi Bai Airport",
-            location_i18n: {
-              fr: "Aeroport Noi Bai"
             }
           }
         ]
@@ -172,15 +156,13 @@ test("travel plan manual field locks survive future auto-translation", async () 
     "fr",
     async () => ({
       "travel_plan.day_1.title": "Titre machine",
-      "travel_plan.day_1.overnight_location": "Hanoi machine",
       "travel_plan.day_1.notes": "Notes machine",
       "travel_plan.day_1.seg_1.time_label": "Matinee machine",
       "travel_plan.day_1.seg_1.title": "Transfert machine",
       "travel_plan.day_1.seg_1.details": "Details machine",
       "travel_plan.day_1.seg_1.image_subtitle": "Sous-titre machine",
       "travel_plan.day_1.seg_1.image.caption": "Legende machine",
-      "travel_plan.day_1.seg_1.image.alt_text": "Texte alternatif machine",
-      "travel_plan.day_1.seg_1.location": "Lieu machine"
+      "travel_plan.day_1.seg_1.image.alt_text": "Texte alternatif machine"
     }),
     "2026-03-17T12:00:00.000Z"
   );

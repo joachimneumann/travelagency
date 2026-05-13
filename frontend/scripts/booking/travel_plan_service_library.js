@@ -390,7 +390,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
               ${escapeHtml(librarySourceLabel(item))}
             </div>
             <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.day_heading", "Day"))}</h3>
-            <p>${escapeHtml(item.overnight_location || item.notes || "")}</p>
+            <p>${escapeHtml(item.notes || "")}</p>
             <div class="travel-plan-library-card__meta">
               ${Number.isFinite(Number(item.service_count)) ? `<span>${escapeHtml(bookingT("booking.travel_plan.service_count", "{count} service(s)", { count: Number(item.service_count) }))}</span>` : ""}
               ${Number(item.image_count) > 0 ? `<span>${escapeHtml(bookingT("booking.travel_plan.image_count", "{count} images", { count: Number(item.image_count) }))}</span>` : ""}
@@ -418,7 +418,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
             ${escapeHtml(librarySourceLabel(item))}
           </div>
           <h3>${escapeHtml(item.title || bookingT("booking.travel_plan.item_title", "Service title"))}</h3>
-          <p>${escapeHtml(item.location || item.overnight_location || item.details || "")}</p>
+          <p>${escapeHtml(item.details || "")}</p>
           <div class="travel-plan-library-card__meta">
             ${item.service_kind ? `<span>${escapeHtml(bookingT(`booking.travel_plan.kind.${String(item.service_kind).toLowerCase()}`, item.service_kind))}</span>` : ""}
             ${Number(item.image_count) > 0 ? `<span>${escapeHtml(bookingT("booking.travel_plan.image_count", "{count} images", { count: Number(item.image_count) }))}</span>` : ""}
@@ -445,7 +445,7 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
     const day = findDraftDay(serviceLibraryState.dayId);
     updateTravelPlanLibraryModeUi();
     if (els.travelPlanServiceLibraryQuery && !els.travelPlanServiceLibraryQuery.value) {
-      els.travelPlanServiceLibraryQuery.value = String(day?.overnight_location || "").trim();
+      els.travelPlanServiceLibraryQuery.value = String(day?.title || "").trim();
     }
     serviceLibraryState.searchResults = [];
     renderTravelPlanServiceLibraryResults([]);

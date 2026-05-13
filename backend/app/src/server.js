@@ -99,7 +99,20 @@ async function moveDirectoryIfNeeded(sourceDir, targetDir) {
   const normalizedTargetDir = String(targetDir || "").trim();
   if (!normalizedSourceDir || !normalizedTargetDir || normalizedSourceDir === normalizedTargetDir) return;
   if (!(await pathExists(normalizedSourceDir))) return;
-  if (await pathExists(normalizedTargetDir)) return;
+  if (await pathExists(normalizedTargetDir)) {
+    const entries = await readdir(normalizedSourceDir, { withFileTypes: true }).catch(() => []);
+    await Promise.all(entries.map(async (entry) => {
+      const sourcePath = path.join(normalizedSourceDir, entry.name);
+      const targetPath = path.join(normalizedTargetDir, entry.name);
+      if (await pathExists(targetPath)) return;
+      await rename(sourcePath, targetPath).catch(() => {});
+    }));
+    const remainingEntries = await readdir(normalizedSourceDir).catch(() => []);
+    if (!remainingEntries.length) {
+      await rm(normalizedSourceDir, { recursive: true, force: true }).catch(() => {});
+    }
+    return;
+  }
   await mkdir(path.dirname(normalizedTargetDir), { recursive: true });
   await rename(normalizedSourceDir, normalizedTargetDir);
 }
@@ -283,6 +296,8 @@ export async function createBackendHandler({ port = PORT } = {}) {
   await backfillPersistedTourState();
   await services.travelPlanPdfArtifacts.migrateLegacyTravelPlanPdfStorage();
   await pruneDirectoryContents(RUNTIME_PATHS.travelPlanPdfPreviewDir);
+  await pruneDirectoryContents(RUNTIME_PATHS.publicTourOnePagerPdfPreviewDir);
+  await pruneDirectoryContents(RUNTIME_PATHS.publicTourTravelPlanPdfPreviewDir);
   await pruneDirectoryContents(path.join(RUNTIME_PATHS.pdfsRoot, "invoices"));
   await services.atpStaffDirectory.ensureStorage();
   await services.countryReferenceStore.ensureStorage();

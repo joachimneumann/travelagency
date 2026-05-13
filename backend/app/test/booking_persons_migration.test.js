@@ -11,11 +11,11 @@ test("store utils backfill missing booking persons from the public submission an
   const dataDir = path.join(rootDir, "data");
   const dataPath = path.join(dataDir, "store.json");
   const toursDir = path.join(dataDir, "tours");
-  const paymentDocumentsDir = path.join(dataDir, "payment_documents");
-  const generatedOffersDir = path.join(dataDir, "generated_offers");
+  const paymentDocumentsDir = path.join(dataDir, "pdfs", "payment_documents");
+  const generatedOffersDir = path.join(dataDir, "pdfs", "generated_offers");
   const bookingImagesDir = path.join(dataDir, "booking_images");
   const bookingPersonPhotosDir = path.join(dataDir, "booking_person_photos");
-  const bookingTravelPlanAttachmentsDir = path.join(dataDir, "booking_travel_plan_attachments");
+  const bookingTravelPlanAttachmentsDir = path.join(dataDir, "pdfs", "attachments");
   const tempUploadDir = path.join(dataDir, "tmp");
 
   await mkdir(dataDir, { recursive: true });
@@ -88,11 +88,11 @@ test("store utils prune legacy invoice data and strict-normalize accepted travel
   const dataDir = path.join(rootDir, "data");
   const dataPath = path.join(dataDir, "store.json");
   const toursDir = path.join(dataDir, "tours");
-  const paymentDocumentsDir = path.join(dataDir, "payment_documents");
-  const generatedOffersDir = path.join(dataDir, "generated_offers");
+  const paymentDocumentsDir = path.join(dataDir, "pdfs", "payment_documents");
+  const generatedOffersDir = path.join(dataDir, "pdfs", "generated_offers");
   const bookingImagesDir = path.join(dataDir, "booking_images");
   const bookingPersonPhotosDir = path.join(dataDir, "booking_person_photos");
-  const bookingTravelPlanAttachmentsDir = path.join(dataDir, "booking_travel_plan_attachments");
+  const bookingTravelPlanAttachmentsDir = path.join(dataDir, "pdfs", "attachments");
   const tempUploadDir = path.join(dataDir, "tmp");
   const travelPlanHelpers = createTravelPlanHelpers();
 
@@ -225,11 +225,11 @@ test("store utils preserve independent concurrent booking writes", async () => {
   const storeUtils = createStoreUtils({
     dataPath,
     toursDir: path.join(dataDir, "tours"),
-    paymentDocumentsDir: path.join(dataDir, "payment_documents"),
-    generatedOffersDir: path.join(dataDir, "generated_offers"),
+    paymentDocumentsDir: path.join(dataDir, "pdfs", "payment_documents"),
+    generatedOffersDir: path.join(dataDir, "pdfs", "generated_offers"),
     bookingImagesDir: path.join(dataDir, "booking_images"),
     bookingPersonPhotosDir: path.join(dataDir, "booking_person_photos"),
-    bookingTravelPlanAttachmentsDir: path.join(dataDir, "booking_travel_plan_attachments"),
+    bookingTravelPlanAttachmentsDir: path.join(dataDir, "pdfs", "attachments"),
     tempUploadDir: path.join(dataDir, "tmp"),
     writeQueueRef: { current: Promise.resolve() },
     syncBookingAssignmentFields: () => {},

@@ -940,7 +940,6 @@ export function createTravelPlanPdfWriter({
         textOrNull(day?.title),
         textOrNull(day?.date),
         textOrNull(day?.date_string),
-        textOrNull(day?.overnight_location),
         textOrNull(day?.notes),
         ...safeArray(day?.services || day?.items).flatMap((item) => [
           textOrNull(item?.time_label),
@@ -948,7 +947,6 @@ export function createTravelPlanPdfWriter({
           textOrNull(item?.start_time),
           textOrNull(item?.end_time),
           textOrNull(item?.title),
-          textOrNull(item?.location),
           textOrNull(item?.details)
         ])
       ]),

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-12T11:43:18Z
+# 2026-05-13T09:49:10Z
 
 ---
 openapi: 3.1.0
@@ -4013,14 +4013,6 @@ components:
           additionalProperties:
             type: string
           nullable: true
-        location:
-          type: string
-          nullable: true
-        location_i18n:
-          type: object
-          additionalProperties:
-            type: string
-          nullable: true
         start_time:
           type: string
           nullable: true
@@ -4044,14 +4036,6 @@ components:
           type: string
           nullable: true
         title_i18n:
-          type: object
-          additionalProperties:
-            type: string
-          nullable: true
-        overnight_location:
-          type: string
-          nullable: true
-        overnight_location_i18n:
           type: object
           additionalProperties:
             type: string
@@ -4429,9 +4413,6 @@ components:
           additionalProperties:
             type: string
           nullable: true
-        location:
-          type: string
-          nullable: true
         start_time:
           type: string
           nullable: true
@@ -4459,9 +4440,6 @@ components:
           type: string
           nullable: true
         title:
-          type: string
-          nullable: true
-        overnight_location:
           type: string
           nullable: true
         services:
@@ -5767,9 +5745,6 @@ components:
         title:
           type: string
           nullable: true
-        overnight_location:
-          type: string
-          nullable: true
         notes:
           type: string
           nullable: true
@@ -5823,12 +5798,6 @@ components:
           type: string
           nullable: true
         details:
-          type: string
-          nullable: true
-        location:
-          type: string
-          nullable: true
-        overnight_location:
           type: string
           nullable: true
         thumbnail_url:

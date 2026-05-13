@@ -79,6 +79,10 @@ export function resolveWipePaths({ storePath = "", dataDir = "" } = {}) {
       path.join(resolvedDataRoot, "booking_images"),
       path.join(resolvedDataRoot, "booking_person_photos"),
       path.join(tempRoot, "travel_plan_previews"),
+      path.join(tempRoot, "public-tour-pdf-previews", "one-pagers"),
+      path.join(tempRoot, "public-tour-pdf-previews", "travel-plans")
+    ],
+    legacyDirectories: [
       path.join(resolvedDataRoot, "payment_documents"),
       path.join(resolvedDataRoot, "generated_offers"),
       path.join(resolvedDataRoot, "booking_travel_plan_attachments")
@@ -148,6 +152,12 @@ async function resetDirectories(directories) {
   }
 }
 
+async function removeDirectories(directories) {
+  for (const directory of directories) {
+    await rm(directory, { recursive: true, force: true });
+  }
+}
+
 export async function wipeBookingsData({ storePath = "", dataDir = "", yes = false } = {}) {
   const paths = resolveWipePaths({ storePath, dataDir });
   const existingStore = await loadExistingStore(paths.storePath);
@@ -161,6 +171,7 @@ export async function wipeBookingsData({ storePath = "", dataDir = "", yes = fal
   await mkdir(path.dirname(paths.storePath), { recursive: true });
   await writeFile(paths.storePath, `${JSON.stringify(wipedStore, null, 2)}\n`, "utf8");
   await resetDirectories(paths.resetDirectories);
+  await removeDirectories(paths.legacyDirectories);
 
   return {
     ...paths,

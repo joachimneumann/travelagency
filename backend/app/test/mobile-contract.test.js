@@ -745,11 +745,6 @@ test("public booking request inherits the selected marketing tour travel plan wi
                   de: "Tag 1 Deutsch",
                   fr: "Jour 1 Francais"
                 },
-                overnight_location: "Hanoi",
-                overnight_location_i18n: {
-                  de: "Hanoi DE",
-                  fr: "Hanoi FR"
-                },
                 notes: "English day note",
                 notes_i18n: {
                   de: "Deutsche Tagesnotiz",
@@ -776,11 +771,6 @@ test("public booking request inherits the selected marketing tour travel plan wi
                       de: "Deutscher Bilduntertitel",
                       fr: "Sous-titre francais"
                     },
-                    location: "Hidden service location",
-                    location_i18n: {
-                      de: "Versteckter Ort",
-                      fr: "Lieu masque"
-                    }
                   }
                 ]
               }
@@ -838,12 +828,6 @@ test("public booking request inherits the selected marketing tour travel plan wi
       en: "Day 1 English",
       fr: "Jour 1 Francais"
     });
-    assert.equal(day.overnight_location, "Hanoi");
-    assert.deepEqual(day.overnight_location_i18n, {
-      de: "Hanoi DE",
-      en: "Hanoi",
-      fr: "Hanoi FR"
-    });
     assert.equal(day.notes, "English day note");
     assert.deepEqual(day.notes_i18n, {
       de: "Deutsche Tagesnotiz",
@@ -870,8 +854,6 @@ test("public booking request inherits the selected marketing tour travel plan wi
       en: "This service detail should reach the booking",
       fr: "Detail francais"
     });
-    assert.equal(service.location, null);
-    assert.deepEqual(service.location_i18n, {});
     assert.equal(service.timing_kind, "not_applicable");
     assert.equal(service.time_label, null);
     assert.deepEqual(service.time_label_i18n, {});
@@ -1695,7 +1677,6 @@ test("booking travel plan patch persists days and services", async () => {
               id: "travel_plan_day_1",
               day_number: 1,
               title: "Arrival",
-              overnight_location: "Hoi An",
               services: [
                 {
                   id: "travel_plan_service_1",
@@ -1898,7 +1879,6 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
           day_number: 1,
           date: "2026-08-10",
           title: "Old target day",
-          overnight_location: "Da Nang",
           services: [],
           notes: ""
         }
@@ -1932,7 +1912,6 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
                 id: "marketing_tour_source_day_1",
                 day_number: 1,
                 title: "Marketing tour day marker",
-                overnight_location: "Hanoi",
                 notes: "Marketing tour day notes",
                 services: [
                   {
@@ -1941,7 +1920,6 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
                     kind: "activity",
                     title: "Marketing tour service marker",
                     details: "Marketing tour service detail marker",
-                    location: "Hanoi"
                   }
                 ]
               }
@@ -1969,7 +1947,7 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
       }
     );
     assert.equal(applyResult.status, 200);
-    assert.deepEqual(applyResult.body.booking.travel_plan.destinations, ["VN"]);
+    assert.deepEqual(applyResult.body.booking.travel_plan.destinations, []);
     assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
     assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Marketing tour day marker");
     assert.equal(applyResult.body.booking.travel_plan.days[0].date, null);
@@ -2013,7 +1991,6 @@ test("marketing tour editor can import days and services from other marketing to
                 id: "marketing_library_source_day_1",
                 day_number: 1,
                 title: "Library source market day",
-                overnight_location: "Hoi An",
                 notes: "Reusable marketing day notes",
                 services: [
                   {
@@ -2026,7 +2003,6 @@ test("marketing tour editor can import days and services from other marketing to
 	                      de: "Laternen Service Details"
 	                    },
 	                    image_subtitle: "Lantern image subtitle",
-                    location: "Hoi An",
                     image: {
                       id: "marketing_library_source_image_1",
                       storage_path: "/public/v1/tour-images/source/library-service.webp",
@@ -2063,7 +2039,6 @@ test("marketing tour editor can import days and services from other marketing to
                 id: "marketing_library_target_day_1",
                 day_number: 1,
                 title: "Target base day",
-                overnight_location: "Da Nang",
                 services: []
               }
             ]
@@ -2082,7 +2057,6 @@ test("marketing tour editor can import days and services from other marketing to
     const reusableDayResult = daySearchResult.body.items.find((item) => item.source_tour_id === sourceTourId);
     assert.ok(reusableDayResult);
     assert.equal(reusableDayResult.source_day?.title, "Library source market day");
-    assert.equal(reusableDayResult.source_destination_scope?.[0]?.destination, "VN");
     assert.equal(daySearchResult.body.items.some((item) => item.source_tour_id === targetTourId), false);
 
     const serviceSearchResult = await requestJson(
@@ -2093,7 +2067,6 @@ test("marketing tour editor can import days and services from other marketing to
     const reusableServiceResult = serviceSearchResult.body.items.find((item) => item.source_tour_id === sourceTourId);
     assert.ok(reusableServiceResult);
     assert.equal(reusableServiceResult.source_service?.details, "Library lantern service details");
-    assert.equal(reusableServiceResult.source_destination_scope?.[0]?.destination, "VN");
     assert.ok(serviceSearchResult.body.items.some((item) => item.details === "Library lantern service details"));
 
     const sameTourImportResult = await requestJson(
@@ -2222,7 +2195,6 @@ test("booking editor can import days and services from marketing tours", async (
                 id: "booking_marketing_source_day_1",
                 day_number: 1,
                 title: "Reusable booking day",
-                overnight_location: "Hoi An",
                 notes: "Reusable booking day notes",
                 services: [
                   {
@@ -2235,7 +2207,6 @@ test("booking editor can import days and services from marketing tours", async (
 	                      de: "Wiederverwendbare Buchungsdetails"
 	                    },
 	                    image_subtitle: "Service image subtitle",
-                    location: "Hoi An"
                   }
                 ]
               }
@@ -2262,7 +2233,6 @@ test("booking editor can import days and services from marketing tours", async (
           id: "booking_marketing_target_day_1",
           day_number: 1,
           title: "Target booking day",
-          overnight_location: "Da Nang",
           services: [],
           notes: ""
         }
@@ -2289,7 +2259,6 @@ test("booking editor can import days and services from marketing tours", async (
                 id: "booking_marketing_target_day_1",
                 day_number: 1,
                 title: "Unsaved target booking day",
-                overnight_location: "Da Nang",
                 notes: "",
                 services: [
                   {
@@ -2348,7 +2317,7 @@ test("booking editor can import days and services from marketing tours", async (
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details, "Reusable booking service details");
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details_i18n?.de, "Wiederverwendbare Buchungsdetails");
     assert.notEqual(dayImportResult.body.booking.travel_plan.days[1].id, "booking_marketing_source_day_1");
-    assert.equal(dayImportResult.body.booking.travel_plan.destination_scope[0].destination, "VN");
+    assert.deepEqual(dayImportResult.body.booking.travel_plan.destination_scope, []);
   } finally {
     if (sourceTourId) {
       await requestJson(
@@ -2424,7 +2393,6 @@ test("booking travel plan save preserves locally inserted tour-backed service im
                 id: "booking_local_insert_day_1",
                 day_number: 1,
                 title: "Locally inserted booking day",
-                overnight_location: "Hoi An",
                 services: [
                   {
                     id: "booking_local_insert_service_1",
@@ -2480,7 +2448,6 @@ test("service image can be deleted", async () => {
         day_number: 1,
         date: "2026-04-02",
         title: "Arrival",
-        overnight_location: "Hue",
         services: [
           {
             id: "travel_item_1",
@@ -2489,7 +2456,6 @@ test("service image can be deleted", async () => {
             kind: "activity",
             title: "Citadel visit",
             details: "Guided walk",
-            location: "Hue",
             image: {
               id: "item_image_a",
               storage_path: "/public/v1/booking-images/a.webp",
@@ -2535,7 +2501,6 @@ test("service image upload keeps exactly one image", { skip: !HAS_MAGICK }, asyn
         day_number: 1,
         date: "2026-04-03",
         title: "Upload day",
-        overnight_location: "Hanoi",
         services: [
           {
             id: "travel_item_upload_1",
@@ -2544,7 +2509,6 @@ test("service image upload keeps exactly one image", { skip: !HAS_MAGICK }, asyn
             kind: "activity",
             title: "Photo item",
             details: "",
-            location: "Hanoi",
             image: {
               id: "travel_item_upload_image_1",
               storage_path: "/public/v1/booking-images/old.webp",
@@ -2600,7 +2564,6 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
               id: "travel_plan_day_attachment_1",
               day_number: 1,
               title: "Arrival",
-              overnight_location: "Hoi An",
               services: [
                 {
                   id: "travel_plan_service_attachment_1",
@@ -2609,7 +2572,6 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
                   kind: "accommodation",
                   title: "Riverside hotel check-in",
                   details: "Private transfer and hotel arrival.",
-                  location: "Hoi An"
                 }
               ]
             }
@@ -2984,7 +2946,6 @@ test("booking generated offers store immutable snapshots", async () => {
               day_number: 1,
               date: "2026-04-10",
               title: "Arrival in Hoi An",
-              overnight_location: "Hoi An",
               services: [
                 {
                   id: "travel_plan_service_1",
@@ -3000,7 +2961,6 @@ test("booking generated offers store immutable snapshots", async () => {
                   time_label: "Evening",
                   kind: "accommodation",
                   title: "Hotel check-in",
-                  location: "Hoi An"
                 }
               ]
             }
@@ -3064,7 +3024,6 @@ test("booking generated offers store immutable snapshots", async () => {
               day_number: 1,
               date: "2026-04-10",
               title: "Updated arrival plan",
-              overnight_location: "Hoi An",
               services: [
                 {
                   id: "travel_plan_service_1",
@@ -3244,14 +3203,12 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
       date: "2026-03-20",
       title: "PublicDayMarker731",
       notes: "PublicDayNote731",
-      overnight_location: "Hoi An",
       services: [{
         id: "travel_plan_service_pdf_marker",
         timing_kind: "point",
         time_point: "2026-03-20T14:00",
         kind: "activity",
         title: "PublicItemMarker731",
-        location: "Hoi An",
         details: "PublicDetailsMarker731",
         images: []
       }]
@@ -3421,7 +3378,6 @@ test("booking travel plan pdf renders personalized copy and accommodation line",
       day_number: 1,
       date: "2026-03-20",
       title: "Arrival day",
-      overnight_location: "Hoi An",
       services: [
         {
           id: "travel_plan_service_hotel_1",
@@ -3990,7 +3946,6 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
               day_number: 1,
               date: "2026-04-10",
               title: "Arrival day",
-              overnight_location: "Hoi An",
               services: [
                 {
                   id: "travel_plan_service_frozen_1",
@@ -4006,7 +3961,6 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
                   time_label: "Evening",
                   kind: "accommodation",
                   title: "Resort check-in",
-                  location: "Hoi An"
                 }
               ]
             }
@@ -5512,7 +5466,6 @@ test("first payment request freezes the accepted commercial snapshot before a re
               id: "travel_plan_day_first_request",
               day_number: 1,
               title: "Arrival",
-              overnight_location: "Hoi An",
               services: [
                 {
                   id: "travel_plan_service_first_request",
@@ -6193,6 +6146,7 @@ test("public tours only expose destinations published on webpage and hide unpubl
                 id: "visible_public_tour_day_1",
                 day_number: 1,
                 title: "Visible Vietnam day",
+                primary_location_id: "place_hanoi",
                 services: [
                   {
                     id: "visible_public_tour_service_1",

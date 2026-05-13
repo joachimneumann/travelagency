@@ -1127,7 +1127,6 @@ test("tour customizer only previews day cards with a title, geocoded location, a
           id: "text_only_location",
           day_number: 3,
           title: "Hoi An beach",
-          overnight_location: "Hoi An",
           services: [
             { title: "Boat", image: { storage_path: "/assets/img/boat.webp" } }
           ]

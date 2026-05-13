@@ -262,15 +262,11 @@ function dayTextFields(day) {
 
   push("day.title", 100, day?.title);
   push("day.title_i18n", 90, day?.title_i18n);
-  push("day.overnight_location", 95, day?.overnight_location);
-  push("day.overnight_location_i18n", 85, day?.overnight_location_i18n);
   push("day.description", 80, day?.description);
   push("day.notes", 80, day?.notes);
   push("day.notes_i18n", 65, day?.notes_i18n);
 
   for (const [index, service] of (Array.isArray(day?.services) ? day.services : []).entries()) {
-    push(`service[${index}].location`, 92, service?.location);
-    push(`service[${index}].location_i18n`, 82, service?.location_i18n);
     push(`service[${index}].title`, 75, service?.title);
     push(`service[${index}].title_i18n`, 65, service?.title_i18n);
     push(`service[${index}].description`, 55, service?.description);

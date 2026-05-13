@@ -21,6 +21,12 @@ content/**
 !content/atp_staff/.gitkeep
 !content/atp_staff/photos/
 !content/atp_staff/photos/.gitkeep
+!content/one-pagers/
+!content/one-pagers/.gitkeep
+!content/one-pagers/images/
+!content/one-pagers/images/.gitkeep
+!content/one-pagers/pdfs/
+!content/one-pagers/pdfs/.gitkeep
 !content/tours/
 !content/tours/.gitkeep
 !content/tours/destinations.json

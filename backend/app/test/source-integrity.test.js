@@ -1643,8 +1643,14 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanSource,
-    /const kindInput = itemNode\.querySelector\('\[data-travel-plan-service-field="kind"\]'\);[\s\S]*item\.kind = kindInput[\s\S]*String\(previousItem\?\.kind \|\| ""\)\.trim\(\);[\s\S]*readLocalizedFieldPayload\([\s\S]*"location",[\s\S]*previousItem\?\.location_i18n \?\? previousItem\?\.location/,
-    "Service editing should preserve saved kind and location values when the overview no longer renders those controls"
+    /const kindInput = itemNode\.querySelector\('\[data-travel-plan-service-field="kind"\]'\);[\s\S]*item\.kind = kindInput[\s\S]*String\(previousItem\?\.kind \|\| ""\)\.trim\(\);/,
+    "Service editing should preserve saved kind values when the overview no longer renders that control"
+  );
+  const removedServiceLocationI18nField = `location_${"i18n"}`;
+  assert.doesNotMatch(
+    travelPlanSource,
+    new RegExp(`data-travel-plan-service-field="location"|plainField:\\s+"location"|mapField:\\s+"${removedServiceLocationI18nField}"`),
+    "Service editing should not render or collect the removed service location fields"
   );
   assert.doesNotMatch(
     validationSource,

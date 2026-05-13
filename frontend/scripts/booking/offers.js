@@ -232,7 +232,6 @@ export function createBookingOfferModule(ctx) {
     const travelDays = Array.isArray(booking?.travel_plan?.days) ? booking.travel_plan.days : [];
     travelDays.forEach((day) => {
       considerField(day?.title_i18n);
-      considerField(day?.overnight_location_i18n);
       considerField(day?.notes_i18n);
       const services = Array.isArray(day?.services)
         ? day.services
@@ -241,7 +240,6 @@ export function createBookingOfferModule(ctx) {
         considerField(item?.time_label_i18n);
         considerField(item?.title_i18n);
         considerField(item?.details_i18n);
-        considerField(item?.location_i18n);
       });
     });
     return missing;

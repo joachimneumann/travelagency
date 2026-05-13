@@ -109,15 +109,6 @@ export function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
         emptyValue: ""
       }),
       createFieldDescriptor({
-        key: `travel_plan.${dayId}.overnight_location`,
-        holder: day,
-        mapField: "overnight_location_i18n",
-        plainField: "overnight_location",
-        sourceLang: normalizedSourceLang,
-        targetLang: normalizedTargetLang,
-        emptyValue: null
-      }),
-      createFieldDescriptor({
         key: `travel_plan.${dayId}.notes`,
         holder: day,
         mapField: "notes_i18n",
@@ -158,15 +149,6 @@ export function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
           holder: item,
           mapField: "details_i18n",
           plainField: "details",
-          sourceLang: normalizedSourceLang,
-          targetLang: normalizedTargetLang,
-          emptyValue: null
-        }),
-        createFieldDescriptor({
-          key: `travel_plan.${dayId}.${itemId}.location`,
-          holder: item,
-          mapField: "location_i18n",
-          plainField: "location",
           sourceLang: normalizedSourceLang,
           targetLang: normalizedTargetLang,
           emptyValue: null

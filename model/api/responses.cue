@@ -176,8 +176,6 @@ import (
 	service_kind?:       enums.#TravelPlanServiceKind
 	title?:              string
 	details?:            string
-	location?:           string
-	overnight_location?: string
 	thumbnail_url?:      common.#Url | string
 	image_count?:        >=0 & int
 	updated_at?:         common.#Timestamp
@@ -196,7 +194,6 @@ import (
 	day_id:              common.#Identifier
 	day_number?:         >0 & int
 	title?:              string
-	overnight_location?: string
 	primary_location_id?: common.#Identifier
 	secondary_location_id?: common.#Identifier
 	experience_highlight_ids?: [...common.#Identifier]

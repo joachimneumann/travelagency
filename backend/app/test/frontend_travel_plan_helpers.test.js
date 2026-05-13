@@ -44,10 +44,6 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
           vi: "Ngay tieng Viet",
           de: "Deutscher Tag"
         },
-        overnight_location: "Hanoi",
-        overnight_location_i18n: {
-          vi: "Ha Noi"
-        },
         primary_location_id: "region_central",
         secondary_location_id: "place_hue",
         experience_highlight_ids: ["iconic_landmarks", "cultural_heritage", "iconic_landmarks", ""],
@@ -87,10 +83,6 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
               alt_text_i18n: {
                 vi: "Van ban thay the"
               }
-            },
-            location: "Old Quarter",
-            location_i18n: {
-              vi: "Pho co"
             }
           }
         ]
@@ -117,11 +109,6 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
     vi: "Ngay tieng Viet",
     de: "Deutscher Tag",
     en: "English day"
-  });
-  assert.equal(day.overnight_location, "Hanoi");
-  assert.deepEqual(day.overnight_location_i18n, {
-    vi: "Ha Noi",
-    en: "Hanoi"
   });
   assert.equal(day.primary_location_id, "region_central");
   assert.equal(day.secondary_location_id, "place_hue");
@@ -160,11 +147,6 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
   assert.deepEqual(service.image.alt_text_i18n, {
     vi: "Van ban thay the",
     en: "English alt text"
-  });
-  assert.equal(service.location, "Old Quarter");
-  assert.deepEqual(service.location_i18n, {
-    vi: "Pho co",
-    en: "Old Quarter"
   });
   assert.deepEqual(normalized.translation_meta, {
     vi: {

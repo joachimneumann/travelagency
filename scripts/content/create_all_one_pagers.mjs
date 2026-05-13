@@ -7,6 +7,7 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { CUSTOMER_CONTENT_LANGUAGES } from "../../shared/generated/language_catalog.js";
 import {
+  CONTENT_ONE_PAGERS_DIR,
   COMPANY_PROFILE,
   FALLBACK_BOOKING_IMAGE_PATH
 } from "../../backend/app/src/config/runtime.js";
@@ -27,7 +28,7 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const toursDir = path.join(repoRoot, "content", "tours");
 const translationsSnapshotDir = path.join(repoRoot, "content", "translations");
 const translationManualOverridesPath = path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
-const defaultOutputDir = path.join(repoRoot, "content", "one-pagers");
+const defaultOutputDir = CONTENT_ONE_PAGERS_DIR;
 const flagTokensPath = path.join(repoRoot, "shared", "css", "tokens.css");
 const experienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
 const googleSitesBaseUrl = "https://sites.google.com";
@@ -205,7 +206,7 @@ function textOrNull(value) {
 }
 
 function serviceImageLabel(service, fallback = "Tour") {
-  return textOrNull(service?.title) || textOrNull(service?.location) || fallback;
+  return textOrNull(service?.title) || fallback;
 }
 
 function normalizeTourImageStoragePath(storagePath) {

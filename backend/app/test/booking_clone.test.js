@@ -140,7 +140,7 @@ function buildSourceBooking() {
           ]
         }
       ],
-      attachments: [{ id: "travel_plan_attachment_1", storage_path: "booking_travel_plan_attachments/doc.pdf" }]
+      attachments: [{ id: "travel_plan_attachment_1", storage_path: "booking_source/doc.pdf" }]
     },
     generated_offers: [{ id: "generated_offer_1" }]
   };
@@ -231,7 +231,7 @@ test("cloneBookingForTesting keeps only approved metadata and clears commercial 
   assert.equal(cloned.travel_plan.days[0].services[0].images[0].storage_path, "travel_plan_service_images/pickup.webp");
   assert.notEqual(cloned.travel_plan.days[0].services[0].images[0].id, "travel_plan_service_image_1");
   assert.equal(cloned.travel_plan.attachments.length, 1);
-  assert.equal(cloned.travel_plan.attachments[0].storage_path, "booking_travel_plan_attachments/doc.pdf");
+  assert.equal(cloned.travel_plan.attachments[0].storage_path, "booking_source/doc.pdf");
   assert.notEqual(cloned.travel_plan.attachments[0].id, "travel_plan_attachment_1");
 
   assert.equal(cloned.pricing, undefined);

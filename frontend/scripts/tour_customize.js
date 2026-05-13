@@ -139,11 +139,9 @@ function daySearchText(day, lang) {
   const services = Array.isArray(day?.services) ? day.services : [];
   return [
     resolveLocalizedField(day, "title", lang),
-    resolveLocalizedField(day, "overnight_location", lang),
     resolveLocalizedField(day, "notes", lang),
     ...services.flatMap((service) => [
       resolveLocalizedField(service, "title", lang),
-      resolveLocalizedField(service, "location", lang),
       resolveLocalizedField(service, "details", lang)
     ])
   ].join(" ");
@@ -163,7 +161,7 @@ function resolveRoutePoints(day, lang, catalog = null, { allowTextFallback = tru
       explicitPoints.push({
         lat: location.latitude,
         lng: location.longitude,
-        label: location.label || resolveLocalizedField(day, "overnight_location", lang),
+        label: location.label || resolveLocalizedField(day, "title", lang),
         locationId: id,
         role
       });
@@ -172,7 +170,7 @@ function resolveRoutePoints(day, lang, catalog = null, { allowTextFallback = tru
   if (explicitPoints.length) return explicitPoints;
   const explicit = day?.route_point || day?.routePoint;
   if (explicit && Number.isFinite(Number(explicit.lat)) && Number.isFinite(Number(explicit.lng))) {
-    const label = normalizeText(explicit.label) || resolveLocalizedField(day, "overnight_location", lang);
+    const label = normalizeText(explicit.label) || resolveLocalizedField(day, "title", lang);
     return [{ lat: Number(explicit.lat), lng: Number(explicit.lng), label, role: "primary" }];
   }
   if (!allowTextFallback) return [];
@@ -251,7 +249,7 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
   if (!sourceTourId || !sourceDayId || !title || !thumbnailUrl || !routePoints.length) return null;
   const { routePoint, mapPoint } = routePoints[0];
   const locationLabel = normalizeText(routePoint.label)
-    || resolveLocalizedField(day, "overnight_location", lang);
+    || resolveLocalizedField(day, "title", lang);
   if (!locationLabel) return null;
   return {
     id: `${sourceTourId}:${sourceDayId}`,
@@ -570,7 +568,6 @@ export function createTourCustomizer({
     }
     const explicit = day?.route_point || day?.routePoint;
     if (explicit?.label) labels.push(explicit.label);
-    labels.push(resolveLocalizedField(day, "overnight_location", lang()));
     return uniqueOrderedTexts(labels);
   }
 

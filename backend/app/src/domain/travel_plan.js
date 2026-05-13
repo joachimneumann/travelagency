@@ -266,13 +266,6 @@ function normalizeTravelPlanDays(days, options = {}) {
           flatMode,
           hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
         });
-        const locationField = normalizeTravelPlanLocalizedField(rawItem?.location_i18n, rawItem?.location, {
-          contentLang,
-          flatLang,
-          sourceLang,
-          flatMode,
-          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-        });
         const imageSubtitleField = normalizeTravelPlanLocalizedField(rawItem?.image_subtitle_i18n, rawItem?.image_subtitle, {
           contentLang,
           flatLang,
@@ -293,8 +286,6 @@ function normalizeTravelPlanDays(days, options = {}) {
           details_i18n: detailsField.map,
           image_subtitle: imageSubtitleField.text || null,
           image_subtitle_i18n: imageSubtitleField.map,
-          location: locationField.text || null,
-          location_i18n: locationField.map,
           start_time: timing.start_time,
           end_time: timing.end_time,
           image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex, {
@@ -314,17 +305,6 @@ function normalizeTravelPlanDays(days, options = {}) {
         flatMode,
         hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
       });
-      const overnightLocationField = normalizeTravelPlanLocalizedField(
-        day?.overnight_location_i18n,
-        day?.overnight_location,
-        {
-          contentLang,
-          flatLang,
-          sourceLang,
-          flatMode,
-          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-        }
-      );
       const notesField = normalizeTravelPlanLocalizedField(day?.notes_i18n, day?.notes, {
         contentLang,
         flatLang,
@@ -341,8 +321,6 @@ function normalizeTravelPlanDays(days, options = {}) {
         date_string: normalizedDate ? null : normalizeOptionalText(day?.date_string),
         title: titleField.text,
         title_i18n: titleField.map,
-        overnight_location: overnightLocationField.text || null,
-        overnight_location_i18n: overnightLocationField.map,
         primary_location_id: normalizeOptionalText(day?.primary_location_id) || null,
         secondary_location_id: normalizeOptionalText(day?.secondary_location_id) || null,
         experience_highlight_ids: normalizeExperienceHighlightIds(day?.experience_highlight_ids, { limit: 1 }),

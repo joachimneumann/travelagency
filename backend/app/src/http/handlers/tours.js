@@ -81,6 +81,9 @@ export function createTourHandlers(deps) {
     path,
     execFile,
     TEMP_UPLOAD_DIR,
+    PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR,
+    PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR,
+    PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR,
     TOURS_DIR,
     TRANSLATIONS_SNAPSHOT_DIR,
     TRANSLATION_MANUAL_OVERRIDES_PATH,
@@ -98,6 +101,12 @@ export function createTourHandlers(deps) {
   const VIDEO_UPLOAD_BODY_MAX_BYTES = 150 * 1024 * 1024;
   const TOUR_STALE_UPDATE_MESSAGE = "This tour was updated by someone else. Reload before saving.";
   const CUSTOM_ONE_PAGER_PREVIEW_TTL_MS = 20 * 60 * 1000;
+  const publicTourOnePagerPdfCacheDir = normalizeText(PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR)
+    || path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-cache", "one-pagers");
+  const publicTourOnePagerPdfPreviewDir = normalizeText(PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR)
+    || path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-previews", "one-pagers");
+  const publicTourTravelPlanPdfPreviewDir = normalizeText(PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR)
+    || path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-previews", "travel-plans");
   const CUSTOM_PREVIEW_TITLE_MAX_LENGTH = 120;
   const CUSTOM_PREVIEW_TITLE_PROPOSAL_LIMIT = 1;
   const CUSTOM_PREVIEW_TITLE_LOCATION_LIMIT = 3;
@@ -707,7 +716,6 @@ export function createTourHandlers(deps) {
       day_id: normalizeText(day?.id),
       day_number: day?.day_number || null,
       title: normalizeText(day?.title),
-      overnight_location: normalizeText(day?.overnight_location),
       primary_location_id: normalizeText(day?.primary_location_id) || null,
       secondary_location_id: normalizeText(day?.secondary_location_id) || null,
       experience_highlight_ids: normalizeExperienceHighlightIds(day?.experience_highlight_ids, { limit: 1 }),
@@ -733,8 +741,6 @@ export function createTourHandlers(deps) {
       service_kind: normalizeText(item.kind) || null,
       title: normalizeText(item.title),
       details: normalizeText(item.details),
-      location: normalizeText(item.location),
-      overnight_location: normalizeText(day?.overnight_location),
       thumbnail_url: normalizeText(primaryImage?.storage_path),
       thumbnail_urls: thumbnailUrls,
       image_count: thumbnailUrls.length,
@@ -770,8 +776,6 @@ export function createTourHandlers(deps) {
       details_i18n: includeTranslations && sourceItem?.details_i18n ? { ...sourceItem.details_i18n } : undefined,
       image_subtitle: preferredEnglishImportText(sourceItem?.image_subtitle_i18n, sourceItem?.image_subtitle),
       image_subtitle_i18n: includeTranslations && sourceItem?.image_subtitle_i18n ? { ...sourceItem.image_subtitle_i18n } : undefined,
-      location: preferredEnglishImportText(sourceItem?.location_i18n, sourceItem?.location),
-      location_i18n: includeTranslations && sourceItem?.location_i18n ? { ...sourceItem.location_i18n } : undefined,
       start_time: normalizeText(sourceItem?.start_time),
       end_time: normalizeText(sourceItem?.end_time),
       image
@@ -786,8 +790,6 @@ export function createTourHandlers(deps) {
       day_number: 1,
       title: preferredEnglishImportText(sourceDay?.title_i18n, sourceDay?.title),
       title_i18n: includeTranslations && sourceDay?.title_i18n ? { ...sourceDay.title_i18n } : undefined,
-      overnight_location: preferredEnglishImportText(sourceDay?.overnight_location_i18n, sourceDay?.overnight_location),
-      overnight_location_i18n: includeTranslations && sourceDay?.overnight_location_i18n ? { ...sourceDay.overnight_location_i18n } : undefined,
       primary_location_id: normalizeText(sourceDay?.primary_location_id) || null,
       secondary_location_id: normalizeText(sourceDay?.secondary_location_id) || null,
       experience_highlight_ids: normalizeExperienceHighlightIds(sourceDay?.experience_highlight_ids, { limit: 1 }),
@@ -917,7 +919,7 @@ export function createTourHandlers(deps) {
   }
 
   function publicOnePagerPdfCachePath(cacheKey) {
-    return path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-cache", "one-pagers", `${cacheKey}.pdf`);
+    return path.join(publicTourOnePagerPdfCacheDir, `${cacheKey}.pdf`);
   }
 
   async function cachedPublicOnePagerPdf(cacheKey, renderPdf) {
@@ -1058,7 +1060,7 @@ export function createTourHandlers(deps) {
         labels.push(placeLabelById.get(locationId));
       }
       const routePoint = day?.route_point || day?.routePoint;
-      labels.push(routePoint?.label, day?.overnight_location);
+      labels.push(routePoint?.label);
     }
     return uniqueOrderedPreviewTexts(labels);
   }
@@ -1119,7 +1121,7 @@ export function createTourHandlers(deps) {
           entries.push({
             id: normalizeText(image?.id) || `overview-service-image-${dayIndex + 1}-${serviceIndex + 1}-${imageIndex + 1}`,
             storage_path: storagePath,
-            label: normalizeText(service?.title) || normalizeText(service?.location) || normalizeText(day?.overnight_location) || normalizeText(day?.title) || "Tour",
+            label: normalizeText(service?.title) || normalizeText(day?.title) || "Tour",
             is_middle_day_image: dayIndex > 0 && dayIndex < lastDayIndex,
             skip_automatic_one_pager_selection: edgeServiceKeys.has(`${dayIndex}:${serviceIndex}`)
           });
@@ -1378,7 +1380,7 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-one-pager-preview-${normalizedToken}.pdf`);
+    const previewPath = path.join(publicTourOnePagerPdfPreviewDir, `tour-one-pager-preview-${normalizedToken}.pdf`);
     let renderedPath = previewPath;
     try {
       await mkdir(path.dirname(previewPath), { recursive: true });
@@ -1428,7 +1430,7 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-travel-plan-preview-${normalizedToken}.pdf`);
+    const previewPath = path.join(publicTourTravelPlanPdfPreviewDir, `tour-travel-plan-preview-${normalizedToken}.pdf`);
     let renderedPath = previewPath;
     const lang = normalizeTourLang(entry.lang);
     try {
@@ -1554,9 +1556,8 @@ export function createTourHandlers(deps) {
         const haystack = [
           readModel.title,
           day?.title,
-          day?.overnight_location,
           day?.notes,
-          ...services.flatMap((item) => [item?.title, item?.image_subtitle, item?.location])
+          ...services.flatMap((item) => [item?.title, item?.image_subtitle, item?.details])
         ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean).join(" ");
         if (query && !haystack.includes(query)) continue;
         rows.push(buildTourTravelPlanDaySearchResult({
@@ -1605,10 +1606,9 @@ export function createTourHandlers(deps) {
           const haystack = [
             readModel.title,
             day?.title,
-            day?.overnight_location,
             item?.title,
             item?.image_subtitle,
-            item?.location
+            item?.details
           ].map((value) => normalizeText(value).toLowerCase()).filter(Boolean).join(" ");
           if (query && !haystack.includes(query)) continue;
           rows.push(buildTourTravelPlanServiceSearchResult({
@@ -1697,7 +1697,7 @@ export function createTourHandlers(deps) {
     });
     const bookingLikeTour = travelPlanPdfBookingLikeTour(localizedTour, lang);
     const tourIdPart = normalizeText(tour?.id) || "tour";
-    const previewPath = path.join(TEMP_UPLOAD_DIR, `tour-travel-plan-${tourIdPart}-${randomUUID()}.pdf`);
+    const previewPath = path.join(publicTourTravelPlanPdfPreviewDir, `tour-travel-plan-${tourIdPart}-${randomUUID()}.pdf`);
     let renderedPath = previewPath;
     try {
       await mkdir(path.dirname(previewPath), { recursive: true });

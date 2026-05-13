@@ -1363,7 +1363,6 @@ export function createFrontendToursController(ctx) {
     const title = resolveTravelPlanField(service, "title")
       || resolveTravelPlanField(service, "image_subtitle")
       || resolveTravelPlanImageField(titleImage, "caption")
-      || resolveTravelPlanField(service, "location")
       || formatServiceKindLabel(service?.kind);
     return title || (genericFallback ? frontendT("tour.plan.service_fallback", "Service") : "");
   }
@@ -1385,9 +1384,8 @@ export function createFrontendToursController(ctx) {
     const title = resolveTravelPlanField(service, "title")
       || resolveTravelPlanField(service, "image_subtitle")
       || formatServiceKindLabel(service?.kind);
-    const location = resolveTravelPlanField(service, "location");
     const details = resolveTravelPlanField(service, "details");
-    const parts = [title, location].map((item) => compactText(item)).filter(Boolean);
+    const parts = [title].map((item) => compactText(item)).filter(Boolean);
     let line = parts.join(" - ");
     const detailsText = compactServiceDetailText(details);
     const titleText = compactText(title).toLowerCase();
