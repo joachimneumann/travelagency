@@ -2,6 +2,7 @@ const TOUR_CUSTOMIZE_STORAGE_PREFIX = "asiatravelplan.custom_tour.";
 const TOUR_CUSTOMIZE_TITLE_PROPOSAL_LIMIT = 1;
 const TOUR_CUSTOMIZE_TITLE_LOCATION_LIMIT = 3;
 const TOUR_CUSTOMIZE_REORDER_ANIMATION_MS = 170;
+const TOUR_CUSTOMIZE_OPTIMIZE_REORDER_ANIMATION_MS = 520;
 const TOUR_CUSTOMIZE_DROP_ANIMATION_MS = 190;
 const TOUR_CUSTOMIZE_DELETE_ANIMATION_MS = 220;
 const TOUR_CUSTOMIZE_SMOKE_ANIMATION_MS = 460;
@@ -21,6 +22,8 @@ const TOUR_CUSTOMIZE_DEFAULT_ROUTE_BOUNDS = Object.freeze({
   east: 109.987724
 });
 const TOUR_CUSTOMIZE_MAP_ZOOM_FACTOR = 3;
+const TOUR_CUSTOMIZE_EARTH_RADIUS_KM = 6371;
+const TOUR_CUSTOMIZE_DISTANCE_IMPROVEMENT_EPSILON = 0.001;
 
 function normalizeText(value) {
   return String(value ?? "").trim();
@@ -288,6 +291,152 @@ function modulePrimaryLatitude(module) {
   return Number.isFinite(fallback) ? fallback : -Infinity;
 }
 
+function routeCoordinateForEntry(entry) {
+  const lat = Number(entry?.routePoint?.lat);
+  const lng = Number(entry?.routePoint?.lng);
+  if (Number.isFinite(lat) && Number.isFinite(lng)) return { lat, lng, kind: "geo" };
+  const x = Number(entry?.mapPoint?.x);
+  const y = Number(entry?.mapPoint?.y);
+  if (Number.isFinite(x) && Number.isFinite(y)) return { x, y, kind: "map" };
+  return null;
+}
+
+function routeCoordinatesForItem(item) {
+  const entries = Array.isArray(item?.routePoints) && item.routePoints.length
+    ? item.routePoints
+    : [{ routePoint: item?.routePoint, mapPoint: item?.mapPoint }];
+  return entries
+    .map(routeCoordinateForEntry)
+    .filter(Boolean);
+}
+
+function degreesToRadians(value) {
+  return (value * Math.PI) / 180;
+}
+
+function routeCoordinateDistance(left, right) {
+  if (!left || !right) return 0;
+  if (left.kind === "geo" && right.kind === "geo") {
+    const deltaLat = degreesToRadians(right.lat - left.lat);
+    const deltaLng = degreesToRadians(right.lng - left.lng);
+    const startLat = degreesToRadians(left.lat);
+    const endLat = degreesToRadians(right.lat);
+    const a = Math.sin(deltaLat / 2) ** 2
+      + Math.cos(startLat) * Math.cos(endLat) * Math.sin(deltaLng / 2) ** 2;
+    return 2 * TOUR_CUSTOMIZE_EARTH_RADIUS_KM * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  const leftX = left.kind === "map" ? left.x : left.lng;
+  const leftY = left.kind === "map" ? left.y : left.lat;
+  const rightX = right.kind === "map" ? right.x : right.lng;
+  const rightY = right.kind === "map" ? right.y : right.lat;
+  return Math.hypot(rightX - leftX, rightY - leftY);
+}
+
+function timelineTravelDistance(timelineDays) {
+  const coordinates = (Array.isArray(timelineDays) ? timelineDays : [])
+    .flatMap(routeCoordinatesForItem);
+  let total = 0;
+  for (let index = 1; index < coordinates.length; index += 1) {
+    total += routeCoordinateDistance(coordinates[index - 1], coordinates[index]);
+  }
+  return total;
+}
+
+function itemConnectionDistance(left, right) {
+  const leftCoordinates = routeCoordinatesForItem(left);
+  const rightCoordinates = routeCoordinatesForItem(right);
+  return routeCoordinateDistance(leftCoordinates[leftCoordinates.length - 1], rightCoordinates[0]);
+}
+
+function nearestNeighborTimelineOrder(items, startIndex = 0) {
+  const source = Array.isArray(items) ? items : [];
+  if (source.length <= 1) return [...source];
+  const remaining = source.map((item, index) => ({ item, index }));
+  const boundedStartIndex = Math.min(Math.max(0, startIndex), remaining.length - 1);
+  const [start] = remaining.splice(boundedStartIndex, 1);
+  const ordered = [start.item];
+  while (remaining.length) {
+    const current = ordered[ordered.length - 1];
+    let bestRemainingIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+    for (let index = 0; index < remaining.length; index += 1) {
+      const distance = itemConnectionDistance(current, remaining[index].item);
+      if (
+        distance < bestDistance
+        || (distance === bestDistance && remaining[index].index < remaining[bestRemainingIndex].index)
+      ) {
+        bestDistance = distance;
+        bestRemainingIndex = index;
+      }
+    }
+    const [next] = remaining.splice(bestRemainingIndex, 1);
+    ordered.push(next.item);
+  }
+  return ordered;
+}
+
+function improveTimelineOrderWithTwoOpt(items) {
+  let best = Array.isArray(items) ? [...items] : [];
+  let bestDistance = timelineTravelDistance(best);
+  let improved = true;
+  while (improved) {
+    improved = false;
+    for (let start = 0; start < best.length - 1; start += 1) {
+      for (let end = start + 1; end < best.length; end += 1) {
+        const candidate = [
+          ...best.slice(0, start),
+          ...best.slice(start, end + 1).reverse(),
+          ...best.slice(end + 1)
+        ];
+        const candidateDistance = timelineTravelDistance(candidate);
+        if (candidateDistance + TOUR_CUSTOMIZE_DISTANCE_IMPROVEMENT_EPSILON < bestDistance) {
+          best = candidate;
+          bestDistance = candidateDistance;
+          improved = true;
+        }
+      }
+    }
+  }
+  return best;
+}
+
+function optimizeLocatedTimelineRun(items) {
+  const source = Array.isArray(items) ? items : [];
+  if (source.length <= 1) return [...source];
+  let best = [...source];
+  let bestDistance = timelineTravelDistance(best);
+  for (let startIndex = 0; startIndex < source.length; startIndex += 1) {
+    const candidate = improveTimelineOrderWithTwoOpt(nearestNeighborTimelineOrder(source, startIndex));
+    const candidateDistance = timelineTravelDistance(candidate);
+    if (candidateDistance + TOUR_CUSTOMIZE_DISTANCE_IMPROVEMENT_EPSILON < bestDistance) {
+      best = candidate;
+      bestDistance = candidateDistance;
+    }
+  }
+  return best;
+}
+
+function optimizeTimelineDaysByDistance(timelineDays) {
+  const source = Array.isArray(timelineDays) ? timelineDays : [];
+  const optimized = [];
+  let locatedRun = [];
+  const flushLocatedRun = () => {
+    if (!locatedRun.length) return;
+    optimized.push(...optimizeLocatedTimelineRun(locatedRun));
+    locatedRun = [];
+  };
+  for (const item of source) {
+    if (routeCoordinatesForItem(item).length) {
+      locatedRun.push(item);
+      continue;
+    }
+    flushLocatedRun();
+    optimized.push(item);
+  }
+  flushLocatedRun();
+  return optimized;
+}
+
 function sortModulesNorthToSouth(modules) {
   return [...(Array.isArray(modules) ? modules : [])].sort((left, right) => {
     const leftLocationKey = modulePrimaryLocationKey(left);
@@ -530,6 +679,12 @@ export function createTourCustomizer({
   function timelineSignature(timelineDays) {
     return selectedDaysFromTimeline(timelineDays)
       .map((item) => `${item.source_tour_id}:${item.source_day_id}`)
+      .join("|");
+  }
+
+  function timelineOrderSignature(timelineDays) {
+    return (Array.isArray(timelineDays) ? timelineDays : [])
+      .map(timelineItemKey)
       .join("|");
   }
 
@@ -932,9 +1087,14 @@ export function createTourCustomizer({
     return `
       <section class="tour-customize-map${zoomClass}"${zoomStyle} aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
         <div class="tour-customize-map__region" aria-hidden="true"></div>
-        <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
-          <span aria-hidden="true"></span>
-        </button>
+        <div class="tour-customize-map__controls">
+          <button class="tour-customize-map__optimize" type="button" data-customize-optimize data-customize-map-control aria-label="${escapeAttr(t("tour.customize.optimize", "Optimize"))}" title="${escapeAttr(t("tour.customize.optimize", "Optimize"))}">
+            ${escapeHTML(t("tour.customize.optimize", "Optimize"))}
+          </button>
+          <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out data-customize-map-control aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
+            <span aria-hidden="true"></span>
+          </button>
+        </div>
         <svg class="tour-customize-map__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
           ${path ? `<path d="${escapeAttr(path)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
         </svg>
@@ -1156,6 +1316,33 @@ export function createTourCustomizer({
     if (refreshOptions) refreshOptionsDom();
     refreshTimelineTitleDom();
     refreshCloseActionDom();
+  }
+
+  function optimizeTimelineOrder() {
+    if (!draft || !Array.isArray(draft.timelineDays) || draft.timelineDays.length < 2) return false;
+    const currentDistance = timelineTravelDistance(draft.timelineDays);
+    const optimizedTimelineDays = optimizeTimelineDaysByDistance(draft.timelineDays);
+    const optimizedDistance = timelineTravelDistance(optimizedTimelineDays);
+    const currentSignature = timelineOrderSignature(draft.timelineDays);
+    const optimizedSignature = timelineOrderSignature(optimizedTimelineDays);
+    if (
+      optimizedSignature === currentSignature
+      || !(optimizedDistance + TOUR_CUSTOMIZE_DISTANCE_IMPROVEMENT_EPSILON < currentDistance)
+    ) {
+      return false;
+    }
+    draft.timelineDays = optimizedTimelineDays;
+    const timeline = modal?.querySelector("[data-customize-timeline]");
+    if (timeline instanceof HTMLElement) {
+      animateTimelineDomOrder(timeline, () => syncTimelineDomOrder(timeline), {
+        className: "is-optimizing-reorder",
+        duration: TOUR_CUSTOMIZE_OPTIMIZE_REORDER_ANIMATION_MS
+      });
+    } else {
+      refreshTimelineDom();
+    }
+    refreshAfterTimelineChange();
+    return true;
   }
 
   function addDay(itemId, insertIndex = draft.timelineDays.length) {
@@ -1488,12 +1675,17 @@ export function createTourCustomizer({
     updateTimelineDayLabels(timeline);
   }
 
-  function animateTimelineDomOrder(timeline, applyOrderChange) {
+  function animateTimelineDomOrder(timeline, applyOrderChange, options = {}) {
     if (!(timeline instanceof HTMLElement) || typeof applyOrderChange !== "function") return;
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
       applyOrderChange();
       return;
     }
+    const className = normalizeText(options?.className) || "is-reordering";
+    const duration = Math.max(
+      0,
+      Number.isFinite(Number(options?.duration)) ? Number(options.duration) : TOUR_CUSTOMIZE_REORDER_ANIMATION_MS
+    );
     const before = new Map(timelineItemElements(timeline).map((element) => [
       element.getAttribute("data-customize-timeline-id"),
       element.getBoundingClientRect()
@@ -1509,6 +1701,7 @@ export function createTourCustomizer({
       const deltaY = previousRect.top - nextRect.top;
       if (Math.abs(deltaX) < 0.5 && Math.abs(deltaY) < 0.5) return;
       element.classList.remove("is-reordering");
+      element.classList.remove("is-optimizing-reorder");
       element.style.transition = "none";
       element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
       movingElements.push(element);
@@ -1516,12 +1709,12 @@ export function createTourCustomizer({
     if (!movingElements.length) return;
     timeline.offsetHeight;
     movingElements.forEach((element) => {
-      element.classList.add("is-reordering");
+      element.classList.add(className);
       element.style.removeProperty("transition");
       element.style.removeProperty("transform");
       window.setTimeout(() => {
-        element.classList.remove("is-reordering");
-      }, TOUR_CUSTOMIZE_REORDER_ANIMATION_MS + 40);
+        element.classList.remove(className);
+      }, duration + 40);
     });
   }
 
@@ -2266,6 +2459,8 @@ export function createTourCustomizer({
     if (!(map instanceof HTMLElement) || map.dataset.customizeMapZoomBound === "1") return;
     map.dataset.customizeMapZoomBound = "1";
     const zoomOutButton = map.querySelector("[data-customize-map-zoom-out]");
+    const optimizeButton = map.querySelector("[data-customize-optimize]");
+    const isMapControlTarget = (target) => target instanceof Element && Boolean(target.closest("[data-customize-map-control]"));
     const applyZoomStateToCurrentMap = () => {
       const zoom = currentMapZoom();
       map.classList.toggle("is-zoomed", zoom.zoomed);
@@ -2312,8 +2507,13 @@ export function createTourCustomizer({
       event.stopPropagation();
       zoomOut();
     });
+    optimizeButton?.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      optimizeTimelineOrder();
+    });
     map.addEventListener("dblclick", (event) => {
-      if (event.target instanceof Element && event.target.closest("[data-customize-map-zoom-out]")) return;
+      if (isMapControlTarget(event.target)) return;
       event.preventDefault();
       if (map.classList.contains("is-zoomed")) {
         zoomOut();
@@ -2328,7 +2528,7 @@ export function createTourCustomizer({
     });
     map.addEventListener("pointerdown", (event) => {
       if (event.button !== 0 || !draft?.mapZoom?.zoomed) return;
-      if (event.target instanceof Element && event.target.closest("[data-customize-map-zoom-out]")) return;
+      if (isMapControlTarget(event.target)) return;
       event.preventDefault();
       event.stopPropagation();
       const zoom = currentMapZoom();

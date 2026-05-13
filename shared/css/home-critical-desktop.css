@@ -2671,21 +2671,48 @@ html.tour-customize-modal-open {
   transition: none;
 }
 
-.tour-customize-map__zoom-out {
+.tour-customize-map__controls {
   position: absolute;
   top: 0.65rem;
   right: 0.65rem;
   z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tour-customize-map__optimize,
+.tour-customize-map__zoom-out {
   display: none;
   place-items: center;
-  width: 2rem;
   height: 2rem;
   border: 1px solid rgba(25, 79, 147, 0.22);
-  border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   color: #194f93;
   box-shadow: 0 8px 18px rgba(16, 27, 43, 0.18);
   cursor: pointer;
+}
+
+.tour-customize-map__optimize {
+  display: inline-grid;
+  min-width: 5.25rem;
+  padding: 0 0.82rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.tour-customize-map__optimize:hover,
+.tour-customize-map__optimize:focus-visible,
+.tour-customize-map__zoom-out:hover,
+.tour-customize-map__zoom-out:focus-visible {
+  border-color: rgba(25, 79, 147, 0.34);
+  background: #fff;
+}
+
+.tour-customize-map__zoom-out {
+  width: 2rem;
+  border-radius: 999px;
 }
 
 .tour-customize-map.is-zoomed .tour-customize-map__zoom-out {
@@ -2840,6 +2867,14 @@ html.tour-customize-modal-open {
 
 .tour-customize-timeline__item.is-reordering {
   transition: transform 170ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tour-customize-timeline__item.is-optimizing-reorder {
+  z-index: 6;
+  box-shadow: 0 14px 28px rgba(16, 27, 43, 0.24);
+  transition:
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 520ms ease;
 }
 
 .tour-customize-timeline__item.is-move-placeholder,

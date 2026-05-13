@@ -6019,6 +6019,7 @@ test("homepage tour cards expand descriptions and align same-row cards without a
     "tour.customize.move_here",
     "tour.customize.next_day_image",
     "tour.customize.no_optional_days",
+    "tour.customize.optimize",
     "tour.customize.optional_days",
     "tour.customize.pdf_loading",
     "tour.customize.pdf_loading_title",
