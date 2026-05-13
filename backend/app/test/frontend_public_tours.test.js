@@ -439,6 +439,7 @@ test("collapsed public tour cards use swipe-only mobile galleries for multi-imag
 });
 
 test("secret tour customization stays disabled when inactive and on mobile viewports", async () => {
+  const storage = new Map();
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;
 
@@ -536,6 +537,17 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
   };
 
   global.window = {
+    localStorage: {
+      getItem(key) {
+        return storage.has(key) ? storage.get(key) : null;
+      },
+      setItem(key, value) {
+        storage.set(key, String(value));
+      },
+      removeItem(key) {
+        storage.delete(key);
+      }
+    },
     addEventListener() {},
     requestAnimationFrame(callback) {
       if (typeof callback === "function") callback();
@@ -574,6 +586,28 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
 
   assert.match(desktop.els.tourGrid.innerHTML, /data-tour-customize/);
   assert.match(desktop.els.tourGrid.innerHTML, /Customize this Trip/);
+  assert.doesNotMatch(desktop.els.tourGrid.innerHTML, /tour-details-overview__customize-summary/);
+
+  storage.set("asiatravelplan.custom_tour.tour_customize_mobile", JSON.stringify({
+    originalTourId: "tour_customize_mobile",
+    timelineDays: [
+      {
+        sourceTourId: "tour_customize_mobile",
+        sourceDayId: "day_1",
+        day: trip.travel_plan.days[0]
+      },
+      {
+        sourceTourId: "tour_customize_mobile",
+        sourceDayId: "day_1",
+        day: trip.travel_plan.days[0]
+      }
+    ]
+  }));
+  const customizedDesktop = createController(baseState());
+  customizedDesktop.controller.renderVisibleTrips();
+
+  assert.match(customizedDesktop.els.tourGrid.innerHTML, /tour-details-overview__customize-button[\s\S]*tour-details-overview__customize-summary/);
+  assert.match(customizedDesktop.els.tourGrid.innerHTML, /Customized: 2 days via Hanoi/);
 
   const localizedDesktop = createController({
     ...baseState(),
