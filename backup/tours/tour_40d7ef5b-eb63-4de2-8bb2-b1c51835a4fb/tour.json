@@ -71,7 +71,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ae32a358-703b-4e7e-9412-194281a3ea1a",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_46a0e3d7-0f03-4b58-9cff-277f68157d27-1778249359140-3ac4a69f-4f48-448d-9cc5-bdf72b8514ca.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-01-xuan-huong-lake.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -106,7 +106,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_eebe5c3b-38f9-4a53-bf52-fd90a7256a13",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_6f8914fe-faaa-48e8-95e9-dc8221b1aa83-1778249465684-7c297394-bbab-46ea-b8a9-862993096437.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-01-lam-vien-square.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -141,7 +141,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_a640303d-b14f-47e0-a1fc-dfb713486e99",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_3dfb4f8e-3f81-4c22-88c1-723c7b28b6de-1778249549424-1a9d0f79-20d6-4a86-9393-d2c916eb532a.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-01-da-lat-night-market.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -191,7 +191,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_059a55c4-c84d-4b15-b908-d927eb82c28c",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_81173400-f852-4e37-ad8b-1b523a0410b0-1778249672528-d21ccfc4-5241-4237-833b-19b7ec13c863.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-02-bao-dai-palace.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -226,7 +226,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_11c17c9e-7729-4c70-aef4-4e482b76449c",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_d2ac95b3-46ad-497f-a287-2746de8960ea-1778249720699-b49279e3-c439-411b-b63c-65ad564e8102.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-02-truc-lam-zen-monastery.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -261,7 +261,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_58807075-d154-41ee-856b-eda882c3e9ee",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_2c0aafca-bdac-4e87-8eca-90b5a9b22362-1778249815072-7d82dfa6-26f8-4d13-9fcc-fc6aece80005.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-02-datanla-waterfal.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -296,7 +296,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e4c6ec35-65b3-4721-b1d0-4b451b1e4c44",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_6da96932-19f2-4b17-b737-77900bee3c68-1778249900169-ff855483-2f7f-4b4d-be21-86f4ecd9be08.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-02-crazy-house.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -346,7 +346,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_226f36d9-2702-4b04-b51b-d9d2c1e9e109",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_2492b05e-15d4-4ed6-9253-d17e08792a63-1778250005953-935f46cb-395e-463e-a709-f9e382d5ea45.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-03-cau-dat-tea-hill.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -381,7 +381,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_a9c428ce-ed43-470f-8532-42338814ce49",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_f19cc19a-10ff-4e73-ba41-a0b4a4a1ceb0-1778250095233-6dde3a2e-f0a0-4087-be95-8fd9738dd6de.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-03-hanging-rose-garden.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -416,7 +416,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_5651df2a-9497-44e3-8b3a-df9a9b9fe055",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_567e84a7-94ff-4b00-b473-9d34bc465649-1778250168397-42071c49-b2dd-4d18-9bc1-4ccb486e96f2.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-03-linh-phuoc-pagoda.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -451,7 +451,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ce294d42-e66b-4fa6-9159-21c74ffe6b58",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_1479cbfe-2955-47c2-b037-948b721cd511-1778250224637-6a64258f-2481-47e9-bb5f-c35c73362f20.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-03-da-lat-train-station.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -501,7 +501,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_0cb948f0-8348-4451-92fe-8a2bcdd16eb4",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_7cad64f5-a922-4e37-99ef-9eb152099641-1778123630359-825d6741-8af5-49e8-8381-be4c6fde887c.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-04-langbiang-mountain.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -536,7 +536,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_c940a5f1-5f12-45b2-848f-e4344ca7189e",
-              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/travel_plan_service_4a91e3c4-fd08-414e-8441-32bfec4ca432-1778250391417-e3960a41-b582-4cbe-b472-33a8237ccc9d.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-04-mongolia-land.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -571,7 +571,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ee1f983d-e6f5-4721-ab46-867184f7c0f7",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_d8c2ac57-0552-4f37-89e0-e39b32fa65bd-1778122981815-b200c3ee-236b-4e24-a7ff-28698e0220e6.webp",
+              "storage_path": "/public/v1/tour-images/tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb/travel-plan-services/day-04-valley-of-love.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,

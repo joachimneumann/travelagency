@@ -80,7 +80,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_d89b2ace-a032-4505-9f25-1c33b5ddfdd3",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_476f6933-0c46-4005-965b-c21668d9d529-1777958445406-e2cc5b61-0c30-47b0-a6d5-28f901dd88fa.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-01-hotel-arrival-transfer.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -115,7 +115,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_fb2eab54-5760-416e-9164-5b48421cdfd3",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_85141620-87fa-4c40-9286-62f72eb5d92f-1777168613135-c655a0c6-a703-4bdc-85fe-8cd24dcc88a8.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-01-hoa-lo-prison.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -150,7 +150,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_38165b85-f838-477b-8d1d-ac22d3c57cd2",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_c2be3ec4-8442-44dc-bb89-a479ee395d72-1777168698578-c26f5cfa-cf6f-43fe-b5e0-4f56ec6a9494.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-01-ho-chi-minh-mausoleum.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -185,7 +185,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_ff577450-b44e-4272-a727-abc85d38fba1-1777168812131-54d74a01-f42b-4525-b896-592026946da9.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-01-temple-of-literature.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -220,7 +220,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e4d15524-cf87-4801-8970-de1be6418f24",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_a4d58f6f-2e2d-48c7-b5da-d2892c92d56f-1777168887530-fff1a834-7a9c-4ab6-ab1c-0e48af8e065a.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-01-one-pillar-pagoda.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -269,7 +269,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_335ced46-ef41-4642-ab3c-39cf58c91ef5",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_7e9a2950-e544-4131-8cc4-84b8055186d7-1778226851177-e09df319-c2be-4ad5-8665-bc9ee9f86777.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-02-ha-long-bay-transfer.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -304,7 +304,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_66239309-9b58-458d-92a9-265a203b1492",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_223df447-6066-4d3a-929c-7828c2d019fb-1777864796064-1fbe43b6-4294-4dca-bcd5-75b2bf847772.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-02-ha-long-bay.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -339,7 +339,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_4a9a4c3a-7134-4a99-be33-6c7213fb474c",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_f910d896-6a4a-4fd6-a843-9e452ef0f324-1777866787701-7030c763-949c-4f2e-9bfb-5d5dde1adbaf.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-02-ha-long-bay-cruise.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -374,7 +374,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_347214db-8e30-42dd-93fa-a0c433bf739b",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_36c60979-3f98-4b28-a381-8d22a545fc17-1777169324546-505da8a3-07fb-4c1d-9bd6-204692655e30.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-02-cruise-lunch.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -423,7 +423,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_8464e064-af4c-48cb-ba8d-6145e7622fe7",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_6bee599f-8443-4f52-8203-789a6da99cf2-1777958385836-0b43eec5-1fee-451d-8cc9-2f0cbb8369b5.webp",
+              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-03-shopping-and-airport-transfer.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,

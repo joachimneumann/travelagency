@@ -11,7 +11,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-13T07:44:05.128Z",
+  "updated_at": "2026-05-13T05:17:36.301Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -69,7 +69,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_06a3a378-133c-4ebd-b9e2-ab6b3b84dd1e",
-              "storage_path": "/public/v1/tour-images/tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136/travel-plan-services/travel_plan_service_316c6cf9-a24f-46aa-8b0e-e896fbf6ad0c-1777972924254-34b755ce-afca-471d-b39b-7181bdd8f30d.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-01-airport-welcome.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -104,7 +104,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_214ed290-6f14-46b4-9f2b-dd32f66b818e",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_9a679ea0-d118-4695-8b0f-47081dffda57-1778119552946-653aa781-0d94-4209-8ae2-0fe22e2fa422.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-01-independence-palace.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -139,7 +139,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_107b5008-0004-4f2a-a525-82cd47f227d5",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_25fb1f8b-3860-4b36-a0eb-387edb15ed26-1778119640190-4d8c2ee0-933b-4ca3-8800-da0f7bea0502.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-01-notre-dame-cathedral.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -174,7 +174,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_1a910cc9-11c8-4677-8d9f-d0492c21cd32",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_0ca9c0fc-6fe0-4653-8565-d1bcf7b8dbb3-1778119723126-002db443-da74-49a5-bda0-9df0ee99c6a6.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-01-central-post-office.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -209,7 +209,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_abb4e53c-3fe1-4a3e-b682-72f12ac90bdd",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_c342616b-51e4-4f9c-bc64-3932eedaa00c-1778119775827-acf54451-c44d-4832-9d37-097b47f59fc1.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-01-thien-hau-temple.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -259,7 +259,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_df359c81-b9b3-4f71-88f1-ffc25d34c03e",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_88121474-0af2-4b25-9a57-0a669fb16f46-1778120254252-a8a8bdad-ca8c-4b8e-83b3-95ce6f6d6f74.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-02-my-tho-river-gateway.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -294,7 +294,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_28021e25-1c9b-4c3d-bc52-17001f91cd9b",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_21bb62f9-936b-4319-8429-7d267478875c-1778649286323-4804b8ca-fb7f-48be-a9f9-df9866363ed5.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-02-ben-tre-coconut-canals.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -344,7 +344,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_f10e319f-7984-4c4b-8a9e-56f2b5029638",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_b13b2d2f-f532-4367-9ea3-345d543d6780-1778210852772-e7d39a27-e949-4029-a418-25f61403a124.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-03-cu-chi-tunnels.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -379,7 +379,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_2060a43c-35fd-45fd-8aee-cd1c085dc442",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_99325809-fd34-4ed0-9d97-78f70ed0c899-1778210929835-36abcdec-0655-4bcb-8142-ca2da8656765.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-03-ben-thanh-market.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -429,7 +429,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_410cf949-7758-49a6-b9c3-cb185a03d099",
-              "storage_path": "/public/v1/tour-images/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22/travel-plan-services/travel_plan_service_79f0c299-91b7-407b-8824-93b7f558a63d-1778084386612-6d773e36-ca7f-474a-b764-5849a1302e21.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-04-red-sand-dunes.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -464,7 +464,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_2fca0b64-ab35-49b0-b017-6e8cedfeee89",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_f6ac54c9-1492-4644-a3b7-ce2ffa4c4589-1778649158960-1d244265-be12-4e6d-b7a2-d7a9284e5a64.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-04-fairy-stream.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -499,7 +499,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_430f6a05-17fd-4aa0-a2e5-f15af47f8d9e",
-              "storage_path": "/public/v1/tour-images/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22/travel-plan-services/travel_plan_service_9c3c86c8-b333-4ac5-9ca1-2e188a91b714-1778084278397-80619696-dcf7-4df1-a032-42dbd45f581a.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-04-mui-ne-fishing-village.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -549,7 +549,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_dce06d5c-8758-406a-af1a-bf0cb509a294",
-              "storage_path": "/public/v1/tour-images/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22/travel-plan-services/travel_plan_service_11278b94-eaf6-400d-84c6-e34d10cc6f93-1778084464987-00383677-c493-4089-a3b6-c85fe4afdc90.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-05-rd-wine-castle.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -582,23 +582,7 @@
             "location_i18n": {},
             "start_time": null,
             "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_6f8ae60b-e0ee-45da-aef5-f822b14d9248",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_3ec304a6-5637-4563-baa0-8a893f05a84c-1778658243613-7657f4ed-6255-4e83-aa68-6ff171838976.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-05-13T07:44:05.126Z"
-            }
+            "image": null
           }
         ],
         "notes": "Move from sea level to the highlands, stopping at RD Wine Castle before the road climbs into pine forests and Da Lat's cooler air.",
@@ -634,7 +618,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_85621b1c-f84f-4154-9226-f21d1db45dd5",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_d8c2ac57-0552-4f37-89e0-e39b32fa65bd-1778122981815-b200c3ee-236b-4e24-a7ff-28698e0220e6.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-06-valley-of-love.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -669,7 +653,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_18e5590a-ff46-48ca-b011-9aab979815dd",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_5abaddc4-ab34-45fb-8ae1-f2271bee1731-1778123147480-9f6aa98b-d1db-4430-b4f7-201540483295.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-06-city-flower-garden.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -704,7 +688,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_04dcd482-0797-44d7-8869-3fb0ac2387aa",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_c3117fc3-ed09-4773-947e-1ad195bafe4c-1778123352098-d5bcebc8-e43e-41e0-8a27-bfdd55e0e821.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-06-me-linh-coffee-garden.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -754,7 +738,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_86bbf895-82e5-4bd6-b827-3c0c3fde2acd",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_7cad64f5-a922-4e37-99ef-9eb152099641-1778123630359-825d6741-8af5-49e8-8381-be4c6fde887c.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-07-langbiang-mountain.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -789,7 +773,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e26bba7c-1cde-48cd-9b6b-da0dfca9ab6e",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_2335b9ed-82bd-496e-bd35-49eb66b712f1-1778123697432-a39ab8d9-010e-4835-a5cc-47bab745c823.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-07-truc-lam-monastery.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -824,7 +808,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_1860db72-6a94-4892-b78c-2a0317363499",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_bfabb213-d00d-4974-8965-83a8dfb89b66-1778123765448-c571b696-f119-40ae-a373-c6221512143d.webp",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/day-07-clay-tunnel.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,

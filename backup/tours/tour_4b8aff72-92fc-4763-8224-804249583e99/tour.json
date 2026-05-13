@@ -1,7 +1,7 @@
 {
   "id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
   "title": "One Trip, A Thousand Memories",
-  "short_description": "A north-to-south Vietnam journey linking Hanoi’s old streets, Ha Long Bay, Central Vietnam’s coast and heritage towns, then Saigon and the Mekong Delta.",
+  "short_description": "A focused Hanoi welcome through cathedral stone, Old Quarter trade streets, railway lanes and Hoan Kiem Lake's local rhythm.",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -16,7 +16,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-14T02:15:56.438Z",
-  "updated_at": "2026-05-13T07:38:36.143Z",
+  "updated_at": "2026-05-13T05:18:45.128Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -30,10 +30,12 @@
       "travel_plan_service_image_54c2582d-b5a9-4dda-8560-f2fda4469a6e",
       "travel_plan_service_image_5fccf51b-60a4-43e3-8825-495e15e9ed53",
       "travel_plan_service_image_fde6db7a-6735-44bc-b3b8-1fdd1538a79b",
+      "travel_plan_service_image_576f7bf2-9818-410a-baf2-82dc510e3440",
       "travel_plan_service_image_aecaab0a-cb92-4dc5-9136-1638211d9cfe",
       "travel_plan_service_image_29ea77f2-8aa9-4647-9266-0dab843492af",
       "travel_plan_service_image_17b080f3-af44-4023-8cad-9fb247eefe1b",
       "travel_plan_service_image_e17130ec-e6e3-4782-912e-ecaf50b52520",
+      "travel_plan_service_image_802762bc-e117-4622-ac9c-f9384c89af1c",
       "travel_plan_service_image_6f48eeee-6ee8-4320-868b-6c5b0715ffaa"
     ],
     "tour_card_primary_image_id": "travel_plan_service_image_4ef28a01-c27b-4101-97fe-5db9f7c9763f",
@@ -41,7 +43,8 @@
     "one_pager_image_ids": [
       "travel_plan_service_image_1179c78c-1aaa-4769-bbb4-03147361176e",
       "travel_plan_service_image_83a02394-8461-4479-b12a-4f45b1a338c8",
-      "travel_plan_service_image_124be17a-4cfe-45b6-8bb1-ea9ad7b5f38f"
+      "travel_plan_service_image_124be17a-4cfe-45b6-8bb1-ea9ad7b5f38f",
+      "travel_plan_service_image_576f7bf2-9818-410a-baf2-82dc510e3440"
     ],
     "days": [
       {
@@ -74,7 +77,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_4c57f45f-6ebb-4ac7-bccd-ecffcf8aed0d",
-              "storage_path": "/public/v1/tour-images/tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136/travel-plan-services/travel_plan_service_316c6cf9-a24f-46aa-8b0e-e896fbf6ad0c-1777972924254-34b755ce-afca-471d-b39b-7181bdd8f30d.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-01-hotel-arrival-transfer.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -109,7 +112,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ce15d279-e0a1-4fff-9910-9e26fef19714",
-              "storage_path": "/public/v1/tour-images/tour_6ad22f13-b6c3-4936-9c14-1cde4b4818fa/travel-plan-services/travel_plan_service_6be04742-997b-48e7-9817-818b7c0f2456-1777371626608-8e86efc5-c483-49bb-b1d8-bfec743074c4.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-01-st-josephs-cathedral.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -144,7 +147,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_d4e0c299-8fc3-45a7-bb41-3551499518a0",
-              "storage_path": "/public/v1/tour-images/tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136/travel-plan-services/travel_plan_service_8396dc7d-48a5-423a-bf83-da922d7859f8-1777972967246-b7351ac5-32fe-4e35-8a27-6701315c3c37.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-01-hanoi-old-quarter.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -179,7 +182,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e2e0cd99-f378-4126-a2d7-8563fbbca244",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_e6e7b2b4-a1bc-4c55-8021-4f1387aca9a5-1778127702732-f8e2c7f4-f11e-48d8-add9-774a32bc2a4d.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-01-hoan-kiem-lake.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -229,7 +232,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_1179c78c-1aaa-4769-bbb4-03147361176e",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_98ba1585-185a-4565-a9f7-f6420776ca7c-1778211619271-e3914c9e-a8fc-4b52-a370-d4b20d6c3e1c.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-02-ha-long-bay.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -279,7 +282,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_83a02394-8461-4479-b12a-4f45b1a338c8",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_b907a323-2e05-4e2c-8426-518ecffadcbe-1778211878491-e754a341-b251-46eb-908e-177b05052527.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-03-sung-sot-cave.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -329,7 +332,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_124be17a-4cfe-45b6-8bb1-ea9ad7b5f38f",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_6f613b22-b548-42a9-a9a8-773001b129ef-1778212536850-74291b15-6129-4eed-bf09-047494620b1f.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-04-son-tra-peninsula.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -364,7 +367,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e4470238-7592-4e33-90fa-3f4458e4b058",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_f0505ee6-b589-47d4-bdf8-5a7d250be858-1777911224116-4533e89e-4386-44e2-af29-eb1ffdee8921.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-04-da-nang-cathedral.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -399,7 +402,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_4ef28a01-c27b-4101-97fe-5db9f7c9763f",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_58177580-de46-4465-9ab9-6d0afeef9d59-1777360605750-717a67c2-3ea7-4e30-a314-c492caa40977.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-04-dragon-bridge.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -434,7 +437,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_9198fb28-f33d-4267-aec4-65ec92291de9",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_28f3a8b1-ddbc-4788-8da3-b7cd6d0996c6-1778213132491-12346268-6632-4515-bc7e-512b3f92fd72.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-04-love-bridge.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -469,7 +472,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_54c2582d-b5a9-4dda-8560-f2fda4469a6e",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_26ea0868-a0ca-4bae-9964-3235c3330302-1778213321521-60b1ec32-1e89-4c46-9f58-65b01a63ac8d.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-04-night-market.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -519,7 +522,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_6f48eeee-6ee8-4320-868b-6c5b0715ffaa",
-              "storage_path": "/public/v1/tour-images/tour_3d160d2f-62ea-43a4-8ca6-3acb6dcd30df/travel-plan-services/travel_plan_service_a90a6c6a-ed8e-4db0-8cbb-8e7cbb410858-1777861731836-719f9a4a-927a-48c8-8feb-cdca58baf481.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-05-marble-mountains.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -554,7 +557,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_5fccf51b-60a4-43e3-8825-495e15e9ed53",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_790a07f0-1b93-41d7-9bc2-ab6bcce60cdb-1777350845232-fb72c76c-ac40-4a00-abd9-185bcad7bab6.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-05-hoi-an-ancient-town.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -589,7 +592,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_fde6db7a-6735-44bc-b3b8-1fdd1538a79b",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_ae51d437-68ce-4883-b169-5d595c9474fe-1777864218091-7bf33222-2cb9-42e8-a8e0-8fa4b4c49fa9.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-05-cam-thanh-coconut-forest.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -606,7 +609,7 @@
             }
           }
         ],
-        "notes": "Leave Da Nang for Marble Mountains, then continue to Cam Thanh for a basket-boat ride through coconut palms before ending the day in lantern-lit Hoi An.",
+        "notes": null,
         "notes_i18n": {}
       },
       {
@@ -638,8 +641,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_e50272c2-710f-465b-b3a0-b10d748ca781",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_67e03aa2-1875-482e-8aee-b9d10930cea0-1778657915335-8dd58c58-5ec5-4670-9132-7522a21e4e19.webp",
+              "id": "travel_plan_service_image_576f7bf2-9818-410a-baf2-82dc510e3440",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-06-ba-na-hills.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -647,12 +650,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-13T07:38:36.140Z"
+              "created_at": "2026-04-28T07:22:31.828Z"
             }
           }
         ],
@@ -689,7 +692,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_2b28828a-692e-44d0-9ab3-dff89b986c81",
-              "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/travel_plan_service_c3958108-8d2f-4e26-876a-7ca4a2ce69fa-1777346115004-232f850c-b3ae-4e9c-adb9-a5a95c69fa43.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-07-lang-co-bay.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -724,7 +727,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_2d16eb33-c4de-4478-80d0-bd013f131e6b",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_3f1c6420-888e-4655-9533-fe19486c8eb8-1777361489424-517513a6-db8b-4d97-a77d-bcace891080c.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-07-thien-mu-pagoda.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -759,7 +762,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_a6de1867-1c5d-4456-8779-2f307c8d5c77",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_d0d43aab-720e-43e7-b530-eb6c506e5a3e-1777361578901-e741d0d0-9765-4eb7-9d0f-31f251d48ce5.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-07-imperial-citadel.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -793,8 +796,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_d04ede5e-d6b0-45aa-b674-bf4fa5286b94",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_4896777f-3271-4d6e-91df-0c509a39755e-1778657344828-2183c3c5-6a99-4369-9cf5-560f97edac78.webp",
+              "id": "travel_plan_service_image_3286a87d-ed28-476d-8763-13988d56f760",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-07-hoi-an-old-town.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -807,7 +810,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-13T07:29:06.099Z"
+              "created_at": "2026-05-09T07:21:00.826Z"
             }
           },
           {
@@ -829,7 +832,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ae840409-f696-4e31-bba4-cd2b3ac749b9",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_193f4411-f341-45bd-a9ee-fd0c55b67390-1777361824144-33d26c48-0f6e-4952-bb56-a01b88c86736.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-07-dong-ba-market.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -846,7 +849,7 @@
             }
           }
         ],
-        "notes": "Travel from Da Nang through Lang Co to Hue for Thien Mu Pagoda, the Imperial Citadel and Dong Ba Market, then return south with an evening stop in Hoi An.",
+        "notes": null,
         "notes_i18n": {}
       },
       {
@@ -879,7 +882,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_aecaab0a-cb92-4dc5-9136-1638211d9cfe",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_25fb1f8b-3860-4b36-a0eb-387edb15ed26-1778119640190-4d8c2ee0-933b-4ca3-8800-da0f7bea0502.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-08-notre-dame-cathedral.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -914,7 +917,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_29ea77f2-8aa9-4647-9266-0dab843492af",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_0ca9c0fc-6fe0-4653-8565-d1bcf7b8dbb3-1778119723126-002db443-da74-49a5-bda0-9df0ee99c6a6.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-08-central-post-office.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -964,7 +967,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e17130ec-e6e3-4782-912e-ecaf50b52520",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_f89eeec5-f200-4b27-a85d-e94cb2d55510-1778229841761-0bac2221-19e9-4a9e-bc82-84f3a14a4bd4.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-09-vam-co-dong-river.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -999,7 +1002,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_17b080f3-af44-4023-8cad-9fb247eefe1b",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_50600776-d649-44a3-b686-3a6b14f53045-1778230262250-eb62fd82-f1ac-436d-b188-c82e6f9109fe.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-09-vinh-trang-pagoda.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -1024,7 +1027,7 @@
             "kind": "other",
             "title": "Bee farm",
             "title_i18n": {},
-            "details": "Visit a Mekong bee farm to taste honey tea, learn about local beekeeping and see how small family farms work among the orchards.",
+            "details": null,
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1034,7 +1037,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_4153d91e-aeac-4eef-a660-8b5b74bb54db",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_6f6de186-7539-4dc0-9023-0fafe3719f5b-1778230687343-2a77632e-cf87-48c4-b97d-1387497135e6.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-09-bee-farm.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -1068,8 +1071,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_eb5303b5-eceb-4d0a-acad-a52fb6c490f4",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_b633a9a9-a507-4a14-9626-5a5548ed18b8-1778657430324-40a7669b-b1b4-46fe-ab82-9f0f6b4b1d7d.webp",
+              "id": "travel_plan_service_image_802762bc-e117-4622-ac9c-f9384c89af1c",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-09-ben-tre-coconut-canals.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -1077,12 +1080,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
+              "include_in_travel_tour_card": true,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-13T07:30:30.431Z"
+              "created_at": "2026-05-07T02:37:02.025Z"
             }
           }
         ],
@@ -1092,7 +1095,7 @@
       {
         "id": "travel_plan_day_5ed8ac84-df0e-4400-bac3-729a6d18ec04",
         "day_number": 10,
-        "title": "Ho Chi Minh City Departure",
+        "title": "Ho Chi Minh - Shopping – See You Again",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -1119,7 +1122,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e9662365-0466-43ba-a941-a7a2252156e0",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_6bee599f-8443-4f52-8203-789a6da99cf2-1777958385836-0b43eec5-1fee-451d-8cc9-2f0cbb8369b5.webp",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/day-10-shopping-and-airport-transfer.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -1136,7 +1139,7 @@
             }
           }
         ],
-        "notes": "Enjoy final shopping time in Ho Chi Minh City before your airport transfer, carrying home last souvenirs and memories from ten days across Vietnam.",
+        "notes": null,
         "notes_i18n": {}
       }
     ],

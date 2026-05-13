@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 80,
   "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-05-13T07:30:37.582Z",
+  "updated_at": "2026-05-13T04:56:00.561Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -62,7 +62,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e231b9ba-3f6e-413e-8166-6c72c3fa0a7a",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_e6230aa7-60b2-4562-8949-575e07da6b3c-1778633108990-0520fe8d-b168-4139-8ace-ba4276f6c044.webp",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-01-ha-giang.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -97,7 +97,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_da06b77f-93c8-4284-87d4-3526263e44dd",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_248995a7-f618-4451-a669-ca4b8e8e4f20-1778247094098-230f840a-27e7-41be-b046-018e7306dd10.webp",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-01-quan-ba.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -132,7 +132,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_d5cc289c-ee88-43ca-aca5-a2734ef32af5",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_48944dde-932f-4929-9c07-8f786450a2dd-1778247276277-a65d2929-29eb-4e5f-8313-9f3e0a42856e.webp",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-01-yen-minh.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -182,7 +182,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_c0d9cf68-ece1-4a6b-89fa-9d0f0f832bab",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_2d00ec2f-3122-4aaa-a2ae-29f15b849af4-1778248190924-5d6c1169-7e39-44aa-96fa-5c08a1ea57be.webp",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-02-dong-van.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -217,7 +217,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_f3c877f7-7acc-4efc-8bbc-3ff5dfe20fc7",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_51aa233f-c6fe-47e2-9b20-52c3a8f379cf-1778248082017-cb368717-472e-4c8a-9841-4c3a1f131a31.webp",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-02-ma-pi-leng-pass.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -252,7 +252,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_d3ee0fdf-ac10-4131-9d84-2b15e709b444",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_f5eca721-9d06-4d59-bf7c-7d391bf68d51-1778248198041-0acf45f4-27a6-4f9c-94c8-0277b3e7aab4.webp",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-02-lung-cu-flag-pole.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -292,7 +292,7 @@
             "kind": "other",
             "title": "Farewell Dong Van, onward to vibrant Hanoi",
             "title_i18n": {},
-            "details": "After a beautiful morning in Dong Van, we will bring you to the airport",
+            "details": null,
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -301,8 +301,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_2da1303e-ba13-4faf-9cdb-ff291aed0fae",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_356a44f0-8159-4598-824c-0ac3a10319c5-1778657437186-5b9769cf-a869-4016-9294-f35154a6d1c3.webp",
+              "id": "travel_plan_service_image_43a6cac0-3df9-4e02-8405-06c7863edbda",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-03-farewell-dong-van-onward-to-vibrant-hanoi.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -315,11 +315,11 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-13T07:30:37.581Z"
+              "created_at": "2026-05-13T01:03:28.930Z"
             }
           }
         ],
-        "notes": "Your last day will bring you back to Hanoi",
+        "notes": null,
         "notes_i18n": {}
       }
     ],

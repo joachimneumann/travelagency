@@ -56,7 +56,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_35ed7735-10db-403b-8b86-e322f01c7399",
-              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/travel_plan_service_8799a91d-e888-44e6-a26b-d5a5159aa99e-1777892026200-dd0ab159-d2c9-4f41-8403-3d64352abe33.webp",
+              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/day-01-hanoi-to-sapa-transfer.webp",
               "caption": null,
               "alt_text": null,
               "sort_order": 0,
@@ -84,7 +84,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_72001d18-e286-4bc8-9b1a-b7da2f104735",
-              "storage_path": "/public/v1/tour-images/tour_eeac7fbd-0770-4275-9809-97619ac66084/travel-plan-services/travel_plan_service_5e6dce3f-13f7-47e4-8ee6-05772f9d5455-1777364413737-5bbe9f2c-0d25-4e8b-9199-a265fb2b8212.webp",
+              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/day-01-sapa-town.webp",
               "caption": null,
               "alt_text": null,
               "sort_order": 0,
@@ -112,7 +112,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_b3a6bf21-06c8-4233-b415-b76abaee6896",
-              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/travel_plan_service_b5b19a09-c411-4b7c-a535-d8491c5c97ca-1777892249168-31aeea15-51a0-453f-bee0-81f68c68fa14.webp",
+              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/day-01-cat-cat-village.webp",
               "caption": null,
               "alt_text": null,
               "sort_order": 0,
@@ -140,7 +140,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ce59625b-0189-4230-a1d0-4baca3721656",
-              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/travel_plan_service_26e39075-947b-41ab-bbba-a17b5c31d021-1777892369343-fca0e5af-5662-4122-aba7-f50e4b818010.webp",
+              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/day-01-moana-sapa.webp",
               "caption": null,
               "alt_text": null,
               "sort_order": 0,
@@ -178,7 +178,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_2042d3fe-53e0-462b-8752-f3d5a2ce0f7a",
-              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/travel_plan_service_d2f09b21-51f5-4f6b-a4bf-e02d2a6ea5d5-1777892565159-cc547ec1-0dcc-4f0d-8a01-cbcd70464c66.webp",
+              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/day-02-fansipan.webp",
               "caption": null,
               "alt_text": null,
               "sort_order": 0,
@@ -206,7 +206,7 @@
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_d19cbeed-1543-4a0d-bc48-ffe2d2138553",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/travel_plan_service_e945d12b-03a5-46d0-a572-62694e9dc251-1777298097393-39920a1a-e273-43b1-b3bf-ecbd2e9aeccd.webp",
+              "storage_path": "/public/v1/tour-images/tour_bb30a054-54a6-456a-bdc3-8a33e134a4c6/travel-plan-services/day-02-return-transfer.webp",
               "caption": null,
               "alt_text": null,
               "sort_order": 0,
