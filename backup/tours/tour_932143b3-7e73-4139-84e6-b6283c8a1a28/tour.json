@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 80,
   "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-05-13T04:56:00.561Z",
+  "updated_at": "2026-05-13T07:30:37.582Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -292,7 +292,7 @@
             "kind": "other",
             "title": "Farewell Dong Van, onward to vibrant Hanoi",
             "title_i18n": {},
-            "details": null,
+            "details": "After a beautiful morning in Dong Van, we will bring you to the airport",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -301,8 +301,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_43a6cac0-3df9-4e02-8405-06c7863edbda",
-              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_356a44f0-8159-4598-824c-0ac3a10319c5-1778634208643-55ff37f0-0b49-4ed4-9eac-66cebf7b1341.webp",
+              "id": "travel_plan_service_image_2da1303e-ba13-4faf-9cdb-ff291aed0fae",
+              "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/travel_plan_service_356a44f0-8159-4598-824c-0ac3a10319c5-1778657437186-5b9769cf-a869-4016-9294-f35154a6d1c3.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -315,11 +315,11 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-13T01:03:28.930Z"
+              "created_at": "2026-05-13T07:30:37.581Z"
             }
           }
         ],
-        "notes": null,
+        "notes": "Your last day will bring you back to Hanoi",
         "notes_i18n": {}
       }
     ],

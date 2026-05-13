@@ -1,7 +1,7 @@
 {
   "id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
   "title": "One Trip, A Thousand Memories",
-  "short_description": "A focused Hanoi welcome through cathedral stone, Old Quarter trade streets, railway lanes and Hoan Kiem Lake's local rhythm.",
+  "short_description": "A north-to-south Vietnam journey linking Hanoi’s old streets, Ha Long Bay, Central Vietnam’s coast and heritage towns, then Saigon and the Mekong Delta.",
   "styles": [
     "grand-expeditions",
     "beach",
@@ -16,7 +16,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-14T02:15:56.438Z",
-  "updated_at": "2026-05-13T05:18:45.128Z",
+  "updated_at": "2026-05-13T07:38:36.143Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -30,12 +30,10 @@
       "travel_plan_service_image_54c2582d-b5a9-4dda-8560-f2fda4469a6e",
       "travel_plan_service_image_5fccf51b-60a4-43e3-8825-495e15e9ed53",
       "travel_plan_service_image_fde6db7a-6735-44bc-b3b8-1fdd1538a79b",
-      "travel_plan_service_image_576f7bf2-9818-410a-baf2-82dc510e3440",
       "travel_plan_service_image_aecaab0a-cb92-4dc5-9136-1638211d9cfe",
       "travel_plan_service_image_29ea77f2-8aa9-4647-9266-0dab843492af",
       "travel_plan_service_image_17b080f3-af44-4023-8cad-9fb247eefe1b",
       "travel_plan_service_image_e17130ec-e6e3-4782-912e-ecaf50b52520",
-      "travel_plan_service_image_802762bc-e117-4622-ac9c-f9384c89af1c",
       "travel_plan_service_image_6f48eeee-6ee8-4320-868b-6c5b0715ffaa"
     ],
     "tour_card_primary_image_id": "travel_plan_service_image_4ef28a01-c27b-4101-97fe-5db9f7c9763f",
@@ -43,8 +41,7 @@
     "one_pager_image_ids": [
       "travel_plan_service_image_1179c78c-1aaa-4769-bbb4-03147361176e",
       "travel_plan_service_image_83a02394-8461-4479-b12a-4f45b1a338c8",
-      "travel_plan_service_image_124be17a-4cfe-45b6-8bb1-ea9ad7b5f38f",
-      "travel_plan_service_image_576f7bf2-9818-410a-baf2-82dc510e3440"
+      "travel_plan_service_image_124be17a-4cfe-45b6-8bb1-ea9ad7b5f38f"
     ],
     "days": [
       {
@@ -609,7 +606,7 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "Leave Da Nang for Marble Mountains, then continue to Cam Thanh for a basket-boat ride through coconut palms before ending the day in lantern-lit Hoi An.",
         "notes_i18n": {}
       },
       {
@@ -641,8 +638,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_576f7bf2-9818-410a-baf2-82dc510e3440",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/travel_plan_service_6b86390f-929d-4d25-b119-6a048a10a190-1777360951649-60f3dc7e-15a5-4b20-aa38-57f002a432c1.webp",
+              "id": "travel_plan_service_image_e50272c2-710f-465b-b3a0-b10d748ca781",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_67e03aa2-1875-482e-8aee-b9d10930cea0-1778657915335-8dd58c58-5ec5-4670-9132-7522a21e4e19.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -650,12 +647,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-04-28T07:22:31.828Z"
+              "created_at": "2026-05-13T07:38:36.140Z"
             }
           }
         ],
@@ -796,8 +793,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_3286a87d-ed28-476d-8763-13988d56f760",
-              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_4896777f-3271-4d6e-91df-0c509a39755e-1778311260594-11d8e2ed-88f3-4943-85b5-5ca132184084.webp",
+              "id": "travel_plan_service_image_d04ede5e-d6b0-45aa-b674-bf4fa5286b94",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_4896777f-3271-4d6e-91df-0c509a39755e-1778657344828-2183c3c5-6a99-4369-9cf5-560f97edac78.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -810,7 +807,7 @@
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-09T07:21:00.826Z"
+              "created_at": "2026-05-13T07:29:06.099Z"
             }
           },
           {
@@ -849,7 +846,7 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "Travel from Da Nang through Lang Co to Hue for Thien Mu Pagoda, the Imperial Citadel and Dong Ba Market, then return south with an evening stop in Hoi An.",
         "notes_i18n": {}
       },
       {
@@ -1027,7 +1024,7 @@
             "kind": "other",
             "title": "Bee farm",
             "title_i18n": {},
-            "details": null,
+            "details": "Visit a Mekong bee farm to taste honey tea, learn about local beekeeping and see how small family farms work among the orchards.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -1071,8 +1068,8 @@
             "start_time": null,
             "end_time": null,
             "image": {
-              "id": "travel_plan_service_image_802762bc-e117-4622-ac9c-f9384c89af1c",
-              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_21bb62f9-936b-4319-8429-7d267478875c-1778121421891-77ea5093-f687-40ad-aed9-a17e53d5639a.webp",
+              "id": "travel_plan_service_image_eb5303b5-eceb-4d0a-acad-a52fb6c490f4",
+              "storage_path": "/public/v1/tour-images/tour_4b8aff72-92fc-4763-8224-804249583e99/travel-plan-services/travel_plan_service_b633a9a9-a507-4a14-9626-5a5548ed18b8-1778657430324-40a7669b-b1b4-46fe-ab82-9f0f6b4b1d7d.webp",
               "caption": null,
               "caption_i18n": {},
               "alt_text": null,
@@ -1080,12 +1077,12 @@
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
+              "include_in_travel_tour_card": false,
               "width_px": null,
               "height_px": null,
               "source_attribution": null,
               "focal_point": null,
-              "created_at": "2026-05-07T02:37:02.025Z"
+              "created_at": "2026-05-13T07:30:30.431Z"
             }
           }
         ],
@@ -1095,7 +1092,7 @@
       {
         "id": "travel_plan_day_5ed8ac84-df0e-4400-bac3-729a6d18ec04",
         "day_number": 10,
-        "title": "Ho Chi Minh - Shopping – See You Again",
+        "title": "Ho Chi Minh City Departure",
         "title_i18n": {},
         "overnight_location": null,
         "overnight_location_i18n": {},
@@ -1139,7 +1136,7 @@
             }
           }
         ],
-        "notes": null,
+        "notes": "Enjoy final shopping time in Ho Chi Minh City before your airport transfer, carrying home last souvenirs and memories from ten days across Vietnam.",
         "notes_i18n": {}
       }
     ],

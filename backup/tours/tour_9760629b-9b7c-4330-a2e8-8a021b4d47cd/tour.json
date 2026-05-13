@@ -11,7 +11,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-13T05:17:36.301Z",
+  "updated_at": "2026-05-13T07:44:05.128Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -582,7 +582,23 @@
             "location_i18n": {},
             "start_time": null,
             "end_time": null,
-            "image": null
+            "image": {
+              "id": "travel_plan_service_image_6f8ae60b-e0ee-45da-aef5-f822b14d9248",
+              "storage_path": "/public/v1/tour-images/tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd/travel-plan-services/travel_plan_service_3ec304a6-5637-4563-baa0-8a893f05a84c-1778658243613-7657f4ed-6255-4e83-aa68-6ff171838976.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-13T07:44:05.126Z"
+            }
           }
         ],
         "notes": "Move from sea level to the highlands, stopping at RD Wine Castle before the road climbs into pine forests and Da Lat's cooler air.",
