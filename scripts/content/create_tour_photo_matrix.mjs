@@ -2,7 +2,10 @@
 import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { writeImageThumbnail } from "./image_thumbnails.mjs";
+import {
+  copyCachedServiceImageDerivative,
+  serviceImageDerivativeRelativePath
+} from "../lib/service_image_derivatives.mjs";
 import {
   matrixPageControlScript,
   matrixPageControlStyles,
@@ -15,7 +18,6 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultOutputPath = "/tmp/tour-photo-matrix/index.html";
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"]);
-const thumbnailMaxSize = 300;
 const missingPhotoWarningImage = `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="Missing photo">
   <rect width="300" height="300" rx="18" fill="#fef2f2"/>
   <path d="M150 48 266 252H34L150 48Z" fill="#dc2626"/>
@@ -408,12 +410,18 @@ async function copyServiceImagesForOutput({ tours, outputPath }) {
       }
 
       const sourceRelativePath = image.sourceRelativePath;
-      const outputRelativePath = path.join("img", sourceRelativePath);
+      const outputRelativePath = path.join("img", serviceImageDerivativeRelativePath(sourceRelativePath, {
+        variant: "matrix-thumb"
+      }));
       const copiedImagePath = path.join(outputDir, outputRelativePath);
 
       if (!copiedImages.has(sourceRelativePath)) {
-        await mkdir(path.dirname(copiedImagePath), { recursive: true });
-        await writeImageThumbnail(image.sourcePath, copiedImagePath, { maxSize: thumbnailMaxSize });
+        await copyCachedServiceImageDerivative({
+          sourcePath: image.sourcePath,
+          sourceRelativePath,
+          outputPath: copiedImagePath,
+          variant: "matrix-thumb"
+        });
         copiedImages.add(sourceRelativePath);
       }
       image.url = toRelativeUrl(outputRelativePath);

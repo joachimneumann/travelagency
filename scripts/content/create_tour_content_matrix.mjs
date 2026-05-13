@@ -2,7 +2,10 @@
 import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { writeImageThumbnail } from "./image_thumbnails.mjs";
+import {
+  copyCachedServiceImageDerivative,
+  serviceImageDerivativeRelativePath
+} from "../lib/service_image_derivatives.mjs";
 import {
   matrixPageControlScript,
   matrixPageControlStyles,
@@ -15,7 +18,6 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultOutputPath = "/tmp/tour-content-matrix/index.html";
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"]);
-const thumbnailMaxSize = 300;
 
 function printUsage() {
   console.log(`Usage: scripts/content/create_tour_content_matrix.mjs [options]
@@ -349,11 +351,17 @@ async function copyServiceImagesForOutput({ tours, outputPath }) {
       continue;
     }
 
-    const outputRelativePath = path.join("img", "content-matrix", image.sourceRelativePath);
+    const outputRelativePath = path.join("img", "content-matrix", serviceImageDerivativeRelativePath(image.sourceRelativePath, {
+      variant: "matrix-thumb"
+    }));
     const outputImagePath = path.join(outputDir, outputRelativePath);
     if (!copied.has(image.sourceRelativePath)) {
-      await mkdir(path.dirname(outputImagePath), { recursive: true });
-      await writeImageThumbnail(image.sourcePath, outputImagePath, { maxSize: thumbnailMaxSize });
+      await copyCachedServiceImageDerivative({
+        sourcePath: image.sourcePath,
+        sourceRelativePath: image.sourceRelativePath,
+        outputPath: outputImagePath,
+        variant: "matrix-thumb"
+      });
       copied.add(image.sourceRelativePath);
     }
     image.url = toRelativeUrl(outputRelativePath);

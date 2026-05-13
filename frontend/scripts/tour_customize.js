@@ -207,9 +207,18 @@ function customerVisibleDayImages(day, lang) {
     for (const image of images) {
       if (!image || typeof image !== "object" || Array.isArray(image)) continue;
       if (image.is_customer_visible === false) continue;
-      const src = normalizeText(image.storage_path || image.url || image.src || image.path);
-      if (!src || seen.has(src)) continue;
-      seen.add(src);
+      const src = normalizeText(
+        image.thumbnail_storage_path
+        || image.thumbnail_url
+        || image.thumb_url
+        || image.storage_path
+        || image.url
+        || image.src
+        || image.path
+      );
+      const sourceKey = normalizeText(image.storage_path || image.url || image.src || image.path) || src;
+      if (!src || seen.has(sourceKey)) continue;
+      seen.add(sourceKey);
       entries.push({ url: src, title });
     }
   }
@@ -987,6 +996,10 @@ export function createTourCustomizer({
     });
   }
 
+  function renderTimelineEmptyState() {
+    return `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.empty_timeline", "Add at least one day to keep customizing."))}</p>`;
+  }
+
   function renderModalBody() {
     const optionalDays = optionalModules(draft.modules, draft.originalTimelineDays);
     const timelineTitle = draftTimelineTitle();
@@ -1019,7 +1032,7 @@ export function createTourCustomizer({
           <div class="tour-customize-timeline__list" data-customize-timeline>
                 ${draft.timelineDays.length
                 ? draft.timelineDays.map(renderTimelineItem).join("")
-                : `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.empty_timeline", "Add at least one day to keep customizing."))}</p>`}
+                : renderTimelineEmptyState()}
             </div>
           </section>
         </div>
@@ -1083,9 +1096,43 @@ export function createTourCustomizer({
     return true;
   }
 
-  function refreshAfterTimelineChange() {
+  function refreshTimelineDom() {
+    if (!modal || !draft) return false;
+    const timeline = modal.querySelector("[data-customize-timeline]");
+    if (!(timeline instanceof HTMLElement)) return false;
+    timeline.innerHTML = draft.timelineDays.length
+      ? draft.timelineDays.map(renderTimelineItem).join("")
+      : renderTimelineEmptyState();
+    timeline.querySelectorAll("[data-customize-timeline-id]").forEach((element) => {
+      if (element instanceof HTMLElement) bindDraggableElement(element, modal);
+    });
+    return true;
+  }
+
+  function removeTimelineItemDom(itemId, sourceElement = null) {
+    if (!modal || !draft) return false;
+    const timelineKey = normalizeText(itemId);
+    const timeline = modal.querySelector("[data-customize-timeline]");
+    if (!timelineKey || !(timeline instanceof HTMLElement)) return false;
+    const sourceMatches = sourceElement instanceof HTMLElement
+      && timeline.contains(sourceElement)
+      && normalizeText(sourceElement.getAttribute("data-customize-timeline-id")) === timelineKey;
+    const element = sourceMatches
+      ? sourceElement
+      : timeline.querySelector(`[data-customize-timeline-id="${CSS.escape(timelineKey)}"]`);
+    if (!(element instanceof HTMLElement)) return refreshTimelineDom();
+    element.remove();
+    if (!draft.timelineDays.length) {
+      timeline.innerHTML = renderTimelineEmptyState();
+    } else {
+      updateTimelineDayLabels(timeline);
+    }
+    return true;
+  }
+
+  function refreshAfterTimelineChange({ refreshOptions = false } = {}) {
     refreshMapDom();
-    refreshOptionsDom();
+    if (refreshOptions) refreshOptionsDom();
     refreshTimelineTitleDom();
     refreshCloseActionDom();
   }
@@ -1207,8 +1254,14 @@ export function createTourCustomizer({
     if (!draft) return;
     const timelineKey = normalizeText(itemId);
     const commitRemoval = () => {
+      const previousLength = draft.timelineDays.length;
       draft.timelineDays = draft.timelineDays.filter((item) => timelineItemKey(item) !== timelineKey);
-      renderModal();
+      if (draft.timelineDays.length === previousLength) return;
+      if (removeTimelineItemDom(timelineKey, sourceElement)) {
+        refreshAfterTimelineChange();
+      } else {
+        renderModal();
+      }
     };
     if (!(sourceElement instanceof HTMLElement)) {
       commitRemoval();
@@ -1869,13 +1922,13 @@ export function createTourCustomizer({
         if (pointerDrag.ghost instanceof HTMLElement) {
           resetPointerDragSource({ preserveDeleteCandidate: true });
           animateFloatingCardSmokeDissolve(pointerDrag.ghost, {
-            onComplete: () => removeDay(pointerDrag.id)
+            onComplete: () => removeDay(pointerDrag.id, { sourceElement: pointerDrag.source })
           });
           return;
         }
         resetPointerDragSource();
         pointerDrag.ghost?.remove();
-        removeDay(pointerDrag.id);
+        removeDay(pointerDrag.id, { sourceElement: pointerDrag.source });
         return;
       }
       if (shouldAddOption) {

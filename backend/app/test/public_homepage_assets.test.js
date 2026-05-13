@@ -384,6 +384,10 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     publicTourDetailsEn.travel_plan.days[0].services[0].image.storage_path,
     /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/
   );
+  assert.match(
+    publicTourDetailsEn.travel_plan.days[0].services[0].image.thumbnail_storage_path,
+    /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/_thumbs\/pickup\.w360\.webp\?v=/
+  );
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[0].image.alt_text, "Driver at arrivals");
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[0].image.include_in_travel_tour_card, true);
   assert.equal(publicTourDetailsEn.travel_plan.days[0].services[2].image.include_in_travel_tour_card, false);
@@ -501,11 +505,14 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
 
   const copiedTourAssetPath = new URL(publicToursEn.items[0].pictures[0], "https://asiatravelplan.test").pathname;
   const copiedServiceAssetPath = new URL(publicTourDetailsEn.travel_plan.days[0].services[0].image.storage_path, "https://asiatravelplan.test").pathname;
+  const copiedServiceThumbPath = new URL(publicTourDetailsEn.travel_plan.days[0].services[0].image.thumbnail_storage_path, "https://asiatravelplan.test").pathname;
   const copiedTourAsset = await stat(path.join(tourOutputDir, copiedTourAssetPath.replace(/^\/assets\/generated\/homepage\/tours\//, "")));
   const copiedServiceAsset = await stat(path.join(tourOutputDir, copiedServiceAssetPath.replace(/^\/assets\/generated\/homepage\/tours\//, "")));
+  const copiedServiceThumb = await stat(path.join(tourOutputDir, copiedServiceThumbPath.replace(/^\/assets\/generated\/homepage\/tours\//, "")));
   const copiedTeamAsset = await stat(path.join(teamOutputDir, "joachim.webp"));
   assert.ok(copiedTourAsset.isFile());
   assert.ok(copiedServiceAsset.isFile());
+  assert.ok(copiedServiceThumb.isFile());
   assert.ok(copiedTeamAsset.isFile());
   await assert.rejects(stat(path.join(tourOutputDir, "tour_alpha", "alpha.png")), { code: "ENOENT" });
   await assert.rejects(stat(path.join(tourOutputDir, "tour_alpha", "alpha.webp")), { code: "ENOENT" });

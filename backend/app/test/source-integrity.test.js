@@ -5760,8 +5760,8 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourCustomizerSource,
-    /function customerVisibleDayImages\(day, lang\)[\s\S]*resolveLocalizedField\(service, "title", lang\)[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*image\.is_customer_visible === false[\s\S]*seen\.has\(src\)[\s\S]*entries\.push\(\{ url: src, title \}\)/,
-    "Customizer day cards should collect every unique customer-visible image and its service title from the source day"
+    /function customerVisibleDayImages\(day, lang\)[\s\S]*resolveLocalizedField\(service, "title", lang\)[\s\S]*service\?\.image[\s\S]*service\?\.images[\s\S]*image\.is_customer_visible === false[\s\S]*image\.thumbnail_storage_path[\s\S]*image\.storage_path[\s\S]*const sourceKey = normalizeText\(image\.storage_path[\s\S]*seen\.has\(sourceKey\)[\s\S]*entries\.push\(\{ url: src, title \}\)/,
+    "Customizer day cards should collect unique customer-visible images, preferring generated thumbnails while retaining service titles"
   );
   assert.match(
     tourCustomizerSource,
@@ -5797,6 +5797,16 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
     tourCustomizerSource,
     /function shouldSuppressDragStartAfterStickyRelease\(event\)[\s\S]*lastStickyDragReleaseAt[\s\S]*dragTargetKeyFromTarget\(event\?\.target\)[\s\S]*targetKey === lastStickyDragReleaseTargetKey[\s\S]*element\.addEventListener\("pointerdown", \(event\) => \{[\s\S]*shouldSuppressDragStartAfterStickyRelease\(event\)[\s\S]*startPointerDrag\(element, event, root\)/,
     "The second click of a release double-click should not start a fresh drag on the same card"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function refreshAfterTimelineChange\(\{ refreshOptions = false \} = \{\}\) \{[\s\S]*refreshMapDom\(\);[\s\S]*if \(refreshOptions\) refreshOptionsDom\(\);[\s\S]*refreshTimelineTitleDom\(\);[\s\S]*refreshCloseActionDom\(\);/,
+    "Timeline drag completion should not rebuild optional day cards by default"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function removeTimelineItemDom\(itemId, sourceElement = null\)[\s\S]*element\.remove\(\)[\s\S]*updateTimelineDayLabels\(timeline\)[\s\S]*function removeDay\(itemId, \{ sourceElement = null \} = \{\}\)[\s\S]*removeTimelineItemDom\(timelineKey, sourceElement\)[\s\S]*refreshAfterTimelineChange\(\)/,
+    "Removing a customizer timeline day should update that card in place instead of rerendering the modal"
   );
   assert.match(
     tourCustomizerSource,
