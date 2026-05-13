@@ -1,7 +1,7 @@
 export function renderMatrixHeaderActions({ visibilityControl = "" } = {}) {
   return `<div class="header-actions">
         ${visibilityControl}
-        <button class="matrix-update" type="button" data-update-matrices hidden>Update</button>
+        <button class="matrix-update" type="button" data-update-matrices>Update</button>
         <span class="matrix-update-status" data-update-matrices-status role="status" aria-live="polite" hidden></span>
       </div>`;
 }
@@ -67,9 +67,6 @@ export const matrixPageControlScript = `
       const updateButton = document.querySelector("[data-update-matrices]");
       const updateStatus = document.querySelector("[data-update-matrices-status]");
       if (!updateButton || !updateStatus) return;
-      if (window.location.hostname !== "staging.asiatravelplan.com") return;
-
-      updateButton.hidden = false;
 
       const setStatus = (message, state = "") => {
         updateStatus.hidden = !message;
