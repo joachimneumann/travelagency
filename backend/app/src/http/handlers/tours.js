@@ -2390,6 +2390,59 @@ export function createTourHandlers(deps) {
     ]);
   }
 
+  function slugifyTourImageFilenamePart(value) {
+    const normalized = String(value ?? "")
+      .replace(/[ĐÐ]/g, "D")
+      .replace(/[đð]/g, "d")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/&/g, " and ")
+      .replace(/['’]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .replace(/-{2,}/g, "-");
+    if (!normalized) return "service-image";
+    if (normalized.length <= 78) return normalized;
+    return normalized.slice(0, 78).replace(/-[^-]*$/, "") || normalized.slice(0, 78);
+  }
+
+  function tourServiceImageDayPrefix(day) {
+    const dayNumber = safeInt(day?.day_number);
+    if (!dayNumber || dayNumber < 1) return "day";
+    return `day-${String(dayNumber).padStart(2, "0")}`;
+  }
+
+  function collectTourTravelPlanImageRelativePaths(travelPlan, tourId) {
+    const paths = new Set();
+    for (const day of Array.isArray(travelPlan?.days) ? travelPlan.days : []) {
+      for (const service of Array.isArray(day?.services) ? day.services : []) {
+        const storagePath = service?.image?.storage_path;
+        if (!storagePath) continue;
+        const relativePath = tourImageRelativePathFromStoragePath(storagePath, tourId);
+        if (relativePath) paths.add(relativePath);
+      }
+    }
+    return paths;
+  }
+
+  function buildTourServiceImageOutputRelativePath({ tourId, travelPlan, day, item, serviceId }) {
+    const serviceSlug = slugifyTourImageFilenamePart(normalizeText(item?.title) || serviceId);
+    const baseName = `${tourServiceImageDayPrefix(day)}-${serviceSlug}`;
+    const usedRelativePaths = collectTourTravelPlanImageRelativePaths(travelPlan, tourId);
+    const serviceDir = `${tourId}/travel-plan-services`;
+
+    for (let suffix = 0; suffix < 500; suffix += 1) {
+      const outputName = suffix === 0 ? `${baseName}.webp` : `${baseName}-${suffix + 1}.webp`;
+      const relativePath = `${serviceDir}/${outputName}`;
+      if (usedRelativePaths.has(relativePath)) continue;
+      if (existsSync(path.join(TOURS_DIR, relativePath))) continue;
+      return relativePath;
+    }
+
+    return `${serviceDir}/${baseName}-${Date.now()}-${String(randomUUID()).slice(0, 8)}.webp`;
+  }
+
   function tourImageRelativePathFromStoragePath(storagePath, tourId) {
     const normalizedTourId = normalizeText(tourId);
     const normalized = normalizeText(storagePath).split("?")[0];
@@ -2441,6 +2494,9 @@ export function createTourHandlers(deps) {
       sendJson(res, 404, { error: "Service not found" });
       return;
     }
+    const currentImage = item.image && typeof item.image === "object" && !Array.isArray(item.image)
+      ? item.image
+      : null;
 
     const filename = normalizeText(payload.filename) || `${serviceId}.upload`;
     const base64 = normalizeText(payload.data_base64);
@@ -2455,8 +2511,13 @@ export function createTourHandlers(deps) {
     }
 
     const tempInputPath = path.join(TEMP_UPLOAD_DIR, `${serviceId}-${randomUUID()}${path.extname(filename) || ".upload"}`);
-    const outputName = `${serviceId}-${Date.now()}-${randomUUID()}.webp`;
-    const outputRelativePath = `${tourId}/travel-plan-services/${outputName}`;
+    const outputRelativePath = buildTourServiceImageOutputRelativePath({
+      tourId,
+      travelPlan: normalizedTravelPlan,
+      day: normalizedTravelPlan.days[dayIndex],
+      item,
+      serviceId
+    });
     const outputPath = path.join(TOURS_DIR, outputRelativePath);
 
     try {
@@ -2491,6 +2552,7 @@ export function createTourHandlers(deps) {
       return;
     }
 
+    const previousImagePath = currentImage ? resolveTourServiceImageDiskPath(currentImage.storage_path, tourId) : "";
     const updated = normalizeTourForStorage({
       ...tours[index],
       travel_plan: check.travel_plan,
@@ -2498,6 +2560,13 @@ export function createTourHandlers(deps) {
     });
     tours[index] = updated;
     await persistTour(updated);
+    if (
+      previousImagePath
+      && path.resolve(previousImagePath) !== path.resolve(outputPath)
+      && previousImagePath.includes(`${path.sep}travel-plan-services${path.sep}`)
+    ) {
+      await rm(previousImagePath, { force: true }).catch(() => {});
+    }
     sendJson(res, 200, {
       tour: await buildLocalizedTourEditorResponse(updated, lang),
       homepage_assets: deferredPublicHomepageAssets("tour_travel_plan_service_image_upload", { tour_id: updated.id })
