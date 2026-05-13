@@ -339,19 +339,6 @@
       "updated_at": "2026-05-09T03:41:06.844Z",
       "latitude": 10.02943,
       "longitude": 104.00831
-    },
-    {
-      "id": "place_df5d50a9-cd0a-4059-a470-3360c46da58f",
-      "destination": "VN",
-      "region_id": "region_3fa05b42-97ab-495d-b16d-4691e66e0434",
-      "code": "hoa-lu",
-      "name": "Hoa Lu",
-      "sort_order": 100,
-      "is_active": true,
-      "created_at": "2026-05-09T03:41:58.777Z",
-      "updated_at": "2026-05-09T03:41:58.777Z",
-      "latitude": 20.24983,
-      "longitude": 105.95653
     }
   ]
 }

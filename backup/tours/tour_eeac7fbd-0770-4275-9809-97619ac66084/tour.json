@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-09T03:29:39.112Z",
-  "updated_at": "2026-05-13T14:03:17.772Z",
+  "updated_at": "2026-05-13T14:50:42.639Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
@@ -38,8 +38,6 @@
         "day_number": 1,
         "title": "Arrival and road to Sapa",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -59,8 +57,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -90,8 +86,6 @@
         "day_number": 2,
         "title": "O Quy Ho Pass and night market",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -111,8 +105,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -146,8 +138,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -181,8 +171,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -216,8 +204,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -247,8 +233,6 @@
         "day_number": 3,
         "title": "Muong Hoa train and Fansipan",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -268,8 +252,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -303,8 +285,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -334,8 +314,6 @@
         "day_number": 4,
         "title": "Sapa to Tam Dao",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -355,8 +333,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -390,8 +366,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -421,8 +395,6 @@
         "day_number": 5,
         "title": "Tam Dao to Hanoi",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -442,8 +414,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -477,8 +447,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -512,8 +480,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -543,8 +509,6 @@
         "day_number": 6,
         "title": "Trang An and Hang Mua",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_d17c6fad-2b99-497b-8bfd-8d2b00237a3d",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -564,8 +528,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -599,8 +561,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -630,9 +590,7 @@
         "day_number": 7,
         "title": "Hoa Lu and Bai Dinh",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
-        "primary_location_id": "place_df5d50a9-cd0a-4059-a470-3360c46da58f",
+        "primary_location_id": "place_d17c6fad-2b99-497b-8bfd-8d2b00237a3d",
         "secondary_location_id": null,
         "experience_highlight_ids": [
           "spiritual_places"
@@ -651,8 +609,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -686,8 +642,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -717,8 +671,6 @@
         "day_number": 8,
         "title": "Hanoi farewell",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [

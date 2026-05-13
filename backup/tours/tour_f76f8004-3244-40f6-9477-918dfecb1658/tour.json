@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 50,
   "created_at": "2026-04-13T10:18:33.599Z",
-  "updated_at": "2026-05-13T05:12:09.429Z",
+  "updated_at": "2026-05-13T14:51:10.840Z",
   "published_on_webpage": false,
   "travel_plan": {
     "one_pager_image_ids": [],
@@ -24,9 +24,7 @@
         "day_number": 1,
         "title": "Hoa Lu, Trang An and Hang Mua",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
-        "primary_location_id": "place_df5d50a9-cd0a-4059-a470-3360c46da58f",
+        "primary_location_id": "place_d17c6fad-2b99-497b-8bfd-8d2b00237a3d",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
         "services": [
@@ -43,8 +41,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": null
