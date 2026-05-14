@@ -31,7 +31,7 @@
 }
 
 (staging_html_no_cache_headers) {
-  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html /photo_matrix.html /meta_matrix.html /content_matrix.html
+  @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html /photo_matrix.html /meta_matrix.html /content_matrix.html /one_pager_matrix.html
   header @staging_html {
     Cache-Control "no-cache, must-revalidate"
   }

@@ -16,7 +16,7 @@ Usage:
   ./scripts/content/deploy_all_one-pagers.sh [options]
 
 Deploys already generated one-pager matrix files to staging.
-Run ./scripts/content/create_all_one-pagers.sh first when the local files need updating.
+Run ./scripts/content/publish_tour_matrices.sh first when the local files need updating.
 
 Options:
   --source DIR             Local generated folder. Default: content/one-pagers
@@ -183,13 +183,13 @@ DEPLOY_MODE="$(detect_mode "$ROOT_DIR" "$STAGING_ROOT" "$STAGING_HOST" "$DEPLOY_
 
 if [[ ! -d "$SOURCE_DIR" ]]; then
   echo "Missing generated one-pager directory: $SOURCE_DIR" >&2
-  echo "Run ./scripts/content/create_all_one-pagers.sh first." >&2
+  echo "Run ./scripts/content/publish_tour_matrices.sh first." >&2
   exit 1
 fi
 
 if [[ ! -f "$SOURCE_DIR/index.html" ]]; then
   echo "Missing matrix page: $SOURCE_DIR/index.html" >&2
-  echo "Run ./scripts/content/create_all_one-pagers.sh first." >&2
+  echo "Run ./scripts/content/publish_tour_matrices.sh first." >&2
   exit 1
 fi
 

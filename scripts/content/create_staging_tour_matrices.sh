@@ -29,6 +29,7 @@ if [[ "$OUTPUT_DIR" != "$ROOT_DIR" ]]; then
   ln -sfn "$RELATIVE_OUTPUT_DIR/photo_matrix.html" "$ROOT_DIR/photo_matrix.html"
   ln -sfn "$RELATIVE_OUTPUT_DIR/meta_matrix.html" "$ROOT_DIR/meta_matrix.html"
   ln -sfn "$RELATIVE_OUTPUT_DIR/content_matrix.html" "$ROOT_DIR/content_matrix.html"
+  ln -sfn "$RELATIVE_OUTPUT_DIR/one_pager_matrix.html" "$ROOT_DIR/one_pager_matrix.html"
   rm -rf "$ROOT_DIR/img"
   ln -s "$RELATIVE_OUTPUT_DIR/img" "$ROOT_DIR/img"
 fi

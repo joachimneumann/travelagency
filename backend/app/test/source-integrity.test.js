@@ -3751,11 +3751,11 @@ test("tour card images are selected from travel-plan service images", async () =
   const travelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const travelPlanModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const homepageGeneratorPath = path.resolve(__dirname, "..", "..", "..", "scripts", "assets", "generate_public_homepage_assets.mjs");
-  const onePagerShellPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one-pagers.sh");
+  const tourMatrixPublishPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "publish_tour_matrices.sh");
   const onePagerScriptPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one_pagers.mjs");
   const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
   const marketingTourPdfBackgroundPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_pdf_background.js");
-  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, onePagerShellSource, onePagerScriptSource, onePagerPdfSource, marketingTourPdfBackgroundSource] = await Promise.all([
+  const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, tourMatrixPublishSource, onePagerScriptSource, onePagerPdfSource, marketingTourPdfBackgroundSource] = await Promise.all([
     readFile(toursSupportPath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
     readFile(tourHtmlPath, "utf8"),
@@ -3766,7 +3766,7 @@ test("tour card images are selected from travel-plan service images", async () =
     readFile(travelPlanEditorPath, "utf8"),
     readFile(travelPlanModelPath, "utf8"),
     readFile(homepageGeneratorPath, "utf8"),
-    readFile(onePagerShellPath, "utf8"),
+    readFile(tourMatrixPublishPath, "utf8"),
     readFile(onePagerScriptPath, "utf8"),
     readFile(onePagerPdfPath, "utf8"),
     readFile(marketingTourPdfBackgroundPath, "utf8")
@@ -3893,9 +3893,14 @@ test("tour card images are selected from travel-plan service images", async () =
     "Homepage generation should strip embedded marketing-tour translations through the shared translator before applying published snapshots and manual overrides"
   );
   assert.match(
-    onePagerShellSource,
-    /export ONE_PAGER_FONT_DIR="\$\{ONE_PAGER_FONT_DIR:-\$\{REPO_ROOT\}\/content\/fonts\}"/,
-    "Batch one-pager generation should default PDF fonts to the private content/fonts folder"
+    tourMatrixPublishSource,
+    /export ONE_PAGER_FONT_DIR="\$\{ONE_PAGER_FONT_DIR:-\$ROOT_DIR\/content\/fonts\}"/,
+    "Tour matrix publishing should default one-pager PDF fonts to the private content/fonts folder"
+  );
+  assert.match(
+    tourMatrixPublishSource,
+    /node "\$SCRIPT_DIR\/create_all_one_pagers\.mjs" "\$\{ONE_PAGER_ARGS\[@\]\}"/,
+    "Tour matrix publishing should generate the one-pager PDF matrix through the shared batch renderer"
   );
   assert.doesNotMatch(
     `${homepageGeneratorSource}\n${onePagerScriptSource}`,

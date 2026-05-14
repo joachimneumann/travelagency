@@ -8,6 +8,7 @@ OUTPUT_DIR="${TOUR_MATRIX_OUTPUT_DIR:-$ROOT_DIR}"
 TOURS_DIR="$ROOT_DIR/content/tours"
 CATALOG_PATH="$ROOT_DIR/content/tours/destinations.json"
 HIGHLIGHT_MANIFEST_PATH="$ROOT_DIR/assets/img/experience-highlights/manifest.json"
+ONE_PAGERS_OUTPUT_DIR="${ONE_PAGERS_OUTPUT_DIR:-}"
 
 usage() {
   cat <<'EOF'
@@ -19,12 +20,14 @@ On staging, run this from /srv/asiatravelplan-staging to refresh:
   https://staging.asiatravelplan.com/photo_matrix.html
   https://staging.asiatravelplan.com/meta_matrix.html
   https://staging.asiatravelplan.com/content_matrix.html
+  https://staging.asiatravelplan.com/one_pager_matrix.html
 
 Options:
   --output-dir DIR              Publish directory. Default: repo root, or TOUR_MATRIX_OUTPUT_DIR.
   --tours DIR                   Tours directory. Default: content/tours
   --catalog FILE                Destination catalog. Default: content/tours/destinations.json
   --highlight-manifest FILE     Highlight manifest. Default: assets/img/experience-highlights/manifest.json
+  --one-pagers-output-dir DIR   One-pager PDF/image output directory. Default: content/one-pagers.
   --help                        Show this help.
 EOF
 }
@@ -51,6 +54,11 @@ while [[ "$#" -gt 0 ]]; do
       HIGHLIGHT_MANIFEST_PATH="$2"
       shift 2
       ;;
+    --one-pagers-output-dir)
+      [[ -n "${2:-}" ]] || { echo "--one-pagers-output-dir requires a directory." >&2; exit 1; }
+      ONE_PAGERS_OUTPUT_DIR="$2"
+      shift 2
+      ;;
     --help|-h)
       usage
       exit 0
@@ -67,6 +75,9 @@ OUTPUT_DIR="$(cd "$ROOT_DIR" && mkdir -p "$OUTPUT_DIR" && cd "$OUTPUT_DIR" && pw
 TOURS_DIR="$(cd "$ROOT_DIR" && cd "$TOURS_DIR" && pwd)"
 CATALOG_PATH="$(cd "$ROOT_DIR" && cd "$(dirname "$CATALOG_PATH")" && printf '%s/%s\n' "$PWD" "$(basename "$CATALOG_PATH")")"
 HIGHLIGHT_MANIFEST_PATH="$(cd "$ROOT_DIR" && cd "$(dirname "$HIGHLIGHT_MANIFEST_PATH")" && printf '%s/%s\n' "$PWD" "$(basename "$HIGHLIGHT_MANIFEST_PATH")")"
+if [[ -n "$ONE_PAGERS_OUTPUT_DIR" ]]; then
+  ONE_PAGERS_OUTPUT_DIR="$(cd "$ROOT_DIR" && mkdir -p "$ONE_PAGERS_OUTPUT_DIR" && cd "$ONE_PAGERS_OUTPUT_DIR" && pwd)"
+fi
 
 if [[ "$OUTPUT_DIR" == "/" ]]; then
   echo "Refusing to publish matrices into /." >&2
@@ -78,8 +89,20 @@ if [[ ! -w "$OUTPUT_DIR" ]]; then
   exit 1
 fi
 
+if [[ -n "$ONE_PAGERS_OUTPUT_DIR" && ! -w "$ONE_PAGERS_OUTPUT_DIR" ]]; then
+  echo "One-pager output directory is not writable by uid $(id -u):gid $(id -g): $ONE_PAGERS_OUTPUT_DIR" >&2
+  exit 1
+fi
+
+if [[ ! -d "$ROOT_DIR/backend/app/node_modules" ]]; then
+  echo "Missing backend/app/node_modules. Run npm install in backend/app first." >&2
+  exit 1
+fi
+
+export ONE_PAGER_FONT_DIR="${ONE_PAGER_FONT_DIR:-$ROOT_DIR/content/fonts}"
+
 rm -rf "$OUTPUT_DIR/img"
-rm -f "$OUTPUT_DIR/photo_matrix.html" "$OUTPUT_DIR/meta_matrix.html" "$OUTPUT_DIR/content_matrix.html"
+rm -f "$OUTPUT_DIR/photo_matrix.html" "$OUTPUT_DIR/meta_matrix.html" "$OUTPUT_DIR/content_matrix.html" "$OUTPUT_DIR/one_pager_matrix.html"
 
 echo "Generating and publishing tour photo matrix..."
 "$SCRIPT_DIR/create_tour_photo_matrix.sh" \
@@ -98,7 +121,19 @@ echo "Generating and publishing tour content matrix..."
   --tours "$TOURS_DIR" \
   --output "$OUTPUT_DIR/content_matrix.html"
 
+echo "Generating and publishing one-pager PDF matrix..."
+ONE_PAGER_ARGS=(
+  --tours "$TOURS_DIR"
+  --highlight-manifest "$HIGHLIGHT_MANIFEST_PATH"
+  --matrix-output "$OUTPUT_DIR/one_pager_matrix.html"
+)
+if [[ -n "$ONE_PAGERS_OUTPUT_DIR" ]]; then
+  ONE_PAGER_ARGS+=(--output "$ONE_PAGERS_OUTPUT_DIR")
+fi
+node "$SCRIPT_DIR/create_all_one_pagers.mjs" "${ONE_PAGER_ARGS[@]}"
+
 echo "Published tour matrices:"
 echo "  $OUTPUT_DIR/photo_matrix.html"
 echo "  $OUTPUT_DIR/meta_matrix.html"
 echo "  $OUTPUT_DIR/content_matrix.html"
+echo "  $OUTPUT_DIR/one_pager_matrix.html"

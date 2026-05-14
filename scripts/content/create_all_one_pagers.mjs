@@ -25,12 +25,12 @@ const execFile = promisify(execFileCallback);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
-const toursDir = path.join(repoRoot, "content", "tours");
+const defaultToursDir = path.join(repoRoot, "content", "tours");
 const translationsSnapshotDir = path.join(repoRoot, "content", "translations");
 const translationManualOverridesPath = path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
 const defaultOutputDir = CONTENT_ONE_PAGERS_DIR;
 const flagTokensPath = path.join(repoRoot, "shared", "css", "tokens.css");
-const experienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
+const defaultExperienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
 const googleSitesBaseUrl = "https://sites.google.com";
 const googleAccount = "info@asiatravelplan.com";
 const onePagerFrameImageCount = 5;
@@ -46,25 +46,28 @@ const defaultPdfColumnLanguages = Object.freeze(
 );
 
 function printUsage() {
-  console.log(`Usage: scripts/content/create_all_one-pagers.sh [N_tours] [N_languages] [options]
+  console.log(`Usage: node scripts/content/create_all_one_pagers.mjs [N_tours] [N_languages] [options]
 
 Examples:
-  scripts/content/create_all_one-pagers.sh
-  scripts/content/create_all_one-pagers.sh 5 3
-  scripts/content/create_all_one-pagers.sh --languages en,vi --limit 2
+  node scripts/content/create_all_one_pagers.mjs
+  node scripts/content/create_all_one_pagers.mjs 5 3
+  node scripts/content/create_all_one_pagers.mjs --languages en,vi --limit 2
 
 Options:
+  --tours DIR               Tours directory. Default: content/tours
   --output DIR              Output directory. Default: content/one-pagers
+  --matrix-output FILE      Extra HTML matrix output path. Default: <output>/index.html
   --languages LIST          Comma-separated language codes. Default: all customer languages, EN and VI first
   --tour TOUR_ID            Render one tour only. Can be repeated.
   --limit N                 Render only the first N tours after filtering.
+  --highlight-manifest FILE Experience highlight manifest. Default: assets/img/experience-highlights/manifest.json
   --image-dpi N             PDF-to-image resolution before web preview resize. Default: 144
   --no-clean                Keep existing output files.
   --open-google-sites       Open Google Sites after generation.
   --help                    Show this help.
 
 Environment:
-  ONE_PAGER_FONT_DIR        Font directory for PDF rendering. Wrapper default: content/fonts.
+  ONE_PAGER_FONT_DIR        Font directory for PDF rendering. Publish default: content/fonts.
 
 Generated files:
   <output>/pdfs/<tour-id>/<lang>.pdf
@@ -85,9 +88,12 @@ function parseLimitArg(value, label) {
 
 function parseArgs(argv) {
   const options = {
+    toursDir: defaultToursDir,
     outputDir: defaultOutputDir,
+    matrixOutputPath: "",
     languages: [...defaultPdfColumnLanguages],
     tours: new Set(),
+    highlightManifestPath: defaultExperienceHighlightsManifestPath,
     limit: 0,
     imageDpi: 144,
     clean: true,
@@ -108,6 +114,18 @@ function parseArgs(argv) {
       options.outputDir = path.resolve(String(argv[++index] || ""));
       continue;
     }
+    if (arg === "--matrix-output") {
+      const value = String(argv[++index] || "");
+      if (!value) throw new Error("--matrix-output requires a file path.");
+      options.matrixOutputPath = path.resolve(value);
+      continue;
+    }
+    if (arg === "--tours") {
+      const value = String(argv[++index] || "");
+      if (!value) throw new Error("--tours requires a directory.");
+      options.toursDir = path.resolve(value);
+      continue;
+    }
     if (arg === "--languages") {
       options.languages = String(argv[++index] || "")
         .split(",")
@@ -122,6 +140,12 @@ function parseArgs(argv) {
     }
     if (arg === "--limit") {
       options.limit = Math.max(0, Number.parseInt(String(argv[++index] || "0"), 10) || 0);
+      continue;
+    }
+    if (arg === "--highlight-manifest") {
+      const value = String(argv[++index] || "");
+      if (!value) throw new Error("--highlight-manifest requires a file path.");
+      options.highlightManifestPath = path.resolve(value);
       continue;
     }
     if (arg === "--image-dpi") {
@@ -153,6 +177,9 @@ function parseArgs(argv) {
   }
   if (!options.languages.length) {
     throw new Error("No languages selected.");
+  }
+  if (!options.matrixOutputPath) {
+    options.matrixOutputPath = path.join(options.outputDir, "index.html");
   }
   return options;
 }
@@ -290,7 +317,7 @@ async function convertPdfToWebJpg(pdfPath, jpgPath, { dpi, width }) {
   throw new Error("Could not convert PDF to JPG. Install poppler (pdftoppm) or ImageMagick (magick/convert).");
 }
 
-async function readTours() {
+async function readTours(toursDir) {
   const entries = await readdir(toursDir, { withFileTypes: true });
   const tours = [];
   for (const entry of entries) {
@@ -306,7 +333,7 @@ async function readTours() {
   return tours;
 }
 
-async function readExperienceHighlightCatalog() {
+async function readExperienceHighlightCatalog(experienceHighlightsManifestPath) {
   const raw = await readFile(experienceHighlightsManifestPath, "utf8");
   const parsed = JSON.parse(raw);
   const seen = new Set();
@@ -505,8 +532,8 @@ async function buildFlagDataUrls(languages) {
   return flagDataUrls;
 }
 
-function buildMatrixHtml({ outputDir, rows, languages, generatedAt, flagDataUrls }) {
-  const indexPath = path.join(outputDir, "index.html");
+function buildMatrixHtml({ matrixOutputPath, rows, languages, generatedAt, flagDataUrls }) {
+  const indexPath = matrixOutputPath;
   const languageLabels = new Map(CUSTOMER_CONTENT_LANGUAGES.map((language) => [language.code, language.shortLabel || language.nativeLabel || language.code.toUpperCase()]));
   const languageFlags = new Map(CUSTOMER_CONTENT_LANGUAGES.map((language) => [language.code, language.flagClass || `flag-${language.code}`]));
   const headerCells = languages.map((lang) => {
@@ -682,10 +709,11 @@ async function main() {
   }
   await mkdir(path.join(options.outputDir, "pdfs"), { recursive: true });
   await mkdir(path.join(options.outputDir, "images"), { recursive: true });
+  await mkdir(path.dirname(options.matrixOutputPath), { recursive: true });
 
   const travelPlanHelpers = createTravelPlanHelpers();
   const tourHelpers = createTourHelpers({
-    toursDir,
+    toursDir: options.toursDir,
     safeInt,
     normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan
   });
@@ -693,18 +721,18 @@ async function main() {
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
     logoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.png"),
     fallbackImagePath: FALLBACK_BOOKING_IMAGE_PATH,
-    experienceHighlightsManifestPath,
+    experienceHighlightsManifestPath: options.highlightManifestPath,
     companyProfile: COMPANY_PROFILE
   });
-  const experienceHighlightCatalog = await readExperienceHighlightCatalog();
+  const experienceHighlightCatalog = await readExperienceHighlightCatalog(options.highlightManifestPath);
   if (experienceHighlightCatalog.length < onePagerExperienceHighlightCount) {
-    throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${experienceHighlightsManifestPath}.`);
+    throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${options.highlightManifestPath}.`);
   }
   const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, options.languages, {
     manualOverridesPath: translationManualOverridesPath
   });
 
-  let tours = (await readTours())
+  let tours = (await readTours(options.toursDir))
     .map((tour) => tourHelpers.normalizeTourForStorage(tour))
     .sort((left, right) => tourTitleForSort(tourHelpers, left).localeCompare(tourTitleForSort(tourHelpers, right), "en", { sensitivity: "base" }));
   if (options.tours.size) {
@@ -745,6 +773,7 @@ async function main() {
   const manifest = {
     generated_at: generatedAt,
     output_dir: options.outputDir,
+    matrix_path: options.matrixOutputPath,
     languages: options.languages,
     min_one_pager_image_count: minOnePagerImageCount,
     skipped_tours: skippedTours,
@@ -822,23 +851,35 @@ async function main() {
     manifest.tours.push(manifestTour);
   }
 
+  const outputIndexPath = path.join(options.outputDir, "index.html");
+  const flagDataUrls = await buildFlagDataUrls(options.languages);
   const matrixHtml = buildMatrixHtml({
-    outputDir: options.outputDir,
+    matrixOutputPath: options.matrixOutputPath,
     rows: matrixRows,
     languages: options.languages,
     generatedAt,
-    flagDataUrls: await buildFlagDataUrls(options.languages)
+    flagDataUrls
   });
   const staleInstructionsPath = path.join(options.outputDir, "google-sites-instructions.html");
   await rm(staleInstructionsPath, { force: true });
-  await writeFile(path.join(options.outputDir, "index.html"), matrixHtml, "utf8");
+  await writeFile(options.matrixOutputPath, matrixHtml, "utf8");
+  if (options.matrixOutputPath !== outputIndexPath) {
+    const outputIndexHtml = buildMatrixHtml({
+      matrixOutputPath: outputIndexPath,
+      rows: matrixRows,
+      languages: options.languages,
+      generatedAt,
+      flagDataUrls
+    });
+    await writeFile(outputIndexPath, outputIndexHtml, "utf8");
+  }
   await writeFile(path.join(options.outputDir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`, "utf8");
 
   if (options.openGoogleSites) {
     await openGoogleSites();
   }
 
-  console.log(`Done. Matrix page: ${path.join(options.outputDir, "index.html")}`);
+  console.log(`Done. Matrix page: ${options.matrixOutputPath}`);
 }
 
 main().catch((error) => {
