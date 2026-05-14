@@ -37,9 +37,7 @@ tmp/
 .playwright-cli/
 
 # Staging-only generated matrix pages.
-/photo_matrix.html
-/meta_matrix.html
-/content_matrix.html
+/*matrix.html
 /img
 /img/
 /matrix-pages/
