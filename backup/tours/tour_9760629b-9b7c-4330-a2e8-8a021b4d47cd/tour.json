@@ -11,7 +11,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-16T03:51:45.597Z",
-  "updated_at": "2026-05-14T05:16:02.450Z",
+  "updated_at": "2026-05-14T06:37:31.327Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -56,7 +56,7 @@
         "end_time": null,
         "image": null,
         "boundary_kind": "arrival",
-        "enabled": false,
+        "enabled": true,
         "airport_code": null,
         "from_label": null,
         "to_label": null,
@@ -72,9 +72,9 @@
         "time_label_i18n": {},
         "time_point": null,
         "kind": "transport",
-        "title": "Da Lat to Nha Trang airport",
+        "title": "Dalat to Nha Trang airport",
         "title_i18n": {},
-        "details": null,
+        "details": "Use this day for Dalat coffee, tea, jams and souvenirs. We will drop you off at the Nha Trang airport",
         "details_i18n": {},
         "image_subtitle": null,
         "image_subtitle_i18n": {},
@@ -82,12 +82,12 @@
         "end_time": null,
         "image": null,
         "boundary_kind": "departure",
-        "enabled": false,
+        "enabled": true,
         "airport_code": null,
         "from_label": null,
         "to_label": null,
         "presentation": {
-          "attach_to": "last_day",
+          "attach_to": "after_last_day",
           "position": "end"
         }
       }
@@ -823,20 +823,6 @@
           }
         ],
         "notes": "Bring together Da Lat's mountain views, lakeside monastery calm and playful clay sculptures that retell the city's story.",
-        "notes_i18n": {}
-      },
-      {
-        "id": "travel_plan_day_997e8b35-547c-420a-a0f7-b3c639e2a5bd",
-        "day_number": 8,
-        "title": "Da Lat to Nha Trang airport",
-        "title_i18n": {},
-        "primary_location_id": "place_5da10678-f8e2-4f2b-97f7-7b2a41017036",
-        "secondary_location_id": null,
-        "experience_highlight_ids": [
-          "city_life"
-        ],
-        "services": [],
-        "notes": "Use this day for Da Lat coffee, tea, jams and souvenirs",
         "notes_i18n": {}
       }
     ],

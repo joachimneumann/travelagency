@@ -14,7 +14,7 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-05-14T04:43:57.513Z",
+  "updated_at": "2026-05-14T06:35:03.794Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
@@ -67,7 +67,7 @@
         "kind": "transport",
         "title": "Hotel to Airport departure transfer",
         "title_i18n": {},
-        "details": "We will drive you to the airport",
+        "details": "We will stop at some shopping opportunities and drive you to the airport",
         "details_i18n": {},
         "image_subtitle": null,
         "image_subtitle_i18n": {},
@@ -80,7 +80,7 @@
         "from_label": null,
         "to_label": null,
         "presentation": {
-          "attach_to": "last_day",
+          "attach_to": "after_last_day",
           "position": "end"
         }
       }
@@ -378,54 +378,6 @@
           }
         ],
         "notes": "Leave the capital for Ha Long Bay and spend the day on the water among limestone islands, cave scenery and lunch aboard the cruise.",
-        "notes_i18n": {}
-      },
-      {
-        "id": "travel_plan_day_56a905e0-b4a3-497c-913f-c23666ce0388",
-        "day_number": 3,
-        "title": "Shopping",
-        "title_i18n": {},
-        "primary_location_id": "place_halong_bay",
-        "secondary_location_id": null,
-        "experience_highlight_ids": [
-          "city_life"
-        ],
-        "services": [
-          {
-            "id": "travel_plan_service_6bee599f-8443-4f52-8203-789a6da99cf2",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "Shopping in Hanoi",
-            "title_i18n": {},
-            "details": "A good opportunity for purchases and souveniers.",
-            "details_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_a38600b0-0057-4f39-80dd-4be2609fbd8a",
-              "storage_path": "/public/v1/tour-images/tour_51d3c652-0e8d-4463-ad04-852c64b3a652/travel-plan-services/day-03-shopping.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-05-14T04:43:02.710Z"
-            }
-          }
-        ],
-        "notes": "We will stop at some shopping opportunities.",
         "notes_i18n": {}
       }
     ],

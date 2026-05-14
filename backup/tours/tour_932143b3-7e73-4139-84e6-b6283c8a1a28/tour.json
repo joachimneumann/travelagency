@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 80,
   "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-05-14T05:18:42.213Z",
+  "updated_at": "2026-05-14T06:39:46.141Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -31,6 +31,60 @@
       "travel_plan_service_image_c0d9cf68-ece1-4a6b-89fa-9d0f0f832bab",
       "travel_plan_service_image_d3ee0fdf-ac10-4131-9d84-2b15e709b444"
     ],
+    "boundary_logistics": {
+      "arrival": {
+        "id": "travel_plan_boundary_arrival_b7eb47b1-befe-47a9-a2ee-b2dc226ebeea",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Airport Pickup",
+        "title_i18n": {},
+        "details": "Our driver will wait for you at the Hanoi Airport",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "arrival",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "first_day",
+          "position": "start"
+        }
+      },
+      "departure": {
+        "id": "travel_plan_boundary_departure_40e44b09-42f1-4a91-a92c-50edc7de91af",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Airport Drop off",
+        "title_i18n": {},
+        "details": "When we return from the north, we will drop you off at the Hanoi Airport",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "departure",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "last_day",
+          "position": "end"
+        }
+      }
+    },
     "days": [
       {
         "id": "travel_plan_day_dfaf33b6-83a8-476b-8b55-549dc26a7710",

@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-09T03:29:39.112Z",
-  "updated_at": "2026-05-14T04:32:25.115Z",
+  "updated_at": "2026-05-14T06:33:04.884Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
@@ -81,7 +81,7 @@
         "from_label": null,
         "to_label": null,
         "presentation": {
-          "attach_to": "last_day",
+          "attach_to": "after_last_day",
           "position": "end"
         }
       }
