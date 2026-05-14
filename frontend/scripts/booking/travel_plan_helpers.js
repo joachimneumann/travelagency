@@ -269,6 +269,24 @@ export function createEmptyTravelPlanService() {
   };
 }
 
+export function createEmptyTravelPlanBoundaryService(boundaryKind = "arrival") {
+  const normalizedBoundaryKind = boundaryKind === "departure" ? "departure" : "arrival";
+  return {
+    ...createEmptyTravelPlanService(),
+    id: travelPlanId(`travel_plan_boundary_${normalizedBoundaryKind}`),
+    boundary_kind: normalizedBoundaryKind,
+    enabled: false,
+    kind: "transport",
+    airport_code: "",
+    from_label: "",
+    to_label: "",
+    presentation: {
+      attach_to: normalizedBoundaryKind === "departure" ? "last_day" : "first_day",
+      position: normalizedBoundaryKind === "departure" ? "end" : "start"
+    }
+  };
+}
+
 export function createEmptyTravelPlanDay(index = 0) {
   return {
     id: travelPlanId("travel_plan_day"),
@@ -294,6 +312,7 @@ export function createEmptyTravelPlan() {
     tour_card_image_ids: [],
     one_pager_hero_image_id: null,
     one_pager_image_ids: [],
+    boundary_logistics: {},
     days: [],
     attachments: []
   };
@@ -369,6 +388,92 @@ function normalizeTravelPlanExperienceHighlightIds(values) {
     .slice(0, 1);
 }
 
+function normalizeBoundaryKind(value, fallback = "arrival") {
+  const normalized = normalizeOptionalText(value || fallback).toLowerCase();
+  return normalized === "departure" ? "departure" : "arrival";
+}
+
+function normalizeBoundaryPresentation(value, boundaryKind) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const normalizedBoundaryKind = normalizeBoundaryKind(boundaryKind);
+  const attachTo = normalizeOptionalText(source.attach_to);
+  const position = normalizeOptionalText(source.position);
+  return {
+    attach_to: attachTo === "last_day" || attachTo === "first_day"
+      ? attachTo
+      : (normalizedBoundaryKind === "departure" ? "last_day" : "first_day"),
+    position: position === "end" || position === "start"
+      ? position
+      : (normalizedBoundaryKind === "departure" ? "end" : "start")
+  };
+}
+
+function normalizeTravelPlanServiceDraft(rawItem, sourceLang, targetLang, {
+  fallbackIdPrefix = "travel_plan_service",
+  fallbackKind = "other"
+} = {}) {
+  const rawItemSource = rawItem && typeof rawItem === "object" ? rawItem : {};
+  const timing = normalizeItemTiming(rawItemSource);
+  const timeLabelField = normalizeDraftLocalizedPayload(rawItemSource, "time_label", sourceLang, targetLang);
+  const titleField = normalizeDraftLocalizedPayload(rawItemSource, "title", sourceLang, targetLang);
+  const detailsField = normalizeDraftLocalizedPayload(rawItemSource, "details", sourceLang, targetLang);
+  const imageSubtitleField = normalizeDraftLocalizedPayload(rawItem, "image_subtitle", sourceLang, targetLang);
+  return {
+    id: String(rawItemSource.id || travelPlanId(fallbackIdPrefix)),
+    timing_kind: timing.timing_kind,
+    time_label: timeLabelField.text,
+    time_label_i18n: timeLabelField.map,
+    time_point: timing.time_point,
+    kind: normalizeItemKind(rawItemSource.kind || fallbackKind),
+    title: titleField.text,
+    title_i18n: titleField.map,
+    details: detailsField.text,
+    details_i18n: detailsField.map,
+    image_subtitle: imageSubtitleField.text,
+    image_subtitle_i18n: imageSubtitleField.map,
+    start_time: timing.start_time,
+    end_time: timing.end_time,
+    image: normalizeItemImage(rawItemSource.image ?? rawItemSource.images, sourceLang, targetLang)
+  };
+}
+
+function normalizeBoundaryService(rawService, boundaryKind, sourceLang, targetLang) {
+  const source = rawService && typeof rawService === "object" && !Array.isArray(rawService)
+    ? rawService
+    : null;
+  if (!source) return null;
+  const normalizedBoundaryKind = normalizeBoundaryKind(source.boundary_kind, boundaryKind);
+  const service = normalizeTravelPlanServiceDraft({
+    ...source,
+    kind: normalizeOptionalText(source.kind) || "transport"
+  }, sourceLang, targetLang, {
+    fallbackIdPrefix: `travel_plan_boundary_${normalizedBoundaryKind}`,
+    fallbackKind: "transport"
+  });
+  return {
+    ...service,
+    boundary_kind: normalizedBoundaryKind,
+    enabled: source.enabled === true,
+    kind: normalizeItemKind(source.kind || "transport"),
+    airport_code: normalizeOptionalText(source.airport_code),
+    from_label: normalizeOptionalText(source.from_label),
+    to_label: normalizeOptionalText(source.to_label),
+    presentation: normalizeBoundaryPresentation(source.presentation, normalizedBoundaryKind)
+  };
+}
+
+function normalizeBoundaryLogistics(source, sourceLang, targetLang) {
+  const boundaryLogistics = source?.boundary_logistics && typeof source.boundary_logistics === "object" && !Array.isArray(source.boundary_logistics)
+    ? source.boundary_logistics
+    : {};
+  const arrival = normalizeBoundaryService(boundaryLogistics.arrival, "arrival", sourceLang, targetLang);
+  const departure = normalizeBoundaryService(boundaryLogistics.departure, "departure", sourceLang, targetLang);
+  return {
+    ...(arrival ? { arrival } : {}),
+    ...(departure ? { departure } : {})
+  };
+}
+
 function normalizeOnePagerHeroImageId(source, days) {
   const heroImageId = normalizeOptionalText(source?.one_pager_hero_image_id);
   if (!heroImageId) return "";
@@ -436,29 +541,7 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
             ? rawDay.services
             : (Array.isArray(rawDay.items) ? rawDay.items : [])
         ).map((item) => {
-          const rawItem = item && typeof item === "object" ? item : {};
-          const timing = normalizeItemTiming(rawItem);
-          const timeLabelField = normalizeDraftLocalizedPayload(rawItem, "time_label", sourceLang, targetLang);
-          const titleField = normalizeDraftLocalizedPayload(rawItem, "title", sourceLang, targetLang);
-          const detailsField = normalizeDraftLocalizedPayload(rawItem, "details", sourceLang, targetLang);
-          const imageSubtitleField = normalizeDraftLocalizedPayload(rawItem, "image_subtitle", sourceLang, targetLang);
-          return {
-            id: String(rawItem.id || travelPlanId("travel_plan_service")),
-            timing_kind: timing.timing_kind,
-            time_label: timeLabelField.text,
-            time_label_i18n: timeLabelField.map,
-            time_point: timing.time_point,
-            kind: normalizeItemKind(rawItem.kind),
-            title: titleField.text,
-            title_i18n: titleField.map,
-            details: detailsField.text,
-            details_i18n: detailsField.map,
-            image_subtitle: imageSubtitleField.text,
-            image_subtitle_i18n: imageSubtitleField.map,
-            start_time: timing.start_time,
-            end_time: timing.end_time,
-            image: normalizeItemImage(rawItem.image ?? rawItem.images, sourceLang, targetLang)
-          };
+          return normalizeTravelPlanServiceDraft(item, sourceLang, targetLang);
         }),
         notes: notesField.text,
         notes_i18n: notesField.map
@@ -478,6 +561,7 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
     tour_card_image_ids,
     one_pager_hero_image_id: one_pager_hero_image_id || null,
     one_pager_image_ids,
+    boundary_logistics: normalizeBoundaryLogistics(source, sourceLang, targetLang),
     days: applyTourCardImageSelection(days, tour_card_image_ids),
     attachments: normalizeTravelPlanAttachments(source.attachments)
   };

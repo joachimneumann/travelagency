@@ -209,7 +209,8 @@ export function createBackendServices({
     fallbackImagePath: collections.fallbackBookingImagePath,
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     companyProfile: runtime.companyProfile,
-    formatMoney: pricingHelpers.formatMoney
+    formatMoney: pricingHelpers.formatMoney,
+    composeTravelPlanForPresentation: travelPlanHelpers.composeTravelPlanForPresentation
   });
 
   const writeTravelPlanPdf = createTravelPlanPdfWriter({
@@ -230,7 +231,8 @@ export function createBackendServices({
     marketingTourLogoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.large.transparent.png"),
     fallbackImagePath: collections.fallbackBookingImagePath,
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
-    companyProfile: runtime.companyProfile
+    companyProfile: runtime.companyProfile,
+    composeTravelPlanForPresentation: travelPlanHelpers.composeTravelPlanForPresentation
   });
 
   const writeMarketingTourOnePagerPdf = createMarketingTourOnePagerPdfWriter({
@@ -238,7 +240,8 @@ export function createBackendServices({
     logoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.large.transparent.png"),
     fallbackImagePath: collections.fallbackBookingImagePath,
     experienceHighlightsManifestPath: path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json"),
-    companyProfile: runtime.companyProfile
+    companyProfile: runtime.companyProfile,
+    composeTravelPlanForPresentation: travelPlanHelpers.composeTravelPlanForPresentation
   });
 
   const writePaymentDocumentPdf = createPaymentDocumentPdfWriter({
@@ -250,7 +253,8 @@ export function createBackendServices({
     resolveAtpStaffPhotoDiskPath: atpStaffDirectory.resolvePhotoDiskPath,
     fallbackImagePath: collections.fallbackBookingImagePath,
     buildBookingOfferPaymentTermsReadModel: pricingHelpers.buildBookingOfferPaymentTermsReadModel,
-    buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel
+    buildBookingTravelPlanReadModel: travelPlanHelpers.buildBookingTravelPlanReadModel,
+    composeTravelPlanForPresentation: travelPlanHelpers.composeTravelPlanForPresentation
   });
 
   return {

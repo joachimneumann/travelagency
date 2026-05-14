@@ -28,6 +28,7 @@ import {
 import {
   countTravelPlanServices,
   createEmptyTravelPlan,
+  createEmptyTravelPlanBoundaryService,
   createEmptyTravelPlanDay,
   createEmptyTravelPlanService,
   TRAVEL_PLAN_TIMING_KIND_OPTIONS,
@@ -513,6 +514,78 @@ export function createBookingTravelPlanModule(ctx) {
       || travelPlanImageHasContent(item.image);
   }
 
+  function travelPlanBoundaryHasContent(item) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return false;
+    return [
+        "time_label",
+        "title",
+        "details",
+        "image_subtitle",
+        "airport_code",
+        "from_label",
+        "to_label"
+      ].some((fieldName) => localizedTravelPlanFieldHasContent(item, fieldName))
+      || hasTravelPlanTextContent(item.time_point)
+      || hasTravelPlanTextContent(item.start_time)
+      || hasTravelPlanTextContent(item.end_time)
+      || travelPlanImageHasContent(item.image);
+  }
+
+  function normalizeTravelPlanBoundaryKind(value) {
+    return String(value || "").trim().toLowerCase() === "departure" ? "departure" : "arrival";
+  }
+
+  function defaultTravelPlanBoundaryPresentation(boundaryKind) {
+    const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    return {
+      attach_to: normalizedBoundaryKind === "departure" ? "last_day" : "first_day",
+      position: normalizedBoundaryKind === "departure" ? "end" : "start"
+    };
+  }
+
+  function normalizeTravelPlanBoundaryDraft(source, boundaryKind) {
+    const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    const fallback = createEmptyTravelPlanBoundaryService(normalizedBoundaryKind);
+    const raw = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+    const next = {
+      ...fallback,
+      ...raw,
+      id: String(raw.id || fallback.id || "").trim(),
+      boundary_kind: normalizedBoundaryKind,
+      enabled: raw.enabled === true,
+      kind: String(raw.kind || "transport").trim() || "transport",
+      airport_code: String(raw.airport_code || "").trim(),
+      from_label: String(raw.from_label || "").trim(),
+      to_label: String(raw.to_label || "").trim(),
+      presentation: defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind)
+    };
+    if (!allowTiming) {
+      next.timing_kind = "label";
+      next.time_label = "";
+      next.time_label_i18n = {};
+      next.time_point = "";
+      next.start_time = "";
+      next.end_time = "";
+    }
+    if (!allowServiceDetails) {
+      delete next.details;
+      delete next.details_i18n;
+    }
+    return next;
+  }
+
+  function normalizeTravelPlanBoundaryLogisticsForEnabledFeatures(sourceBoundaryLogistics) {
+    const source = sourceBoundaryLogistics && typeof sourceBoundaryLogistics === "object" && !Array.isArray(sourceBoundaryLogistics)
+      ? sourceBoundaryLogistics
+      : {};
+    const arrival = normalizeTravelPlanBoundaryDraft(source.arrival, "arrival");
+    const departure = normalizeTravelPlanBoundaryDraft(source.departure, "departure");
+    return {
+      ...(arrival.enabled || travelPlanBoundaryHasContent(arrival) ? { arrival } : {}),
+      ...(departure.enabled || travelPlanBoundaryHasContent(departure) ? { departure } : {})
+    };
+  }
+
   function travelPlanDayHasContent(day) {
     if (!day || typeof day !== "object" || Array.isArray(day)) return false;
     return [
@@ -544,6 +617,7 @@ export function createBookingTravelPlanModule(ctx) {
       }));
     return {
       ...source,
+      boundary_logistics: normalizeTravelPlanBoundaryLogisticsForEnabledFeatures(source.boundary_logistics),
       days
     };
   }
@@ -563,6 +637,7 @@ export function createBookingTravelPlanModule(ctx) {
       tour_card_image_ids: Array.isArray(source.tour_card_image_ids) ? source.tour_card_image_ids : [],
       one_pager_hero_image_id: source.one_pager_hero_image_id || null,
       one_pager_image_ids: Array.isArray(source.one_pager_image_ids) ? source.one_pager_image_ids : [],
+      boundary_logistics: normalizeTravelPlanBoundaryLogisticsForEnabledFeatures(source.boundary_logistics),
       days: (Array.isArray(source.days) ? source.days : []).map((day, dayIndex) => {
         const sourceDay = day && typeof day === "object" && !Array.isArray(day) ? day : {};
         const nextDay = {
@@ -1792,6 +1867,196 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
+  function renderTravelPlanBoundaryTimingFields(boundaryKind, item) {
+    if (!allowTiming) return "";
+    const idPart = `${boundaryKind}_${item.id}`;
+    const timingKind = String(item?.timing_kind || "label");
+    if (timingKind === "not_applicable") {
+      return `
+        <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
+          <label for="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "When?"))}</label>
+          <select id="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}" data-travel-plan-boundary-field="timing_kind">
+            ${timingKindOptions(timingKind)}
+          </select>
+        </div>
+      `;
+    }
+    if (timingKind === "point") {
+      const pointParts = splitDateTimeValue("", item.time_point);
+      return `
+        <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
+          <label for="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "When?"))}</label>
+          <select id="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}" data-travel-plan-boundary-field="timing_kind">
+            ${timingKindOptions(timingKind)}
+          </select>
+        </div>
+        <div class="field travel-plan-timing-field travel-plan-timing-field--date">
+          <label for="travel_plan_boundary_time_point_date_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
+          ${renderTravelPlanDateInput({
+            id: `travel_plan_boundary_time_point_date_${idPart}`,
+            dataAttribute: 'data-travel-plan-boundary-field="time_point_date"',
+            value: pointParts.date,
+            disabled: !state.permissions.canEditBooking,
+            ariaLabel: bookingT("booking.date", "Date")
+          })}
+        </div>
+        <div class="field travel-plan-timing-field travel-plan-timing-field--time">
+          <label for="travel_plan_boundary_time_point_time_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.time", "Time"))}</label>
+          <select id="travel_plan_boundary_time_point_time_${escapeHtml(idPart)}" data-travel-plan-boundary-field="time_point_time">
+            ${timeSelectOptions(pointParts.time)}
+          </select>
+        </div>
+      `;
+    }
+    if (timingKind === "range") {
+      const startParts = splitDateTimeValue("", item.start_time);
+      const endParts = splitDateTimeValue("", item.end_time);
+      return `
+        <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
+          <label for="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "When?"))}</label>
+          <select id="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}" data-travel-plan-boundary-field="timing_kind">
+            ${timingKindOptions(timingKind)}
+          </select>
+        </div>
+        <div class="field travel-plan-timing-field travel-plan-timing-field--start-date">
+          <label for="travel_plan_boundary_start_time_date_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.start_date", "Start date"))}</label>
+          ${renderTravelPlanDateInput({
+            id: `travel_plan_boundary_start_time_date_${idPart}`,
+            dataAttribute: 'data-travel-plan-boundary-field="start_time_date"',
+            value: startParts.date,
+            disabled: !state.permissions.canEditBooking,
+            ariaLabel: bookingT("booking.travel_plan.start_date", "Start date")
+          })}
+        </div>
+        <div class="field travel-plan-timing-field travel-plan-timing-field--start-time">
+          <label for="travel_plan_boundary_start_time_time_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.start_time", "Start time"))}</label>
+          <select id="travel_plan_boundary_start_time_time_${escapeHtml(idPart)}" data-travel-plan-boundary-field="start_time_time">
+            ${timeSelectOptions(startParts.time)}
+          </select>
+        </div>
+        <div class="field travel-plan-timing-field travel-plan-timing-field--end-date">
+          <label for="travel_plan_boundary_end_time_date_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.end_date", "End date"))}</label>
+          ${renderTravelPlanDateInput({
+            id: `travel_plan_boundary_end_time_date_${idPart}`,
+            dataAttribute: 'data-travel-plan-boundary-field="end_time_date"',
+            value: endParts.date,
+            disabled: !state.permissions.canEditBooking,
+            ariaLabel: bookingT("booking.travel_plan.end_date", "End date")
+          })}
+        </div>
+        <div class="field travel-plan-timing-field travel-plan-timing-field--end-time">
+          <label for="travel_plan_boundary_end_time_time_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.end_time", "End time"))}</label>
+          <select id="travel_plan_boundary_end_time_time_${escapeHtml(idPart)}" data-travel-plan-boundary-field="end_time_time">
+            ${timeSelectOptions(endParts.time)}
+          </select>
+        </div>
+      `;
+    }
+    return `
+      <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
+        <label for="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "When?"))}</label>
+        <select id="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}" data-travel-plan-boundary-field="timing_kind">
+          ${timingKindOptions(timingKind)}
+        </select>
+      </div>
+      <div class="field travel-plan-timing-field travel-plan-timing-field--label">
+        ${renderTravelPlanLocalizedField({
+          label: bookingT("booking.travel_plan.human_readable_time", "Human readable time"),
+          idBase: `travel_plan_boundary_time_${idPart}`,
+          dataScope: "travel-plan-boundary-field",
+          field: "time_label",
+          type: "input",
+          sourceValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, bookingSourceLang(), ""),
+          localizedValue: resolveLocalizedDraftBranchText(item.time_label_i18n ?? item.time_label, bookingContentLang(), "")
+        })}
+      </div>
+    `;
+  }
+
+  function boundaryLabel(boundaryKind) {
+    return boundaryKind === "departure"
+      ? bookingT("booking.travel_plan.departure", "Departure")
+      : bookingT("booking.travel_plan.arrival", "Arrival");
+  }
+
+  function boundaryTitleLabel(boundaryKind) {
+    return boundaryKind === "departure"
+      ? bookingT("booking.travel_plan.departure_title", "Departure Title")
+      : bookingT("booking.travel_plan.arrival_title", "Arrival Title");
+  }
+
+  function boundaryDetailsLabel(boundaryKind) {
+    return boundaryKind === "departure"
+      ? bookingT("booking.travel_plan.departure_details", "Departure Details")
+      : bookingT("booking.travel_plan.arrival_details", "Arrival Details");
+  }
+
+  function renderTravelPlanBoundarySection(boundaryKind) {
+    const source = state.travelPlanDraft?.boundary_logistics?.[boundaryKind] || createEmptyTravelPlanBoundaryService(boundaryKind);
+    const item = normalizeTravelPlanBoundaryDraft(source, boundaryKind);
+    const label = boundaryLabel(boundaryKind);
+    return `
+      <section class="travel-plan-boundary" data-travel-plan-boundary="${escapeHtml(boundaryKind)}">
+        <div class="travel-plan-boundary__head">
+          <label class="travel-plan-boundary__toggle">
+            <input type="checkbox" data-travel-plan-boundary-field="enabled" ${item.enabled ? "checked" : ""} ${!state.permissions.canEditBooking ? "disabled" : ""} />
+            <span>${escapeHtml(label)}</span>
+          </label>
+        </div>
+        <div class="travel-plan-boundary__body">
+          <div class="field travel-plan-boundary__title-field">
+            ${renderTravelPlanLocalizedField({
+              label: boundaryTitleLabel(boundaryKind),
+              idBase: `travel_plan_boundary_title_${boundaryKind}_${item.id}`,
+              dataScope: "travel-plan-boundary-field",
+              field: "title",
+              type: "input",
+              sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), ""),
+              localizedValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingContentLang(), "")
+            })}
+          </div>
+          ${allowServiceDetails
+            ? `<div class="field">
+                ${renderTravelPlanLocalizedField({
+                  label: boundaryDetailsLabel(boundaryKind),
+                  idBase: `travel_plan_boundary_details_${boundaryKind}_${item.id}`,
+                  dataScope: "travel-plan-boundary-field",
+                  field: "details",
+                  type: "textregion",
+                  rows: 3,
+                  sourceValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingSourceLang(), ""),
+                  localizedValue: resolveLocalizedDraftBranchText(item.details_i18n ?? item.details, bookingContentLang(), "")
+                })}
+              </div>`
+            : ""}
+          ${allowTiming
+            ? `<div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing travel-plan-grid--item-timing-${escapeHtml(String(item.timing_kind || "label").trim() || "label")}">
+                ${renderTravelPlanBoundaryTimingFields(boundaryKind, item)}
+              </div>`
+            : ""}
+          <div class="travel-plan-grid travel-plan-boundary__meta">
+            <div class="field">
+              <label for="travel_plan_boundary_airport_${escapeHtml(boundaryKind)}">${escapeHtml(bookingT("booking.travel_plan.airport_code", "Airport code"))}</label>
+              <input id="travel_plan_boundary_airport_${escapeHtml(boundaryKind)}" data-travel-plan-boundary-field="airport_code" value="${escapeHtml(item.airport_code || "")}" ${!state.permissions.canEditBooking ? "disabled" : ""} />
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  function renderTravelPlanBoundaryLogistics() {
+    return `
+      <section aria-label="${escapeHtml(bookingT("booking.travel_plan.arrival_departure", "Arrival & departure"))}">
+        <div class="travel-plan-boundaries__title">${escapeHtml(bookingT("booking.travel_plan.arrival_departure", "Arrival & departure"))}</div>
+        <div class="travel-plan-boundaries__grid">
+          ${renderTravelPlanBoundarySection("arrival")}
+          ${renderTravelPlanBoundarySection("departure")}
+        </div>
+      </section>
+    `;
+  }
+
   function normalizeLocationCoordinate(value) {
     if (value === undefined || value === null || value === "") return null;
     const numberValue = Number(value);
@@ -2119,6 +2384,81 @@ export function createBookingTravelPlanModule(ctx) {
     return mergeDualLocalizedPayload(existingValue, sourceValue, localizedValue, targetLang, sourceLang);
   }
 
+  function readTravelPlanBoundaryServiceFromDom(boundaryKind, previousBoundary) {
+    const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    const node = els.travel_plan_editor?.querySelector?.(`[data-travel-plan-boundary="${escapeSelectorValue(normalizedBoundaryKind)}"]`);
+    const previous = previousBoundary && typeof previousBoundary === "object" && !Array.isArray(previousBoundary)
+      ? previousBoundary
+      : {};
+    const item = createEmptyTravelPlanBoundaryService(normalizedBoundaryKind);
+    item.id = String(previous.id || item.id || "").trim();
+    item.boundary_kind = normalizedBoundaryKind;
+    item.enabled = node?.querySelector('[data-travel-plan-boundary-field="enabled"]')?.checked === true;
+    item.kind = "transport";
+    item.airport_code = String(node?.querySelector('[data-travel-plan-boundary-field="airport_code"]')?.value || "").trim();
+    item.from_label = String(previous.from_label || "").trim();
+    item.to_label = String(previous.to_label || "").trim();
+    item.presentation = defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind);
+    item.timing_kind = allowTiming
+      ? String(node?.querySelector('[data-travel-plan-boundary-field="timing_kind"]')?.value || previous.timing_kind || "label").trim()
+      : "label";
+    if (allowTiming) {
+      const timeLabel = readLocalizedFieldPayload(
+        node,
+        "travel-plan-boundary-field",
+        "time_label",
+        previous?.time_label_i18n ?? previous?.time_label
+      );
+      item.time_label = timeLabel.text;
+      item.time_label_i18n = timeLabel.map;
+      item.time_point = combineDateAndTime(
+        String(node?.querySelector('[data-travel-plan-boundary-field="time_point_date"]')?.value || "").trim(),
+        String(node?.querySelector('[data-travel-plan-boundary-field="time_point_time"]')?.value || "").trim()
+      );
+      item.start_time = combineDateAndTime(
+        String(node?.querySelector('[data-travel-plan-boundary-field="start_time_date"]')?.value || "").trim(),
+        String(node?.querySelector('[data-travel-plan-boundary-field="start_time_time"]')?.value || "").trim()
+      );
+      item.end_time = combineDateAndTime(
+        String(node?.querySelector('[data-travel-plan-boundary-field="end_time_date"]')?.value || "").trim(),
+        String(node?.querySelector('[data-travel-plan-boundary-field="end_time_time"]')?.value || "").trim()
+      );
+    } else {
+      item.time_label = "";
+      item.time_label_i18n = {};
+      item.time_point = "";
+      item.start_time = "";
+      item.end_time = "";
+    }
+    const title = readLocalizedFieldPayload(
+      node,
+      "travel-plan-boundary-field",
+      "title",
+      previous?.title_i18n ?? previous?.title
+    );
+    item.title = title.text;
+    item.title_i18n = title.map;
+    if (allowServiceDetails) {
+      const details = readLocalizedFieldPayload(
+        node,
+        "travel-plan-boundary-field",
+        "details",
+        previous?.details_i18n ?? previous?.details
+      );
+      item.details = details.text;
+      item.details_i18n = details.map;
+    } else {
+      delete item.details;
+      delete item.details_i18n;
+    }
+    item.image_subtitle = previous.image_subtitle || "";
+    item.image_subtitle_i18n = previous.image_subtitle_i18n || {};
+    item.image = previous?.image && typeof previous.image === "object" && !Array.isArray(previous.image)
+      ? { ...previous.image }
+      : null;
+    return normalizeTravelPlanBoundaryDraft(item, normalizedBoundaryKind);
+  }
+
   function syncTravelPlanDraftFromDom() {
     if (!els.travel_plan_editor) return state.travelPlanDraft;
     const previousItemsById = new Map(
@@ -2139,6 +2479,15 @@ export function createBookingTravelPlanModule(ctx) {
       draft.destination_scope = readDestinationScopeFromDom(destinationScopeEditorRoot());
       draft.destinations = destinationScopeDestinations(draft.destination_scope);
     }
+    const previousBoundaryLogistics = state.travelPlanDraft?.boundary_logistics && typeof state.travelPlanDraft.boundary_logistics === "object" && !Array.isArray(state.travelPlanDraft.boundary_logistics)
+      ? state.travelPlanDraft.boundary_logistics
+      : {};
+    const arrivalBoundary = readTravelPlanBoundaryServiceFromDom("arrival", previousBoundaryLogistics.arrival);
+    const departureBoundary = readTravelPlanBoundaryServiceFromDom("departure", previousBoundaryLogistics.departure);
+    draft.boundary_logistics = {
+      ...(arrivalBoundary.enabled || travelPlanBoundaryHasContent(arrivalBoundary) ? { arrival: arrivalBoundary } : {}),
+      ...(departureBoundary.enabled || travelPlanBoundaryHasContent(departureBoundary) ? { departure: departureBoundary } : {})
+    };
     draft.days = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-day]")).map((dayNode, dayIndex) => {
       const dayId = String(dayNode.getAttribute("data-travel-plan-day") || "").trim();
       const day = createEmptyTravelPlanDay(dayIndex);
@@ -3057,6 +3406,40 @@ export function createBookingTravelPlanModule(ctx) {
       });
     }
 
+    const boundaryLogistics = plan?.boundary_logistics && typeof plan.boundary_logistics === "object" && !Array.isArray(plan.boundary_logistics)
+      ? plan.boundary_logistics
+      : {};
+    ["arrival", "departure"].forEach((boundaryKind) => {
+      const service = boundaryLogistics[boundaryKind];
+      if (!service || typeof service !== "object" || Array.isArray(service)) return;
+      const serviceLabel = boundaryLabel(boundaryKind);
+      if (normalizeReviewText(service?.timing_kind || "label") === "label") {
+        addField({
+          holder: service,
+          mapField: "time_label_i18n",
+          plainField: "time_label",
+          key: `travel_plan.boundary.${boundaryKind}.time_label`,
+          label: `${serviceLabel} · ${bookingT("booking.travel_plan.time_label", "Time label")}`
+        });
+      }
+      addField({
+        holder: service,
+        mapField: "title_i18n",
+        plainField: "title",
+        key: `travel_plan.boundary.${boundaryKind}.title`,
+        label: `${serviceLabel} · ${boundaryTitleLabel(boundaryKind)}`
+      });
+      if (allowServiceDetails) {
+        addField({
+          holder: service,
+          mapField: "details_i18n",
+          plainField: "details",
+          key: `travel_plan.boundary.${boundaryKind}.details`,
+          label: `${serviceLabel} · ${boundaryDetailsLabel(boundaryKind)}`
+        });
+      }
+    });
+
     days.forEach((day, dayIndex) => {
       const dayId = normalizeReviewText(day?.id) || `day_${dayIndex + 1}`;
       const dayLabel = bookingT("booking.travel_plan.day_heading", "Day {day}", { day: String(dayIndex + 1) });
@@ -3619,6 +4002,7 @@ export function createBookingTravelPlanModule(ctx) {
         renderTravelPlanTranslationPanel();
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
+          || target?.matches?.('[data-travel-plan-boundary-field="timing_kind"]')
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
           || target?.matches?.("[data-travel-plan-day-location-field]")
           || target?.matches?.("[data-destination-scope-destination]")
@@ -3936,6 +4320,7 @@ export function createBookingTravelPlanModule(ctx) {
     }
     els.travel_plan_editor.innerHTML = `
       ${usesExternalDestinationScopeEditor() ? "" : destinationScopeMarkup}
+      ${renderTravelPlanBoundaryLogistics()}
       ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
       <div class="travel-plan-footer">
         <div class="travel-plan-footer__action-rows">

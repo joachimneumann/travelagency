@@ -95,8 +95,46 @@ function createFieldDescriptor({
 export function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
   const normalizedSourceLang = normalizeBookingContentLang(options?.sourceLang || DEFAULT_BOOKING_CONTENT_LANG);
   const normalizedTargetLang = normalizeBookingContentLang(options?.targetLang || options?.lang || DEFAULT_BOOKING_CONTENT_LANG);
+  const boundaryLogistics = travelPlan?.boundary_logistics && typeof travelPlan.boundary_logistics === "object" && !Array.isArray(travelPlan.boundary_logistics)
+    ? travelPlan.boundary_logistics
+    : {};
+  const boundaryDescriptors = ["arrival", "departure"].flatMap((boundaryKind) => {
+    const service = boundaryLogistics[boundaryKind];
+    if (!service || typeof service !== "object" || Array.isArray(service)) return [];
+    const boundaryLabel = `travel_plan.boundary.${boundaryKind}`;
+    return [
+      createFieldDescriptor({
+        key: `${boundaryLabel}.time_label`,
+        holder: service,
+        mapField: "time_label_i18n",
+        plainField: "time_label",
+        sourceLang: normalizedSourceLang,
+        targetLang: normalizedTargetLang,
+        emptyValue: null,
+        enabled: String(service?.timing_kind || "label") === "label"
+      }),
+      createFieldDescriptor({
+        key: `${boundaryLabel}.title`,
+        holder: service,
+        mapField: "title_i18n",
+        plainField: "title",
+        sourceLang: normalizedSourceLang,
+        targetLang: normalizedTargetLang,
+        emptyValue: ""
+      }),
+      createFieldDescriptor({
+        key: `${boundaryLabel}.details`,
+        holder: service,
+        mapField: "details_i18n",
+        plainField: "details",
+        sourceLang: normalizedSourceLang,
+        targetLang: normalizedTargetLang,
+        emptyValue: null
+      })
+    ].filter(Boolean);
+  });
   const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
-  return days.flatMap((day, dayIndex) => {
+  const dayDescriptors = days.flatMap((day, dayIndex) => {
     const dayId = normalizeText(day?.id) || `day_${dayIndex + 1}`;
     const dayDescriptors = [
       createFieldDescriptor({
@@ -185,6 +223,7 @@ export function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
 
     return [...dayDescriptors, ...itemDescriptors];
   });
+  return [...boundaryDescriptors, ...dayDescriptors];
 }
 
 function computeSourceHash(descriptors, options = {}) {

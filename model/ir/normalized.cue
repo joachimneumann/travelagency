@@ -228,6 +228,55 @@ IR: {
 			]
 		},
 		{
+			name:       "TravelPlanBoundaryPresentation"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanBoundaryPresentation"
+			fields: [
+				{name: "attach_to", kind: "scalar", typeName: "string", required: true},
+				{name: "position", kind: "scalar", typeName: "string", required: true},
+			]
+		},
+		{
+			name:       "TravelPlanBoundaryService"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanBoundaryService"
+			fields: [
+				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+				{name: "boundary_kind", kind: "scalar", typeName: "string", required: true},
+				{name: "enabled", kind: "scalar", typeName: "bool", required: false},
+				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
+				{name: "time_label", kind: "scalar", typeName: "string", required: false},
+				{name: "time_label_i18n", kind: "map", typeName: "string", required: false},
+				{name: "time_point", kind: "scalar", typeName: "string", required: false},
+				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
+				{name: "title", kind: "scalar", typeName: "string", required: false},
+				{name: "title_i18n", kind: "map", typeName: "string", required: false},
+				{name: "details", kind: "scalar", typeName: "string", required: false},
+				{name: "details_i18n", kind: "map", typeName: "string", required: false},
+				{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
+				{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
+				{name: "start_time", kind: "scalar", typeName: "string", required: false},
+				{name: "end_time", kind: "scalar", typeName: "string", required: false},
+				{name: "image", kind: "entity", typeName: "TravelPlanServiceImage", required: false},
+				{name: "airport_code", kind: "scalar", typeName: "string", required: false},
+				{name: "from_label", kind: "scalar", typeName: "string", required: false},
+				{name: "to_label", kind: "scalar", typeName: "string", required: false},
+				{name: "presentation", kind: "entity", typeName: "TravelPlanBoundaryPresentation", required: false},
+			]
+		},
+		{
+			name:       "TravelPlanBoundaryLogistics"
+			domain:     "booking"
+			module:     "database"
+			sourceType: "database.#TravelPlanBoundaryLogistics"
+			fields: [
+				{name: "arrival", kind: "entity", typeName: "TravelPlanBoundaryService", required: false},
+				{name: "departure", kind: "entity", typeName: "TravelPlanBoundaryService", required: false},
+			]
+		},
+		{
 			name:       "TravelPlanDestinationPlaceSelection"
 			domain:     "booking"
 			module:     "database"
@@ -269,6 +318,7 @@ IR: {
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "boundary_logistics", kind: "entity", typeName: "TravelPlanBoundaryLogistics", required: false},
 				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
 			]
 		},
@@ -282,6 +332,7 @@ IR: {
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "boundary_logistics", kind: "entity", typeName: "TravelPlanBoundaryLogistics", required: false},
 				{name: "days", kind: "entity", typeName: "TravelPlanDay", required: false, isArray: true},
 			]
 		},
@@ -466,6 +517,7 @@ IR: {
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+				{name: "boundary_logistics", kind: "entity", typeName: "TravelPlanBoundaryLogistics", required: false},
 				{name: "days", kind: "entity", typeName: "BookingTravelPlanDay", required: false, isArray: true},
 				{name: "attachments", kind: "entity", typeName: "BookingTravelPlanAttachment", required: false, isArray: true},
 			]

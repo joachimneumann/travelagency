@@ -851,6 +851,166 @@
       "source_text": "What's not included",
       "target_lang": "vi",
       "manual_override": "Không bao gồm"
+    },
+    {
+      "source_text": "Airport code",
+      "target_lang": "vi",
+      "manual_override": "Mã sân bay"
+    },
+    {
+      "source_text": "Arrival",
+      "target_lang": "vi",
+      "manual_override": "Đến"
+    },
+    {
+      "source_text": "Arrival & departure",
+      "target_lang": "vi",
+      "manual_override": "Đến và khởi hành"
+    },
+    {
+      "source_text": "Arrival Details",
+      "target_lang": "vi",
+      "manual_override": "Chi tiết phần đến"
+    },
+    {
+      "source_text": "Arrival Title",
+      "target_lang": "vi",
+      "manual_override": "Tiêu đề phần đến"
+    },
+    {
+      "source_text": "Arrival/departure information is invalid.",
+      "target_lang": "vi",
+      "manual_override": "Thông tin đến/khởi hành không hợp lệ."
+    },
+    {
+      "source_text": "Departure",
+      "target_lang": "vi",
+      "manual_override": "Khởi hành"
+    },
+    {
+      "source_text": "Departure Details",
+      "target_lang": "vi",
+      "manual_override": "Chi tiết phần khởi hành"
+    },
+    {
+      "source_text": "Departure Title",
+      "target_lang": "vi",
+      "manual_override": "Tiêu đề phần khởi hành"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "ar",
+      "manual_override": "تحسين"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "da",
+      "manual_override": "Optimer"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "de",
+      "manual_override": "Optimieren"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "es",
+      "manual_override": "Optimizar"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "fr",
+      "manual_override": "Optimiser"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "it",
+      "manual_override": "Ottimizza"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "ja",
+      "manual_override": "最適化"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "ko",
+      "manual_override": "최적화"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "ms",
+      "manual_override": "Optimumkan"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "nl",
+      "manual_override": "Optimaliseren"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "no",
+      "manual_override": "Optimaliser"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "pl",
+      "manual_override": "Optymalizuj"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "ru",
+      "manual_override": "Оптимизировать"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "sv",
+      "manual_override": "Optimera"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "vi",
+      "manual_override": "Tối ưu"
+    },
+    {
+      "source_text": "Optimize",
+      "target_lang": "zh",
+      "manual_override": "优化"
+    },
+    {
+      "source_text": "Other",
+      "target_lang": "vi",
+      "manual_override": "Khác"
+    },
+    {
+      "source_text": "{kind}: Kind is invalid.",
+      "target_lang": "vi",
+      "manual_override": "{kind}: Loại không hợp lệ."
+    },
+    {
+      "source_text": "{kind}: Service id is duplicated.",
+      "target_lang": "vi",
+      "manual_override": "{kind}: ID dịch vụ bị trùng."
+    },
+    {
+      "source_text": "{kind}: Service id is missing.",
+      "target_lang": "vi",
+      "manual_override": "{kind}: Thiếu ID dịch vụ."
+    },
+    {
+      "source_text": "{kind}: Start and end time are required.",
+      "target_lang": "vi",
+      "manual_override": "{kind}: Cần nhập giờ bắt đầu và giờ kết thúc."
+    },
+    {
+      "source_text": "{kind}: Time information is invalid.",
+      "target_lang": "vi",
+      "manual_override": "{kind}: Thông tin thời gian không hợp lệ."
+    },
+    {
+      "source_text": "{kind}: Time point is required.",
+      "target_lang": "vi",
+      "manual_override": "{kind}: Cần nhập thời điểm."
     }
   ]
 }

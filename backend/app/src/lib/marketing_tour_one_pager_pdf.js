@@ -2075,7 +2075,8 @@ export function createMarketingTourOnePagerPdfWriter({
   pinImagePath = "",
   fallbackImagePath = "",
   experienceHighlightsManifestPath = "",
-  companyProfile = null
+  companyProfile = null,
+  composeTravelPlanForPresentation = null
 } = {}) {
   return async function writeMarketingTourOnePagerPdf(tour, {
     lang = "en",
@@ -2083,6 +2084,12 @@ export function createMarketingTourOnePagerPdfWriter({
   } = {}) {
     const timing = createPdfRenderTiming();
     const normalizedLang = normalizePdfLang(lang);
+    if (typeof composeTravelPlanForPresentation === "function") {
+      tour = {
+        ...(tour || {}),
+        travel_plan: composeTravelPlanForPresentation(tour?.travel_plan)
+      };
+    }
     const days = safeArray(tour?.travel_plan?.days);
     const duration = durationParts(days, normalizedLang);
     const sampleText = [

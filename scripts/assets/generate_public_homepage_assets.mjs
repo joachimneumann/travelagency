@@ -1030,6 +1030,16 @@ async function publicHomepageTourTravelPlan(
   version
 ) {
   if (!travelPlan || typeof travelPlan !== "object" || Array.isArray(travelPlan)) return travelPlan;
+  async function renderPublicTourService(service) {
+    return publicHomepageTourService(
+      service,
+      tourId,
+      generatedTourAssetPaths,
+      generatedTourThumbnailAssetPaths,
+      outputRoot,
+      version
+    );
+  }
   const days = [];
   for (const day of Array.isArray(travelPlan.days) ? travelPlan.days : []) {
     if (!day || typeof day !== "object" || Array.isArray(day)) {
@@ -1038,22 +1048,24 @@ async function publicHomepageTourTravelPlan(
     }
     const services = [];
     for (const service of Array.isArray(day.services) ? day.services : []) {
-      services.push(await publicHomepageTourService(
-        service,
-        tourId,
-        generatedTourAssetPaths,
-        generatedTourThumbnailAssetPaths,
-        outputRoot,
-        version
-      ));
+      services.push(await renderPublicTourService(service));
     }
     days.push({
       ...day,
       services
     });
   }
+  const boundaryLogistics = travelPlan.boundary_logistics && typeof travelPlan.boundary_logistics === "object" && !Array.isArray(travelPlan.boundary_logistics)
+    ? Object.fromEntries(await Promise.all(Object.entries(travelPlan.boundary_logistics).map(async ([boundaryKind, service]) => ([
+        boundaryKind,
+        service && typeof service === "object" && !Array.isArray(service)
+          ? await renderPublicTourService(service)
+          : service
+      ]))))
+    : null;
   return {
     ...travelPlan,
+    ...(boundaryLogistics ? { boundary_logistics: boundaryLogistics } : {}),
     days
   };
 }
@@ -1885,6 +1897,7 @@ async function generateTourAssets({
   const resolvedDestinationCatalogPath = normalizeText(destinationCatalogPath)
     || (toursRoot === TOURS_ROOT ? DESTINATION_CATALOG_PATH : path.join(toursRoot, "destinations.json"));
   const { normalizeMarketingTourTravelPlan } = createTravelPlanHelpers();
+  const { composeTravelPlanForPresentation } = createTravelPlanHelpers();
   const tourHelpers = createTourHelpers({ toursDir: toursRoot, safeInt, normalizeMarketingTourTravelPlan });
   const {
     collectTourOptions,
@@ -1998,6 +2011,7 @@ async function generateTourAssets({
         normalizeText(readModel.updated_at || readModel.created_at)
       );
       const pictures = selectedTravelTourCardImagePaths(travelPlan);
+      const presentationTravelPlan = composeTravelPlanForPresentation(travelPlan);
       const onePagerArtifact = onePagerArtifactForLang(onePagerArtifactsByTourId, readModel.id, normalizedLang);
       const onePagerExperienceHighlightIds = selectTourExperienceHighlightIds(readModel.travel_plan, experienceHighlightCatalog, {
         seed: readModel.id
@@ -2028,7 +2042,7 @@ async function generateTourAssets({
         ...readModel,
         seo_slug: seoSlug,
         pictures,
-        travel_plan: travelPlan
+        travel_plan: presentationTravelPlan
       });
     }
     const options = collectTourOptions(publicTours, { lang: normalizedLang });

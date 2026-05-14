@@ -528,7 +528,8 @@ export function createPaymentDocumentPdfWriter({
   resolveAtpStaffPhotoDiskPath = null,
   fallbackImagePath = "",
   buildBookingOfferPaymentTermsReadModel = null,
-  buildBookingTravelPlanReadModel = null
+  buildBookingTravelPlanReadModel = null,
+  composeTravelPlanForPresentation = null
 }) {
   return async function writePaymentDocumentPdf(document, paymentDocumentParty, booking, options = {}) {
     const lang = normalizePdfLang(document?.lang || booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
@@ -548,9 +549,12 @@ export function createPaymentDocumentPdfWriter({
     const previewMode = options?.preview === true || document?.is_preview === true;
     const previewWatermarkText = normalizeText(options?.previewWatermarkText) || normalizeText(document?.preview_watermark_text) || "Preview";
     const depositRequestMode = isDepositPaymentRequestDocument(document);
-    const travelPlan = depositRequestMode
+    const sourceTravelPlan = depositRequestMode
       ? resolveTravelPlanForDepositRequest(booking, buildBookingTravelPlanReadModel, lang)
       : null;
+    const travelPlan = depositRequestMode && typeof composeTravelPlanForPresentation === "function"
+      ? composeTravelPlanForPresentation(sourceTravelPlan)
+      : sourceTravelPlan;
     const paymentSchedule = depositRequestMode
       ? resolveFriendlyPaymentSchedule(booking, buildBookingOfferPaymentTermsReadModel)
       : null;

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-13T09:49:10Z
+# 2026-05-14T03:01:47Z
 
 ---
 openapi: 3.1.0
@@ -4052,6 +4052,101 @@ components:
           additionalProperties:
             type: string
           nullable: true
+    TravelPlanBoundaryPresentation:
+      type: object
+      required:
+      - attach_to
+      - position
+      properties:
+        attach_to:
+          type: string
+        position:
+          type: string
+    TravelPlanBoundaryService:
+      type: object
+      required:
+      - id
+      - boundary_kind
+      - timing_kind
+      - kind
+      properties:
+        id:
+          type: string
+        boundary_kind:
+          type: string
+        enabled:
+          type: boolean
+          nullable: true
+        timing_kind:
+          "$ref": "#/components/schemas/TravelPlanTimingKind"
+        time_label:
+          type: string
+          nullable: true
+        time_label_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        time_point:
+          type: string
+          nullable: true
+        kind:
+          "$ref": "#/components/schemas/TravelPlanServiceKind"
+        title:
+          type: string
+          nullable: true
+        title_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        details_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        image_subtitle:
+          type: string
+          nullable: true
+        image_subtitle_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        image:
+          "$ref": "#/components/schemas/TravelPlanServiceImage"
+          nullable: true
+        airport_code:
+          type: string
+          nullable: true
+        from_label:
+          type: string
+          nullable: true
+        to_label:
+          type: string
+          nullable: true
+        presentation:
+          "$ref": "#/components/schemas/TravelPlanBoundaryPresentation"
+          nullable: true
+    TravelPlanBoundaryLogistics:
+      type: object
+      required: []
+      properties:
+        arrival:
+          "$ref": "#/components/schemas/TravelPlanBoundaryService"
+          nullable: true
+        departure:
+          "$ref": "#/components/schemas/TravelPlanBoundaryService"
+          nullable: true
     TravelPlanDestinationPlaceSelection:
       type: object
       required:
@@ -4111,6 +4206,9 @@ components:
           type: array
           items:
             type: string
+        boundary_logistics:
+          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          nullable: true
         days:
           type: array
           items:
@@ -4133,6 +4231,9 @@ components:
           type: array
           items:
             type: string
+        boundary_logistics:
+          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          nullable: true
         days:
           type: array
           items:
@@ -4498,6 +4599,9 @@ components:
           type: array
           items:
             type: string
+        boundary_logistics:
+          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          nullable: true
         days:
           type: array
           items:

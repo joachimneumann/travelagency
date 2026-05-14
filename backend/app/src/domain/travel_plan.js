@@ -17,6 +17,15 @@ import {
 const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
 const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
+const TRAVEL_PLAN_BOUNDARY_KINDS = new Set(["arrival", "departure"]);
+
+function cloneJson(value, fallback = null) {
+  try {
+    return JSON.parse(JSON.stringify(value ?? fallback));
+  } catch {
+    return fallback;
+  }
+}
 
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);
@@ -150,6 +159,7 @@ function normalizeTimingKind(value) {
 function buildDefaultTravelPlan() {
   return {
     tour_card_primary_image_id: null,
+    boundary_logistics: {},
     days: []
   };
 }
@@ -220,6 +230,103 @@ function normalizeTravelPlanLocalizedField(mapValue, plainValue, options = {}) {
   });
 }
 
+function normalizeTravelPlanService(rawItem, {
+  dayIndex = 0,
+  itemIndex = 0,
+  defaultId = "",
+  contentLang = "en",
+  flatLang = "en",
+  sourceLang = "en",
+  flatMode = "source",
+  hydrateSourceIntoLocalizedMaps = false
+} = {}) {
+  const item = rawItem && typeof rawItem === "object" && !Array.isArray(rawItem) ? rawItem : {};
+  const timing = normalizeItemTiming(item);
+  const fieldOptions = {
+    contentLang,
+    flatLang,
+    sourceLang,
+    flatMode,
+    hydrateSourceIntoLocalizedMaps
+  };
+  const timeLabelField = normalizeTravelPlanLocalizedField(item?.time_label_i18n, timing.time_label, fieldOptions);
+  const titleField = normalizeTravelPlanLocalizedField(item?.title_i18n, item?.title, fieldOptions);
+  const detailsField = normalizeTravelPlanLocalizedField(item?.details_i18n, item?.details, fieldOptions);
+  const imageSubtitleField = normalizeTravelPlanLocalizedField(rawItem?.image_subtitle_i18n, rawItem?.image_subtitle, fieldOptions);
+  return {
+    id: normalizeText(item.id) || normalizeText(defaultId) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
+    timing_kind: timing.timing_kind,
+    time_label: timing.timing_kind === "label" ? (timeLabelField.text || null) : null,
+    time_label_i18n: timeLabelField.map,
+    time_point: timing.time_point,
+    kind: normalizeItemKind(item.kind),
+    title: titleField.text,
+    title_i18n: titleField.map,
+    details: detailsField.text || null,
+    details_i18n: detailsField.map,
+    image_subtitle: imageSubtitleField.text || null,
+    image_subtitle_i18n: imageSubtitleField.map,
+    start_time: timing.start_time,
+    end_time: timing.end_time,
+    image: normalizeTravelPlanServiceImage(item.image ?? item.images, dayIndex, itemIndex, fieldOptions)
+  };
+}
+
+function normalizeBoundaryKind(value, fallback = "") {
+  const normalized = normalizeText(value || fallback).toLowerCase();
+  return TRAVEL_PLAN_BOUNDARY_KINDS.has(normalized) ? normalized : fallback;
+}
+
+function normalizeTravelPlanBoundaryPresentation(value, boundaryKind) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const normalizedBoundaryKind = normalizeBoundaryKind(boundaryKind);
+  const defaultAttachTo = normalizedBoundaryKind === "departure" ? "last_day" : "first_day";
+  const defaultPosition = normalizedBoundaryKind === "departure" ? "end" : "start";
+  const attachTo = normalizeText(source.attach_to);
+  const position = normalizeText(source.position);
+  return {
+    attach_to: attachTo === "last_day" || attachTo === "first_day" ? attachTo : defaultAttachTo,
+    position: position === "end" || position === "start" ? position : defaultPosition
+  };
+}
+
+function normalizeTravelPlanBoundaryService(rawService, boundaryKind, options = {}) {
+  const source = rawService && typeof rawService === "object" && !Array.isArray(rawService)
+    ? rawService
+    : null;
+  const normalizedBoundaryKind = normalizeBoundaryKind(source?.boundary_kind, boundaryKind);
+  if (!source || !normalizedBoundaryKind) return null;
+  const service = normalizeTravelPlanService({
+    ...source,
+    kind: normalizeText(source.kind) || "transport"
+  }, {
+    ...options,
+    dayIndex: 0,
+    itemIndex: normalizedBoundaryKind === "departure" ? 1 : 0,
+    defaultId: `travel_plan_boundary_${normalizedBoundaryKind}`
+  });
+  return {
+    ...service,
+    boundary_kind: normalizedBoundaryKind,
+    enabled: source.enabled === false ? false : true,
+    kind: normalizeItemKind(source.kind || "transport"),
+    airport_code: normalizeOptionalText(source.airport_code),
+    from_label: normalizeOptionalText(source.from_label),
+    to_label: normalizeOptionalText(source.to_label),
+    presentation: normalizeTravelPlanBoundaryPresentation(source.presentation, normalizedBoundaryKind)
+  };
+}
+
+function normalizeTravelPlanBoundaryLogistics(value, options = {}) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+  const arrival = normalizeTravelPlanBoundaryService(source.arrival, "arrival", options);
+  const departure = normalizeTravelPlanBoundaryService(source.departure, "departure", options);
+  return {
+    ...(arrival ? { arrival } : {}),
+    ...(departure ? { departure } : {})
+  };
+}
+
 function normalizeTravelPlanDays(days, options = {}) {
   const sourceDays = Array.isArray(days) ? days : [];
   const contentLang = normalizeBookingContentLang(options?.contentLang || options?.lang || "en");
@@ -242,61 +349,17 @@ function normalizeTravelPlanDays(days, options = {}) {
         Array.isArray(day?.services)
           ? day.services
           : (Array.isArray(day?.items) ? day.items : [])
-      ).map((item, itemIndex) => {
-        const rawItem = item && typeof item === "object" && !Array.isArray(item) ? item : {};
-        const timing = normalizeItemTiming(rawItem);
-        const timeLabelField = normalizeTravelPlanLocalizedField(rawItem?.time_label_i18n, timing.time_label, {
+      ).map((item, itemIndex) => (
+        normalizeTravelPlanService(item, {
+          dayIndex,
+          itemIndex,
           contentLang,
           flatLang,
           sourceLang,
           flatMode,
           hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-        });
-        const titleField = normalizeTravelPlanLocalizedField(rawItem?.title_i18n, rawItem?.title, {
-          contentLang,
-          flatLang,
-          sourceLang,
-          flatMode,
-          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-        });
-        const detailsField = normalizeTravelPlanLocalizedField(rawItem?.details_i18n, rawItem?.details, {
-          contentLang,
-          flatLang,
-          sourceLang,
-          flatMode,
-          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-        });
-        const imageSubtitleField = normalizeTravelPlanLocalizedField(rawItem?.image_subtitle_i18n, rawItem?.image_subtitle, {
-          contentLang,
-          flatLang,
-          sourceLang,
-          flatMode,
-          hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-        });
-        return {
-          id: normalizeText(rawItem.id) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
-          timing_kind: timing.timing_kind,
-          time_label: timing.timing_kind === "label" ? (timeLabelField.text || null) : null,
-          time_label_i18n: timeLabelField.map,
-          time_point: timing.time_point,
-          kind: normalizeItemKind(rawItem.kind),
-          title: titleField.text,
-          title_i18n: titleField.map,
-          details: detailsField.text || null,
-          details_i18n: detailsField.map,
-          image_subtitle: imageSubtitleField.text || null,
-          image_subtitle_i18n: imageSubtitleField.map,
-          start_time: timing.start_time,
-          end_time: timing.end_time,
-          image: normalizeTravelPlanServiceImage(rawItem.image ?? rawItem.images, dayIndex, itemIndex, {
-            contentLang,
-            flatLang,
-            sourceLang,
-            flatMode,
-            hydrateSourceIntoLocalizedMaps: options?.hydrateSourceIntoLocalizedMaps === true
-          })
-        };
-      });
+        })
+      ));
 
       const titleField = normalizeTravelPlanLocalizedField(day?.title_i18n, day?.title, {
         contentLang,
@@ -417,6 +480,94 @@ function applyTravelPlanTourCardImageSelection(days, selectedIds) {
   }));
 }
 
+function boundaryServiceHasPresentationContent(service) {
+  if (!service || typeof service !== "object" || Array.isArray(service)) return false;
+  return [
+    service.time_label,
+    service.time_point,
+    service.start_time,
+    service.end_time,
+    service.title,
+    service.details,
+    service.image_subtitle,
+    service.airport_code,
+    service.from_label,
+    service.to_label
+  ].some((value) => Boolean(normalizeText(value)))
+    || Object.values(service.title_i18n || {}).some((value) => Boolean(normalizeText(value)))
+    || Object.values(service.details_i18n || {}).some((value) => Boolean(normalizeText(value)))
+    || Object.values(service.time_label_i18n || {}).some((value) => Boolean(normalizeText(value)))
+    || Boolean(service.image && typeof service.image === "object" && normalizeText(service.image.storage_path));
+}
+
+function boundaryServiceTargetAlreadyContains(day, boundaryService, boundaryKind) {
+  const boundaryId = normalizeText(boundaryService?.id);
+  const services = Array.isArray(day?.services) ? day.services : [];
+  return services.some((service) => {
+    if (!service || typeof service !== "object" || Array.isArray(service)) return false;
+    return normalizeText(service.boundary_kind) === boundaryKind
+      || (boundaryId && normalizeText(service.copied_from_boundary_id) === boundaryId)
+      || (boundaryId && normalizeText(service.id) === boundaryId);
+  });
+}
+
+function presentationBoundaryService(service, boundaryKind) {
+  const source = service && typeof service === "object" && !Array.isArray(service) ? service : {};
+  const sourceId = normalizeText(source.id) || `travel_plan_boundary_${boundaryKind}`;
+  return {
+    ...cloneJson(source, {}),
+    id: sourceId,
+    kind: normalizeItemKind(source.kind || "transport"),
+    boundary_kind: boundaryKind,
+    copied_from_boundary_id: sourceId,
+    _presentation_source: "boundary_logistics"
+  };
+}
+
+function composeBoundaryIntoDays(days, boundaryService, boundaryKind) {
+  if (!Array.isArray(days) || !days.length) return days;
+  if (!boundaryService || boundaryService.enabled === false || !boundaryServiceHasPresentationContent(boundaryService)) {
+    return days;
+  }
+  const targetIndex = boundaryKind === "departure" ? days.length - 1 : 0;
+  const targetDay = days[targetIndex];
+  if (boundaryServiceTargetAlreadyContains(targetDay, boundaryService, boundaryKind)) return days;
+  const presentationService = presentationBoundaryService(boundaryService, boundaryKind);
+  return days.map((day, index) => {
+    if (index !== targetIndex) return day;
+    const services = Array.isArray(day?.services) ? day.services : [];
+    return {
+      ...day,
+      services: boundaryKind === "departure"
+        ? [...services, presentationService]
+        : [presentationService, ...services]
+    };
+  });
+}
+
+function composeTravelPlanForPresentation(rawTravelPlan, options = {}) {
+  if (options?.includeBoundaryLogistics === false) {
+    return cloneJson(rawTravelPlan, { days: [] });
+  }
+  const source = rawTravelPlan && typeof rawTravelPlan === "object" && !Array.isArray(rawTravelPlan)
+    ? rawTravelPlan
+    : { days: [] };
+  let days = (Array.isArray(source.days) ? source.days : []).map((day) => ({
+    ...cloneJson(day, {}),
+    services: (Array.isArray(day?.services) ? day.services : (Array.isArray(day?.items) ? day.items : []))
+      .map((service) => cloneJson(service, {}))
+  }));
+  const boundaries = source.boundary_logistics && typeof source.boundary_logistics === "object" && !Array.isArray(source.boundary_logistics)
+    ? source.boundary_logistics
+    : {};
+  days = composeBoundaryIntoDays(days, boundaries.arrival, "arrival");
+  days = composeBoundaryIntoDays(days, boundaries.departure, "departure");
+  return {
+    ...cloneJson(source, {}),
+    days
+  };
+}
+
 export function createTravelPlanHelpers() {
   function defaultBookingTravelPlan() {
     return buildDefaultBookingTravelPlan();
@@ -444,6 +595,10 @@ export function createTravelPlanHelpers() {
     const flatMode = options?.flatMode === "localized" ? "localized" : "source";
     const destination_scope = normalizeTravelPlanDestinationScope(source);
     const destinations = destinationScopeDestinations(destination_scope);
+    const boundary_logistics = normalizeTravelPlanBoundaryLogistics(source.boundary_logistics, {
+      ...options,
+      flatMode
+    });
     const days = normalizeTravelPlanDays(source.days, {
       ...options,
       flatMode
@@ -463,6 +618,7 @@ export function createTravelPlanHelpers() {
       ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),
       ...(hasExplicitOnePagerImageIds ? { one_pager_image_ids } : {}),
+      ...(Object.keys(boundary_logistics).length ? { boundary_logistics } : {}),
       days: normalizedDays,
       translation_meta: source.translation_meta
     });
@@ -483,6 +639,10 @@ export function createTravelPlanHelpers() {
       ...options,
       flatMode
     });
+    const boundary_logistics = normalizeTravelPlanBoundaryLogistics(source.boundary_logistics, {
+      ...options,
+      flatMode
+    });
 
     const destination_scope = normalizeTravelPlanDestinationScope(source);
     const tour_card_image_ids = normalizeTravelPlanTourCardImageIds(source, days);
@@ -500,6 +660,7 @@ export function createTravelPlanHelpers() {
       ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),
       ...(hasExplicitOnePagerImageIds ? { one_pager_image_ids } : {}),
+      ...(Object.keys(boundary_logistics).length ? { boundary_logistics } : {}),
       days: normalizedDays,
       attachments: normalizeTravelPlanAttachments(source.attachments),
       translation_meta: source.translation_meta
@@ -562,6 +723,50 @@ export function createTravelPlanHelpers() {
       }
     }
 
+    for (const [boundaryKind, boundaryService] of Object.entries(normalized.boundary_logistics || {})) {
+      if (!TRAVEL_PLAN_BOUNDARY_KINDS.has(boundaryKind)) {
+        return { ok: false, error: `Travel-plan boundary ${boundaryKind} is invalid.` };
+      }
+      if (!boundaryService || boundaryService.enabled === false) continue;
+      if (!normalizeText(boundaryService.id)) {
+        return { ok: false, error: `Travel-plan ${boundaryKind} service id is missing.` };
+      }
+      if (itemIds.has(boundaryService.id)) {
+        return { ok: false, error: `Travel-plan ${boundaryKind} service id ${boundaryService.id} is duplicated.` };
+      }
+      itemIds.add(boundaryService.id);
+      if (!TRAVEL_PLAN_TIMING_KINDS.has(boundaryService.timing_kind)) {
+        return { ok: false, error: `Travel-plan ${boundaryKind} time information is invalid.` };
+      }
+      if (!TRAVEL_PLAN_SERVICE_KINDS.has(boundaryService.kind)) {
+        return { ok: false, error: `Travel-plan ${boundaryKind} kind is invalid.` };
+      }
+      if (boundaryService.timing_kind === "point" && !normalizeText(boundaryService.time_point)) {
+        return { ok: false, error: `Travel-plan ${boundaryKind}: Time point is required.` };
+      }
+      if (boundaryService.timing_kind === "range" && (!normalizeText(boundaryService.start_time) || !normalizeText(boundaryService.end_time))) {
+        return { ok: false, error: `Travel-plan ${boundaryKind}: Start and end time are required.` };
+      }
+      const image = boundaryService.image && typeof boundaryService.image === "object" && !Array.isArray(boundaryService.image)
+        ? boundaryService.image
+        : null;
+      if (image) {
+        if (!normalizeText(image.id)) {
+          return { ok: false, error: `Travel-plan ${boundaryKind}: Service image id is missing.` };
+        }
+        if (imageIds.has(image.id)) {
+          return { ok: false, error: `Travel-plan ${boundaryKind}: Service image id is duplicated.` };
+        }
+        imageIds.add(image.id);
+        if (!normalizeText(image.storage_path)) {
+          return { ok: false, error: `Travel-plan ${boundaryKind}: Service image storage path is required.` };
+        }
+        if (image.is_primary === false) {
+          return { ok: false, error: `Travel-plan ${boundaryKind}: The service image must be primary.` };
+        }
+      }
+    }
+
     for (const attachment of Array.isArray(normalized.attachments) ? normalized.attachments : []) {
       if (!normalizeText(attachment.id)) {
         return { ok: false, error: "Every travel-plan attachment needs an id." };
@@ -611,6 +816,7 @@ export function createTravelPlanHelpers() {
     normalizeTravelPlan,
     normalizeMarketingTourTravelPlan,
     normalizeBookingTravelPlan,
+    composeTravelPlanForPresentation,
     validateMarketingTourTravelPlanInput,
     validateBookingTravelPlanInput,
     buildBookingTravelPlanReadModel

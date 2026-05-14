@@ -147,11 +147,68 @@ export function createBookingTravelPlanHandlers(deps) {
     const existingDaysById = new Map(
       (Array.isArray(existingNormalized?.days) ? existingNormalized.days : []).map((day) => [day.id, day])
     );
+    function mergeTravelPlanServiceLocalizedFields(item, existingItem) {
+      const timeLabelField = mergeEditableLocalizedTextField(
+        existingItem?.time_label_i18n,
+        item.time_label,
+        item.time_label_i18n,
+        normalizedLang,
+        {
+          existingText: existingItem?.time_label,
+          sourceLang: normalizedSourceLang,
+          defaultLang: normalizedSourceLang,
+          pruneExtraTranslationsOnSourceChange: true
+        }
+      );
+      const titleItemField = mergeEditableLocalizedTextField(
+        existingItem?.title_i18n,
+        item.title,
+        item.title_i18n,
+        normalizedLang,
+        {
+          existingText: existingItem?.title,
+          sourceLang: normalizedSourceLang,
+          defaultLang: normalizedSourceLang,
+          pruneExtraTranslationsOnSourceChange: true
+        }
+      );
+      const detailsField = mergeEditableLocalizedTextField(
+        existingItem?.details_i18n,
+        item.details,
+        item.details_i18n,
+        normalizedLang,
+        {
+          existingText: existingItem?.details,
+          sourceLang: normalizedSourceLang,
+          defaultLang: normalizedSourceLang,
+          pruneExtraTranslationsOnSourceChange: true
+        }
+      );
+      return {
+        ...item,
+        time_label: item.timing_kind === "label" ? (timeLabelField.text || null) : null,
+        time_label_i18n: timeLabelField.map,
+        title: titleItemField.text,
+        title_i18n: titleItemField.map,
+        details: detailsField.text || null,
+        details_i18n: detailsField.map
+      };
+    }
+    const existingBoundaryLogistics = existingNormalized.boundary_logistics && typeof existingNormalized.boundary_logistics === "object" && !Array.isArray(existingNormalized.boundary_logistics)
+      ? existingNormalized.boundary_logistics
+      : {};
+    const nextBoundaryLogistics = nextNormalized.boundary_logistics && typeof nextNormalized.boundary_logistics === "object" && !Array.isArray(nextNormalized.boundary_logistics)
+      ? Object.fromEntries(Object.entries(nextNormalized.boundary_logistics).map(([boundaryKind, item]) => ([
+          boundaryKind,
+          mergeTravelPlanServiceLocalizedFields(item, existingBoundaryLogistics[boundaryKind])
+        ])))
+      : {};
 
     return {
       ...nextNormalized,
       destination_scope: nextDestinationScope,
       destinations: nextDestinations,
+      ...(Object.keys(nextBoundaryLogistics).length ? { boundary_logistics: nextBoundaryLogistics } : {}),
       days: (Array.isArray(nextNormalized?.days) ? nextNormalized.days : []).map((day) => {
         const existingDay = existingDaysById.get(day.id);
         const existingItemsById = new Map(
@@ -191,51 +248,7 @@ export function createBookingTravelPlanHandlers(deps) {
           notes_i18n: nextNotesField.map,
           services: (Array.isArray(day?.services) ? day.services : []).map((item) => {
             const existingItem = existingItemsById.get(item.id);
-            const timeLabelField = mergeEditableLocalizedTextField(
-              existingItem?.time_label_i18n,
-              item.time_label,
-              item.time_label_i18n,
-              normalizedLang,
-              {
-                existingText: existingItem?.time_label,
-                sourceLang: normalizedSourceLang,
-                defaultLang: normalizedSourceLang,
-                pruneExtraTranslationsOnSourceChange: true
-              }
-            );
-            const titleItemField = mergeEditableLocalizedTextField(
-              existingItem?.title_i18n,
-              item.title,
-              item.title_i18n,
-              normalizedLang,
-              {
-                existingText: existingItem?.title,
-                sourceLang: normalizedSourceLang,
-                defaultLang: normalizedSourceLang,
-                pruneExtraTranslationsOnSourceChange: true
-              }
-            );
-            const detailsField = mergeEditableLocalizedTextField(
-              existingItem?.details_i18n,
-              item.details,
-              item.details_i18n,
-              normalizedLang,
-              {
-                existingText: existingItem?.details,
-                sourceLang: normalizedSourceLang,
-                defaultLang: normalizedSourceLang,
-                pruneExtraTranslationsOnSourceChange: true
-              }
-            );
-            return {
-              ...item,
-              time_label: item.timing_kind === "label" ? (timeLabelField.text || null) : null,
-              time_label_i18n: timeLabelField.map,
-              title: titleItemField.text,
-              title_i18n: titleItemField.map,
-              details: detailsField.text || null,
-              details_i18n: detailsField.map
-            };
+            return mergeTravelPlanServiceLocalizedFields(item, existingItem);
           })
         };
       })

@@ -861,7 +861,8 @@ export function createTravelPlanPdfWriter({
   marketingTourLogoPath = "",
   fallbackImagePath = "",
   travelPlanAttachmentsDir = "",
-  companyProfile = null
+  companyProfile = null,
+  composeTravelPlanForPresentation = null
 }) {
   return async function writeTravelPlanPdf(booking, travelPlan, options = {}) {
     const timing = createPdfRenderTiming();
@@ -876,7 +877,10 @@ export function createTravelPlanPdfWriter({
       throw new Error("Travel plan PDF output path is required");
     }
     await mkdir(path.dirname(outputPath), { recursive: true });
-    const plan = travelPlan && typeof travelPlan === "object" ? travelPlan : { days: [] };
+    const sourcePlan = travelPlan && typeof travelPlan === "object" ? travelPlan : { days: [] };
+    const plan = typeof composeTravelPlanForPresentation === "function"
+      ? composeTravelPlanForPresentation(sourcePlan)
+      : sourcePlan;
     const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
     const heroSubtitle = resolveTravelPlanSubtitle(booking, plan, lang);
     const welcomeText = resolveTravelPlanWelcomeText(booking, lang);

@@ -203,6 +203,57 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     };
   }
 
+  async function cloneMarketingTourBoundaryServiceForBooking(service, boundaryKind, {
+    tourId,
+    bookingId,
+    createdAt
+  }) {
+    const normalizedBoundaryKind = normalizeText(service?.boundary_kind) || normalizeText(boundaryKind);
+    if (!normalizedBoundaryKind) return null;
+    const nextServiceId = `travel_plan_boundary_${normalizedBoundaryKind}_${randomUUID()}`;
+    const timeLabel = cloneLocalizedTextField(service, "time_label", "time_label_i18n", normalizeText);
+    const title = cloneLocalizedTextField(service, "title", "title_i18n", normalizeText);
+    const details = cloneLocalizedTextField(service, "details", "details_i18n", normalizeText);
+    const imageSubtitle = cloneLocalizedTextField(
+      service,
+      "image_subtitle",
+      "image_subtitle_i18n",
+      normalizeText
+    );
+    const nextImage = await copyTourServiceImageToBooking(service?.image, {
+      tourId,
+      bookingId,
+      serviceId: nextServiceId,
+      createdAt
+    });
+
+    return {
+      id: nextServiceId,
+      boundary_kind: normalizedBoundaryKind,
+      enabled: service?.enabled === false ? false : true,
+      timing_kind: normalizeText(service?.timing_kind) || "label",
+      time_label: timeLabel.text || null,
+      time_label_i18n: timeLabel.map,
+      time_point: normalizeText(service?.time_point) || null,
+      kind: normalizeText(service?.kind) || "transport",
+      title: title.text,
+      title_i18n: title.map,
+      details: details.text || null,
+      details_i18n: details.map,
+      image_subtitle: imageSubtitle.text || null,
+      image_subtitle_i18n: imageSubtitle.map,
+      start_time: normalizeText(service?.start_time) || null,
+      end_time: normalizeText(service?.end_time) || null,
+      image: nextImage,
+      airport_code: normalizeText(service?.airport_code) || null,
+      from_label: normalizeText(service?.from_label) || null,
+      to_label: normalizeText(service?.to_label) || null,
+      presentation: service?.presentation && typeof service.presentation === "object" && !Array.isArray(service.presentation)
+        ? cloneJson(service.presentation)
+        : undefined
+    };
+  }
+
   async function cloneMarketingTourDayForBooking(day, {
     dayIndex,
     tourId,
@@ -245,9 +296,21 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     const destinations = tourDestinations.length
       ? tourDestinations
       : bookingDestinationCodesFromValues(options?.fallbackDestinations);
+    const boundaryEntries = await Promise.all(
+      Object.entries(normalized.boundary_logistics || {}).map(async ([boundaryKind, service]) => ([
+        boundaryKind,
+        await cloneMarketingTourBoundaryServiceForBooking(service, boundaryKind, {
+          tourId: tour?.id,
+          bookingId,
+          createdAt
+        })
+      ]))
+    );
+    const boundaryLogistics = Object.fromEntries(boundaryEntries.filter(([, service]) => Boolean(service)));
     return {
       destination_scope: normalizeDestinationScope(normalized.destination_scope, destinations),
       destinations,
+      ...(Object.keys(boundaryLogistics).length ? { boundary_logistics: boundaryLogistics } : {}),
       days: await Promise.all((Array.isArray(normalized.days) ? normalized.days : []).map((day, dayIndex) => (
         cloneMarketingTourDayForBooking(day, {
           dayIndex,
@@ -269,32 +332,43 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     const sourcePlan = travelPlan && typeof travelPlan === "object" && !Array.isArray(travelPlan)
       ? travelPlan
       : {};
+    async function materializeServiceTourImage(service) {
+      const sourceService = service && typeof service === "object" && !Array.isArray(service) ? service : {};
+      const sourceImage = sourceService.image && typeof sourceService.image === "object" && !Array.isArray(sourceService.image)
+        ? sourceService.image
+        : null;
+      const sourceTourId = extractTourIdFromStoragePath(sourceImage?.storage_path, normalizeText);
+      if (!sourceImage || !sourceTourId || !normalizedBookingId) {
+        return cloneJson(sourceService);
+      }
+      const copiedImage = await copyTourServiceImageToBooking(sourceImage, {
+        tourId: sourceTourId,
+        bookingId: normalizedBookingId,
+        serviceId: normalizeText(sourceService.id) || `travel_plan_service_${randomUUID()}`,
+        createdAt: normalizedCreatedAt
+      });
+      return {
+        ...cloneJson(sourceService),
+        image: copiedImage || cloneJson(sourceImage)
+      };
+    }
     const days = await Promise.all((Array.isArray(sourcePlan.days) ? sourcePlan.days : []).map(async (day) => ({
       ...cloneJson(day),
       services: await Promise.all((Array.isArray(day?.services) ? day.services : []).map(async (service) => {
-        const sourceService = service && typeof service === "object" && !Array.isArray(service) ? service : {};
-        const sourceImage = sourceService.image && typeof sourceService.image === "object" && !Array.isArray(sourceService.image)
-          ? sourceService.image
-          : null;
-        const sourceTourId = extractTourIdFromStoragePath(sourceImage?.storage_path, normalizeText);
-        if (!sourceImage || !sourceTourId || !normalizedBookingId) {
-          return cloneJson(sourceService);
-        }
-        const copiedImage = await copyTourServiceImageToBooking(sourceImage, {
-          tourId: sourceTourId,
-          bookingId: normalizedBookingId,
-          serviceId: normalizeText(sourceService.id) || `travel_plan_service_${randomUUID()}`,
-          createdAt: normalizedCreatedAt
-        });
-        return {
-          ...cloneJson(sourceService),
-          image: copiedImage || cloneJson(sourceImage)
-        };
+        return materializeServiceTourImage(service);
       }))
     })));
+    const boundaryEntries = await Promise.all(
+      Object.entries(sourcePlan.boundary_logistics || {}).map(async ([boundaryKind, service]) => ([
+        boundaryKind,
+        await materializeServiceTourImage(service)
+      ]))
+    );
+    const boundaryLogistics = Object.fromEntries(boundaryEntries.filter(([, service]) => Boolean(service)));
     return {
       ...cloneJson(sourcePlan),
-      days
+      days,
+      ...(Object.keys(boundaryLogistics).length ? { boundary_logistics: boundaryLogistics } : {})
     };
   }
 

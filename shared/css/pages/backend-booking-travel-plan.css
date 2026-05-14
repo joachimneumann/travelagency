@@ -399,6 +399,62 @@
   margin-top: 0;
 }
 
+.travel-plan-boundaries {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem;
+  border: 1px solid var(--travel-plan-accent-border-strong);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.travel-plan-boundaries__title {
+  color: var(--travelplan_day_text_color);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.travel-plan-boundaries__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.travel-plan-boundary {
+  display: grid;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.65rem;
+  border: 1px solid rgba(202, 191, 173, 0.82);
+  border-radius: 8px;
+  background: rgba(250, 249, 246, 0.78);
+}
+
+.travel-plan-boundary__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.travel-plan-boundary__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  color: var(--travelplan_service_text_color);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.travel-plan-boundary__body {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.travel-plan-boundary__meta {
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+}
+
 #travel_plan_editor .localized-pair {
   --localized-code-column-width: 1.55rem;
   display: grid;
@@ -1917,7 +1973,9 @@
   .travel-plan-grid,
   .travel-plan-grid--item,
   .travel-plan-grid--item-kind,
-  .travel-plan-grid--item-timing {
+  .travel-plan-grid--item-timing,
+  .travel-plan-boundaries__grid,
+  .travel-plan-boundary__meta {
     grid-template-columns: 1fr;
   }
 

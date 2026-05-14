@@ -2431,29 +2431,46 @@ export function createOfferPdfWriter({
   fallbackImagePath,
   travelPlanAttachmentsDir,
   companyProfile,
-  formatMoney
+  formatMoney,
+  composeTravelPlanForPresentation = null
 }) {
   return async function writeGeneratedOfferPdf(generatedOffer, booking) {
     const lang = normalizePdfLang(generatedOffer?.lang || booking?.customer_language || booking?.web_form_submission?.preferred_language || "en");
     const renderMoney = (amountCents, currency) => fallbackFormatMoney(currency, amountCents, lang);
     const outputPath = generatedOfferPdfPath(generatedOffer.id);
     await mkdir(path.dirname(outputPath), { recursive: true });
-      const attachmentPaths = resolveOfferAttachmentPaths(generatedOffer, booking, travelPlanAttachmentsDir);
+    const attachmentPaths = resolveOfferAttachmentPaths(generatedOffer, booking, travelPlanAttachmentsDir);
 
-    const offerTravelPlan = generatedOffer?.travel_plan || booking?.travel_plan || null;
+    const sourceOfferTravelPlan = generatedOffer?.travel_plan || booking?.travel_plan || null;
+    const offerTravelPlan = typeof composeTravelPlanForPresentation === "function"
+      ? composeTravelPlanForPresentation(sourceOfferTravelPlan)
+      : sourceOfferTravelPlan;
+    const renderBooking = booking && typeof booking === "object"
+      ? {
+          ...booking,
+          ...(offerTravelPlan ? { travel_plan: offerTravelPlan } : {})
+        }
+      : booking;
+    const renderGeneratedOffer = generatedOffer && typeof generatedOffer === "object"
+      ? {
+          ...generatedOffer,
+          ...(offerTravelPlan ? { travel_plan: offerTravelPlan } : {}),
+          __booking_for_offer_pdf: renderBooking
+        }
+      : generatedOffer;
     const [logoImage, heroPath, fonts, heroTitle, itemThumbnailMap] = await Promise.all([
       rasterizeImage(logoPath, { width: 1000 }),
-      resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
+      resolveBookingImageForPdf({ booking: renderBooking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
       resolvePdfFontsForLang({
         lang,
         regularCandidates: PDF_FONT_REGULAR_CANDIDATES,
         boldCandidates: PDF_FONT_BOLD_CANDIDATES
       }),
-      resolveBookingHeroTitle(booking, lang, readTours),
+      resolveBookingHeroTitle(renderBooking, lang, readTours),
       buildTravelPlanItemThumbnailMap(offerTravelPlan, bookingImagesDir)
     ]);
-      const heroImage = await rasterizeImage(heroPath || fallbackImagePath, { width: 1200, height: 780 });
-      const hasDetailedTravelPlanAppendix = safeArray(generatedOffer?.travel_plan?.days || booking?.travel_plan?.days).length > 0;
+    const heroImage = await rasterizeImage(heroPath || fallbackImagePath, { width: 1200, height: 780 });
+    const hasDetailedTravelPlanAppendix = safeArray(offerTravelPlan?.days).length > 0;
 
     await new Promise((resolve, reject) => {
       const doc = new PDFDocument({
@@ -2474,16 +2491,15 @@ export function createOfferPdfWriter({
       doc.on("error", reject);
 
       registerPdfFonts(doc, fonts);
-      doc.__booking_for_offer_pdf = booking;
-      generatedOffer.__booking_for_offer_pdf = booking;
+      doc.__booking_for_offer_pdf = renderBooking;
 
       let y = drawTopHeader(doc, companyProfile, logoImage, fonts, lang);
-      y = drawHero(doc, heroTitle, booking, generatedOffer, heroImage, y, fonts, lang);
+      y = drawHero(doc, heroTitle, renderBooking, renderGeneratedOffer, heroImage, y, fonts, lang);
       y = drawIntro(doc, y, fonts, lang);
-      if (booking?.pdf_personalization?.offer?.include_who_is_traveling !== false) {
+      if (renderBooking?.pdf_personalization?.offer?.include_who_is_traveling !== false) {
         y = drawPdfTravelersSection({
           doc,
-          booking,
+          booking: renderBooking,
           startY: y,
           fonts,
           lang,
@@ -2496,44 +2512,44 @@ export function createOfferPdfWriter({
       }
       if (hasDetailedTravelPlanAppendix) {
         y = keepSectionTogetherIfPossible(doc, y, 160);
-        y = drawOfferItinerarySummary(doc, generatedOffer, booking, y, fonts, lang);
+        y = drawOfferItinerarySummary(doc, renderGeneratedOffer, renderBooking, y, fonts, lang);
       }
-      const paymentTermsLines = safeArray(generatedOffer?.payment_terms?.lines || generatedOffer?.offer?.payment_terms?.lines);
-      const mergeFinancialOverviewAndPaymentTerms = !offerHasTaxSummary(generatedOffer) && paymentTermsLines.length > 0;
+      const paymentTermsLines = safeArray(renderGeneratedOffer?.payment_terms?.lines || renderGeneratedOffer?.offer?.payment_terms?.lines);
+      const mergeFinancialOverviewAndPaymentTerms = !offerHasTaxSummary(renderGeneratedOffer) && paymentTermsLines.length > 0;
       if (mergeFinancialOverviewAndPaymentTerms) {
         y = keepSectionTogetherIfPossible(
           doc,
           y,
-          estimateOfferTableHeight(doc, generatedOffer, renderMoney, fonts, lang)
-            + estimatePaymentTermsHeightWithOptions(doc, generatedOffer, renderMoney, fonts, lang, {
+          estimateOfferTableHeight(doc, renderGeneratedOffer, renderMoney, fonts, lang)
+            + estimatePaymentTermsHeightWithOptions(doc, renderGeneratedOffer, renderMoney, fonts, lang, {
               renderSectionHeader: false
             })
         );
-        y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang, {
-          sectionTitle: resolveOfferFinancialSectionTitle(generatedOffer, lang)
+        y = drawOfferTable(doc, renderGeneratedOffer, y, renderMoney, fonts, lang, {
+          sectionTitle: resolveOfferFinancialSectionTitle(renderGeneratedOffer, lang)
         });
-        y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang, {
+        y = drawPaymentTerms(doc, renderGeneratedOffer, y, renderMoney, fonts, lang, {
           renderSectionHeader: false
         });
       } else {
-        y = keepSectionTogetherIfPossible(doc, y, estimateOfferTableHeight(doc, generatedOffer, renderMoney, fonts, lang));
-        y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);
+        y = keepSectionTogetherIfPossible(doc, y, estimateOfferTableHeight(doc, renderGeneratedOffer, renderMoney, fonts, lang));
+        y = drawOfferTable(doc, renderGeneratedOffer, y, renderMoney, fonts, lang);
       }
       if (!mergeFinancialOverviewAndPaymentTerms && paymentTermsLines.length) {
-        y = keepSectionTogetherIfPossible(doc, y, estimatePaymentTermsHeight(doc, generatedOffer, renderMoney, fonts, lang));
-        y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);
+        y = keepSectionTogetherIfPossible(doc, y, estimatePaymentTermsHeight(doc, renderGeneratedOffer, renderMoney, fonts, lang));
+        y = drawPaymentTerms(doc, renderGeneratedOffer, y, renderMoney, fonts, lang);
       }
       const bankDetailsHeight = estimateBankDetailsHeight(doc, companyProfile, fonts, lang);
       if (bankDetailsHeight > 0) {
         y = keepSectionTogetherIfPossible(doc, y, bankDetailsHeight);
         y = drawBankDetails(doc, companyProfile, y, fonts, lang);
       }
-          y = keepSectionTogetherIfPossible(doc, y + 18, estimateClosingHeight(doc, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length));
-          y = drawClosing(doc, y, fonts, lang, generatedOffer, renderMoney, attachmentPaths.length);
+      y = keepSectionTogetherIfPossible(doc, y + 18, estimateClosingHeight(doc, fonts, lang, renderGeneratedOffer, renderMoney, attachmentPaths.length));
+      y = drawClosing(doc, y, fonts, lang, renderGeneratedOffer, renderMoney, attachmentPaths.length);
 
       if (hasDetailedTravelPlanAppendix) {
         y = startSectionOnNewPage(doc);
-        y = drawOfferDetailedTravelPlanAppendix(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);
+        y = drawOfferDetailedTravelPlanAppendix(doc, renderGeneratedOffer, renderBooking, y, fonts, lang, itemThumbnailMap);
       }
 
       drawDivider(doc, doc.page.height - PAGE_MARGIN - 12);

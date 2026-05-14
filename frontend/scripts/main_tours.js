@@ -762,6 +762,91 @@ export function createFrontendToursController(ctx) {
     return Array.isArray(trip?.travel_plan?.days) ? trip.travel_plan.days : [];
   }
 
+  function cloneTravelPlanPresentationValue(value, fallback = null) {
+    try {
+      return JSON.parse(JSON.stringify(value ?? fallback));
+    } catch {
+      return fallback;
+    }
+  }
+
+  function boundaryServiceHasPresentationContent(service) {
+    if (!service || typeof service !== "object" || Array.isArray(service)) return false;
+    return [
+      service.time_label,
+      service.time_point,
+      service.start_time,
+      service.end_time,
+      service.title,
+      service.details,
+      service.image_subtitle,
+      service.airport_code,
+      service.from_label,
+      service.to_label
+    ].some((value) => Boolean(normalizeText(value)))
+      || Object.values(service.title_i18n || {}).some((value) => Boolean(normalizeText(value)))
+      || Object.values(service.details_i18n || {}).some((value) => Boolean(normalizeText(value)))
+      || Object.values(service.time_label_i18n || {}).some((value) => Boolean(normalizeText(value)))
+      || Boolean(service.image && typeof service.image === "object" && normalizeText(service.image.storage_path || service.image.url || service.image.src));
+  }
+
+  function dayAlreadyContainsBoundaryService(day, boundaryService, boundaryKind) {
+    const boundaryId = normalizeText(boundaryService?.id);
+    return (Array.isArray(day?.services) ? day.services : []).some((service) => (
+      normalizeText(service?.boundary_kind) === boundaryKind
+        || (boundaryId && normalizeText(service?.copied_from_boundary_id) === boundaryId)
+        || (boundaryId && normalizeText(service?.id) === boundaryId)
+    ));
+  }
+
+  function presentationBoundaryService(boundaryService, boundaryKind) {
+    const sourceId = normalizeText(boundaryService?.id) || `travel_plan_boundary_${boundaryKind}`;
+    return {
+      ...cloneTravelPlanPresentationValue(boundaryService, {}),
+      id: sourceId,
+      boundary_kind: boundaryKind,
+      copied_from_boundary_id: sourceId,
+      _presentation_source: "boundary_logistics"
+    };
+  }
+
+  function composeBoundaryServiceIntoDays(days, boundaryService, boundaryKind) {
+    if (!Array.isArray(days) || !days.length) return Array.isArray(days) ? days : [];
+    if (!boundaryService || boundaryService.enabled === false || !boundaryServiceHasPresentationContent(boundaryService)) return days;
+    const targetIndex = boundaryKind === "departure" ? days.length - 1 : 0;
+    const targetDay = days[targetIndex];
+    if (dayAlreadyContainsBoundaryService(targetDay, boundaryService, boundaryKind)) return days;
+    const service = presentationBoundaryService(boundaryService, boundaryKind);
+    return days.map((day, index) => {
+      if (index !== targetIndex) return day;
+      const services = Array.isArray(day?.services) ? day.services : [];
+      return {
+        ...day,
+        services: boundaryKind === "departure"
+          ? [...services, service]
+          : [service, ...services]
+      };
+    });
+  }
+
+  function presentationTourPlanDays(trip, sourceDays) {
+    const travelPlan = trip?.travel_plan && typeof trip.travel_plan === "object" && !Array.isArray(trip.travel_plan)
+      ? trip.travel_plan
+      : {};
+    const boundaryLogistics = travelPlan.boundary_logistics && typeof travelPlan.boundary_logistics === "object" && !Array.isArray(travelPlan.boundary_logistics)
+      ? travelPlan.boundary_logistics
+      : {};
+    let days = (Array.isArray(sourceDays) ? sourceDays : [])
+      .map((day) => ({
+        ...cloneTravelPlanPresentationValue(day, {}),
+        services: (Array.isArray(day?.services) ? day.services : [])
+          .map((service) => cloneTravelPlanPresentationValue(service, {}))
+      }));
+    days = composeBoundaryServiceIntoDays(days, boundaryLogistics.arrival, "arrival");
+    days = composeBoundaryServiceIntoDays(days, boundaryLogistics.departure, "departure");
+    return days;
+  }
+
   function customizeFeatureEnabled() {
     return state.customizeFeatureEnabled === true && !isCustomizeMobileViewport();
   }
@@ -1878,7 +1963,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function renderTourTravelPlanDetails(trip) {
-    const days = activeTourPlanDays(trip);
+    const days = presentationTourPlanDays(trip, activeTourPlanDays(trip));
     if (!days.length) {
       return `
         <div class="tour-plan--empty">

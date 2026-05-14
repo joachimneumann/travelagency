@@ -1,5 +1,11 @@
 import { bookingT } from "./i18n.js";
 
+function travelPlanBoundaryLabel(boundaryKind) {
+  return boundaryKind === "departure"
+    ? bookingT("booking.travel_plan.departure", "Departure")
+    : bookingT("booking.travel_plan.arrival", "Arrival");
+}
+
 export function validateTravelPlanDraft(plan, {
   validTimingKinds,
   validItemKinds,
@@ -9,6 +15,54 @@ export function validateTravelPlanDraft(plan, {
   const normalizedPlan = plan && typeof plan === "object" ? plan : {};
   const dayIds = new Set();
   const itemIds = new Set();
+
+  for (const [boundaryKind, service] of Object.entries(normalizedPlan.boundary_logistics || {})) {
+    if (!["arrival", "departure"].includes(boundaryKind)) {
+      return { ok: false, error: bookingT("booking.travel_plan.validation.boundary_invalid", "Arrival/departure information is invalid.") };
+    }
+    if (!service || service.enabled === false) continue;
+    const boundaryLabel = travelPlanBoundaryLabel(boundaryKind);
+    const itemId = String(service?.id || "").trim();
+    if (!itemId) {
+      return {
+        ok: false,
+        error: bookingT("booking.travel_plan.validation.boundary_id_missing", "{kind}: Service id is missing.", { kind: boundaryLabel })
+      };
+    }
+    if (itemIds.has(itemId)) {
+      return {
+        ok: false,
+        error: bookingT("booking.travel_plan.validation.boundary_id_duplicate", "{kind}: Service id is duplicated.", { kind: boundaryLabel })
+      };
+    }
+    itemIds.add(itemId);
+    const timingKind = String(service?.timing_kind || "").trim();
+    if (!validTimingKinds.has(timingKind)) {
+      return {
+        ok: false,
+        error: bookingT("booking.travel_plan.validation.boundary_timing_invalid", "{kind}: Time information is invalid.", { kind: boundaryLabel })
+      };
+    }
+    const itemKind = String(service?.kind || "").trim();
+    if (!validItemKinds.has(itemKind)) {
+      return {
+        ok: false,
+        error: bookingT("booking.travel_plan.validation.boundary_kind_invalid", "{kind}: Kind is invalid.", { kind: boundaryLabel })
+      };
+    }
+    if (timingKind === "point" && !String(service?.time_point || "").trim()) {
+      return {
+        ok: false,
+        error: bookingT("booking.travel_plan.validation.boundary_time_point_required", "{kind}: Time point is required.", { kind: boundaryLabel })
+      };
+    }
+    if (timingKind === "range" && (!String(service?.start_time || "").trim() || !String(service?.end_time || "").trim())) {
+      return {
+        ok: false,
+        error: bookingT("booking.travel_plan.validation.boundary_time_range_required", "{kind}: Start and end time are required.", { kind: boundaryLabel })
+      };
+    }
+  }
 
   for (const day of Array.isArray(normalizedPlan.days) ? normalizedPlan.days : []) {
     const dayId = String(day?.id || "").trim();

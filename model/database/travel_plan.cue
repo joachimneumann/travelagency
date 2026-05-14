@@ -60,6 +60,28 @@ import (
 	...
 }
 
+#TravelPlanBoundaryKind: "arrival" | "departure"
+
+#TravelPlanBoundaryPresentation: {
+	attach_to: "first_day" | "last_day"
+	position:  "start" | "end"
+}
+
+#TravelPlanBoundaryService: #TravelPlanService & {
+	boundary_kind:   #TravelPlanBoundaryKind
+	kind:            *"transport" | enums.#TravelPlanServiceKind
+	enabled?:        *true | bool
+	airport_code?:   string
+	from_label?:     string
+	to_label?:       string
+	presentation?:   #TravelPlanBoundaryPresentation
+}
+
+#TravelPlanBoundaryLogistics: {
+	arrival?:   #TravelPlanBoundaryService
+	departure?: #TravelPlanBoundaryService
+}
+
 #BookingTravelPlanService: #TravelPlanService
 
 #BookingTravelPlanAttachment: {
@@ -113,6 +135,7 @@ import (
 	tour_card_image_ids?: [...common.#Identifier]
 	one_pager_hero_image_id?: common.#Identifier
 	one_pager_image_ids?: [...common.#Identifier]
+	boundary_logistics?: #TravelPlanBoundaryLogistics
 	days?: [...#TravelPlanDay]
 	...
 }
@@ -122,6 +145,7 @@ import (
 	tour_card_image_ids?: [...common.#Identifier]
 	one_pager_hero_image_id?: common.#Identifier
 	one_pager_image_ids?: [...common.#Identifier]
+	boundary_logistics?: #TravelPlanBoundaryLogistics
 	days?: [...#TravelPlanDay]
 	...
 }

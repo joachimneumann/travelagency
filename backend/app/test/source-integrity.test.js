@@ -4534,12 +4534,12 @@ test("offer PDF keeps offer details and payment terms together when they fit ins
   );
   assert.match(
     source,
-    /y = keepSectionTogetherIfPossible\(doc, y, estimateOfferTableHeight\(doc, generatedOffer, renderMoney, fonts, lang\)\);\s*y = drawOfferTable\(doc, generatedOffer, y, renderMoney, fonts, lang\);/,
+    /y = keepSectionTogetherIfPossible\(doc, y, estimateOfferTableHeight\(doc, (?:generatedOffer|renderGeneratedOffer), renderMoney, fonts, lang\)\);\s*y = drawOfferTable\(doc, (?:generatedOffer|renderGeneratedOffer), y, renderMoney, fonts, lang\);/,
     "Offer details should only move to a new page when the entire section would not fit in the remaining space"
   );
   assert.match(
     source,
-    /y = keepSectionTogetherIfPossible\(doc, y, estimatePaymentTermsHeight\(doc, generatedOffer, renderMoney, fonts, lang\)\);\s*y = drawPaymentTerms\(doc, generatedOffer, y, renderMoney, fonts, lang\);/,
+    /y = keepSectionTogetherIfPossible\(doc, y, estimatePaymentTermsHeight\(doc, (?:generatedOffer|renderGeneratedOffer), renderMoney, fonts, lang\)\);\s*y = drawPaymentTerms\(doc, (?:generatedOffer|renderGeneratedOffer), y, renderMoney, fonts, lang\);/,
     "Payment terms should only move to a new page when the entire section would not fit in the remaining space"
   );
   assert.doesNotMatch(
@@ -4565,7 +4565,7 @@ test("offer PDF keeps the closing letter and signoff together when they fit on o
   );
   assert.match(
     source,
-    /y = keepSectionTogetherIfPossible\(\s*doc,\s*y \+ 18,\s*estimateClosingHeight\(doc, fonts, lang, generatedOffer, renderMoney, attachmentPaths\.length\)\s*\);\s*y = drawClosing\(doc, y, fonts, lang, generatedOffer, renderMoney, attachmentPaths\.length\);/s,
+    /y = keepSectionTogetherIfPossible\(\s*doc,\s*y \+ 18,\s*estimateClosingHeight\(doc, fonts, lang, (?:generatedOffer|renderGeneratedOffer), renderMoney, attachmentPaths\.length\)\s*\);\s*y = drawClosing\(doc, y, fonts, lang, (?:generatedOffer|renderGeneratedOffer), renderMoney, attachmentPaths\.length\);/s,
     "Offer PDFs should keep the closing body and signoff together when the entire block can fit on the current page"
   );
   assert.doesNotMatch(
