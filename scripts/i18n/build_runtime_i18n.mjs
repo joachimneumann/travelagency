@@ -56,6 +56,10 @@ const RUNTIME_DOMAINS = Object.freeze({
     sourcePath: (repoRoot) => path.join(repoRoot, "frontend", "data", "generated", "i18n", "source", "backend", "en.json"),
     targetPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend", `${lang}.json`),
     metaPath: (repoRoot, lang) => path.join(repoRoot, "frontend", "data", "i18n", "backend", `${lang}.meta.json`),
+    retiredKeys: [
+      "booking.travel_plan.location_optional",
+      "booking.travel_plan.overnight_location"
+    ],
     cleanupPatterns: [
       {
         dir: (repoRoot) => path.join(repoRoot, "frontend", "data", "i18n", "backend"),

@@ -278,3 +278,45 @@ test("runtime i18n generator ignores retired frontend keys left in published sna
   const frontendVi = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8"));
   assert.equal(Object.hasOwn(frontendVi, "footer.brand_title"), false);
 });
+
+test("runtime i18n generator ignores retired backend travel-plan keys left in published snapshots", async () => {
+  const { repoRoot } = await createRuntimeI18nFixture();
+  const snapshotPath = path.join(repoRoot, "content", "translations", "staff", "backend-ui.vi.json");
+  const manifestPath = path.join(repoRoot, "content", "translations", "manifest.json");
+  const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
+  const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+
+  snapshot.items.push(
+    snapshotItem({
+      domain: "backend",
+      section: "staff",
+      subsection: "backend-ui",
+      audience: "staff",
+      lang: "vi",
+      key: "booking.travel_plan.location_optional",
+      sourceText: "Location (optional)",
+      targetText: "Dia diem (tuy chon)"
+    }),
+    snapshotItem({
+      domain: "backend",
+      section: "staff",
+      subsection: "backend-ui",
+      audience: "staff",
+      lang: "vi",
+      key: "booking.travel_plan.overnight_location",
+      sourceText: "Overnight location (optional)",
+      targetText: "Dia diem nghi qua dem (tuy chon)"
+    })
+  );
+  snapshot.item_count = snapshot.items.length;
+  manifest.sections[1].item_count = snapshot.items.length;
+  manifest.total_items += 2;
+
+  await writeJson(snapshotPath, snapshot);
+  await writeJson(manifestPath, manifest);
+  await generateRuntimeI18nFromSnapshots({ repoRoot, quiet: true });
+
+  const backendVi = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "backend", "vi.json"), "utf8"));
+  assert.equal(Object.hasOwn(backendVi, "booking.travel_plan.location_optional"), false);
+  assert.equal(Object.hasOwn(backendVi, "booking.travel_plan.overnight_location"), false);
+});
