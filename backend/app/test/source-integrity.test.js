@@ -4956,6 +4956,16 @@ test("translations page exposes one translate action and leaves website generati
   );
   assert.match(
     translationsSource,
+    /\/api\/v1\/public-site\/publish-status/,
+    "The translations page should read central public-site publish status"
+  );
+  assert.doesNotMatch(
+    translationsSource,
+    /\/api\/v1\/public-site-publish\/status/,
+    "The translations page should not call the retired public-site publish status endpoint"
+  );
+  assert.match(
+    translationsSource,
     /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Publish Website remains blocked[\s\S]*latest\.type === "apply" && translationStatus\.unavailableCount > 0[\s\S]*Publish Website remains blocked/,
     "After Translate finishes, the page should report only blockers that keep central Publish unavailable"
   );

@@ -325,7 +325,7 @@ function summarizePublicSiteStatus(payload) {
 
 async function loadPublicSiteStatus() {
   try {
-    const response = await fetch(resolveApiUrl(apiOrigin, "/api/v1/public-site-publish/status"), {
+    const response = await fetch(resolveApiUrl(apiOrigin, "/api/v1/public-site/publish-status"), {
       cache: "no-store",
       credentials: "include"
     });
