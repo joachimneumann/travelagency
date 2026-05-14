@@ -13,6 +13,8 @@ IR: {
 		bookingPersonGenders: [for gender in enumModel.BookingPersonGenderCatalog {{code: gender}}]
 		travelPlanTimingKinds: [for kind in enumModel.TravelPlanTimingKindCatalog {{code: kind}}]
 		travelPlanServiceKinds: [for kind in enumModel.TravelPlanServiceKindCatalog {{code: kind}}]
+		travelPlanBoundaryKinds: [for kind in enumModel.TravelPlanBoundaryKindCatalog {{code: kind}}]
+		travelPlanBoundaryPlacementKinds: [for kind in enumModel.TravelPlanBoundaryPlacementKindCatalog {{code: kind}}]
 		paymentStatuses: [for status in enumModel.PaymentStatusCatalog {{code: status}}]
 		pricingAdjustmentTypes: [for adjustmentType in enumModel.PricingAdjustmentTypeCatalog {{code: adjustmentType}}]
 		offerCategories: [for category in enumModel.OfferCategoryCatalog {{code: category}}]

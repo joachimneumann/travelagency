@@ -79,6 +79,68 @@ test("boundary logistics stay outside canonical days and compose into presentati
   assert.equal(normalized.days[0].services.length, 1);
 });
 
+test("boundary logistics can add presentation days before and after the itinerary", () => {
+  const normalized = normalizeBookingTravelPlan({
+    boundary_logistics: {
+      arrival: {
+        id: "arrival_service",
+        boundary_kind: "arrival",
+        enabled: true,
+        timing_kind: "label",
+        time_label: "Arrival",
+        kind: "transport",
+        title: "Airport pickup",
+        presentation: {
+          attach_to: "before_first_day",
+          position: "start"
+        }
+      },
+      departure: {
+        id: "departure_service",
+        boundary_kind: "departure",
+        enabled: true,
+        timing_kind: "label",
+        time_label: "Departure",
+        kind: "transport",
+        title: "Airport drop-off",
+        presentation: {
+          attach_to: "after_last_day",
+          position: "end"
+        }
+      }
+    },
+    days: [
+      {
+        id: "day_1",
+        title: "Hanoi",
+        services: [
+          {
+            id: "service_1",
+            timing_kind: "label",
+            kind: "activity",
+            title: "Old Quarter walk"
+          }
+        ]
+      }
+    ]
+  });
+
+  const presentation = composeTravelPlanForPresentation(normalized);
+
+  assert.deepEqual(
+    presentation.days.map((day) => ({
+      day_number: day.day_number,
+      services: day.services.map((service) => service.id)
+    })),
+    [
+      { day_number: 1, services: ["arrival_service"] },
+      { day_number: 2, services: ["service_1"] },
+      { day_number: 3, services: ["departure_service"] }
+    ]
+  );
+  assert.equal(normalized.days.length, 1);
+});
+
 test("boundary logistics validation rejects duplicate service ids", () => {
   const result = validateBookingTravelPlanInput({
     boundary_logistics: {

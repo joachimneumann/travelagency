@@ -60,10 +60,10 @@ import (
 	...
 }
 
-#TravelPlanBoundaryKind: "arrival" | "departure"
+#TravelPlanBoundaryKind: enums.#TravelPlanBoundaryKind
 
 #TravelPlanBoundaryPresentation: {
-	attach_to: "first_day" | "last_day"
+	attach_to: enums.#TravelPlanBoundaryPlacementKind
 	position:  "start" | "end"
 }
 

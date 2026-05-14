@@ -393,18 +393,33 @@ function normalizeBoundaryKind(value, fallback = "arrival") {
   return normalized === "departure" ? "departure" : "arrival";
 }
 
+function defaultBoundaryAttachTo(boundaryKind) {
+  return boundaryKind === "departure" ? "last_day" : "first_day";
+}
+
+function defaultBoundaryPosition(boundaryKind) {
+  return boundaryKind === "departure" ? "end" : "start";
+}
+
+function normalizeBoundaryAttachTo(value, boundaryKind) {
+  const normalizedBoundaryKind = normalizeBoundaryKind(boundaryKind);
+  const normalized = normalizeOptionalText(value).toLowerCase();
+  if (normalizedBoundaryKind === "departure") {
+    return normalized === "after_last_day" ? "after_last_day" : "last_day";
+  }
+  return normalized === "before_first_day" ? "before_first_day" : "first_day";
+}
+
 function normalizeBoundaryPresentation(value, boundaryKind) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const normalizedBoundaryKind = normalizeBoundaryKind(boundaryKind);
   const attachTo = normalizeOptionalText(source.attach_to);
   const position = normalizeOptionalText(source.position);
   return {
-    attach_to: attachTo === "last_day" || attachTo === "first_day"
-      ? attachTo
-      : (normalizedBoundaryKind === "departure" ? "last_day" : "first_day"),
+    attach_to: attachTo ? normalizeBoundaryAttachTo(attachTo, normalizedBoundaryKind) : defaultBoundaryAttachTo(normalizedBoundaryKind),
     position: position === "end" || position === "start"
       ? position
-      : (normalizedBoundaryKind === "departure" ? "end" : "start")
+      : defaultBoundaryPosition(normalizedBoundaryKind)
   };
 }
 

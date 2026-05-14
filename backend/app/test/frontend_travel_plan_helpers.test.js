@@ -220,6 +220,43 @@ test("normalizeTravelPlanDraft ignores legacy destinations without explicit scop
   assert.deepEqual(scoped.destinations, ["VN"]);
 });
 
+test("normalizeTravelPlanDraft preserves boundary placement choices", async () => {
+  const { normalizeTravelPlanDraft } = await loadHelpers();
+
+  const normalized = normalizeTravelPlanDraft({
+    boundary_logistics: {
+      arrival: {
+        id: "arrival_service",
+        boundary_kind: "arrival",
+        enabled: true,
+        timing_kind: "label",
+        kind: "transport",
+        title: "Airport pickup",
+        presentation: {
+          attach_to: "before_first_day",
+          position: "start"
+        }
+      },
+      departure: {
+        id: "departure_service",
+        boundary_kind: "departure",
+        enabled: true,
+        timing_kind: "label",
+        kind: "transport",
+        title: "Airport drop-off",
+        presentation: {
+          attach_to: "after_last_day",
+          position: "end"
+        }
+      }
+    },
+    days: []
+  });
+
+  assert.equal(normalized.boundary_logistics.arrival.presentation.attach_to, "before_first_day");
+  assert.equal(normalized.boundary_logistics.departure.presentation.attach_to, "after_last_day");
+});
+
 test("experience highlight labels follow the display language while preserving English ids", async () => {
   const { resolveTravelPlanExperienceHighlightTitle } = await loadEditorCore();
   const highlight = {

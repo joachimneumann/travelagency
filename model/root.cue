@@ -57,6 +57,8 @@ import (
 		BookingPersonGender:                          enumModel.#BookingPersonGender
 		TravelPlanTimingKind:                         enumModel.#TravelPlanTimingKind
 		TravelPlanServiceKind:                        enumModel.#TravelPlanServiceKind
+		TravelPlanBoundaryKind:                       enumModel.#TravelPlanBoundaryKind
+		TravelPlanBoundaryPlacementKind:              enumModel.#TravelPlanBoundaryPlacementKind
 		PaymentStatus:                                enumModel.#PaymentStatus
 		PricingAdjustmentType:                        enumModel.#PricingAdjustmentType
 		OfferCategory:                                enumModel.#OfferCategory

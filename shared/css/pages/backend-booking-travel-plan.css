@@ -437,13 +437,18 @@
   gap: 0.5rem;
 }
 
-.travel-plan-boundary__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.42rem;
+.travel-plan-boundary__label {
   color: var(--travelplan_service_text_color);
   font-size: 0.92rem;
   font-weight: 700;
+}
+
+.travel-plan-boundary__placement {
+  min-width: min(100%, 13rem);
+}
+
+.travel-plan-boundary__placement span {
+  font-size: 0.78rem;
 }
 
 .travel-plan-boundary__body {

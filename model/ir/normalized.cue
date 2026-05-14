@@ -48,6 +48,8 @@ IR: {
 		BookingPersonGender: {catalog: "bookingPersonGenders"}
 		TravelPlanTimingKind: {catalog: "travelPlanTimingKinds"}
 		TravelPlanServiceKind: {catalog: "travelPlanServiceKinds"}
+		TravelPlanBoundaryKind: {catalog: "travelPlanBoundaryKinds"}
+		TravelPlanBoundaryPlacementKind: {catalog: "travelPlanBoundaryPlacementKinds"}
 		PaymentStatus: {catalog: "paymentStatuses"}
 		PricingAdjustmentType: {catalog: "pricingAdjustmentTypes"}
 		OfferCategory: {catalog: "offerCategories"}
@@ -233,7 +235,7 @@ IR: {
 			module:     "database"
 			sourceType: "database.#TravelPlanBoundaryPresentation"
 			fields: [
-				{name: "attach_to", kind: "scalar", typeName: "string", required: true},
+				{name: "attach_to", kind: "enum", typeName: "TravelPlanBoundaryPlacementKind", required: true},
 				{name: "position", kind: "scalar", typeName: "string", required: true},
 			]
 		},
@@ -244,7 +246,7 @@ IR: {
 			sourceType: "database.#TravelPlanBoundaryService"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "boundary_kind", kind: "scalar", typeName: "string", required: true},
+				{name: "boundary_kind", kind: "enum", typeName: "TravelPlanBoundaryKind", required: true},
 				{name: "enabled", kind: "scalar", typeName: "bool", required: false},
 				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
 				{name: "time_label", kind: "scalar", typeName: "string", required: false},

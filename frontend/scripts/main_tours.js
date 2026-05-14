@@ -799,6 +799,20 @@ export function createFrontendToursController(ctx) {
     ));
   }
 
+  function boundaryAlreadyComposedIntoDays(days, boundaryService, boundaryKind) {
+    return (Array.isArray(days) ? days : []).some((day) => (
+      dayAlreadyContainsBoundaryService(day, boundaryService, boundaryKind)
+    ));
+  }
+
+  function boundaryAttachTo(boundaryService, boundaryKind) {
+    const attachTo = normalizeText(boundaryService?.presentation?.attach_to);
+    if (boundaryKind === "departure") {
+      return attachTo === "after_last_day" ? "after_last_day" : "last_day";
+    }
+    return attachTo === "before_first_day" ? "before_first_day" : "first_day";
+  }
+
   function presentationBoundaryService(boundaryService, boundaryKind) {
     const sourceId = normalizeText(boundaryService?.id) || `travel_plan_boundary_${boundaryKind}`;
     return {
@@ -810,9 +824,50 @@ export function createFrontendToursController(ctx) {
     };
   }
 
+  function presentationBoundaryDay(boundaryService, boundaryKind, dayNumber) {
+    const fallbackTitle = boundaryKind === "departure"
+      ? frontendT("booking.travel_plan.departure", "Departure")
+      : frontendT("booking.travel_plan.arrival", "Arrival");
+    const sourceTitle = resolveTravelPlanField(boundaryService, "title");
+    return {
+      id: `travel_plan_boundary_${boundaryKind}_day`,
+      day_number: dayNumber,
+      title: sourceTitle || fallbackTitle,
+      title_i18n: boundaryService?.title_i18n && typeof boundaryService.title_i18n === "object" && !Array.isArray(boundaryService.title_i18n)
+        ? { ...boundaryService.title_i18n }
+        : {},
+      services: [presentationBoundaryService(boundaryService, boundaryKind)],
+      notes: "",
+      notes_i18n: {},
+      _presentation_source: "boundary_logistics"
+    };
+  }
+
+  function renumberPresentationDays(days) {
+    return (Array.isArray(days) ? days : []).map((day, index) => ({
+      ...day,
+      day_number: index + 1
+    }));
+  }
+
   function composeBoundaryServiceIntoDays(days, boundaryService, boundaryKind) {
-    if (!Array.isArray(days) || !days.length) return Array.isArray(days) ? days : [];
+    if (!Array.isArray(days)) return [];
     if (!boundaryService || boundaryService.enabled === false || !boundaryServiceHasPresentationContent(boundaryService)) return days;
+    if (boundaryAlreadyComposedIntoDays(days, boundaryService, boundaryKind)) return renumberPresentationDays(days);
+    const attachTo = boundaryAttachTo(boundaryService, boundaryKind);
+    if (boundaryKind === "arrival" && attachTo === "before_first_day") {
+      return renumberPresentationDays([
+        presentationBoundaryDay(boundaryService, boundaryKind, 1),
+        ...days
+      ]);
+    }
+    if (boundaryKind === "departure" && attachTo === "after_last_day") {
+      return renumberPresentationDays([
+        ...days,
+        presentationBoundaryDay(boundaryService, boundaryKind, days.length + 1)
+      ]);
+    }
+    if (!days.length) return days;
     const targetIndex = boundaryKind === "departure" ? days.length - 1 : 0;
     const targetDay = days[targetIndex];
     if (dayAlreadyContainsBoundaryService(targetDay, boundaryService, boundaryKind)) return days;
@@ -870,7 +925,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function tourDurationDayCount(trip) {
-    return activeTourPlanDays(trip).length
+    return presentationTourPlanDays(trip, activeTourPlanDays(trip)).length
       || Math.max(0, Number.parseInt(trip?.travel_plan_day_count, 10) || 0)
       || Math.max(0, Number.parseInt(trip?.duration_days, 10) || 0);
   }
@@ -940,10 +995,11 @@ export function createFrontendToursController(ctx) {
     const onePagerExperienceHighlights = Array.isArray(source.one_pager_experience_highlights)
       ? source.one_pager_experience_highlights
       : (Array.isArray(travelPlan.one_pager_experience_highlights) ? travelPlan.one_pager_experience_highlights : []);
+    const presentationDays = presentationTourPlanDays({ travel_plan: travelPlan }, Array.isArray(travelPlan.days) ? travelPlan.days : []);
     return {
       title: source.title ?? trip?.title,
       travel_plan: travelPlan,
-      travel_plan_day_count: Array.isArray(travelPlan.days) ? travelPlan.days.length : 0,
+      travel_plan_day_count: presentationDays.length,
       has_travel_plan_details: Array.isArray(travelPlan.days) && travelPlan.days.length > 0,
       ...(onePagerPdfUrl ? { one_pager_pdf_url: onePagerPdfUrl } : {}),
       ...(onePagerExperienceHighlights.length ? { one_pager_experience_highlights: onePagerExperienceHighlights } : {})

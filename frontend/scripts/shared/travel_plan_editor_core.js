@@ -535,12 +535,27 @@ export function createBookingTravelPlanModule(ctx) {
     return String(value || "").trim().toLowerCase() === "departure" ? "departure" : "arrival";
   }
 
-  function defaultTravelPlanBoundaryPresentation(boundaryKind) {
+  function normalizeTravelPlanBoundaryPlacement(value, boundaryKind, fallback = "") {
     const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    const normalized = String(value || fallback || "").trim().toLowerCase();
+    if (normalizedBoundaryKind === "departure") {
+      return normalized === "after_last_day" ? "after_last_day" : "last_day";
+    }
+    return normalized === "before_first_day" ? "before_first_day" : "first_day";
+  }
+
+  function defaultTravelPlanBoundaryPresentation(boundaryKind, placement = "") {
+    const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    const normalizedPlacement = normalizeTravelPlanBoundaryPlacement(placement, normalizedBoundaryKind);
     return {
-      attach_to: normalizedBoundaryKind === "departure" ? "last_day" : "first_day",
+      attach_to: normalizedPlacement,
       position: normalizedBoundaryKind === "departure" ? "end" : "start"
     };
+  }
+
+  function travelPlanBoundarySelectionValue(item, boundaryKind) {
+    if (!item || item.enabled !== true) return "none";
+    return normalizeTravelPlanBoundaryPlacement(item?.presentation?.attach_to, boundaryKind);
   }
 
   function normalizeTravelPlanBoundaryDraft(source, boundaryKind) {
@@ -557,7 +572,7 @@ export function createBookingTravelPlanModule(ctx) {
       airport_code: String(raw.airport_code || "").trim(),
       from_label: String(raw.from_label || "").trim(),
       to_label: String(raw.to_label || "").trim(),
-      presentation: defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind)
+      presentation: defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind, raw?.presentation?.attach_to)
     };
     if (!allowTiming) {
       next.timing_kind = "label";
@@ -1991,16 +2006,37 @@ export function createBookingTravelPlanModule(ctx) {
       : bookingT("booking.travel_plan.arrival_details", "Arrival Details");
   }
 
+  function boundaryPlacementOptions(boundaryKind, selectedValue) {
+    const options = boundaryKind === "departure"
+      ? [
+          { value: "none", label: bookingT("booking.travel_plan.departure_none", "No departure") },
+          { value: "last_day", label: bookingT("booking.travel_plan.departure_last_day", "Departure on the last day") },
+          { value: "after_last_day", label: bookingT("booking.travel_plan.departure_after_last_day", "Departure after the last day") }
+        ]
+      : [
+          { value: "none", label: bookingT("booking.travel_plan.arrival_none", "No arrival") },
+          { value: "first_day", label: bookingT("booking.travel_plan.arrival_first_day", "Arrival on the first day") },
+          { value: "before_first_day", label: bookingT("booking.travel_plan.arrival_before_first_day", "Arrival before the first day") }
+        ];
+    return options.map((option) => (
+      `<option value="${escapeHtml(option.value)}" ${option.value === selectedValue ? "selected" : ""}>${escapeHtml(option.label)}</option>`
+    )).join("");
+  }
+
   function renderTravelPlanBoundarySection(boundaryKind) {
     const source = state.travelPlanDraft?.boundary_logistics?.[boundaryKind] || createEmptyTravelPlanBoundaryService(boundaryKind);
     const item = normalizeTravelPlanBoundaryDraft(source, boundaryKind);
     const label = boundaryLabel(boundaryKind);
+    const selectedPlacement = travelPlanBoundarySelectionValue(item, boundaryKind);
     return `
       <section class="travel-plan-boundary" data-travel-plan-boundary="${escapeHtml(boundaryKind)}">
         <div class="travel-plan-boundary__head">
-          <label class="travel-plan-boundary__toggle">
-            <input type="checkbox" data-travel-plan-boundary-field="enabled" ${item.enabled ? "checked" : ""} ${!state.permissions.canEditBooking ? "disabled" : ""} />
-            <span>${escapeHtml(label)}</span>
+          <div class="travel-plan-boundary__label">${escapeHtml(label)}</div>
+          <label class="field travel-plan-boundary__placement">
+            <span>${escapeHtml(bookingT("booking.travel_plan.boundary_mode", "Mode"))}</span>
+            <select data-travel-plan-boundary-field="placement" ${!state.permissions.canEditBooking ? "disabled" : ""}>
+              ${boundaryPlacementOptions(boundaryKind, selectedPlacement)}
+            </select>
           </label>
         </div>
         <div class="travel-plan-boundary__body">
@@ -2393,12 +2429,13 @@ export function createBookingTravelPlanModule(ctx) {
     const item = createEmptyTravelPlanBoundaryService(normalizedBoundaryKind);
     item.id = String(previous.id || item.id || "").trim();
     item.boundary_kind = normalizedBoundaryKind;
-    item.enabled = node?.querySelector('[data-travel-plan-boundary-field="enabled"]')?.checked === true;
+    const placement = String(node?.querySelector('[data-travel-plan-boundary-field="placement"]')?.value || "").trim();
+    item.enabled = placement !== "none";
     item.kind = "transport";
     item.airport_code = String(node?.querySelector('[data-travel-plan-boundary-field="airport_code"]')?.value || "").trim();
     item.from_label = String(previous.from_label || "").trim();
     item.to_label = String(previous.to_label || "").trim();
-    item.presentation = defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind);
+    item.presentation = defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind, placement);
     item.timing_kind = allowTiming
       ? String(node?.querySelector('[data-travel-plan-boundary-field="timing_kind"]')?.value || previous.timing_kind || "label").trim()
       : "label";
@@ -4003,6 +4040,7 @@ export function createBookingTravelPlanModule(ctx) {
         const shouldRerender = Boolean(
           target?.matches?.('[data-travel-plan-service-field="timing_kind"]')
           || target?.matches?.('[data-travel-plan-boundary-field="timing_kind"]')
+          || target?.matches?.('[data-travel-plan-boundary-field="placement"]')
           || target?.matches?.('[data-travel-plan-service-field="kind"]')
           || target?.matches?.("[data-travel-plan-day-location-field]")
           || target?.matches?.("[data-destination-scope-destination]")

@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-14T03:01:47Z
+# 2026-05-14T05:37:08Z
 
 ---
 openapi: 3.1.0
@@ -510,6 +510,40 @@ components:
         label: border_crossing
       - value: other
         label: other
+    TravelPlanBoundaryKind:
+      type: string
+      enum:
+      - arrival
+      - departure
+      x-enum-catalog:
+      - code: arrival
+      - code: departure
+      x-enum-options:
+      - value: arrival
+        label: arrival
+      - value: departure
+        label: departure
+    TravelPlanBoundaryPlacementKind:
+      type: string
+      enum:
+      - first_day
+      - last_day
+      - before_first_day
+      - after_last_day
+      x-enum-catalog:
+      - code: first_day
+      - code: last_day
+      - code: before_first_day
+      - code: after_last_day
+      x-enum-options:
+      - value: first_day
+        label: first_day
+      - value: last_day
+        label: last_day
+      - value: before_first_day
+        label: before_first_day
+      - value: after_last_day
+        label: after_last_day
     PaymentStatus:
       type: string
       enum:
@@ -4059,7 +4093,7 @@ components:
       - position
       properties:
         attach_to:
-          type: string
+          "$ref": "#/components/schemas/TravelPlanBoundaryPlacementKind"
         position:
           type: string
     TravelPlanBoundaryService:
@@ -4073,7 +4107,7 @@ components:
         id:
           type: string
         boundary_kind:
-          type: string
+          "$ref": "#/components/schemas/TravelPlanBoundaryKind"
         enabled:
           type: boolean
           nullable: true

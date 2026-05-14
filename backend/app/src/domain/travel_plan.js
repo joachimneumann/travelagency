@@ -277,16 +277,31 @@ function normalizeBoundaryKind(value, fallback = "") {
   return TRAVEL_PLAN_BOUNDARY_KINDS.has(normalized) ? normalized : fallback;
 }
 
+function defaultBoundaryAttachTo(boundaryKind) {
+  return boundaryKind === "departure" ? "last_day" : "first_day";
+}
+
+function defaultBoundaryPosition(boundaryKind) {
+  return boundaryKind === "departure" ? "end" : "start";
+}
+
+function normalizeBoundaryAttachTo(value, boundaryKind) {
+  const normalizedBoundaryKind = normalizeBoundaryKind(boundaryKind);
+  const normalized = normalizeText(value).toLowerCase();
+  if (normalizedBoundaryKind === "departure") {
+    return normalized === "after_last_day" ? "after_last_day" : "last_day";
+  }
+  return normalized === "before_first_day" ? "before_first_day" : "first_day";
+}
+
 function normalizeTravelPlanBoundaryPresentation(value, boundaryKind) {
   const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
   const normalizedBoundaryKind = normalizeBoundaryKind(boundaryKind);
-  const defaultAttachTo = normalizedBoundaryKind === "departure" ? "last_day" : "first_day";
-  const defaultPosition = normalizedBoundaryKind === "departure" ? "end" : "start";
   const attachTo = normalizeText(source.attach_to);
   const position = normalizeText(source.position);
   return {
-    attach_to: attachTo === "last_day" || attachTo === "first_day" ? attachTo : defaultAttachTo,
-    position: position === "end" || position === "start" ? position : defaultPosition
+    attach_to: attachTo ? normalizeBoundaryAttachTo(attachTo, normalizedBoundaryKind) : defaultBoundaryAttachTo(normalizedBoundaryKind),
+    position: position === "end" || position === "start" ? position : defaultBoundaryPosition(normalizedBoundaryKind)
   };
 }
 
@@ -511,6 +526,12 @@ function boundaryServiceTargetAlreadyContains(day, boundaryService, boundaryKind
   });
 }
 
+function boundaryAlreadyComposedIntoDays(days, boundaryService, boundaryKind) {
+  return (Array.isArray(days) ? days : []).some((day) => (
+    boundaryServiceTargetAlreadyContains(day, boundaryService, boundaryKind)
+  ));
+}
+
 function presentationBoundaryService(service, boundaryKind) {
   const source = service && typeof service === "object" && !Array.isArray(service) ? service : {};
   const sourceId = normalizeText(source.id) || `travel_plan_boundary_${boundaryKind}`;
@@ -524,11 +545,52 @@ function presentationBoundaryService(service, boundaryKind) {
   };
 }
 
+function presentationBoundaryDay(boundaryService, boundaryKind, dayNumber) {
+  const source = boundaryService && typeof boundaryService === "object" && !Array.isArray(boundaryService)
+    ? boundaryService
+    : {};
+  const fallbackTitle = boundaryKind === "departure" ? "Departure" : "Arrival";
+  return {
+    id: `travel_plan_boundary_${boundaryKind}_day`,
+    day_number: dayNumber,
+    title: normalizeOptionalText(source.title) || fallbackTitle,
+    title_i18n: source.title_i18n && typeof source.title_i18n === "object" && !Array.isArray(source.title_i18n)
+      ? { ...source.title_i18n }
+      : {},
+    services: [presentationBoundaryService(boundaryService, boundaryKind)],
+    notes: null,
+    notes_i18n: {},
+    _presentation_source: "boundary_logistics"
+  };
+}
+
+function renumberPresentationDays(days) {
+  return (Array.isArray(days) ? days : []).map((day, index) => ({
+    ...day,
+    day_number: index + 1
+  }));
+}
+
 function composeBoundaryIntoDays(days, boundaryService, boundaryKind) {
-  if (!Array.isArray(days) || !days.length) return days;
+  if (!Array.isArray(days)) return days;
   if (!boundaryService || boundaryService.enabled === false || !boundaryServiceHasPresentationContent(boundaryService)) {
     return days;
   }
+  if (boundaryAlreadyComposedIntoDays(days, boundaryService, boundaryKind)) return renumberPresentationDays(days);
+  const attachTo = normalizeTravelPlanBoundaryPresentation(boundaryService.presentation, boundaryKind).attach_to;
+  if (boundaryKind === "arrival" && attachTo === "before_first_day") {
+    return renumberPresentationDays([
+      presentationBoundaryDay(boundaryService, boundaryKind, 1),
+      ...days
+    ]);
+  }
+  if (boundaryKind === "departure" && attachTo === "after_last_day") {
+    return renumberPresentationDays([
+      ...days,
+      presentationBoundaryDay(boundaryService, boundaryKind, days.length + 1)
+    ]);
+  }
+  if (!days.length) return days;
   const targetIndex = boundaryKind === "departure" ? days.length - 1 : 0;
   const targetDay = days[targetIndex];
   if (boundaryServiceTargetAlreadyContains(targetDay, boundaryService, boundaryKind)) return days;

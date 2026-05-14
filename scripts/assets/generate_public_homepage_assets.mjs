@@ -2037,7 +2037,7 @@ async function generateTourAssets({
       const detailVersion = versionTokenForContent(detailSource);
       await writeFile(detailOutputPath, detailSource, "utf8");
       const detailsUrl = buildVersionedGeneratedDataUrl(detailFilename, detailVersion);
-      localizedItems.push(publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl, seoSlug));
+      localizedItems.push(publicHomepageTourListItem(readModel, presentationTravelPlan, pictures, detailsUrl, seoSlug));
       localizedSeoItems.push({
         ...readModel,
         seo_slug: seoSlug,

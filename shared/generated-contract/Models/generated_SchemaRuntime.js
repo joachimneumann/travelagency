@@ -3938,6 +3938,25 @@
 },
   FIELD_125: {
   "kind": "enum",
+  "typeName": "TravelPlanBoundaryKind",
+  "isArray": false,
+  "enumValues": [
+    "arrival",
+    "departure"
+  ],
+  "options": [
+    {
+      "value": "arrival",
+      "label": "arrival"
+    },
+    {
+      "value": "departure",
+      "label": "departure"
+    }
+  ]
+},
+  FIELD_126: {
+  "kind": "enum",
   "typeName": "TravelPlanTimingKind",
   "isArray": false,
   "enumValues": [
@@ -3965,22 +3984,22 @@
     }
   ]
 },
-  FIELD_126: {
+  FIELD_127: {
   "kind": "transport",
   "typeName": "TravelPlanServiceImage",
   "isArray": false
 },
-  FIELD_127: {
+  FIELD_128: {
   "kind": "transport",
   "typeName": "TravelPlanBoundaryPresentation",
   "isArray": false
 },
-  FIELD_128: {
+  FIELD_129: {
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImage",
   "isArray": false
 },
-  FIELD_129: {
+  FIELD_130: {
   "kind": "enum",
   "typeName": "OfferPaymentTermKind",
   "isArray": false,
@@ -4004,37 +4023,66 @@
     }
   ]
 },
-  FIELD_130: {
+  FIELD_131: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentAmountSpec",
   "isArray": false
 },
-  FIELD_131: {
+  FIELD_132: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentDueRule",
   "isArray": false
 },
-  FIELD_132: {
+  FIELD_133: {
   "kind": "transport",
   "typeName": "TravelPlanServiceImageSourceAttribution",
   "isArray": false
 },
-  FIELD_133: {
+  FIELD_134: {
   "kind": "transport",
   "typeName": "TravelPlanServiceImageFocalPoint",
   "isArray": false
 },
-  FIELD_134: {
+  FIELD_135: {
+  "kind": "enum",
+  "typeName": "TravelPlanBoundaryPlacementKind",
+  "isArray": false,
+  "enumValues": [
+    "first_day",
+    "last_day",
+    "before_first_day",
+    "after_last_day"
+  ],
+  "options": [
+    {
+      "value": "first_day",
+      "label": "first_day"
+    },
+    {
+      "value": "last_day",
+      "label": "last_day"
+    },
+    {
+      "value": "before_first_day",
+      "label": "before_first_day"
+    },
+    {
+      "value": "after_last_day",
+      "label": "after_last_day"
+    }
+  ]
+},
+  FIELD_136: {
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImageSourceAttribution",
   "isArray": false
 },
-  FIELD_135: {
+  FIELD_137: {
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImageFocalPoint",
   "isArray": false
 },
-  FIELD_136: {
+  FIELD_138: {
   "kind": "enum",
   "typeName": "OfferPaymentAmountMode",
   "isArray": false,
@@ -4058,7 +4106,7 @@
     }
   ]
 },
-  FIELD_137: {
+  FIELD_139: {
   "kind": "enum",
   "typeName": "OfferPaymentDueType",
   "isArray": false,
