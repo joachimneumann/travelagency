@@ -13,7 +13,7 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-05-13T14:06:45.071Z",
+  "updated_at": "2026-05-14T04:39:54.152Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
@@ -23,66 +23,81 @@
       "travel_plan_service_image_961feeff-81da-44e0-ae8e-0a5ffd6055c6",
       "travel_plan_service_image_4037a8ce-2c5f-4522-b7b1-ccc913c82370",
       "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178",
-      "travel_plan_service_image_a9337be8-4099-49d6-a510-d8493068fe3c",
       "travel_plan_service_image_847ae6d4-5c63-4d17-b7a4-fd3b84a64b93"
     ],
     "tour_card_primary_image_id": "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
-    "one_pager_hero_image_id": "travel_plan_service_image_a9337be8-4099-49d6-a510-d8493068fe3c",
     "one_pager_image_ids": [
       "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178",
       "travel_plan_service_image_56be8279-c524-4b62-a072-184337ddb334",
       "travel_plan_service_image_4037a8ce-2c5f-4522-b7b1-ccc913c82370",
       "travel_plan_service_image_18824d49-06de-4da9-aab9-a1998cc3637e"
     ],
+    "boundary_logistics": {
+      "arrival": {
+        "id": "travel_plan_boundary_arrival_6e0ddc28-5905-4436-8847-a1b77dcb3466",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Phu Quoc Airport welcome",
+        "title_i18n": {},
+        "details": "Arrive on Phu Quoc and meet your driver for the first island visits after airport pickup.",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "arrival",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "first_day",
+          "position": "start"
+        }
+      },
+      "departure": {
+        "id": "travel_plan_boundary_departure_e085f412-84d8-42fa-9e3e-0a1800613744",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Phu Quoc Airport farwell",
+        "title_i18n": {},
+        "details": "We will drop you off at the airport in time",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "departure",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "last_day",
+          "position": "end"
+        }
+      }
+    },
     "days": [
       {
         "id": "travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92",
         "day_number": 1,
         "title": "Temples, prison and beach",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "experience_highlight_ids": [
           "beaches_islands"
         ],
         "services": [
-          {
-            "id": "travel_plan_service_abdee124-c984-4813-aae9-cea38dd11c85",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "Phu Quoc Airport welcome",
-            "title_i18n": {},
-            "details": "Arrive on Phu Quoc and meet your driver for the first island visits after airport pickup.",
-            "details_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_a9337be8-4099-49d6-a510-d8493068fe3c",
-              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-01-phu-quoc-airport-welcome.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": true,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-05-13T00:31:09.964Z"
-            }
-          },
           {
             "id": "travel_plan_service_82fc71fa-1066-4a3d-a8f3-004293542098",
             "timing_kind": "label",
@@ -96,8 +111,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -131,8 +144,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -166,8 +177,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -201,8 +210,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -232,8 +239,6 @@
         "day_number": 2,
         "title": "VinWonders and Grand World",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -253,8 +258,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -288,8 +291,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -319,8 +320,6 @@
         "day_number": 3,
         "title": "Islands and Sunset Town",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_baf76224-bda3-44fd-bd0a-9c098626f9b3",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -340,8 +339,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -375,8 +372,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -404,10 +399,8 @@
       {
         "id": "travel_plan_day_18bacfad-0f7f-49d8-8295-8af767ec3a40",
         "day_number": 4,
-        "title": "Crafts, Bun Quay and farewell",
+        "title": "Crafts, Bun Quay",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -427,8 +420,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -450,7 +441,7 @@
             }
           }
         ],
-        "notes": "Close the island route with local temples, traditional craft stops, Bun Quay noodles and an easy airport transfer.",
+        "notes": "Close the island route with local temples, traditional craft stops, Bun Quay noodles.",
         "notes_i18n": {}
       }
     ],

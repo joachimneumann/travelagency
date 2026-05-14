@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-09T03:29:39.112Z",
-  "updated_at": "2026-05-13T14:50:42.639Z",
+  "updated_at": "2026-05-14T04:32:25.115Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
@@ -32,11 +32,65 @@
     "tour_card_primary_image_id": "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
     "one_pager_hero_image_id": "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
     "one_pager_image_ids": [],
+    "boundary_logistics": {
+      "arrival": {
+        "id": "travel_plan_boundary_arrival_15ffa09c-7a87-44f2-9d38-7a05a9eead75",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Airport Pickup",
+        "title_i18n": {},
+        "details": "You will be picked up at the airport and we transfer you to Sapa.",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "arrival",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "first_day",
+          "position": "start"
+        }
+      },
+      "departure": {
+        "id": "travel_plan_boundary_departure_7dd364a7-f338-4460-9a4e-c1fa69315509",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Airport Drop Off",
+        "title_i18n": {},
+        "details": "You will end the northern journey in Hanoi after many days of highland passes, misty towns, caves, temples and karst viewpoints.",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "departure",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "last_day",
+          "position": "end"
+        }
+      }
+    },
     "days": [
       {
         "id": "travel_plan_day_bde5a92b-64be-4e98-bd3c-3ec97881766b",
         "day_number": 1,
-        "title": "Arrival and road to Sapa",
+        "title": "Sapa",
         "title_i18n": {},
         "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
@@ -53,7 +107,7 @@
             "kind": "other",
             "title": "Sapa town",
             "title_i18n": {},
-            "details": "Arrive in Sapa, the mountain town known for terraces, mist and views toward the Hoang Lien Son range.",
+            "details": "Sapa, the mountain town known for terraces, mist and views toward the Hoang Lien Son range.",
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
@@ -78,7 +132,7 @@
             }
           }
         ],
-        "notes": "Begin with airport pickup and a private transfer into the northern mountains, where Sapa's cooler air and misty scenery set the tone.",
+        "notes": "Sapa in the northern mountains is awaiting you with its cooler air and misty scenery",
         "notes_i18n": {}
       },
       {
@@ -664,20 +718,6 @@
           }
         ],
         "notes": "Before returning to Hanoi, connect Ninh Binh's ancient capital history with the scale and calm of Bai Dinh Pagoda.",
-        "notes_i18n": {}
-      },
-      {
-        "id": "travel_plan_day_043f0985-1102-486c-a192-43a1d15684b7",
-        "day_number": 8,
-        "title": "Hanoi farewell",
-        "title_i18n": {},
-        "primary_location_id": "place_hanoi",
-        "secondary_location_id": null,
-        "experience_highlight_ids": [
-          "city_life"
-        ],
-        "services": [],
-        "notes": "End the northern journey in Hanoi after eight days of highland passes, misty towns, caves, temples and karst viewpoints.",
         "notes_i18n": {}
       }
     ],

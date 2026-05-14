@@ -15,7 +15,7 @@
   "seasonality_end_month": "apr",
   "priority": 100,
   "created_at": "2026-04-09T04:30:04.537Z",
-  "updated_at": "2026-05-13T14:04:05.400Z",
+  "updated_at": "2026-05-14T05:04:27.480Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_6b1cce87-be10-4851-91e5-e3366253493c",
@@ -39,55 +39,72 @@
       "travel_plan_service_image_f2324210-3164-43c0-a6ec-4f1537512d27",
       "travel_plan_service_image_dfcae598-3c21-4625-8b21-d6798421dcf0"
     ],
+    "boundary_logistics": {
+      "arrival": {
+        "id": "travel_plan_boundary_arrival_101885cb-1064-4d98-b33c-bcf10886bf47",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Hotel arrival transfer",
+        "title_i18n": {},
+        "details": "Meet your driver on arrival and transfer to the hotel before starting the first Ho Chi Minh City visits.",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "arrival",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "first_day",
+          "position": "start"
+        }
+      },
+      "departure": {
+        "id": "travel_plan_boundary_departure_46a9ddfc-4e98-4fc8-984e-c98283d38f49",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_label_i18n": {},
+        "time_point": null,
+        "kind": "transport",
+        "title": "Departure drop off",
+        "title_i18n": {},
+        "details": "Travel onward for airport drop-off at the end of the Ho Chi Minh City, Tay Ninh and Mui Ne journey",
+        "details_i18n": {},
+        "image_subtitle": null,
+        "image_subtitle_i18n": {},
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "departure",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "last_day",
+          "position": "end"
+        }
+      }
+    },
     "days": [
       {
         "id": "travel_plan_day_e21f4f02-b0a4-4d74-816d-b5e0b24db279",
         "day_number": 1,
         "title": "Saigon icons and markets",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
         "experience_highlight_ids": [
           "iconic_landmarks"
         ],
         "services": [
-          {
-            "id": "travel_plan_service_826c564e-02ca-4afe-a5bc-4cecddf09cbb",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "Hotel arrival transfer",
-            "title_i18n": {},
-            "details": "Meet your driver on arrival and transfer to the hotel before starting the first Ho Chi Minh City visits.",
-            "details_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_3f79abd1-5f28-4211-97e3-e102f1993e4e",
-              "storage_path": "/public/v1/tour-images/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22/travel-plan-services/day-01-hotel-arrival-transfer.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-05-13T09:08:28.876Z"
-            }
-          },
           {
             "id": "travel_plan_service_a63f1403-6deb-4acd-afdb-1bf3be12609a",
             "timing_kind": "label",
@@ -101,8 +118,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -136,8 +151,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -171,8 +184,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -206,8 +217,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -229,7 +238,7 @@
             }
           }
         ],
-        "notes": "Arrive in Ho Chi Minh City and begin with green space, market color, colonial architecture and the evening life of Nguyen Hue Walking Street.",
+        "notes": "Ho Chi Minh City and surprises with green spaces, colorful markets, colonial architecture and the evening life of Nguyen Hue Walking Street.",
         "notes_i18n": {}
       },
       {
@@ -237,8 +246,6 @@
         "day_number": 2,
         "title": "Ba Den Mountain",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_0612b13f-6f41-4bbc-9bf7-5e361bf9a4aa",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -258,8 +265,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -289,8 +294,6 @@
         "day_number": 3,
         "title": "Saigon history to Mui Ne",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_d273e209-f56a-4dc6-ae33-5b23e67bbdbf",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -310,8 +313,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -345,8 +346,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -380,8 +379,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -415,8 +412,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -446,8 +441,6 @@
         "day_number": 4,
         "title": "Mui Ne dunes and coast",
         "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -467,8 +460,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -502,8 +493,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -537,8 +526,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -572,8 +559,6 @@
             "details_i18n": {},
             "image_subtitle": null,
             "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
@@ -596,58 +581,6 @@
           }
         ],
         "notes": "Spend the day with Mui Ne's sandy stream, fishing village, red dunes and a winery-style castle, giving the coast both local life and playful scenery.",
-        "notes_i18n": {}
-      },
-      {
-        "id": "travel_plan_day_b2d72111-87a3-4ff7-9b72-7c3289374955",
-        "day_number": 5,
-        "title": "Mui Ne farewell",
-        "title_i18n": {},
-        "overnight_location": null,
-        "overnight_location_i18n": {},
-        "primary_location_id": "place_a3cb234e-27ec-4560-b0bc-780c86ed45d5",
-        "secondary_location_id": null,
-        "experience_highlight_ids": [
-          "beaches_islands"
-        ],
-        "services": [
-          {
-            "id": "travel_plan_service_d0ddb675-b94a-49e0-8e54-e2e3d809a29c",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "Airport drop-off",
-            "title_i18n": {},
-            "details": "Travel onward for airport drop-off at the end of the Ho Chi Minh City, Tay Ninh and Mui Ne journey.",
-            "details_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "location": null,
-            "location_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_0cd02c05-0571-482b-be3f-0bcdc464a749",
-              "storage_path": "/public/v1/tour-images/tour_67b333c8-0eb7-4cd2-a203-13a97c382b22/travel-plan-services/day-05-airport-drop-off.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-04-28T02:40:58.471Z"
-            }
-          }
-        ],
-        "notes": "Close the five-day route with the return journey and airport send-off after Saigon, Tay Ninh and Phan Thiet highlights.",
         "notes_i18n": {}
       }
     ],
