@@ -14,7 +14,7 @@
   "seasonality_end_month": "oct",
   "priority": 97,
   "created_at": "2026-04-06T02:54:41.519Z",
-  "updated_at": "2026-05-14T05:14:05.060Z",
+  "updated_at": "2026-05-14T06:12:42.775Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
@@ -653,41 +653,7 @@
         "experience_highlight_ids": [
           "city_life"
         ],
-        "services": [
-          {
-            "id": "travel_plan_service_d82c1d9f-d49c-431a-be8e-56cff8fa6e25",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_label_i18n": {},
-            "time_point": null,
-            "kind": "other",
-            "title": "Airport transfer",
-            "title_i18n": {},
-            "details": "After checkout and a final shopping stop, continue to the airport for your departure from Da Nang.",
-            "details_i18n": {},
-            "image_subtitle": null,
-            "image_subtitle_i18n": {},
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_4f0cd716-9c1d-43ec-813d-6b8ca103e916",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/day-05-airport-transfer.webp",
-              "caption": null,
-              "caption_i18n": {},
-              "alt_text": null,
-              "alt_text_i18n": {},
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-04-28T07:39:38.955Z"
-            }
-          }
-        ],
+        "services": [],
         "notes": "Use this day shopping and souvenir stops.",
         "notes_i18n": {}
       }
