@@ -3902,6 +3902,11 @@ test("tour card images are selected from travel-plan service images", async () =
     /node "\$SCRIPT_DIR\/create_all_one_pagers\.mjs" "\$\{ONE_PAGER_ARGS\[@\]\}"/,
     "Tour matrix publishing should generate the one-pager PDF matrix through the shared batch renderer"
   );
+  assert.match(
+    onePagerScriptSource,
+    /function isPublishedOnWebpage\(tour\) \{[\s\S]*published_on_webpage === true[\s\S]*skippedUnpublishedTours[\s\S]*tours = tours\.filter\(isPublishedOnWebpage\)/,
+    "Batch one-pager PDFs should render only tours that are published on the web page"
+  );
   assert.doesNotMatch(
     `${homepageGeneratorSource}\n${onePagerScriptSource}`,
     /sourceTextFromLocalizedValue|localizedObjectText|applyPublishedTranslationToLocalizedMap/,

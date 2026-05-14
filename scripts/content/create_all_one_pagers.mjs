@@ -213,6 +213,10 @@ function safeArray(value) {
   return Array.isArray(value) ? value : [];
 }
 
+function isPublishedOnWebpage(tour) {
+  return tour?.published_on_webpage === true;
+}
+
 function slug(value) {
   return normalizeText(value)
     .normalize("NFKD")
@@ -738,6 +742,13 @@ async function main() {
   if (options.tours.size) {
     tours = tours.filter((tour) => options.tours.has(tour.id));
   }
+  const skippedUnpublishedTours = tours
+    .filter((tour) => !isPublishedOnWebpage(tour))
+    .map((tour) => ({
+      id: tour.id,
+      title: tourTitleForSort(tourHelpers, tour)
+    }));
+  tours = tours.filter(isPublishedOnWebpage);
 
   const skippedTours = [];
   const eligibleTours = [];
@@ -763,7 +774,10 @@ async function main() {
     tours = tours.slice(0, options.limit);
   }
   if (!tours.length) {
-    throw new Error(`No tours found to render with at least ${minOnePagerImageCount} usable images.`);
+    throw new Error(`No published tours found to render with at least ${minOnePagerImageCount} usable images.`);
+  }
+  if (skippedUnpublishedTours.length) {
+    console.log(`Skipped ${skippedUnpublishedTours.length} tours not published on the web page.`);
   }
   if (skippedTours.length) {
     console.log(`Skipped ${skippedTours.length} tours with fewer than ${minOnePagerImageCount} usable images.`);
@@ -776,6 +790,7 @@ async function main() {
     matrix_path: options.matrixOutputPath,
     languages: options.languages,
     min_one_pager_image_count: minOnePagerImageCount,
+    skipped_unpublished_tours: skippedUnpublishedTours,
     skipped_tours: skippedTours,
     tours: []
   };
