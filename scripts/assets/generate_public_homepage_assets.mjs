@@ -7,6 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { createTravelPlanHelpers } from "../../backend/app/src/domain/travel_plan.js";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
+import { createTourVariantHelpers } from "../../backend/app/src/domain/tour_variants.js";
 import {
   buildDestinationScopeCatalogResponse,
   countryCodeToTourDestinationCode,
@@ -50,6 +51,11 @@ const TOURS_ROOT = normalizeText(
   || process.env.TOURS_DIR
   || process.env.TOURS_ROOT
 ) || path.join(CONTENT_ROOT, "tours");
+const TOUR_VARIANTS_ROOT = normalizeText(
+  process.env.PUBLIC_HOMEPAGE_TOUR_VARIANTS_ROOT
+  || process.env.TOUR_VARIANTS_DIR
+  || process.env.TOUR_VARIANTS_ROOT
+) || path.join(CONTENT_ROOT, "tour_variants");
 const ATP_STAFF_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_ROOT) || path.join(CONTENT_ROOT, "atp_staff");
 const ATP_STAFF_PROFILES_PATH = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH) || path.join(ATP_STAFF_ROOT, "staff.json");
 const ATP_STAFF_PHOTOS_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR) || path.join(ATP_STAFF_ROOT, "photos");
@@ -879,6 +885,8 @@ function extractTourAssetRelativePath(imagePath, tourId) {
   if (!normalizedTourId) return "";
   const bareValue = withoutQuery.replace(/^\/+/, "");
   if (bareValue.startsWith(`${normalizedTourId}/`)) return bareValue;
+  const firstSegment = bareValue.split("/").filter(Boolean)[0] || "";
+  if (firstSegment.startsWith("tour_") && bareValue.includes("/")) return bareValue;
   return "";
 }
 
@@ -1046,9 +1054,17 @@ async function publicHomepageTourTravelPlan(
       days.push(day);
       continue;
     }
+    const daySourceTourId = normalizeText(day.source_tour_id) || tourId;
     const services = [];
     for (const service of Array.isArray(day.services) ? day.services : []) {
-      services.push(await renderPublicTourService(service));
+      services.push(await publicHomepageTourService(
+        service,
+        daySourceTourId,
+        generatedTourAssetPaths,
+        generatedTourThumbnailAssetPaths,
+        outputRoot,
+        version
+      ));
     }
     days.push({
       ...day,
@@ -1755,11 +1771,10 @@ function stripStaticImports(source, moduleSpecifiers) {
   }, String(source || ""));
 }
 
-function localizeNamedFunctionExport(source, functionName) {
-  return String(source || "").replace(
-    new RegExp(`\\bexport\\s+function\\s+${escapeRegExp(functionName)}\\b`),
-    `function ${functionName}`
-  );
+function localizeModuleExports(source) {
+  return String(source || "")
+    .replace(/^\s*export\s+\{[\s\S]*?\};?\s*$/gm, "")
+    .replace(/\bexport\s+(?=(?:async\s+)?function\b|const\b|let\b|var\b|class\b)/g, "");
 }
 
 async function writeHomepageInitialBundleScript(outputPath) {
@@ -1812,13 +1827,13 @@ async function writeHomepageInitialBundleScript(outputPath) {
     ""
   ].join("\n");
 
-  const transformedTourCustomizeSource = localizeNamedFunctionExport(tourCustomizeSource, "createTourCustomizer");
+  const transformedTourCustomizeSource = localizeModuleExports(tourCustomizeSource);
 
-  const transformedToursSource = localizeNamedFunctionExport(stripStaticImports(toursSource, [
+  const transformedToursSource = localizeModuleExports(stripStaticImports(toursSource, [
     "../../shared/js/text.js",
     "../../shared/generated/language_catalog.js",
     "./tour_customize.js"
-  ]), "createFrontendToursController");
+  ]));
 
   const transformedMainSource = stripStaticImports(mainSource, [
     "../../shared/js/text.js",
@@ -1884,6 +1899,7 @@ async function probeReelDurationSeconds(sourcePath) {
 
 async function generateTourAssets({
   toursRoot = TOURS_ROOT,
+  tourVariantsRoot = TOUR_VARIANTS_ROOT,
   outputRoot = TOUR_OUTPUT_DIR,
   frontendDataDir = FRONTEND_DATA_DIR,
   countryReferenceInfoPath = COUNTRY_REFERENCE_INFO_PATH,
@@ -1902,11 +1918,22 @@ async function generateTourAssets({
   const {
     collectTourOptions,
     normalizeTourForRead,
-    normalizeTourForStorage
+    normalizeTourForStorage,
+    canPublishTourOnWebpage
   } = tourHelpers;
+  const tourVariantHelpers = createTourVariantHelpers({
+    safeInt,
+    randomUUID: () => "",
+    normalizeMarketingTourTravelPlan,
+    normalizeTourForRead,
+    normalizeTourForStorage,
+    canPublishTourOnWebpage
+  });
 
   const tourDirectories = (await listDirectoryEntries(toursRoot)).filter((entry) => entry.isDirectory());
+  const tourVariantDirectories = (await listDirectoryEntries(tourVariantsRoot)).filter((entry) => entry.isDirectory());
   const tours = [];
+  const tourVariants = [];
   const tourRecords = [];
   const generatedTourAssetPaths = new Map();
   const generatedTourThumbnailAssetPaths = new Map();
@@ -1929,9 +1956,29 @@ async function generateTourAssets({
     tourRecords.push({ tour: normalizedTour, tourDir });
   }
 
+  for (const entry of tourVariantDirectories) {
+    const tourVariantPath = path.join(tourVariantsRoot, entry.name, "tour_variant.json");
+    let parsedTourVariant;
+    try {
+      parsedTourVariant = await readJson(tourVariantPath);
+    } catch (error) {
+      if (error?.code === "ENOENT") continue;
+      throw new Error(`Could not parse ${tourVariantPath}: ${error?.message || error}`);
+    }
+    const normalizedTourVariant = tourVariantHelpers.normalizeTourVariantForStorage(parsedTourVariant);
+    if (!normalizeText(normalizedTourVariant?.id)) {
+      throw new Error(`Tour Variant at ${tourVariantPath} is missing an id.`);
+    }
+    tourVariants.push(normalizedTourVariant);
+  }
+
   const ids = tours.map((tour) => normalizeText(tour.id));
   if (new Set(ids).size !== ids.length) {
     throw new Error("Duplicate tour ids found while generating public homepage assets.");
+  }
+  const tourVariantIds = tourVariants.map((tourVariant) => normalizeText(tourVariant.id));
+  if (new Set([...ids, ...tourVariantIds]).size !== ids.length + tourVariantIds.length) {
+    throw new Error("Duplicate tour or Tour Variant ids found while generating public homepage assets.");
   }
 
   const destinationCatalogPayload = await readJson(resolvedDestinationCatalogPath, { fallback: {} });
@@ -1959,7 +2006,30 @@ async function generateTourAssets({
       destinationCatalogPayload: storePayload
     }))
     .filter(Boolean);
-  const sortedPublicTours = [...publicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
+  const publicTourVariants = tourVariants
+    .filter((tourVariant) => tourVariant.published_on_webpage === true)
+    .filter((tourVariant) => {
+      const publication = tourVariantHelpers.validateTourVariantPublication(tourVariant, tours);
+      if (!publication.ok) {
+        console.warn("[homepage-assets] Skipping Tour Variant that cannot be published.", {
+          id: tourVariant.id,
+          issues: publication.issues
+        });
+        return false;
+      }
+      return true;
+    })
+    .map((tourVariant) => tourVariantHelpers.resolveTourVariantToTour(tourVariant, tours, { publicOnly: true }))
+    .map((tour) => normalizeTourForPublicHomepage(tour, {
+      normalizeTourForStorage,
+      destinationCatalogPayload: storePayload
+    }))
+    .filter(Boolean);
+  const allPublicTours = [
+    ...publicTours,
+    ...publicTourVariants
+  ];
+  const sortedPublicTours = [...allPublicTours].sort((left, right) => Number(right.priority || 0) - Number(left.priority || 0));
   const publishedCountryCodes = publicTourCountryCodes(sortedPublicTours);
   const destinationScopeFilters = publicTourDestinationScopeFilters(sortedPublicTours);
   const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages, {
@@ -2045,8 +2115,8 @@ async function generateTourAssets({
         travel_plan: presentationTravelPlan
       });
     }
-    const options = collectTourOptions(publicTours, { lang: normalizedLang });
-    const availableDestinations = Array.from(new Set(publicTours.flatMap((tour) => (
+    const options = collectTourOptions(allPublicTours, { lang: normalizedLang });
+    const availableDestinations = Array.from(new Set(allPublicTours.flatMap((tour) => (
       Array.isArray(tour?.destinations) ? tour.destinations : []
     ))))
       .map((code) => ({ code, label: countryDisplayName(TOUR_DESTINATION_TO_COUNTRY_CODE[normalizeTourDestinationCode(code)] || code, normalizedLang) || code }));
@@ -2095,7 +2165,7 @@ async function generateTourAssets({
   });
 
   return {
-    count: publicTours.length,
+    count: allPublicTours.length,
     languages: languages.map((lang) => normalizeTourLang(lang)),
     publishedCountryCodes,
     destinationPromiseCopy,

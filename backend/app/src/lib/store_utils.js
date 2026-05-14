@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeBookingPdfPersonalization } from "./booking_pdf_personalization.js";
 import { normalizeText } from "./text.js";
@@ -228,6 +228,7 @@ function mergeStoreSnapshot(baseStore, latestStore, nextStore) {
 export function createStoreUtils({
   dataPath,
   toursDir,
+  tourVariantsDir = "",
   tourDestinationsPath = "",
   paymentDocumentsDir,
   generatedOffersDir,
@@ -245,6 +246,7 @@ export function createStoreUtils({
   convertBookingOfferToBaseCurrency
 }) {
   const destinationCatalogPath = normalizeText(tourDestinationsPath);
+  const resolvedTourVariantsDir = normalizeText(tourVariantsDir);
 
   function initialStoreDocument() {
     return {
@@ -261,6 +263,9 @@ export function createStoreUtils({
   async function ensureStorage() {
     await mkdir(path.dirname(dataPath), { recursive: true });
     await mkdir(toursDir, { recursive: true });
+    if (resolvedTourVariantsDir) {
+      await mkdir(resolvedTourVariantsDir, { recursive: true });
+    }
     if (destinationCatalogPath) {
       await mkdir(path.dirname(destinationCatalogPath), { recursive: true });
     }
@@ -498,6 +503,14 @@ export function createStoreUtils({
     return path.join(tourFolderPath(tourId), "tour.json");
   }
 
+  function tourVariantFolderPath(tourVariantId) {
+    return path.join(resolvedTourVariantsDir, tourVariantId);
+  }
+
+  function tourVariantJsonPath(tourVariantId) {
+    return path.join(tourVariantFolderPath(tourVariantId), "tour_variant.json");
+  }
+
   async function readTours() {
     const items = [];
     const entries = await readdir(toursDir, { withFileTypes: true }).catch(() => []);
@@ -527,11 +540,55 @@ export function createStoreUtils({
     await writeQueueRef.current;
   }
 
+  async function readTourVariants() {
+    if (!resolvedTourVariantsDir) return [];
+    const items = [];
+    const entries = await readdir(resolvedTourVariantsDir, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      if (!entry.isDirectory()) continue;
+      const variantPath = path.join(resolvedTourVariantsDir, entry.name, "tour_variant.json");
+      try {
+        const raw = await readFile(variantPath, "utf8");
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object" && normalizeText(parsed.id)) {
+          items.push(parsed);
+        }
+      } catch {
+        // Ignore unreadable tour-variant folders.
+      }
+    }
+    return items;
+  }
+
+  async function persistTourVariant(tourVariant) {
+    writeQueueRef.current = writeQueueRef.current.then(async () => {
+      if (!resolvedTourVariantsDir) throw new Error("Tour variants directory is not configured");
+      const id = normalizeText(tourVariant?.id);
+      if (!id) throw new Error("Tour variant id is required");
+      await mkdir(tourVariantFolderPath(id), { recursive: true });
+      await writeFile(tourVariantJsonPath(id), `${JSON.stringify(tourVariant, null, 2)}\n`, "utf8");
+    });
+    await writeQueueRef.current;
+  }
+
+  async function deleteTourVariant(tourVariantId) {
+    writeQueueRef.current = writeQueueRef.current.then(async () => {
+      if (!resolvedTourVariantsDir) throw new Error("Tour variants directory is not configured");
+      const id = normalizeText(tourVariantId);
+      if (!id) throw new Error("Tour variant id is required");
+      await rm(tourVariantFolderPath(id), { recursive: true, force: true });
+    });
+    await writeQueueRef.current;
+  }
+
   return {
     ensureStorage,
     readStore,
     persistStore,
     readTours,
-    persistTour
+    persistTour,
+    readTourVariants,
+    persistTourVariant,
+    deleteTourVariant
   };
 }

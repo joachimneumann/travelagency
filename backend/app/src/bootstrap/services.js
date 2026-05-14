@@ -3,6 +3,7 @@ import { createPricingHelpers } from "../domain/pricing.js";
 import { createTravelPlanHelpers } from "../domain/travel_plan.js";
 import { createBookingViewHelpers } from "../domain/booking_views.js";
 import { createTourHelpers } from "../domain/tours_support.js";
+import { createTourVariantHelpers } from "../domain/tour_variants.js";
 import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
 import { createPaymentDocumentPdfWriter } from "../lib/payment_document_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
@@ -119,6 +120,7 @@ export function createBackendServices({
   const storeUtils = createStoreUtils({
     dataPath: collections.dataPath,
     toursDir: collections.toursDir,
+    tourVariantsDir: collections.tourVariantsDir,
     tourDestinationsPath: collections.tourDestinationsPath,
     paymentDocumentsDir: collections.paymentDocumentsDir,
     generatedOffersDir: collections.generatedOffersDir,
@@ -146,6 +148,7 @@ export function createBackendServices({
     readStore: storeUtils.readStore,
     persistStore: storeUtils.persistStore,
     readTours: storeUtils.readTours,
+    readTourVariants: storeUtils.readTourVariants,
     persistTour: storeUtils.persistTour,
     translationMemoryStore,
     translateEntriesWithMeta: translationClient.translateEntriesWithMeta,
@@ -187,11 +190,21 @@ export function createBackendServices({
     normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan
   });
 
+  const tourVariantHelpers = createTourVariantHelpers({
+    safeInt: support.safeInt,
+    randomUUID: support.randomUUID,
+    normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan,
+    normalizeTourForRead: tourHelpers.normalizeTourForRead,
+    normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
+    canPublishTourOnWebpage: tourHelpers.canPublishTourOnWebpage
+  });
+
   const publicSitePublishService = createPublicSitePublishService({
     repoRoot,
     manifestPath: path.join(runtime.paths?.contentRoot || path.join(repoRoot, "content"), "public-site-publish-manifest.json"),
     translationsSnapshotDir: collections.translationsSnapshotDir,
     readTours: storeUtils.readTours,
+    readTourVariants: storeUtils.readTourVariants,
     normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
     staticTranslationService,
     translationMemoryStore,
@@ -272,6 +285,7 @@ export function createBackendServices({
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
+    tourVariantHelpers,
     writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf,

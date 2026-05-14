@@ -27,3 +27,17 @@ export function buildTourCreateHref() {
   addLangParam(params);
   return params.toString() ? `marketing_tour.html?${params.toString()}` : "marketing_tour.html";
 }
+
+export function buildTourVariantEditHref(id) {
+  const params = new URLSearchParams({ id });
+  addLangParam(params);
+  return `tour_variant.html?${params.toString()}`;
+}
+
+export function buildTourVariantCreateHref(baseMarketingTourId = "") {
+  const params = new URLSearchParams();
+  const baseId = String(baseMarketingTourId || "").trim();
+  if (baseId) params.set("base_marketing_tour_id", baseId);
+  addLangParam(params);
+  return params.toString() ? `tour_variant.html?${params.toString()}` : "tour_variant.html";
+}

@@ -39,6 +39,7 @@ export function createTourHandlers(deps) {
     tourStyleCodes,
     readStore,
     readTours,
+    readTourVariants,
     persistStore,
     sendJson,
     clamp,
@@ -46,6 +47,7 @@ export function createTourHandlers(deps) {
     normalizeTourForStorage,
     normalizeTourTravelPlan,
     normalizeMarketingTourTravelPlan,
+    tourVariantHelpers,
     validateMarketingTourTravelPlanInput,
     validateBookingTravelPlanInput,
     resolveLocalizedText,
@@ -866,12 +868,44 @@ export function createTourHandlers(deps) {
     };
   }
 
+  async function readStoredTourVariants() {
+    if (typeof readTourVariants !== "function") return [];
+    return (await readTourVariants()).map((variant) => (
+      typeof tourVariantHelpers?.normalizeTourVariantForStorage === "function"
+        ? tourVariantHelpers.normalizeTourVariantForStorage(variant)
+        : variant
+    ));
+  }
+
+  async function readPublicTourLikeObjects(destinationCatalogPayload = {}) {
+    const storedTours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tourVariants = await readStoredTourVariants();
+    const publicTours = storedTours
+      .map((tour) => normalizeTourForPublicWebpage(tour, destinationCatalogPayload))
+      .filter(Boolean);
+    const publicTourVariants = typeof tourVariantHelpers?.resolveTourVariantToTour === "function"
+      ? tourVariants
+        .filter((variant) => variant.published_on_webpage === true)
+        .filter((variant) => tourVariantHelpers.validateTourVariantPublication(variant, storedTours).ok)
+        .map((variant) => tourVariantHelpers.resolveTourVariantToTour(variant, storedTours, { publicOnly: true }))
+        .map((tour) => normalizeTourForPublicWebpage(tour, destinationCatalogPayload))
+        .filter(Boolean)
+      : [];
+    return {
+      storedTours,
+      tourVariants,
+      publicTours: [
+        ...publicTours,
+        ...publicTourVariants
+      ]
+    };
+  }
+
   async function handlePublicListTours(req, res) {
     const lang = requestLang(req.url);
     const destinationCatalogPayload = await readStore();
-    const tours = await localizeMarketingToursForRead((await readTours())
-      .map((tour) => normalizeTourForPublicWebpage(tour, destinationCatalogPayload))
-      .filter(Boolean), lang);
+    const { publicTours } = await readPublicTourLikeObjects(destinationCatalogPayload);
+    const tours = await localizeMarketingToursForRead(publicTours, lang);
     const requestUrl = new URL(req.url, "http://localhost");
     const destination = normalizeTourDestinationCode(requestUrl.searchParams.get("destination"));
     const style = normalizeTourStyleCode(requestUrl.searchParams.get("style"));
@@ -1157,8 +1191,12 @@ export function createTourHandlers(deps) {
     };
   }
 
-  function publicTourById(tours, tourId, destinationCatalogPayload = {}) {
-    const tour = (Array.isArray(tours) ? tours : []).find((item) => normalizeText(item?.id) === tourId);
+  function publicTourById(tours, tourId, destinationCatalogPayload = {}, tourVariants = []) {
+    const normalizedTourId = normalizeText(tourId);
+    const storedTours = (Array.isArray(tours) ? tours : []).map((tour) => normalizeTourForStorage(tour));
+    const tour = typeof tourVariantHelpers?.resolvePublishedTourLikeById === "function"
+      ? tourVariantHelpers.resolvePublishedTourLikeById(normalizedTourId, storedTours, tourVariants, { publicOnly: true })
+      : storedTours.find((item) => normalizeText(item?.id) === normalizedTourId);
     return tour ? normalizeTourForPublicWebpage(tour, destinationCatalogPayload) : null;
   }
 
@@ -1178,7 +1216,8 @@ export function createTourHandlers(deps) {
     const selectedDays = Array.isArray(entry?.selectedDays) ? entry.selectedDays : [];
     const destinationCatalogPayload = await readStore();
     const storedTours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
-    const baseTour = publicTourById(storedTours, baseTourId, destinationCatalogPayload);
+    const tourVariants = await readStoredTourVariants();
+    const baseTour = publicTourById(storedTours, baseTourId, destinationCatalogPayload, tourVariants);
     if (!baseTour) return { ok: false, status: 404, error: "Tour not found" };
 
     const daySourcesByTourId = new Map();
@@ -1190,7 +1229,7 @@ export function createTourHandlers(deps) {
         return { ok: false, status: 400, error: "Selected days are invalid" };
       }
       if (!daySourcesByTourId.has(sourceTourId)) {
-        const publicSourceTour = publicTourById(storedTours, sourceTourId, destinationCatalogPayload);
+        const publicSourceTour = publicTourById(storedTours, sourceTourId, destinationCatalogPayload, tourVariants);
         if (!publicSourceTour) {
           return { ok: false, status: 400, error: "Selected day source is not available" };
         }
@@ -1472,8 +1511,8 @@ export function createTourHandlers(deps) {
     const lang = requestLang(req.url);
     const destinationCatalogPayload = await readStore();
     const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
-    const tour = tours.find((item) => item.id === tourId);
-    const publicTour = tour ? normalizeTourForPublicWebpage(tour, destinationCatalogPayload) : null;
+    const tourVariants = await readStoredTourVariants();
+    const publicTour = publicTourById(tours, tourId, destinationCatalogPayload, tourVariants);
     if (!publicTour) {
       sendJson(res, 404, { error: "Tour not found" });
       return;

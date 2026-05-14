@@ -30,6 +30,8 @@ content/**
 !content/tours/
 !content/tours/.gitkeep
 !content/tours/destinations.json
+!content/tour_variants/
+!content/tour_variants/.gitkeep
 
 frontend/data/generated/
 assets/generated/

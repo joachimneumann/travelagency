@@ -39,8 +39,9 @@ Backend workspace HTML pages are served statically only after Caddy verifies an
 authenticated backend session:
 
 - protected pages: `/bookings.html`, `/booking.html`, `/persons.html`,
-  `/marketing_tours.html`, `/marketing_tour.html`, `/standard-tours.html`,
-  `/standard-tour.html`, `/settings.html`, and `/emergency.html`
+  `/marketing_tours.html`, `/marketing_tour.html`, `/tour_variants.html`,
+  `/tour_variant.html`, `/standard-tours.html`, `/standard-tour.html`,
+  `/settings.html`, and `/emergency.html`
 - Caddy `forward_auth` endpoint: `/backend-access/check`
 - unauthenticated users are redirected to `/auth/login` with the requested page
   as `return_to`

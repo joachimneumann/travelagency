@@ -173,6 +173,7 @@ export function createStaticTranslationService({
   manualOverridesPath = path.join(repoRoot || "", "config", "i18n", "translation_manual_overrides.json"),
   readStore = null,
   readTours = null,
+  readTourVariants = null,
   translationMemoryStore = null,
   translateEntriesWithMeta = null,
   nowIso = () => new Date().toISOString(),
@@ -747,6 +748,16 @@ export function createStaticTranslationService({
   }
 
   function collectMarketingTourMemorySourcesFromPlan(targetSet, travelPlan) {
+    const boundaryLogistics = travelPlan?.boundary_logistics && typeof travelPlan.boundary_logistics === "object" && !Array.isArray(travelPlan.boundary_logistics)
+      ? travelPlan.boundary_logistics
+      : {};
+    for (const service of [boundaryLogistics.arrival, boundaryLogistics.departure]) {
+      if (!service || typeof service !== "object" || Array.isArray(service)) continue;
+      addSourceText(targetSet, localizedSource(service?.time_label_i18n, service?.time_label));
+      addSourceText(targetSet, localizedSource(service?.title_i18n, service?.title));
+      addSourceText(targetSet, localizedSource(service?.details_i18n, service?.details));
+      addSourceText(targetSet, localizedSource(service?.image_subtitle_i18n, service?.image_subtitle));
+    }
     const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
     for (const day of days) {
       addSourceText(targetSet, localizedSource(day?.title_i18n, day?.title));
@@ -777,6 +788,20 @@ export function createStaticTranslationService({
       collectMarketingTourMemorySourcesFromPlan(sources, tour?.travel_plan);
     }
     return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));
+  }
+
+  function tourVariantAsTranslationTour(tourVariant) {
+    if (!tourVariant || typeof tourVariant !== "object" || Array.isArray(tourVariant)) return null;
+    return {
+      title: tourVariant.title,
+      title_i18n: tourVariant.title_i18n,
+      short_description: tourVariant.short_description,
+      short_description_i18n: tourVariant.short_description_i18n,
+      travel_plan: {
+        boundary_logistics: tourVariant.boundary_logistics,
+        days: []
+      }
+    };
   }
 
   function cloneJson(value) {
@@ -858,7 +883,14 @@ export function createStaticTranslationService({
       if (typeof readTours !== "function") {
         throw apiError(500, "STATIC_TRANSLATION_MEMORY_UNAVAILABLE", "Marketing tour translation memory storage is not configured.");
       }
-      return collectMarketingTourMemorySources(await readTours());
+      const sources = new Set(collectMarketingTourMemorySources(await readTours()));
+      const tourVariants = typeof readTourVariants === "function"
+        ? (await readTourVariants()).map(tourVariantAsTranslationTour).filter(Boolean)
+        : [];
+      for (const source of collectMarketingTourMemorySources(tourVariants)) {
+        sources.add(source);
+      }
+      return sortedSourceTexts(sources);
     }
     return [];
   }

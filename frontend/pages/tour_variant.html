@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en" translate="no">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tour Variant</title>
+    <meta name="description" content="AsiaTravelPlan backend Tour Variant editor" />
+    <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png" sizes="180x180" />
+    <script>
+      {
+        const hostname = window.location.hostname;
+        const isPrivateNetworkHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(hostname);
+        const isLocalEnvironment = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname) || isPrivateNetworkHost;
+        const isStagingEnvironment = hostname === "staging.asiatravelplan.com";
+        const environmentIcon = isLocalEnvironment
+          ? { href: "/assets/img/local.small.png", sizes: "200x200" }
+          : isStagingEnvironment
+            ? { href: "/assets/img/staging.small.png", sizes: "150x150" }
+            : null;
+        const environmentAppleTouchIcon = isLocalEnvironment
+          ? { href: "/assets/img/local-home-screen-icon.png", sizes: "180x180" }
+          : isStagingEnvironment
+            ? { href: "/assets/img/staging-home-screen-icon.png", sizes: "180x180" }
+            : null;
+        if (environmentIcon) {
+          document.querySelector('link[rel="icon"][sizes="32x32"]')?.setAttribute("href", environmentIcon.href);
+          document.querySelector('link[rel="icon"][sizes="16x16"]')?.setAttribute("href", environmentIcon.href);
+        }
+        if (environmentAppleTouchIcon) {
+          const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+          appleTouchIcon?.setAttribute("href", environmentAppleTouchIcon.href);
+          appleTouchIcon?.setAttribute("sizes", environmentAppleTouchIcon.sizes);
+        }
+      }
+    </script>
+    <script>
+      if (!window.ASIATRAVELPLAN_API_BASE && ["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        window.ASIATRAVELPLAN_API_BASE = window.location.origin;
+      }
+    </script>
+    <script>
+      if (["localhost", "127.0.0.1"].includes(window.location.hostname)) {
+        const diagnosticsScript = document.createElement("script");
+        diagnosticsScript.src = "/frontend/scripts/shared/localhost_diagnostics.js";
+        document.head.append(diagnosticsScript);
+      }
+    </script>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+    <style>
+      .tour-variant-editor {
+        display: grid;
+        gap: 1.25rem;
+      }
+
+      .tour-variant-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .tour-variant-toolbar__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+      }
+
+      .tour-variant-toolbar__actions .btn {
+        min-height: 3rem;
+        padding: 0.8rem 1.6rem;
+      }
+
+      .tour-variant-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.25rem;
+        align-items: start;
+      }
+
+      .tour-variant-panel {
+        display: grid;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .tour-variant-panel h2 {
+        margin: 0;
+        font-size: var(--font-size-h3);
+      }
+
+      .tour-variant-collapsible {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .tour-variant-collapsible > summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 1rem;
+        cursor: pointer;
+        list-style: none;
+        font-size: var(--font-size-h3);
+        font-weight: 700;
+      }
+
+      .tour-variant-collapsible > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .tour-variant-collapsible > summary::after {
+        content: "";
+        width: 0.55rem;
+        height: 0.55rem;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg);
+        transition: transform 0.16s ease;
+      }
+
+      .tour-variant-collapsible[open] > summary::after {
+        transform: rotate(225deg);
+      }
+
+      .tour-variant-collapsible__body {
+        display: grid;
+        gap: 1rem;
+        padding: 0 1rem 1rem;
+      }
+
+      .tour-variant-panel--customizer {
+        overflow: hidden;
+      }
+
+      .tour-variant-customizer-heading {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 0.85rem;
+      }
+
+      .tour-variant-fields {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tour-variant-fields .field--wide {
+        grid-column: 1 / -1;
+      }
+
+      .tour-variant-style-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .tour-variant-style-grid label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.6rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-muted);
+        font-weight: 600;
+      }
+
+      .tour-variant-boundaries {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .tour-variant-boundary {
+        display: grid;
+        gap: 0.75rem;
+        padding: 0.85rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface-muted);
+      }
+
+      .tour-variant-boundary h3 {
+        margin: 0;
+        font-size: var(--font-size-ui);
+      }
+
+      .tour-variant-source-tools {
+        display: flex;
+        align-items: end;
+        gap: 0.65rem;
+      }
+
+      .tour-variant-source-tools .field {
+        min-width: min(20rem, 100%);
+      }
+
+      .tour-variant-customizer-mount {
+        min-height: 28rem;
+      }
+
+      .tour-variant-issues {
+        color: var(--danger-text);
+      }
+
+      @media (max-width: 980px) {
+        .tour-variant-grid,
+        .tour-variant-fields,
+        .tour-variant-boundaries {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 620px) {
+        .tour-variant-source-tools {
+          display: grid;
+          grid-template-columns: 1fr;
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body class="backend-page-loading--busy">
+    <div class="booking-page-overlay backend-page-loading-overlay" id="backendPageLoadingOverlay" aria-hidden="false">
+      <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
+        <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
+        <span class="booking-page-overlay__text" id="backendPageLoadingOverlayText" data-i18n-id="backend.page_loading_overlay">Loading page content. Please wait.</span>
+      </div>
+    </div>
+
+    <header class="header" id="top">
+      <div class="container header-wrap">
+        <a class="brand" id="backendHomeLink" href="bookings.html" aria-label="AsiaTravelPlan backend home">
+          <img class="brand-logo" src="/assets/generated/runtime/brand-logo.png" alt="AsiaTravelPlan" width="165" height="68" />
+        </a>
+        <div id="backendNavMount"></div>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="section">
+        <div class="container">
+          <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
+
+          <section class="backend-section tour-variant-editor">
+            <div class="tour-variant-toolbar">
+              <div>
+                <a id="tourVariantBackLink" href="tour_variants.html" class="micro">Tour Variants</a>
+                <h1 id="tourVariantHeading">Tour Variant</h1>
+              </div>
+              <div class="tour-variant-toolbar__actions">
+                <button class="btn btn-ghost" id="tourVariantReloadBtn" type="button">Reload</button>
+                <button class="btn btn-primary" id="tourVariantSaveBtn" type="button">Save</button>
+              </div>
+            </div>
+
+            <div class="tour-variant-grid">
+              <details class="tour-variant-panel tour-variant-collapsible" open>
+                <summary>Tour Variant</summary>
+                <div class="tour-variant-collapsible__body">
+                  <div class="tour-variant-fields">
+                    <div class="field">
+                      <label for="tourVariantTitle">Name</label>
+                      <input id="tourVariantTitle" type="text" />
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantPriority">Priority</label>
+                      <input id="tourVariantPriority" type="number" min="0" max="100" step="1" />
+                    </div>
+                    <div class="field field--wide">
+                      <label for="tourVariantShortDescription">Short description</label>
+                      <textarea id="tourVariantShortDescription" rows="3"></textarea>
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantSeasonStart">Season start month</label>
+                      <input id="tourVariantSeasonStart" type="text" />
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantSeasonEnd">Season end month</label>
+                      <input id="tourVariantSeasonEnd" type="text" />
+                    </div>
+                    <label class="check-row field--wide">
+                      <input id="tourVariantPublished" type="checkbox" />
+                      <span>Published on webpage</span>
+                    </label>
+                    <div class="field field--wide">
+                      <label>Styles</label>
+                      <div id="tourVariantStyles" class="tour-variant-style-grid"></div>
+                    </div>
+                  </div>
+                </div>
+              </details>
+            </div>
+
+            <details class="tour-variant-panel tour-variant-collapsible" open>
+              <summary>Arrival and Departure</summary>
+              <div class="tour-variant-collapsible__body">
+                <div class="tour-variant-boundaries">
+                  <div class="tour-variant-boundary" data-boundary="arrival">
+                    <h3>Arrival</h3>
+                    <div class="field">
+                      <label for="tourVariantArrivalMode">Mode</label>
+                      <select id="tourVariantArrivalMode">
+                        <option value="none">None</option>
+                        <option value="first_day">First day</option>
+                        <option value="before_first_day">Before first day</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantArrivalTitle">Title</label>
+                      <input id="tourVariantArrivalTitle" type="text" />
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantArrivalAirportCode">Airport code</label>
+                      <input id="tourVariantArrivalAirportCode" type="text" />
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantArrivalDetails">Details</label>
+                      <textarea id="tourVariantArrivalDetails" rows="3"></textarea>
+                    </div>
+                  </div>
+
+                  <div class="tour-variant-boundary" data-boundary="departure">
+                    <h3>Departure</h3>
+                    <div class="field">
+                      <label for="tourVariantDepartureMode">Mode</label>
+                      <select id="tourVariantDepartureMode">
+                        <option value="none">None</option>
+                        <option value="last_day">Last day</option>
+                        <option value="after_last_day">After last day</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantDepartureTitle">Title</label>
+                      <input id="tourVariantDepartureTitle" type="text" />
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantDepartureAirportCode">Airport code</label>
+                      <input id="tourVariantDepartureAirportCode" type="text" />
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantDepartureDetails">Details</label>
+                      <textarea id="tourVariantDepartureDetails" rows="3"></textarea>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </details>
+
+            <div class="tour-variant-panel tour-variant-panel--customizer">
+              <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="shared/generated/language_catalog.global.js"></script>
+    <script src="frontend/scripts/shared/backend_i18n.js"></script>
+    <script type="module">
+      import { mountBackendNav } from "./frontend/scripts/shared/nav.js";
+      await (window.__BACKEND_I18N_PROMISE || Promise.resolve());
+      mountBackendNav(document.getElementById("backendNavMount"), { currentSection: "tour_variants" });
+    </script>
+    <script type="module" src="frontend/scripts/pages/tour_variant.js"></script>
+  </body>
+</html>

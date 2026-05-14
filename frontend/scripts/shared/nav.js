@@ -163,6 +163,8 @@ export function resolveBackendSectionHref(section) {
   const pathname =
     normalizedSection === "tours"
       ? "marketing_tours.html"
+      : normalizedSection === "tour_variants"
+        ? "tour_variants.html"
       : normalizedSection === "settings"
         ? "settings.html"
       : normalizedSection === "translations"
@@ -188,6 +190,7 @@ function applyNavPermissions(mount, roles) {
   const resolvedRoles = Array.isArray(roles) ? roles : [];
   const canReadBookings = hasAnyRole(resolvedRoles, "atp_admin", "atp_manager", "atp_accountant", "atp_staff");
   const canReadTours = hasAnyRole(resolvedRoles, "atp_admin", "atp_accountant", "atp_tour_editor");
+  const canReadTourVariants = hasAnyRole(resolvedRoles, "atp_tour_editor");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin");
   const canReadTranslations = hasAnyRole(resolvedRoles, "atp_admin");
   const canPublishPublicSite = hasAnyRole(resolvedRoles, "atp_admin", "atp_tour_editor");
@@ -198,6 +201,7 @@ function applyNavPermissions(mount, roles) {
       const visible =
         (section === "bookings" && canReadBookings) ||
         (section === "tours" && canReadTours) ||
+        (section === "tour_variants" && canReadTourVariants) ||
         (section === "translations" && canReadTranslations) ||
         (section === "settings" && canReadSettings);
       button.hidden = !visible;
@@ -548,6 +552,7 @@ export function mountBackendNav(mount, options = {}) {
           ${buildSectionButton("settings", backendT("nav.settings", "Reports and Settings"), { type: "image", src: "assets/img/profile_person.png", size: "large" })}
           ${buildSectionButton("translations", backendT("nav.translations", "Translations"), { type: "image", src: TRANSLATIONS_ICON_READY, size: "large" })}
           ${buildSectionButton("tours", backendT("nav.tours", "Tours"), { type: "image", src: "assets/img/marketing_tours.png", size: "large" })}
+          ${buildSectionButton("tour_variants", backendT("nav.tour_variants", "Tour Variants"), { type: "image", src: "assets/img/marketing_tour_variants.png", size: "large" })}
         </div>
       </div>
 

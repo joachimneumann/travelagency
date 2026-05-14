@@ -4998,6 +4998,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     localhostDiagnosticsSource,
     marketingTourHtml,
     marketingToursHtml,
+    tourVariantHtml,
+    tourVariantsHtml,
     privacyHtml,
     settingsHtml,
     translationsHtml,
@@ -5025,6 +5027,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     readFile(path.join(frontendRoot, "scripts", "shared", "localhost_diagnostics.js"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "marketing_tour.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "marketing_tours.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "tour_variant.html"), "utf8"),
+    readFile(path.join(frontendRoot, "pages", "tour_variants.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "privacy.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "settings.html"), "utf8"),
     readFile(path.join(frontendRoot, "pages", "translations.html"), "utf8"),
@@ -5057,6 +5061,16 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "marketing_tours.html should mount the tours page script"
   );
   assert.match(
+    tourVariantsHtml,
+    /frontend\/scripts\/pages\/tour_variants\.js/,
+    "tour_variants.html should mount the Tour Variants list page script"
+  );
+  assert.match(
+    tourVariantHtml,
+    /frontend\/scripts\/pages\/tour_variant\.js/,
+    "tour_variant.html should mount the Tour Variant editor page script"
+  );
+  assert.match(
     settingsHtml,
     /frontend\/scripts\/pages\/settings_list\.js/,
     "settings.html should mount the settings page script"
@@ -5078,6 +5092,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     indexHtml,
     marketingTourHtml,
     marketingToursHtml,
+    tourVariantHtml,
+    tourVariantsHtml,
     privacyHtml,
     settingsHtml,
     translationsHtml,
@@ -5244,6 +5260,8 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     assert.match(source, /\/tours\.html/, "Caddy should keep redirecting legacy tours.html");
     assert.match(source, /\/marketing_tour\.html/, "Caddy should serve marketing_tour.html");
     assert.match(source, /\/tour\.html/, "Caddy should keep redirecting legacy tour.html");
+    assert.match(source, /\/tour_variants\.html/, "Caddy should serve tour_variants.html");
+    assert.match(source, /\/tour_variant\.html/, "Caddy should serve tour_variant.html");
     assert.match(source, /\/settings\.html/, "Caddy should serve settings.html");
     assert.match(source, /\/translations\.html/, "Caddy should serve translations.html");
     assert.match(source, /\/emergency\.html/, "Caddy should serve emergency.html");
@@ -5363,7 +5381,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /production_private_noindex_headers[\s\S]*path \/app-home\.html \/bookings\.html \/booking\.html \/persons\.html \/marketing_tour\.html \/marketing_tours\.html \/settings\.html \/translations\.html \/emergency\.html \/traveler-details\.html \/auth\/\* \/api\/\* \/integrations\/\* \/keycloak\/\*[\s\S]*X-Robots-Tag "noindex, nofollow, noarchive"[\s\S]*import production_private_noindex_headers/,
+    /production_private_noindex_headers[\s\S]*path \/app-home\.html \/bookings\.html \/booking\.html \/persons\.html \/marketing_tour\.html \/marketing_tours\.html \/tour_variant\.html \/tour_variants\.html \/settings\.html \/translations\.html \/emergency\.html \/traveler-details\.html \/auth\/\* \/api\/\* \/integrations\/\* \/keycloak\/\*[\s\S]*X-Robots-Tag "noindex, nofollow, noarchive"[\s\S]*import production_private_noindex_headers/,
     "Production Caddy should send an X-Robots-Tag noindex header on private or utility routes"
   );
   assert.doesNotMatch(
@@ -5831,8 +5849,8 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourCustomizerSource,
-    /function removeTimelineItemDom\(itemId, sourceElement = null\)[\s\S]*element\.remove\(\)[\s\S]*updateTimelineDayLabels\(timeline\)[\s\S]*function removeDay\(itemId, \{ sourceElement = null \} = \{\}\)[\s\S]*removeTimelineItemDom\(timelineKey, sourceElement\)[\s\S]*refreshAfterTimelineChange\(\)/,
-    "Removing a customizer timeline day should update that card in place instead of rerendering the modal"
+    /function createTourCustomizerWorkspaceModule\(\)[\s\S]*function removeTimelineItem\(root, itemId, sourceElement = null\)[\s\S]*element\.remove\(\)[\s\S]*updateTimelineDayLabels\(timeline\)[\s\S]*function removeTimelineItemDom\(itemId, sourceElement = null\) \{[\s\S]*customizerWorkspaceModule\.removeTimelineItem\(modal, itemId, sourceElement\)[\s\S]*function removeDay\(itemId, \{ sourceElement = null \} = \{\}\)[\s\S]*removeTimelineItemDom\(timelineKey, sourceElement\)[\s\S]*refreshAfterTimelineChange\(\)/,
+    "Removing a customizer timeline day should update that card in place through the shared workspace module instead of rerendering the modal"
   );
   assert.match(
     tourCustomizerSource,

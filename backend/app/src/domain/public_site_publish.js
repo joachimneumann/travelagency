@@ -182,6 +182,7 @@ export function createPublicSitePublishService({
   manifestPath = "",
   translationsSnapshotDir = "",
   readTours,
+  readTourVariants = null,
   normalizeTourForStorage = (tour) => tour,
   staticTranslationService,
   translationMemoryStore = null,
@@ -272,14 +273,37 @@ export function createPublicSitePublishService({
       .sort((left, right) => normalizeText(left?.id).localeCompare(normalizeText(right?.id), "en"));
   }
 
+  async function readTourVariantSnapshot() {
+    if (typeof readTourVariants !== "function") return [];
+    return (await readTourVariants())
+      .map((tourVariant) => stableValue(tourVariant))
+      .sort((left, right) => normalizeText(left?.id).localeCompare(normalizeText(right?.id), "en"));
+  }
+
+  function tourVariantAsTranslationTour(tourVariant) {
+    if (!tourVariant || typeof tourVariant !== "object" || Array.isArray(tourVariant)) return null;
+    return {
+      title: tourVariant.title,
+      title_i18n: tourVariant.title_i18n,
+      short_description: tourVariant.short_description,
+      short_description_i18n: tourVariant.short_description_i18n,
+      travel_plan: {
+        boundary_logistics: tourVariant.boundary_logistics,
+        days: []
+      }
+    };
+  }
+
   async function computeSourceState() {
-    const [tours, translations] = await Promise.all([
+    const [tours, tourVariants, translations] = await Promise.all([
       readTourSnapshot(),
+      readTourVariantSnapshot(),
       readWebsiteTranslationSnapshot()
     ]);
     const source = {
       version: 1,
       tours,
+      tour_variants: tourVariants,
       translations
     };
     return {
@@ -406,8 +430,11 @@ export function createPublicSitePublishService({
         phases: [
           callbackPhase("sync_tour_translations", "Sync manual marketing-tour translations", async (_phase, job) => {
             const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
-            await syncMarketingTourTranslationsForPublish(tours, translationMemoryStore);
-            appendLog(job, `Synced manual translations for ${tours.length} marketing tour${tours.length === 1 ? "" : "s"}.`);
+            const tourVariants = typeof readTourVariants === "function"
+              ? (await readTourVariants()).map(tourVariantAsTranslationTour).filter(Boolean)
+              : [];
+            await syncMarketingTourTranslationsForPublish([...tours, ...tourVariants], translationMemoryStore);
+            appendLog(job, `Synced manual translations for ${tours.length} marketing tour${tours.length === 1 ? "" : "s"} and ${tourVariants.length} Tour Variant${tourVariants.length === 1 ? "" : "s"}.`);
           }),
           callbackPhase("validate_translations", "Validate public website translations", async (_phase, job) => {
             const status = await getWebsiteTranslationStatus();

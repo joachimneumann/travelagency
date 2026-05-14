@@ -235,7 +235,7 @@ function summarizeDay(day, lang) {
   return service || "";
 }
 
-function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destinationCatalog = null }) {
+function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destinationCatalog = null, sourceTourTitle = "" }) {
   const sourceDayId = normalizeText(day?.id);
   const title = resolveLocalizedField(day, "title", lang);
   const imageEntries = customerVisibleDayImages(day, lang);
@@ -259,6 +259,7 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
     source: sourceTourId === originalTourId ? "original" : "optional",
     sourceTourId,
     sourceDayId,
+    sourceTourTitle: normalizeText(sourceTourTitle),
     title,
     locationLabel,
     summary: summarizeDay(day, lang),
@@ -480,6 +481,79 @@ function normalizeCustomizationPayload(value) {
   return originalTourId && timelineDays.length ? { originalTourId, timelineDays } : null;
 }
 
+function defaultEscapeHTML(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function templateLabel(labels, key, fallback, vars = {}) {
+  const source = labels && Object.prototype.hasOwnProperty.call(labels, key)
+    ? labels[key]
+    : fallback;
+  if (typeof source === "function") return source(vars);
+  return normalizeText(source || fallback).replace(/\{([a-zA-Z0-9_]+)\}/g, (_, name) => (
+    Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : ""
+  ));
+}
+
+const TOUR_CUSTOMIZER_WORKSPACE_LABEL_KEYS = Object.freeze({
+  "common.and": "and",
+  "tour.customize.map": "map",
+  "tour.customize.optimize": "optimize",
+  "tour.customize.zoom_out": "zoomOut",
+  "tour.customize.optional_days": "optionalDays",
+  "tour.customize.no_optional_days": "noOptionalDays",
+  "tour.customize.empty_timeline": "emptyTimeline",
+  "tour.customize.timeline": "timeline",
+  "tour.customize.timeline_with_count": "timelineWithCount",
+  "tour.customize.day": "day",
+  "tour.customize.move_here": "moveHere",
+  "tour.customize.drop_here": "dropHere",
+  "tour.customize.marker_label": "marker",
+  "tour.customize.next_day_image": "nextDayImage",
+  "tour.customize.day_image": "dayImage"
+});
+
+export function createTourCustomizerWorkspace({
+  root,
+  labels = {},
+  escapeHTML = defaultEscapeHTML,
+  escapeAttr = escapeHTML,
+  currentFrontendLang = () => "en",
+  normalizeFrontendTourLang = (value) => normalizeText(value).toLowerCase() || "en",
+  destinationScopeCatalog = () => null,
+  travelPlanDays = () => [],
+  findTripById = () => null,
+  ensureTourDetailsLoaded = async () => null,
+  allTrips = () => [],
+  renderVisibleTrips = () => {},
+  onTimelineChange = null
+} = {}) {
+  const frontendT = (key, fallback, vars = {}) => {
+    const labelKey = TOUR_CUSTOMIZER_WORKSPACE_LABEL_KEYS[key] || key;
+    return templateLabel(labels, labelKey, fallback, vars);
+  };
+  const runtime = createTourCustomizer({
+    state: {},
+    frontendT,
+    currentFrontendLang,
+    normalizeFrontendTourLang,
+    escapeHTML,
+    escapeAttr,
+    travelPlanDays,
+    destinationScopeCatalog,
+    findTripById,
+    ensureTourDetailsLoaded,
+    allTrips,
+    renderVisibleTrips
+  });
+  return runtime.mountWorkspace({ root, onTimelineChange });
+}
+
 export function createTourCustomizer({
   state,
   frontendT,
@@ -508,6 +582,16 @@ export function createTourCustomizer({
   let modalCloseCallback = null;
   let lastStickyDragReleaseTargetKey = "";
   let forceTripRefreshOnClose = false;
+  let embeddedWorkspaceRoot = null;
+  let embeddedWorkspaceTourId = "tour_variant_workspace";
+  let embeddedWorkspaceTourTitle = "";
+  let embeddedWorkspaceModules = [];
+  let embeddedWorkspaceTimelineItems = [];
+  let embeddedWorkspaceOriginalTimelineItems = [];
+  let embeddedWorkspaceDisabled = false;
+  let embeddedWorkspaceEmptyOptionsLabel = "";
+  let embeddedWorkspaceEmptyTimelineLabel = "";
+  let embeddedWorkspaceOnTimelineChange = null;
   const cardTitleResetTimers = new WeakMap();
 
   function t(key, fallback, vars) {
@@ -522,6 +606,10 @@ export function createTourCustomizer({
 
   function timelineItemKey(item) {
     return normalizeText(item?.timelineInstanceId) || normalizeText(item?.id);
+  }
+
+  function isEmbeddedWorkspace() {
+    return typeof HTMLElement !== "undefined" && embeddedWorkspaceRoot instanceof HTMLElement && modal === embeddedWorkspaceRoot;
   }
 
   function createTimelineInstanceId(sourceId) {
@@ -765,6 +853,12 @@ export function createTourCustomizer({
   }
 
   function draftTimelineTitle() {
+    if (isEmbeddedWorkspace()) {
+      const count = Array.isArray(draft?.timelineDays) ? draft.timelineDays.length : 0;
+      return count
+        ? t("tour.customize.timeline_with_count", "Tour Variant timeline ({count})", { count: String(count) })
+        : t("tour.customize.timeline", "Tour Variant timeline");
+    }
     const proposedTitle = draftTitleProposals()[0] || "";
     const title = proposedTitle || normalizeText(draft?.tourTitle);
     return title
@@ -839,7 +933,8 @@ export function createTourCustomizer({
         sourceTourId: tourId,
         originalTourId: tourId,
         lang: lang(),
-        destinationCatalog
+        destinationCatalog,
+        sourceTourTitle: tourTitleForTimeline(trip)
       }))
       .filter(Boolean);
     const groups = routeGroups(modules);
@@ -871,8 +966,9 @@ export function createTourCustomizer({
     }));
     const modules = (Array.isArray(trips) ? trips : []).flatMap((trip) => {
       const sourceTourId = normalizeText(trip?.id);
+      const sourceTourTitle = tourTitleForTimeline(trip);
       return (typeof travelPlanDays === "function" ? travelPlanDays(trip) : [])
-        .map((day) => dayModuleFromDay({ day, sourceTourId, originalTourId: baseTourId, lang: currentLang, destinationCatalog }))
+        .map((day) => dayModuleFromDay({ day, sourceTourId, originalTourId: baseTourId, lang: currentLang, destinationCatalog, sourceTourTitle }))
         .filter(Boolean);
     });
     return sortModulesNorthToSouth(modules);
@@ -889,7 +985,8 @@ export function createTourCustomizer({
           sourceTourId: baseTourId,
           originalTourId: baseTourId,
           lang: lang(),
-          destinationCatalog
+          destinationCatalog,
+          sourceTourTitle: tourTitleForTimeline(baseTrip)
         }))
         .filter(Boolean);
     const originalModules = sortModulesNorthToSouth(sourceModules
@@ -932,6 +1029,66 @@ export function createTourCustomizer({
     return originalTimelineFromTrip(baseTrip, modules);
   }
 
+  function timelineFromDayRefs(dayRefs, modules, baseTrip) {
+    const baseTourId = normalizeText(baseTrip?.id);
+    const byId = new Map((Array.isArray(modules) ? modules : []).map((item) => [normalizeText(item?.id), item]));
+    const destinationCatalog = typeof destinationScopeCatalog === "function" ? destinationScopeCatalog() : null;
+    return (Array.isArray(dayRefs) ? dayRefs : [])
+      .map((item) => {
+        const sourceTourId = normalizeText(item?.sourceTourId || item?.source_tour_id);
+        const sourceDayId = normalizeText(item?.sourceDayId || item?.source_day_id);
+        if (!sourceTourId || !sourceDayId) return null;
+        const sourceId = `${sourceTourId}:${sourceDayId}`;
+        const rawDay = item?.source_day && typeof item.source_day === "object" && !Array.isArray(item.source_day)
+          ? item.source_day
+          : item?.day && typeof item.day === "object" && !Array.isArray(item.day)
+            ? item.day
+            : null;
+        const module = byId.get(sourceId) || (rawDay
+          ? dayModuleFromDay({
+              day: rawDay,
+              sourceTourId,
+              originalTourId: baseTourId,
+              lang: lang(),
+              destinationCatalog,
+              sourceTourTitle: normalizeText(item?.sourceTourTitle || item?.source_tour_title)
+            })
+          : null);
+        const timelineItem = timelineItemFromModule(module, normalizeText(item?.timelineInstanceId || item?.timeline_instance_id || item?.id));
+        if (!timelineItem) return null;
+        timelineItem.variantDayId = normalizeText(item?.variantDayId || item?.variant_day_id || item?.id);
+        timelineItem.sourceTourTitle = normalizeText(item?.sourceTourTitle || item?.source_tour_title) || timelineItem.sourceTourTitle;
+        timelineItem.sourceDayExists = item?.sourceDayExists !== false && item?.source_day_exists !== false;
+        timelineItem.sourceTourPublished = item?.sourceTourPublished !== false && item?.source_tour_published_on_webpage !== false;
+        return timelineItem;
+      })
+      .filter(Boolean);
+  }
+
+  function moduleMatchesWorkspaceQuery(module, query) {
+    const normalizedQuery = normalizeSearchText(query);
+    if (!normalizedQuery) return true;
+    const currentLang = lang();
+    const day = module?.day && typeof module.day === "object" && !Array.isArray(module.day) ? module.day : {};
+    const haystack = normalizeSearchText([
+      module?.title,
+      module?.locationLabel,
+      module?.summary,
+      module?.sourceTourTitle,
+      module?.sourceTourId,
+      module?.sourceDayId,
+      resolveLocalizedField(day, "title", currentLang),
+      resolveLocalizedField(day, "notes", currentLang),
+      daySearchText(day, currentLang)
+    ].join(" "));
+    return haystack.includes(normalizedQuery);
+  }
+
+  function filterWorkspaceModules(modules, query) {
+    const source = Array.isArray(modules) ? modules : [];
+    return source.filter((module) => moduleMatchesWorkspaceQuery(module, query));
+  }
+
   function optionalModules(modules, originalTimelineDays) {
     const originalDayIds = new Set((Array.isArray(originalTimelineDays) ? originalTimelineDays : [])
       .map((item) => item.id));
@@ -943,7 +1100,7 @@ export function createTourCustomizer({
     const byPoint = new Map();
     timelineDays.forEach((item, index) => {
       for (const point of routePointEntriesForItem(item)) {
-        const key = routeKeyForPoint(point?.routePoint);
+        const key = normalizeText(point?.key) || routeKeyForPoint(point?.routePoint);
         if (!key) continue;
         if (!byPoint.has(key)) {
           const group = {
@@ -966,13 +1123,27 @@ export function createTourCustomizer({
   }
 
   function routePointEntriesForItem(item) {
-    return Array.isArray(item?.routePoints) && item.routePoints.length
+    const entries = Array.isArray(item?.routePoints) && item.routePoints.length
       ? item.routePoints
-      : [{ routePoint: item?.routePoint, mapPoint: item?.mapPoint, label: item?.locationLabel }];
+      : [{ routePoint: item?.routePoint, mapPoint: item?.mapPoint, label: item?.locationLabel, key: item?.fallbackRouteKey }];
+    return entries
+      .map((entry) => {
+        const mapPoint = entry?.mapPoint;
+        const x = Number(mapPoint?.x);
+        const y = Number(mapPoint?.y);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return null;
+        return {
+          ...entry,
+          key: normalizeText(entry?.key) || routeKeyForPoint(entry?.routePoint),
+          mapPoint: { x, y }
+        };
+      })
+      .filter(Boolean);
   }
 
   function routeKeyForItem(item) {
-    return routeKeyForPoint(item?.routePoint);
+    const entry = routePointEntriesForItem(item)[0];
+    return normalizeText(entry?.key) || routeKeyForPoint(entry?.routePoint);
   }
 
   function formatDayNumbers(numbers) {
@@ -1084,11 +1255,12 @@ export function createTourCustomizer({
       ? ` style="--tour-customize-map-zoom-x:${zoom.x.toFixed(2)}%;--tour-customize-map-zoom-y:${zoom.y.toFixed(2)}%;"`
       : "";
     const path = routePathData(points);
+    const optimizeDisabled = isEmbeddedWorkspace() && (embeddedWorkspaceDisabled || draft.timelineDays.length <= 1);
     return `
       <section class="tour-customize-map${zoomClass}"${zoomStyle} aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
         <div class="tour-customize-map__region" aria-hidden="true"></div>
         <div class="tour-customize-map__controls">
-          <button class="tour-customize-map__optimize" type="button" data-customize-optimize data-customize-map-control aria-label="${escapeAttr(t("tour.customize.optimize", "Optimize"))}" title="${escapeAttr(t("tour.customize.optimize", "Optimize"))}">
+          <button class="tour-customize-map__optimize" type="button" data-customize-optimize data-customize-map-control aria-label="${escapeAttr(t("tour.customize.optimize", "Optimize"))}" title="${escapeAttr(t("tour.customize.optimize", "Optimize"))}"${optimizeDisabled ? " disabled" : ""}>
             ${escapeHTML(t("tour.customize.optimize", "Optimize"))}
           </button>
           <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out data-customize-map-control aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
@@ -1178,32 +1350,37 @@ export function createTourCustomizer({
   }
 
   function renderTimelineEmptyState() {
-    return `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.empty_timeline", "Add at least one day to keep customizing."))}</p>`;
+    const label = isEmbeddedWorkspace() && embeddedWorkspaceEmptyTimelineLabel
+      ? embeddedWorkspaceEmptyTimelineLabel
+      : t("tour.customize.empty_timeline", "Add at least one day to keep customizing.");
+    return `<p class="tour-customize__empty">${escapeHTML(label)}</p>`;
   }
 
-  function renderModalBody() {
-    const optionalDays = optionalModules(draft.modules, draft.originalTimelineDays);
-    const timelineTitle = draftTimelineTitle();
-    return `
-      <div class="tour-customize__dialog" role="dialog" aria-modal="true" aria-labelledby="tour_customize_title">
-        <header class="tour-customize__header">
-          <div>
-            <h2 id="tour_customize_title">${escapeHTML(t("tour.customize.title", "Customize this tour"))}</h2>
-            <p>${escapeHTML(t("tour.customize.subtitle", "Adapt the day-by-day route before previewing your trip."))}</p>
-          </div>
-          <div class="tour-customize__header-actions">
-            <button class="btn btn-secondary" type="button" data-customize-reset>${escapeHTML(t("tour.customize.reset", "Reset tour"))}</button>
-            ${renderCloseActionButton()}
-          </div>
-        </header>
+  function createTourCustomizerWorkspaceModule() {
+    function emptyOptionsLabel() {
+      return isEmbeddedWorkspace() && embeddedWorkspaceEmptyOptionsLabel
+        ? embeddedWorkspaceEmptyOptionsLabel
+        : t("tour.customize.no_optional_days", "No optional days are available for this route yet.");
+    }
+
+    function renderEmptyOptionsState() {
+      return `<p class="tour-customize__empty">${escapeHTML(emptyOptionsLabel())}</p>`;
+    }
+
+    function currentOptionalDays() {
+      return optionalModules(draft.modules, draft.originalTimelineDays);
+    }
+
+    function render() {
+      const optionalDays = currentOptionalDays();
+      const timelineTitle = draftTimelineTitle();
+      return `
         <div class="tour-customize__workspace">
           ${renderMap()}
           <section class="tour-customize-options" aria-label="${escapeAttr(t("tour.customize.optional_days", "Optional days"))}">
             <h3>${escapeHTML(t("tour.customize.optional_days", "Optional days"))}</h3>
             <div class="tour-customize-options__list">
-              ${optionalDays.length
-                ? renderOptionalCards(optionalDays)
-                : `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.no_optional_days", "No optional days are available for this route yet."))}</p>`}
+              ${optionalDays.length ? renderOptionalCards(optionalDays) : renderEmptyOptionsState()}
             </div>
             </section>
             <section class="tour-customize-timeline" aria-label="${escapeAttr(timelineTitle)}">
@@ -1217,98 +1394,183 @@ export function createTourCustomizer({
             </div>
           </section>
         </div>
+      `;
+    }
+
+    function bind(root) {
+      bindMapZoom(root);
+      bindDragAndDrop(root);
+    }
+
+    function refreshMap(root) {
+      if (!root) return false;
+      const currentMap = root.querySelector(".tour-customize-map");
+      if (!(currentMap instanceof HTMLElement)) return false;
+      currentMap.outerHTML = renderMap();
+      bindMapZoom(root);
+      return true;
+    }
+
+    function refreshOptions(root) {
+      if (!root || !draft) return false;
+      const optionsList = root.querySelector(".tour-customize-options__list");
+      if (!(optionsList instanceof HTMLElement)) return false;
+      const optionalDays = currentOptionalDays();
+      optionsList.innerHTML = optionalDays.length
+        ? renderOptionalCards(optionalDays)
+        : renderEmptyOptionsState();
+      optionsList.querySelectorAll("[data-customize-option-id]").forEach((element) => {
+        if (element instanceof HTMLElement) bindDraggableElement(element, root);
+      });
+      return true;
+    }
+
+    function refreshTimelineTitle(root) {
+      if (!root || !draft) return false;
+      const title = root.querySelector(".tour-customize-timeline__header h3");
+      const section = root.querySelector(".tour-customize-timeline");
+      if (!(title instanceof HTMLElement)) return false;
+      const timelineTitle = draftTimelineTitle();
+      title.textContent = timelineTitle;
+      if (section instanceof HTMLElement) section.setAttribute("aria-label", timelineTitle);
+      return true;
+    }
+
+    function insertTimelineItem(root, item, insertIndex) {
+      if (!root || !draft) return false;
+      const timeline = root.querySelector("[data-customize-timeline]");
+      if (!(timeline instanceof HTMLElement)) return false;
+      timeline.querySelector(".tour-customize__empty")?.remove();
+      const template = document.createElement("template");
+      template.innerHTML = renderTimelineItem(item, insertIndex).trim();
+      const element = template.content.firstElementChild;
+      if (!(element instanceof HTMLElement)) return false;
+      const items = timelineItemElements(timeline);
+      timeline.insertBefore(element, items[insertIndex] || null);
+      bindDraggableElement(element, root);
+      updateTimelineDayLabels(timeline);
+      return true;
+    }
+
+    function refreshTimeline(root) {
+      if (!root || !draft) return false;
+      const timeline = root.querySelector("[data-customize-timeline]");
+      if (!(timeline instanceof HTMLElement)) return false;
+      timeline.innerHTML = draft.timelineDays.length
+        ? draft.timelineDays.map(renderTimelineItem).join("")
+        : renderTimelineEmptyState();
+      timeline.querySelectorAll("[data-customize-timeline-id]").forEach((element) => {
+        if (element instanceof HTMLElement) bindDraggableElement(element, root);
+      });
+      return true;
+    }
+
+    function removeTimelineItem(root, itemId, sourceElement = null) {
+      if (!root || !draft) return false;
+      const timelineKey = normalizeText(itemId);
+      const timeline = root.querySelector("[data-customize-timeline]");
+      if (!timelineKey || !(timeline instanceof HTMLElement)) return false;
+      const sourceMatches = sourceElement instanceof HTMLElement
+        && timeline.contains(sourceElement)
+        && normalizeText(sourceElement.getAttribute("data-customize-timeline-id")) === timelineKey;
+      const element = sourceMatches
+        ? sourceElement
+        : timeline.querySelector(`[data-customize-timeline-id="${CSS.escape(timelineKey)}"]`);
+      if (!(element instanceof HTMLElement)) return refreshTimeline(root);
+      element.remove();
+      if (!draft.timelineDays.length) {
+        timeline.innerHTML = renderTimelineEmptyState();
+      } else {
+        updateTimelineDayLabels(timeline);
+      }
+      return true;
+    }
+
+    return {
+      render,
+      bind,
+      refreshMap,
+      refreshOptions,
+      refreshTimelineTitle,
+      insertTimelineItem,
+      refreshTimeline,
+      removeTimelineItem
+    };
+  }
+
+  const customizerWorkspaceModule = createTourCustomizerWorkspaceModule();
+
+  function renderModalBody() {
+    return `
+      <div class="tour-customize__dialog" role="dialog" aria-modal="true" aria-labelledby="tour_customize_title">
+        <header class="tour-customize__header">
+          <div>
+            <h2 id="tour_customize_title">${escapeHTML(t("tour.customize.title", "Customize this tour"))}</h2>
+            <p>${escapeHTML(t("tour.customize.subtitle", "Adapt the day-by-day route before previewing your trip."))}</p>
+          </div>
+          <div class="tour-customize__header-actions">
+            <button class="btn btn-secondary" type="button" data-customize-reset>${escapeHTML(t("tour.customize.reset", "Reset tour"))}</button>
+            ${renderCloseActionButton()}
+          </div>
+        </header>
+        ${customizerWorkspaceModule.render()}
       </div>
     `;
   }
 
   function renderModal() {
     if (!modal) return;
+    if (isEmbeddedWorkspace()) {
+      renderEmbeddedWorkspace();
+      return;
+    }
     modal.innerHTML = renderModalBody();
     bindModalEvents();
   }
 
+  function renderEmbeddedWorkspace() {
+    if (!(embeddedWorkspaceRoot instanceof HTMLElement)) return;
+    modal = embeddedWorkspaceRoot;
+    modal.innerHTML = `
+      <div class="tour-customize-embedded${embeddedWorkspaceDisabled ? " is-disabled" : ""}" data-tour-customize-embedded>
+        ${customizerWorkspaceModule.render()}
+      </div>
+    `;
+    bindModalEvents();
+  }
+
   function refreshMapDom() {
-    if (!modal) return false;
-    const currentMap = modal.querySelector(".tour-customize-map");
-    if (!(currentMap instanceof HTMLElement)) return false;
-    currentMap.outerHTML = renderMap();
-    bindMapZoom(modal);
-    return true;
+    return customizerWorkspaceModule.refreshMap(modal);
   }
 
   function refreshOptionsDom() {
-    if (!modal || !draft) return false;
-    const optionsList = modal.querySelector(".tour-customize-options__list");
-    if (!(optionsList instanceof HTMLElement)) return false;
-    const optionalDays = optionalModules(draft.modules, draft.originalTimelineDays);
-    optionsList.innerHTML = optionalDays.length
-      ? renderOptionalCards(optionalDays)
-      : `<p class="tour-customize__empty">${escapeHTML(t("tour.customize.no_optional_days", "No optional days are available for this route yet."))}</p>`;
-    optionsList.querySelectorAll("[data-customize-option-id]").forEach((element) => {
-      if (element instanceof HTMLElement) bindDraggableElement(element, modal);
-    });
-    return true;
+    return customizerWorkspaceModule.refreshOptions(modal);
   }
 
   function refreshTimelineTitleDom() {
-    if (!modal || !draft) return false;
-    const title = modal.querySelector(".tour-customize-timeline__header h3");
-    const section = modal.querySelector(".tour-customize-timeline");
-    if (!(title instanceof HTMLElement)) return false;
-    const timelineTitle = draftTimelineTitle();
-    title.textContent = timelineTitle;
-    if (section instanceof HTMLElement) section.setAttribute("aria-label", timelineTitle);
-    return true;
+    return customizerWorkspaceModule.refreshTimelineTitle(modal);
   }
 
   function insertTimelineItemDom(item, insertIndex) {
-    if (!modal || !draft) return false;
-    const timeline = modal.querySelector("[data-customize-timeline]");
-    if (!(timeline instanceof HTMLElement)) return false;
-    timeline.querySelector(".tour-customize__empty")?.remove();
-    const template = document.createElement("template");
-    template.innerHTML = renderTimelineItem(item, insertIndex).trim();
-    const element = template.content.firstElementChild;
-    if (!(element instanceof HTMLElement)) return false;
-    const items = timelineItemElements(timeline);
-    timeline.insertBefore(element, items[insertIndex] || null);
-    bindDraggableElement(element, modal);
-    updateTimelineDayLabels(timeline);
-    return true;
+    return customizerWorkspaceModule.insertTimelineItem(modal, item, insertIndex);
   }
 
   function refreshTimelineDom() {
-    if (!modal || !draft) return false;
-    const timeline = modal.querySelector("[data-customize-timeline]");
-    if (!(timeline instanceof HTMLElement)) return false;
-    timeline.innerHTML = draft.timelineDays.length
-      ? draft.timelineDays.map(renderTimelineItem).join("")
-      : renderTimelineEmptyState();
-    timeline.querySelectorAll("[data-customize-timeline-id]").forEach((element) => {
-      if (element instanceof HTMLElement) bindDraggableElement(element, modal);
-    });
-    return true;
+    return customizerWorkspaceModule.refreshTimeline(modal);
   }
 
   function removeTimelineItemDom(itemId, sourceElement = null) {
-    if (!modal || !draft) return false;
-    const timelineKey = normalizeText(itemId);
-    const timeline = modal.querySelector("[data-customize-timeline]");
-    if (!timelineKey || !(timeline instanceof HTMLElement)) return false;
-    const sourceMatches = sourceElement instanceof HTMLElement
-      && timeline.contains(sourceElement)
-      && normalizeText(sourceElement.getAttribute("data-customize-timeline-id")) === timelineKey;
-    const element = sourceMatches
-      ? sourceElement
-      : timeline.querySelector(`[data-customize-timeline-id="${CSS.escape(timelineKey)}"]`);
-    if (!(element instanceof HTMLElement)) return refreshTimelineDom();
-    element.remove();
-    if (!draft.timelineDays.length) {
-      timeline.innerHTML = renderTimelineEmptyState();
-    } else {
-      updateTimelineDayLabels(timeline);
+    return customizerWorkspaceModule.removeTimelineItem(modal, itemId, sourceElement);
+  }
+
+  function notifyEmbeddedWorkspaceTimelineChange() {
+    if (!isEmbeddedWorkspace() || typeof embeddedWorkspaceOnTimelineChange !== "function" || !draft) return;
+    embeddedWorkspaceTimelineItems = Array.isArray(draft.timelineDays) ? draft.timelineDays : [];
+    try {
+      embeddedWorkspaceOnTimelineChange(cloneJson(embeddedWorkspaceTimelineItems));
+    } catch (error) {
+      console.error("Tour customizer workspace change callback failed.", error);
     }
-    return true;
   }
 
   function refreshAfterTimelineChange({ refreshOptions = false } = {}) {
@@ -1316,6 +1578,7 @@ export function createTourCustomizer({
     if (refreshOptions) refreshOptionsDom();
     refreshTimelineTitleDom();
     refreshCloseActionDom();
+    notifyEmbeddedWorkspaceTimelineChange();
   }
 
   function optimizeTimelineOrder() {
@@ -2565,6 +2828,12 @@ export function createTourCustomizer({
   }
 
   function bindDragAndDrop(root) {
+    if (isEmbeddedWorkspace() && embeddedWorkspaceDisabled) {
+      root.querySelectorAll("[data-customize-option-id], [data-customize-timeline-id]").forEach((element) => {
+        if (element instanceof HTMLElement) bindCardImageCycleButtons(element);
+      });
+      return;
+    }
     root.querySelectorAll("[data-customize-option-id], [data-customize-timeline-id]").forEach((element) => {
       if (element instanceof HTMLElement) bindDraggableElement(element, root);
     });
@@ -2613,19 +2882,128 @@ export function createTourCustomizer({
 
   function bindModalEvents() {
     if (!modal) return;
-    bindMapZoom(modal);
-    modal.querySelector("[data-customize-reset]")?.addEventListener("click", resetDraftToOriginal);
-    modal.querySelector("[data-customize-close]")?.addEventListener("click", () => closeModal());
-    modal.addEventListener("click", (event) => {
-      if (event.target === modal) closeModal();
-    });
-    modal.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        closeModal();
+    if (!isEmbeddedWorkspace()) {
+      modal.querySelector("[data-customize-reset]")?.addEventListener("click", resetDraftToOriginal);
+      modal.querySelector("[data-customize-close]")?.addEventListener("click", () => closeModal());
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) closeModal();
+      });
+      modal.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeModal();
+        }
+      });
+    }
+    customizerWorkspaceModule.bind(modal);
+  }
+
+  function mountWorkspace({
+    root,
+    modules = [],
+    timelineItems = [],
+    disabled = false,
+    emptyOptionsLabel = "",
+    emptyTimelineLabel = "",
+    onTimelineChange = null
+  } = {}) {
+    if (typeof HTMLElement === "undefined" || !(root instanceof HTMLElement)) {
+      return {
+        setState() {},
+        destroy() {}
+      };
+    }
+
+    embeddedWorkspaceRoot = root;
+    embeddedWorkspaceOnTimelineChange = onTimelineChange;
+    embeddedWorkspaceEmptyOptionsLabel = t("tour.customize.no_optional_days", "No optional days are available for this route yet.");
+    embeddedWorkspaceEmptyTimelineLabel = t("tour.customize.empty_timeline", "Add at least one day to keep customizing.");
+    let tripStateRequestId = 0;
+
+    function setState(nextState = {}) {
+      if (!(embeddedWorkspaceRoot instanceof HTMLElement)) return;
+      if (Object.prototype.hasOwnProperty.call(nextState, "tourId")) {
+        embeddedWorkspaceTourId = normalizeText(nextState.tourId) || embeddedWorkspaceTourId || "tour_variant_workspace";
       }
-    });
-    bindDragAndDrop(modal);
+      if (Object.prototype.hasOwnProperty.call(nextState, "tourTitle")) {
+        embeddedWorkspaceTourTitle = normalizeText(nextState.tourTitle);
+      }
+      if (Array.isArray(nextState.modules)) embeddedWorkspaceModules = nextState.modules.filter(Boolean);
+      if (Array.isArray(nextState.timelineItems)) embeddedWorkspaceTimelineItems = nextState.timelineItems.filter(Boolean);
+      if (Array.isArray(nextState.originalTimelineItems)) {
+        embeddedWorkspaceOriginalTimelineItems = nextState.originalTimelineItems.filter(Boolean);
+      }
+      if (Object.prototype.hasOwnProperty.call(nextState, "disabled")) {
+        embeddedWorkspaceDisabled = Boolean(nextState.disabled);
+      }
+      embeddedWorkspaceEmptyOptionsLabel = normalizeText(nextState.emptyOptionsLabel)
+        || embeddedWorkspaceEmptyOptionsLabel;
+      embeddedWorkspaceEmptyTimelineLabel = normalizeText(nextState.emptyTimelineLabel)
+        || embeddedWorkspaceEmptyTimelineLabel;
+      const previousZoom = isEmbeddedWorkspace() && draft?.mapZoom
+        ? draft.mapZoom
+        : { zoomed: false, x: 50, y: 50 };
+      modal = embeddedWorkspaceRoot;
+      draft = {
+        tourId: embeddedWorkspaceTourId || "tour_variant_workspace",
+        tourTitle: embeddedWorkspaceTourTitle || t("tour.customize.timeline", "Tour Variant timeline"),
+        modules: embeddedWorkspaceModules,
+        originalTimelineDays: embeddedWorkspaceOriginalTimelineItems,
+        timelineDays: embeddedWorkspaceTimelineItems,
+        mapZoom: previousZoom
+      };
+      renderEmbeddedWorkspace();
+    }
+
+    async function setTripState(nextState = {}) {
+      const requestId = ++tripStateRequestId;
+      const baseTrip = nextState.baseTrip && typeof nextState.baseTrip === "object" && !Array.isArray(nextState.baseTrip)
+        ? nextState.baseTrip
+        : null;
+      const modules = baseTrip ? await candidateModulesForTrip(baseTrip) : [];
+      if (requestId !== tripStateRequestId || !(embeddedWorkspaceRoot instanceof HTMLElement)) return;
+      const originalTimelineItems = baseTrip ? originalTimelineFromTrip(baseTrip, modules) : [];
+      const timelineItems = timelineFromDayRefs(nextState.selectedDayRefs, modules, baseTrip);
+      setState({
+        tourId: normalizeText(nextState.tourId) || normalizeText(baseTrip?.id) || "tour_variant_workspace",
+        tourTitle: normalizeText(nextState.tourTitle) || tourTitleForTimeline(baseTrip),
+        modules: filterWorkspaceModules(modules, nextState.moduleQuery),
+        originalTimelineItems,
+        timelineItems,
+        disabled: nextState.disabled,
+        emptyOptionsLabel: nextState.emptyOptionsLabel,
+        emptyTimelineLabel: nextState.emptyTimelineLabel
+      });
+    }
+
+    function destroy() {
+      if (activePointerDrag) cleanupPointerDrag({ animateCancel: false });
+      if (root instanceof HTMLElement) root.innerHTML = "";
+      if (modal === root) {
+        modal = null;
+        draft = null;
+      }
+      activeDragPayload = null;
+      activeDropIndex = null;
+      cleanupMapPan();
+      if (typeof document !== "undefined") {
+        document.documentElement.classList.remove("tour-customize-pointer-dragging");
+        document.documentElement.classList.remove("tour-customize-sticky-dragging");
+      }
+      embeddedWorkspaceRoot = null;
+      embeddedWorkspaceTourId = "tour_variant_workspace";
+      embeddedWorkspaceTourTitle = "";
+      embeddedWorkspaceModules = [];
+      embeddedWorkspaceTimelineItems = [];
+      embeddedWorkspaceOriginalTimelineItems = [];
+      embeddedWorkspaceDisabled = false;
+      embeddedWorkspaceEmptyOptionsLabel = "";
+      embeddedWorkspaceEmptyTimelineLabel = "";
+      embeddedWorkspaceOnTimelineChange = null;
+    }
+
+    setState({ modules, timelineItems, disabled, emptyOptionsLabel, emptyTimelineLabel });
+    return { setState, setTripState, destroy };
   }
 
   async function open(tourId, options = {}) {
@@ -2760,6 +3138,7 @@ export function createTourCustomizer({
     customizationSummaryForTrip,
     routePreviewForTrip,
     open,
+    mountWorkspace,
     openCustomizedOverviewPdf,
     openCustomizedTravelPlanPdf,
     openCustomizedPdf,

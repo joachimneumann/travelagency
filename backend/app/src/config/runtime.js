@@ -28,6 +28,9 @@ export const LEGACY_TOURS_DIR = path.join(DATA_ROOT, "tours");
 export const TOURS_DIR = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TOURS_DIR || process.env.TOURS_ROOT || path.join("content", "tours"))
 );
+export const TOUR_VARIANTS_DIR = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TOUR_VARIANTS_DIR || process.env.TOUR_VARIANTS_ROOT || path.join("content", "tour_variants"))
+);
 export const TOUR_DESTINATIONS_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TOUR_DESTINATIONS_PATH || path.join("content", "tours", "destinations.json"))
 );
@@ -320,6 +323,7 @@ export const RUNTIME_PATHS = Object.freeze({
   tourDestinationsPath: TOUR_DESTINATIONS_PATH,
   pdfsRoot: PDFS_ROOT,
   toursDir: TOURS_DIR,
+  tourVariantsDir: TOUR_VARIANTS_DIR,
   paymentDocumentsDir: PAYMENT_DOCUMENTS_DIR,
   generatedOffersDir: GENERATED_OFFERS_DIR,
   travelPlanPdfsDir: TRAVEL_PLAN_PDFS_DIR,

@@ -17,6 +17,7 @@ import { createDestinationScopeHandlers } from "../http/handlers/destination_sco
 import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStaticTranslationHandlers } from "../http/handlers/static_translations.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
+import { createTourVariantHandlers } from "../http/handlers/tour_variants.js";
 import { createPublicSitePublishHandlers } from "../http/handlers/public_site_publish.js";
 import { createTourMatrixHandlers } from "../http/handlers/tour_matrices.js";
 
@@ -36,6 +37,8 @@ export function createApplicationRoutes({
     canReadSettings,
     canReadTours,
     canEditTours,
+    canReadTourVariants,
+    canEditTourVariants,
     canReadCountryReferenceInfo,
     canEditCountryReferenceInfo
   } = createAccessHelpers({
@@ -58,6 +61,7 @@ export function createApplicationRoutes({
     travelPlanPdfArtifacts,
     metaWebhookHandlers,
     tourHelpers,
+    tourVariantHelpers,
     writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf,
@@ -364,6 +368,7 @@ export function createApplicationRoutes({
     normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
     normalizeTourTravelPlan: tourHelpers.normalizeTourTravelPlan,
     normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan,
+    tourVariantHelpers,
     validateMarketingTourTravelPlanInput: travelPlanHelpers.validateMarketingTourTravelPlanInput,
     validateBookingTravelPlanInput: travelPlanHelpers.validateBookingTravelPlanInput,
     resolveLocalizedText: tourHelpers.resolveLocalizedText,
@@ -410,6 +415,34 @@ export function createApplicationRoutes({
     BOOKING_IMAGES_DIR: runtime.paths.bookingImagesDir,
     writeFile,
     rm
+  });
+
+  const tourVariantHandlers = createTourVariantHandlers({
+    normalizeText: support.normalizeText,
+    safeInt: support.safeInt,
+    clamp: support.clamp,
+    readBodyJson: httpHelpers.readBodyJson,
+    sendJson: httpHelpers.sendJson,
+    readTours: storeUtils.readTours,
+    readTourVariants: storeUtils.readTourVariants,
+    persistTourVariant: storeUtils.persistTourVariant,
+    deleteTourVariant: storeUtils.deleteTourVariant,
+    normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
+    normalizeTourForRead: tourHelpers.normalizeTourForRead,
+    normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan,
+    collectTourOptions: tourHelpers.collectTourOptions,
+    buildPaginatedListResponse,
+    paginate: bookingViewHelpers.paginate,
+    getPrincipal,
+    canReadTourVariants,
+    canEditTourVariants,
+    normalizeTourLang,
+    tourVariantHelpers,
+    nowIso: support.nowIso,
+    randomUUID,
+    repoRoot: runtime.paths.repoRoot,
+    execFile: runtime.execFile,
+    path
   });
 
   const staticTranslationHandlers = createStaticTranslationHandlers({
@@ -462,6 +495,7 @@ export function createApplicationRoutes({
       ...staticTranslationHandlers,
       ...publicSitePublishHandlers,
       ...tourMatrixHandlers,
+      ...tourVariantHandlers,
       ...tourHandlers
     }
   });

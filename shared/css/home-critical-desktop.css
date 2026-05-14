@@ -2635,6 +2635,23 @@ html.tour-customize-modal-open {
   background: #f7f9f7;
 }
 
+.tour-customize-embedded {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f7f9f7;
+}
+
+.tour-customize-embedded .tour-customize__workspace {
+  max-height: min(72vh, 760px);
+}
+
+.tour-customize-embedded.is-disabled .tour-customize-option,
+.tour-customize-embedded.is-disabled .tour-customize-timeline__item {
+  cursor: default;
+  opacity: 0.68;
+}
+
 .tour-customize-map {
   position: relative;
   min-height: 330px;
@@ -3387,6 +3404,10 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
   .tour-customize__workspace {
     display: block;
+  }
+
+  .tour-customize-embedded .tour-customize__workspace {
+    max-height: none;
   }
 
   .tour-customize-map {

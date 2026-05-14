@@ -447,6 +447,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(homepageCopyGlobal, /"en": "AsiaTravelPlan \| Private holidays in Vietnam"/);
   assert.match(homepageCopyGlobal, /Private holidays in Vietnam with clear pricing and local support/);
   assert.match(homepageInitialBundle, /function createFrontendToursController/);
+  assert.doesNotMatch(homepageInitialBundle, /^export\s+/m);
   assert.doesNotMatch(homepageInitialBundle, /function frontendT\(/);
   assert.match(homepageInitialBundle, /const frontendT = \(id, fallback, vars\) => \{/);
   assert.match(homepageInitialBundle, /<a class="btn tour-card__show-more/);

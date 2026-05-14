@@ -210,6 +210,7 @@ const services = createBackendServices({
     repoRoot: RUNTIME_PATHS.repoRoot,
     dataPath: RUNTIME_PATHS.dataPath,
     toursDir: RUNTIME_PATHS.toursDir,
+    tourVariantsDir: RUNTIME_PATHS.tourVariantsDir,
     tourDestinationsPath: RUNTIME_PATHS.tourDestinationsPath,
     paymentDocumentsDir: RUNTIME_PATHS.paymentDocumentsDir,
     generatedOffersDir: RUNTIME_PATHS.generatedOffersDir,
