@@ -91,6 +91,7 @@ const OPERATIONAL_ROUTE_DEFINITIONS = Object.freeze([
   { method: "POST", pattern: /^\/integrations\/meta\/webhook$/, handlerKey: "handleMetaWebhookIngest" },
   { method: "GET", pattern: /^\/backend-access\/check$/, handlerKey: "handleBackendAccessCheck" },
   { method: "GET", pattern: /^\/staging-access\/login$/, handlerKey: "handleStagingAccessLoginPage" },
+  { method: "HEAD", pattern: /^\/staging-access\/login$/, handlerKey: "handleStagingAccessLoginPage" },
   { method: "POST", pattern: /^\/staging-access\/login$/, handlerKey: "handleStagingAccessLoginSubmit" },
   { method: "GET", pattern: /^\/staging-access\/check$/, handlerKey: "handleStagingAccessCheck" },
   { method: "GET", pattern: /^\/staging-access\/logout$/, handlerKey: "handleStagingAccessLogout" },

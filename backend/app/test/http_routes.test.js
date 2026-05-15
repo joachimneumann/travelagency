@@ -36,6 +36,22 @@ test("buildApiRoutes includes the backend access check route", () => {
   );
 });
 
+test("buildApiRoutes includes GET and HEAD routes for staging access login", () => {
+  const handlers = new Proxy({}, {
+    get: () => () => {}
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/staging-access/login")),
+    true
+  );
+  assert.equal(
+    routes.some((route) => route.method === "HEAD" && route.pattern.test("/staging-access/login")),
+    true
+  );
+});
+
 test("buildApiRoutes includes the settings observability route", () => {
   const handlers = new Proxy({}, {
     get: () => () => {}
