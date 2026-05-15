@@ -199,8 +199,6 @@ mkdir -p frontend/data/generated/homepage assets/generated/homepage
 prepare_runtime_brand_logo
 generate_runtime_i18n
 generate_public_homepage_assets
-scripts/content/create_staging_tour_matrices.sh
-chmod -R u+rwX,g+rwX,o+rwX matrix-pages
 
 mkdir -p backend/app/data
 

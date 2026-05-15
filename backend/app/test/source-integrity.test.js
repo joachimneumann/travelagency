@@ -6783,8 +6783,13 @@ test("staging backend bakes dependencies into the image and mounts only the writ
   );
   assert.match(
     updateStagingSource,
-    /mkdir -p matrix-pages[\s\S]*chmod -R u\+rwX,g\+rwX,o\+rwX matrix-pages[\s\S]*generate_public_homepage_assets[\s\S]*scripts\/content\/create_staging_tour_matrices\.sh[\s\S]*chmod -R u\+rwX,g\+rwX,o\+rwX matrix-pages/,
-    "Staging deploy should regenerate matrix pages and leave the matrix output root writable for the non-root backend container"
+    /mkdir -p matrix-pages[\s\S]*chmod -R u\+rwX,g\+rwX,o\+rwX matrix-pages/,
+    "Staging deploy should leave the matrix output root writable for the non-root backend container"
+  );
+  assert.doesNotMatch(
+    updateStagingSource,
+    /scripts\/content\/create_staging_tour_matrices\.sh|publish_tour_matrices\.sh/,
+    "Staging deploy should not regenerate or publish tour matrices"
   );
   assert.match(
     updateStagingSource,
