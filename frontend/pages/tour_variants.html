@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tour Variants</title>
+    <title data-i18n-id="backend.tour_variants.heading">Tour Variants</title>
     <meta name="description" content="AsiaTravelPlan backend Tour Variants workspace" />
     <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
@@ -155,33 +155,33 @@
 
           <section class="backend-section">
             <div class="backend-section-head">
-              <h1>Tour Variants</h1>
+              <h1 data-i18n-id="backend.tour_variants.heading">Tour Variants</h1>
             </div>
 
             <div class="tour-variants-controls">
               <div class="tour-variants-create">
                 <div class="field">
-                  <label for="tourVariantsBaseTour">Base marketing tour</label>
+                  <label for="tourVariantsBaseTour" data-i18n-id="backend.tour_variants.base_marketing_tour">Base marketing tour</label>
                   <select id="tourVariantsBaseTour"></select>
                 </div>
-                <button class="btn btn-primary" id="tourVariantsCreateBtn" type="button" disabled>New Tour Variant</button>
+                <button class="btn btn-primary" id="tourVariantsCreateBtn" type="button" disabled data-i18n-id="backend.tour_variants.new_title">New Tour Variant</button>
               </div>
 
               <div class="tour-variants-controls__row">
                 <div class="field">
-                  <label for="tourVariantsSearch">Search</label>
+                  <label for="tourVariantsSearch" data-i18n-id="common.search">Search</label>
                   <input id="tourVariantsSearch" type="text" />
                 </div>
                 <div class="field">
-                  <label for="tourVariantsPublished">Publication</label>
+                  <label for="tourVariantsPublished" data-i18n-id="backend.tour_variants.publication">Publication</label>
                   <select id="tourVariantsPublished">
-                    <option value="">All</option>
-                    <option value="yes">Published</option>
-                    <option value="no">Draft</option>
+                    <option value="" data-i18n-id="common.all">All</option>
+                    <option value="yes" data-i18n-id="backend.tour_variants.published">Published</option>
+                    <option value="no" data-i18n-id="backend.tour_variants.draft">Draft</option>
                   </select>
                 </div>
-                <button class="btn btn-ghost" id="tourVariantsSearchBtn" type="button">Search</button>
-                <button class="btn btn-ghost" id="tourVariantsClearBtn" type="button">Clear</button>
+                <button class="btn btn-ghost" id="tourVariantsSearchBtn" type="button" data-i18n-id="common.search">Search</button>
+                <button class="btn btn-ghost" id="tourVariantsClearBtn" type="button" data-i18n-id="common.clear">Clear</button>
               </div>
               <span id="tourVariantsStatus" class="micro" role="status" aria-live="polite"></span>
             </div>
@@ -189,7 +189,7 @@
             <div class="backend-table-wrap">
               <table class="backend-table tour-variants-table" id="tourVariantsTable"></table>
             </div>
-            <div class="backend-pagination" id="tourVariantsPagination" aria-label="Tour Variants pagination"></div>
+            <div class="backend-pagination" id="tourVariantsPagination" aria-label="Tour Variants pagination" data-i18n-aria-label-id="backend.tour_variants.pagination_label"></div>
           </section>
         </div>
       </section>

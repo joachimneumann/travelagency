@@ -5824,8 +5824,8 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourCustomizerSource,
-    /function bindCardImageCycleButtons\(element\)[\s\S]*"pointerdown"[\s\S]*event\.stopPropagation\(\)[\s\S]*"click"[\s\S]*cycleCardImage\(button\)/,
-    "Pointer starts inside the customizer card image should stay out of card dragging"
+    /function bindCardImageCycleButtons\(element, root = null\)[\s\S]*function handleImagePointerMove\(event\)[\s\S]*TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX[\s\S]*startPointerDrag\(card, event, root, \{ startX, startY, hasMoved: true \}\)[\s\S]*"pointerdown"[\s\S]*event\.stopPropagation\(\)[\s\S]*startImagePointerIntent\(event\)[\s\S]*"click"[\s\S]*cycleCardImage\(button\)[\s\S]*"dblclick"[\s\S]*startPointerDrag\(card, event, root, \{ startX: event\.clientX, startY: event\.clientY, hasMoved: true \}\)[\s\S]*activateStickyPointerDrag\(event\)/,
+    "Customizer day-card images should click-cycle images while image drags and double-clicks start card dragging"
   );
   assert.match(
     tourCustomizerSource,

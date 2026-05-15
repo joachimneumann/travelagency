@@ -18,6 +18,7 @@ import {
   setBackendPageLoadingOverlay,
   withBackendApiLang
 } from "../shared/backend_page.js";
+import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import { buildTourVariantEditHref } from "../shared/links.js";
 
 const apiBase = getBackendApiBase();
@@ -29,7 +30,6 @@ const els = {
   logoutLink: document.getElementById("backendLogoutLink"),
   userLabel: document.getElementById("backendUserLabel"),
   error: document.getElementById("backendError"),
-  backLink: document.getElementById("tourVariantBackLink"),
   heading: document.getElementById("tourVariantHeading"),
   reloadBtn: document.getElementById("tourVariantReloadBtn"),
   saveBtn: document.getElementById("tourVariantSaveBtn"),
@@ -85,32 +85,31 @@ const state = {
   sourceSearch: ""
 };
 
+let backendLoginRedirectScheduled = false;
+
 const fetchApi = createApiFetcher({
   apiBase,
-  onError: (message) => showError(message),
+  onError: (message, _payload, response) => {
+    if (response?.status === 401) {
+      handleUnauthorizedApiResponse();
+      return;
+    }
+    showError(message);
+  },
   suppressNotFound: false,
   includeDetailInError: true,
   connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API.")
 });
+
+const customizerLabels = {};
+updateCustomizerLabels();
 
 const tourVariantCustomizer = createTourCustomizerWorkspace({
   root: els.customizer,
   escapeHTML: escapeHtml,
   escapeAttr: escapeHtml,
   currentFrontendLang: currentLang,
-  labels: {
-    map: "Route map",
-    optimize: "Optimize",
-    zoomOut: "Zoom out",
-    optionalDays: "Optional days",
-    noOptionalDays: "No optional days are available for this route yet.",
-    timeline: "Tour Variant timeline",
-    timelineWithCount: "Tour Variant timeline ({count})",
-    emptyTimeline: "Add at least one day to keep customizing.",
-    day: "Day {day}",
-    moveHere: "move here",
-    dropHere: "drop here"
-  },
+  labels: customizerLabels,
   destinationScopeCatalog: () => state.destinationScopeCatalog,
   travelPlanDays: customizerTravelPlanDays,
   allTrips: customizerTrips,
@@ -118,6 +117,26 @@ const tourVariantCustomizer = createTourCustomizerWorkspace({
   ensureTourDetailsLoaded: async (tourId) => findCustomizerTripById(tourId),
   onTimelineChange: applyCustomizerTimeline
 });
+
+function tourVariantT(key, fallback, vars) {
+  return backendT(`backend.tour_variant.${key}`, fallback, vars);
+}
+
+function updateCustomizerLabels() {
+  Object.assign(customizerLabels, {
+    map: tourVariantT("map", "Route map"),
+    optimize: tourVariantT("reorder_route", "Reorder Route"),
+    zoomOut: tourVariantT("zoom_out", "Zoom out"),
+    optionalDays: tourVariantT("optional_days", "Optional days"),
+    noOptionalDays: tourVariantT("no_optional_days", "No optional days are available for this route yet."),
+    timeline: tourVariantT("timeline", "Tour Variant timeline"),
+    timelineWithCount: tourVariantT("timeline_with_count", "Tour Variant timeline ({count})"),
+    emptyTimeline: tourVariantT("empty_timeline", "Add at least one day to keep customizing."),
+    day: tourVariantT("day", "Day {day}"),
+    moveHere: tourVariantT("move_here", "move here"),
+    dropHere: tourVariantT("drop_here", "drop here")
+  });
+}
 
 function refreshBackendNavElements() {
   els.logoutLink = document.getElementById("backendLogoutLink");
@@ -140,6 +159,30 @@ function clearError() {
 
 function setStatus(message = "") {
   if (els.status) els.status.textContent = String(message || "").trim();
+}
+
+function redirectToBackendLogin() {
+  const authBase = String(apiBase || window.location.origin).replace(/\/$/, "");
+  const loginParams = new URLSearchParams({
+    return_to: window.location.href,
+    prompt: "login"
+  });
+  window.location.href = `${authBase}/auth/login?${loginParams.toString()}`;
+}
+
+function handleUnauthorizedApiResponse() {
+  const message = tourVariantT(
+    "session_expired",
+    "Your backend session expired. Sign in again to continue."
+  );
+  showError(message);
+  setStatus(message);
+  if (els.saveBtn instanceof HTMLButtonElement) els.saveBtn.disabled = true;
+  if (backendLoginRedirectScheduled) return;
+  backendLoginRedirectScheduled = true;
+  window.setTimeout(() => {
+    redirectToBackendLogin();
+  }, 250);
 }
 
 function currentLang() {
@@ -188,6 +231,20 @@ function setInput(element, value) {
   if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) {
     element.value = value == null ? "" : String(value);
   }
+}
+
+function renderSelectOptions(select, values) {
+  if (!(select instanceof HTMLSelectElement)) return;
+  const currentValue = select.value || "";
+  select.innerHTML = `<option value=""></option>${values
+    .map((value) => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`)
+    .join("")}`;
+  select.value = currentValue;
+}
+
+function renderMonthOptions() {
+  renderSelectOptions(els.seasonStart, MONTH_CODE_CATALOG || []);
+  renderSelectOptions(els.seasonEnd, MONTH_CODE_CATALOG || []);
 }
 
 function localizedMap(mapValue, plainValue = "") {
@@ -258,7 +315,9 @@ function renderBaseTourOptions(selectedValue = "") {
   if (!(els.baseTour instanceof HTMLSelectElement)) return;
   const baseTours = Array.isArray(state.options.base_tours) ? state.options.base_tours : [];
   els.baseTour.innerHTML = [
-    `<option value="">${escapeHtml(baseTours.length ? "Choose a base marketing tour" : "No published marketing tours")}</option>`,
+    `<option value="">${escapeHtml(baseTours.length
+      ? tourVariantT("choose_base_marketing_tour", "Choose a base marketing tour")
+      : tourVariantT("no_published_marketing_tours", "No published marketing tours"))}</option>`,
     ...baseTours.map((tour) => {
       const id = normalizeText(tour.id);
       return `<option value="${escapeHtml(id)}"${id === selectedValue ? " selected" : ""}>${escapeHtml(tour.title || id)} (${escapeHtml(String(tour.day_count || 0))})</option>`;
@@ -271,8 +330,8 @@ function renderMeta() {
   const variant = state.variant || {};
   const updated = formatDateTime(variant.updated_at || variant.created_at);
   els.meta.innerHTML = [
-    variant.id ? `<div>ID: ${escapeHtml(variant.id)}</div>` : "",
-    `<div>Updated: ${escapeHtml(updated)}</div>`
+    variant.id ? `<div>${escapeHtml(tourVariantT("id_line", "ID: {id}", { id: variant.id }))}</div>` : "",
+    `<div>${escapeHtml(tourVariantT("updated_line", "Updated: {updated}", { updated }))}</div>`
   ].filter(Boolean).join("");
 }
 
@@ -283,7 +342,9 @@ function renderIssues() {
 }
 
 function renderHeader() {
-  const title = normalizeText(state.variant?.title) || (state.isCreateMode ? "New Tour Variant" : "Tour Variant");
+  const title = normalizeText(state.variant?.title) || (state.isCreateMode
+    ? tourVariantT("new_title", "New Tour Variant")
+    : tourVariantT("heading", "Tour Variant"));
   if (els.heading) els.heading.textContent = title;
   document.title = title;
 }
@@ -291,6 +352,7 @@ function renderHeader() {
 function renderForm() {
   const variant = state.variant || {};
   renderHeader();
+  renderMonthOptions();
   setInput(els.title, variant.title || "");
   setInput(els.shortDescription, variant.short_description || "");
   setInput(els.priority, variant.priority ?? 50);
@@ -306,7 +368,9 @@ function renderForm() {
   renderBaseTourOptions(normalizeText(qs.get("base_marketing_tour_id")) || variant.base_marketing_tour_id || "");
   if (els.saveBtn instanceof HTMLButtonElement) {
     els.saveBtn.disabled = !state.permissions.canEditTourVariants;
-    els.saveBtn.textContent = state.isCreateMode ? "Create" : "Save";
+    els.saveBtn.textContent = state.isCreateMode
+      ? tourVariantT("create", "Create")
+      : tourVariantT("save", "Save");
   }
   renderCustomizer();
 }
@@ -453,13 +517,13 @@ function renderCustomizer() {
     moduleQuery: state.sourceSearch,
     disabled: state.isCreateMode || !state.permissions.canEditTourVariants,
     emptyOptionsLabel: state.isCreateMode
-      ? "Choose a base marketing tour and create the Tour Variant first."
-      : "No optional days are available for this route yet.",
+      ? tourVariantT("choose_base_marketing_tour_first", "Choose a base marketing tour and create the Tour Variant first.")
+      : tourVariantT("no_optional_days", "No optional days are available for this route yet."),
     emptyTimelineLabel: state.isCreateMode
-      ? "Choose a base marketing tour and create the Tour Variant first."
-      : "Add at least one day to keep customizing.",
+      ? tourVariantT("choose_base_marketing_tour_first", "Choose a base marketing tour and create the Tour Variant first.")
+      : tourVariantT("empty_timeline", "Add at least one day to keep customizing."),
     tourId: normalizeText(state.variant?.id) || "tour_variant_workspace",
-    tourTitle: normalizeText(state.variant?.title) || "Tour Variant timeline"
+    tourTitle: normalizeText(state.variant?.title) || tourVariantT("timeline", "Tour Variant timeline")
   }).catch((error) => {
     console.error("[backend-tour-variant] Failed to render Tour Variant customizer.", error);
   });
@@ -520,7 +584,7 @@ async function loadTourVariant() {
     await loadSourceDays();
     return;
   }
-  setStatus("Loading...");
+  setStatus(tourVariantT("loading", "Loading..."));
   const payload = await fetchApi(withBackendApiLang(`/api/v1/tour-variants/${encodeURIComponent(state.id)}`), {
     cache: "no-store"
   });
@@ -560,7 +624,7 @@ function buildPayload() {
 async function createFromBase() {
   const baseMarketingTourId = normalizeText(els.baseTour?.value || state.variant?.base_marketing_tour_id);
   if (!baseMarketingTourId) {
-    showError("Choose a base marketing tour.");
+    showError(tourVariantT("choose_base_marketing_tour", "Choose a base marketing tour."));
     return;
   }
   const payload = await fetchApi(withBackendApiLang("/api/v1/tour-variants"), {
@@ -582,7 +646,7 @@ async function saveTourVariant() {
     await createFromBase();
     return;
   }
-  setStatus("Saving...");
+  setStatus(tourVariantT("saving", "Saving..."));
   const payload = await fetchApi(withBackendApiLang(`/api/v1/tour-variants/${encodeURIComponent(state.id)}`), {
     method: "PATCH",
     body: buildPayload()
@@ -593,7 +657,14 @@ async function saveTourVariant() {
   window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
     detail: { dirty: true }
   }));
-  setStatus("Saved.");
+  setStatus(tourVariantT("saved", "Saved."));
+}
+
+function handleBackendLanguageChanged() {
+  updateCustomizerLabels();
+  renderHeader();
+  renderBaseTourOptions(normalizeText(qs.get("base_marketing_tour_id")) || state.variant?.base_marketing_tour_id || "");
+  renderCustomizer();
 }
 
 function bindControls() {
@@ -612,6 +683,7 @@ function bindControls() {
     state.sourceSearch = normalizeText(els.sourceSearch.value);
     renderCustomizer();
   });
+  window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
 }
 
 async function init() {
@@ -644,14 +716,14 @@ async function init() {
     };
     bindControls();
     if (!state.permissions.canReadTourVariants) {
-      showError("You do not have access to Tour Variants.");
+      showError(tourVariantT("forbidden", "You do not have access to Tour Variants."));
       return;
     }
     await loadDestinationScopeCatalog();
     await loadTourVariant();
   } catch (error) {
     console.error("[backend-tour-variant] initialization failed", error);
-    showError(error?.message || "Could not load Tour Variant.");
+    showError(error?.message || tourVariantT("load_failed", "Could not load Tour Variant."));
   } finally {
     setBackendPageLoadingOverlay(false);
   }

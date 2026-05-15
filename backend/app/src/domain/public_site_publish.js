@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { syncMarketingTourTranslationsForPublish } from "./marketing_tour_translations.js";
 
@@ -8,11 +8,16 @@ export const PUBLIC_SITE_TRANSLATION_DOMAINS = Object.freeze([
   "frontend",
   "index-content-memory",
   "marketing-tour-memory",
-  "destination-scope-catalog"
+  "destination-scope-catalog",
+  "backend"
 ]);
 
 const MANIFEST_SCHEMA = "public-site-publish/v1";
 const MAX_LOG_LINES = 400;
+const CONTENT_FINGERPRINT_SCHEMA_VERSION = 1;
+const CONTENT_SOURCE_EXCLUDED_DIR_NAMES = new Set([".cache"]);
+const CONTENT_SOURCE_EXCLUDED_FILE_NAMES = new Set([".DS_Store", ".gitkeep", "README.md"]);
+const CONTENT_SOURCE_EXCLUDED_SUFFIXES = [".audit.log", ".tmp"];
 
 function normalizeText(value) {
   return String(value ?? "").trim();
@@ -27,6 +32,10 @@ function apiError(status, code, message) {
 
 function sha256(value) {
   return createHash("sha256").update(String(value ?? ""), "utf8").digest("hex");
+}
+
+function normalizedRelativePath(rootDir, filePath) {
+  return path.relative(rootDir, filePath).split(path.sep).join("/");
 }
 
 function stableValue(value) {
@@ -92,6 +101,47 @@ async function readJsonFile(readFileFn, filePath, fallback = {}) {
   }
 }
 
+function isExcludedContentPath(relativePath, manifestRelativePath = "") {
+  const normalized = normalizeText(relativePath);
+  if (!normalized || normalized.startsWith("../") || path.isAbsolute(normalized)) return true;
+  if (manifestRelativePath && normalized === manifestRelativePath) return true;
+  const parts = normalized.split("/");
+  const basename = parts.at(-1) || "";
+  if (parts.some((part) => CONTENT_SOURCE_EXCLUDED_DIR_NAMES.has(part))) return true;
+  if (CONTENT_SOURCE_EXCLUDED_FILE_NAMES.has(basename)) return true;
+  if (basename.startsWith(".") || parts.some((part) => part.startsWith(".") && !CONTENT_SOURCE_EXCLUDED_DIR_NAMES.has(part))) return true;
+  return CONTENT_SOURCE_EXCLUDED_SUFFIXES.some((suffix) => basename.endsWith(suffix));
+}
+
+async function listContentSourceFiles({ contentRoot, manifestPath, readdirFn }) {
+  const manifestRelativePath = normalizedRelativePath(contentRoot, manifestPath);
+  async function visit(dirPath) {
+    let entries = [];
+    try {
+      entries = await readdirFn(dirPath, { withFileTypes: true });
+    } catch (error) {
+      if (error?.code === "ENOENT") return [];
+      throw error;
+    }
+
+    const files = [];
+    for (const entry of entries) {
+      const entryPath = path.join(dirPath, entry.name);
+      const relativePath = normalizedRelativePath(contentRoot, entryPath);
+      if (isExcludedContentPath(relativePath, manifestRelativePath)) continue;
+      if (entry.isDirectory()) {
+        const nestedFiles = await visit(entryPath);
+        files.push(...nestedFiles);
+      } else if (entry.isFile()) {
+        files.push({ path: relativePath, absolute_path: entryPath });
+      }
+    }
+    return files;
+  }
+
+  return (await visit(contentRoot)).sort((left, right) => left.path.localeCompare(right.path, "en"));
+}
+
 async function writeJsonAtomic({ mkdirFn, writeFileFn, renameFn }, filePath, data) {
   await mkdirFn(path.dirname(filePath), { recursive: true });
   const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
@@ -102,6 +152,8 @@ async function writeJsonAtomic({ mkdirFn, writeFileFn, renameFn }, filePath, dat
 function normalizeTranslationStatus(status = {}) {
   const unavailable = Array.isArray(status?.unavailable) ? status.unavailable : [];
   const languages = Array.isArray(status?.languages) ? status.languages : [];
+  const hasCount = (field) => status?.[field] !== undefined
+    || languages.some((entry) => entry && typeof entry === "object" && entry[field] !== undefined);
   const count = (field) => (
     status?.[field] === undefined
       ? languages.reduce((sum, entry) => sum + Number(entry?.[field] || 0), 0)
@@ -111,12 +163,18 @@ function normalizeTranslationStatus(status = {}) {
   const staleCount = count("stale_count");
   const legacyCount = count("legacy_count");
   const untranslatedCount = count("untranslated_count");
-  const issueCount = missingCount + staleCount + legacyCount + Math.max(0, untranslatedCount - missingCount);
+  const protectedTermCount = count("protected_term_count");
+  const translationWorkCount = hasCount("translation_work_count")
+    ? count("translation_work_count")
+    : missingCount + staleCount + legacyCount + protectedTermCount;
+  const issueCount = translationWorkCount;
   const unpublishedCount = count("unpublished_count");
   const dirtyCount = count("dirty_count");
   return {
     dirty: Boolean(status?.dirty || dirtyCount > 0 || unpublishedCount > 0 || issueCount > 0 || unavailable.length > 0),
     dirty_count: dirtyCount,
+    translation_work_count: translationWorkCount,
+    protected_term_count: protectedTermCount,
     missing_count: missingCount,
     stale_count: staleCount,
     legacy_count: legacyCount,
@@ -179,6 +237,7 @@ function runCommandWithSpawn({ spawnCommand, repoRoot, env }) {
 
 export function createPublicSitePublishService({
   repoRoot,
+  contentRoot = "",
   manifestPath = "",
   translationsSnapshotDir = "",
   readTours,
@@ -191,6 +250,8 @@ export function createPublicSitePublishService({
   nowIso = () => new Date().toISOString(),
   idFactory = randomUUID,
   readFileFn = readFile,
+  readdirFn = readdir,
+  statFn = stat,
   mkdirFn = mkdir,
   writeFileFn = writeFile,
   renameFn = rename,
@@ -211,6 +272,7 @@ export function createPublicSitePublishService({
 
   const resolvedManifestPath = normalizeText(manifestPath)
     || path.join(repoRoot, "content", "public-site-publish-manifest.json");
+  const resolvedContentRoot = normalizeText(contentRoot) || path.dirname(resolvedManifestPath);
   const resolvedTranslationsSnapshotDir = normalizeText(translationsSnapshotDir)
     || path.join(repoRoot, "content", "translations");
   const executePhase = typeof runCommand === "function"
@@ -221,6 +283,36 @@ export function createPublicSitePublishService({
 
   async function readPublishManifest() {
     return readJsonFile(readFileFn, resolvedManifestPath, {});
+  }
+
+  async function readContentSourceSnapshot() {
+    const files = await listContentSourceFiles({
+      contentRoot: resolvedContentRoot,
+      manifestPath: resolvedManifestPath,
+      readdirFn
+    });
+    const entries = [];
+    for (const file of files) {
+      let stats;
+      try {
+        stats = await statFn(file.absolute_path);
+      } catch (error) {
+        if (error?.code === "ENOENT") continue;
+        throw error;
+      }
+      entries.push({
+        path: file.path,
+        size: Number(stats.size || 0),
+        mtime_ms: Number(stats.mtimeMs || 0)
+      });
+    }
+    return {
+      schema_version: CONTENT_FINGERPRINT_SCHEMA_VERSION,
+      file_count: entries.length,
+      total_bytes: entries.reduce((sum, entry) => sum + entry.size, 0),
+      hash: sha256(stableJson(entries)),
+      files: entries
+    };
   }
 
   async function readWebsiteTranslationSnapshot() {
@@ -295,13 +387,15 @@ export function createPublicSitePublishService({
   }
 
   async function computeSourceState() {
-    const [tours, tourVariants, translations] = await Promise.all([
+    const [content, tours, tourVariants, translations] = await Promise.all([
+      readContentSourceSnapshot(),
       readTourSnapshot(),
       readTourVariantSnapshot(),
       readWebsiteTranslationSnapshot()
     ]);
     const source = {
-      version: 1,
+      version: 2,
+      content,
       tours,
       tour_variants: tourVariants,
       translations
@@ -309,8 +403,16 @@ export function createPublicSitePublishService({
     return {
       source_hash: sha256(stableJson(source)),
       sources: {
+        content: {
+          file_count: content.file_count,
+          total_bytes: content.total_bytes,
+          hash: content.hash
+        },
         tours: {
           count: tours.length
+        },
+        tour_variants: {
+          count: tourVariants.length
         },
         translations: {
           domains: PUBLIC_SITE_TRANSLATION_DOMAINS,

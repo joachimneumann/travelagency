@@ -12,6 +12,7 @@ import {
   initializeBackendPageChrome,
   loadBackendPageAuthState,
   setBackendPageLoadingOverlay,
+  waitForBackendI18n,
   withBackendApiLang
 } from "../shared/backend_page.js";
 import { buildTourVariantEditHref } from "../shared/links.js";
@@ -54,6 +55,8 @@ const state = {
   page: 1,
   pageSize: 100,
   totalPages: 1,
+  totalItems: 0,
+  hasLoaded: false,
   search: "",
   published: "",
   options: {
@@ -94,6 +97,10 @@ function setStatus(message = "") {
   if (els.status) els.status.textContent = String(message || "").trim();
 }
 
+function tourVariantsT(key, fallback, vars) {
+  return backendT(`backend.tour_variants.${key}`, fallback, vars);
+}
+
 function optionHtml(value, label, selectedValue = "") {
   const normalizedValue = normalizeText(value);
   return `<option value="${escapeHtml(normalizedValue)}"${normalizedValue === selectedValue ? " selected" : ""}>${escapeHtml(label || normalizedValue)}</option>`;
@@ -114,7 +121,9 @@ function renderBaseTourOptions() {
   const optionIds = new Set(options.map((tour) => normalizeText(tour?.id)).filter(Boolean));
   const selectedValue = optionIds.has(selectedBaseTourId()) ? selectedBaseTourId() : "";
   els.baseTour.innerHTML = [
-    optionHtml("", options.length ? "Choose a base marketing tour" : "No published marketing tours", selectedValue),
+    optionHtml("", options.length
+      ? tourVariantsT("choose_base_marketing_tour", "Choose a base marketing tour")
+      : tourVariantsT("no_published_marketing_tours", "No published marketing tours"), selectedValue),
     ...options.map((tour) => optionHtml(tour.id, `${tour.title || tour.id} (${tour.day_count || 0})`, selectedValue))
   ].join("");
   els.baseTour.disabled = !options.length;
@@ -122,7 +131,9 @@ function renderBaseTourOptions() {
 }
 
 function publicationLabel(variant) {
-  return variant?.published_on_webpage === true ? "Published" : "Draft";
+  return variant?.published_on_webpage === true
+    ? tourVariantsT("published", "Published")
+    : tourVariantsT("draft", "Draft");
 }
 
 function publicationClass(variant) {
@@ -132,7 +143,36 @@ function publicationClass(variant) {
 function issuesText(variant) {
   const issues = Array.isArray(variant?.publication?.issues) ? variant.publication.issues : [];
   if (variant?.published_on_webpage !== true || !issues.length) return "";
-  return issues.join(" ");
+  return issues.map(localizePublicationIssue).join(" ");
+}
+
+function localizePublicationIssue(issue) {
+  const text = normalizeText(issue);
+  if (!text) return "";
+  const referencedDaysMatch = text.match(/^Referenced days are missing: (.+)\.$/);
+  if (referencedDaysMatch) {
+    return tourVariantsT("issue_referenced_days_missing", "Referenced days are missing: {refs}.", {
+      refs: referencedDaysMatch[1]
+    });
+  }
+  const referencedToursMatch = text.match(/^Referenced tours are not published: (.+)\.$/);
+  if (referencedToursMatch) {
+    return tourVariantsT("issue_referenced_tours_unpublished", "Referenced tours are not published: {refs}.", {
+      refs: referencedToursMatch[1]
+    });
+  }
+  const knownIssues = new Map([
+    ["Tour Variant id is required.", ["issue_id_required", "Tour Variant id is required."]],
+    ["Title is required.", ["issue_title_required", "Title is required."]],
+    ["At least one style is required.", ["issue_style_required", "At least one style is required."]],
+    ["At least one day is required.", ["issue_day_required", "At least one day is required."]],
+    ["Base marketing tour is required.", ["issue_base_required", "Base marketing tour is required."]],
+    ["Base marketing tour was not found.", ["issue_base_not_found", "Base marketing tour was not found."]],
+    ["Base marketing tour must be published.", ["issue_base_must_be_published", "Base marketing tour must be published."]],
+    ["The selected days do not have enough public tour-card content.", ["issue_tour_card_content_required", "The selected days do not have enough public tour-card content."]]
+  ]);
+  const entry = knownIssues.get(text);
+  return entry ? tourVariantsT(entry[0], entry[1]) : text;
 }
 
 function renderTable() {
@@ -148,10 +188,10 @@ function renderTable() {
   els.table.innerHTML = `
     <thead>
       <tr>
-        <th>Tour Variant</th>
-        <th>Days</th>
-        <th>Publication</th>
-        <th>Updated</th>
+        <th>${escapeHtml(tourVariantsT("table_tour_variant", "Tour Variant"))}</th>
+        <th>${escapeHtml(backendT("backend.table.days", "Days"))}</th>
+        <th>${escapeHtml(tourVariantsT("publication", "Publication"))}</th>
+        <th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th>
         <th></th>
       </tr>
     </thead>
@@ -171,7 +211,7 @@ function renderTable() {
             <td>${escapeHtml(String(Array.isArray(variant.days) ? variant.days.length : 0))}</td>
             <td><span class="tour-variant-status ${publicationClass(variant)}">${escapeHtml(publicationLabel(variant))}</span></td>
             <td>${escapeHtml(formatDateTime(variant.updated_at || variant.created_at))}</td>
-            <td><button class="btn btn-ghost" type="button" data-delete-id="${escapeHtml(variant.id)}">Delete</button></td>
+            <td><button class="btn btn-ghost" type="button" data-delete-id="${escapeHtml(variant.id)}">${escapeHtml(backendT("common.delete", "Delete"))}</button></td>
           </tr>
         `;
       }).join("")}
@@ -220,27 +260,32 @@ function currentQuery() {
 async function loadTourVariants() {
   const token = state.loadToken + 1;
   state.loadToken = token;
-  setStatus("Loading...");
+  setStatus(tourVariantsT("loading", "Loading..."));
   const payload = await fetchApi(withBackendApiLang("/api/v1/tour-variants", currentQuery()), {
     cache: "no-store"
   });
   if (!payload || token !== state.loadToken) return;
   state.items = Array.isArray(payload.items) ? payload.items : [];
   state.options = payload.options && typeof payload.options === "object" ? payload.options : state.options;
+  state.totalItems = Number(payload.pagination?.total_items || state.items.length);
+  state.hasLoaded = true;
   renderBaseTourOptions();
   renderTable();
   renderPager(payload.pagination || {});
-  setStatus(`${state.items.length} of ${payload.pagination?.total_items || state.items.length}`);
+  setStatus(tourVariantsT("count_status", "{count} of {total}", {
+    count: String(state.items.length),
+    total: String(state.totalItems)
+  }));
 }
 
 async function createTourVariant() {
   if (!(els.baseTour instanceof HTMLSelectElement)) return;
   const baseMarketingTourId = normalizeText(els.baseTour.value);
   if (!baseMarketingTourId) {
-    showError("Choose a base marketing tour.");
+    showError(tourVariantsT("choose_base_marketing_tour", "Choose a base marketing tour."));
     return;
   }
-  setStatus("Creating...");
+  setStatus(tourVariantsT("creating", "Creating..."));
   const payload = await fetchApi(withBackendApiLang("/api/v1/tour-variants"), {
     method: "POST",
     body: {
@@ -259,9 +304,9 @@ async function deleteTourVariant(id) {
   if (!tourVariantId) return;
   const item = state.items.find((variant) => variant.id === tourVariantId);
   const label = item?.title || tourVariantId;
-  if (!window.confirm(`Delete ${label}?`)) return;
-  setStatus("Deleting...");
-  const payload = await fetchApi(`/api/v1/tour-variants/${encodeURIComponent(tourVariantId)}`, {
+  if (!window.confirm(tourVariantsT("delete_confirm", "Delete {name}?", { name: label }))) return;
+  setStatus(tourVariantsT("deleting", "Deleting..."));
+  const payload = await fetchApi(withBackendApiLang(`/api/v1/tour-variants/${encodeURIComponent(tourVariantId)}`), {
     method: "DELETE"
   });
   if (!payload?.ok) return;
@@ -299,9 +344,27 @@ function bindControls() {
   });
 }
 
+function handleBackendLanguageChanged() {
+  renderBaseTourOptions();
+  renderTable();
+  renderPager({ page: state.page, total_pages: state.totalPages });
+  if (state.hasLoaded) {
+    setStatus(tourVariantsT("count_status", "{count} of {total}", {
+      count: String(state.items.length),
+      total: String(state.totalItems)
+    }));
+  }
+  if (!state.permissions.canReadTourVariants) {
+    showError(tourVariantsT("forbidden", "You do not have access to Tour Variants."));
+  }
+}
+
 async function init() {
   setBackendPageLoadingOverlay(true);
   try {
+    await waitForBackendI18n();
+    window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
+
     const chrome = await initializeBackendPageChrome({
       currentSection: "tour_variants",
       homeLink: els.homeLink,
@@ -329,13 +392,13 @@ async function init() {
     };
     bindControls();
     if (!state.permissions.canReadTourVariants) {
-      showError("You do not have access to Tour Variants.");
+      showError(tourVariantsT("forbidden", "You do not have access to Tour Variants."));
       return;
     }
     await loadTourVariants();
   } catch (error) {
     console.error("[backend-tour-variants] initialization failed", error);
-    showError(error?.message || "Could not load Tour Variants.");
+    showError(error?.message || tourVariantsT("load_failed", "Could not load Tour Variants."));
   } finally {
     setBackendPageLoadingOverlay(false);
   }

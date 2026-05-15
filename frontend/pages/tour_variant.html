@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tour Variant</title>
+    <title data-i18n-id="backend.tour_variant.heading">Tour Variant</title>
     <meta name="description" content="AsiaTravelPlan backend Tour Variant editor" />
     <link rel="icon" href="/assets/img/favicon-32.png" sizes="32x32" type="image/png" />
     <link rel="icon" href="/assets/img/favicon-16.png" sizes="16x16" type="image/png" />
@@ -51,39 +51,87 @@
     <style>
       .tour-variant-editor {
         display: grid;
-        gap: 1.25rem;
+        gap: 0.75rem;
+        overflow: visible;
+      }
+
+      .tour-variant-page-section {
+        padding: 1.25rem 0 2rem;
       }
 
       .tour-variant-toolbar {
+        position: sticky;
+        top: 74px;
+        z-index: 40;
         display: flex;
         flex-wrap: wrap;
-        align-items: center;
+        align-items: flex-start;
         justify-content: space-between;
         gap: 0.75rem;
+        padding: 0.65rem 0.75rem;
+        border-bottom: 1px solid var(--line);
+        background: var(--surface);
       }
 
       .tour-variant-toolbar__actions {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.65rem;
+        gap: 0.5rem;
+        align-self: flex-start;
       }
 
       .tour-variant-toolbar__actions .btn {
-        min-height: 3rem;
-        padding: 0.8rem 1.6rem;
+        min-height: 2.45rem;
+        padding: 0.6rem 1.15rem;
+      }
+
+      .tour-variant-title {
+        flex: 1 1 24rem;
+        display: grid;
+        gap: 0.2rem;
+        min-width: min(28rem, 100%);
+      }
+
+      .tour-variant-title-input {
+        width: 100%;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        border-radius: 0;
+        background: transparent;
+        color: var(--text);
+        font: inherit;
+        font-size: var(--font-size-heading);
+        font-weight: 800;
+        line-height: 1.1;
+        padding: 0;
+      }
+
+      .tour-variant-title-input:focus-visible {
+        outline: 2px solid var(--secondary);
+        outline-offset: 2px;
+        border-bottom-color: var(--accent);
+      }
+
+      .tour-variant-published-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        justify-self: center;
+        margin-top: 0.1rem;
+        font-weight: 600;
       }
 
       .tour-variant-grid {
         display: grid;
         grid-template-columns: minmax(0, 1fr);
-        gap: 1.25rem;
+        gap: 0.75rem;
         align-items: start;
       }
 
       .tour-variant-panel {
         display: grid;
-        gap: 1rem;
-        padding: 1rem;
+        gap: 0.65rem;
+        padding: 0.65rem;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--surface);
@@ -92,6 +140,11 @@
       .tour-variant-panel h2 {
         margin: 0;
         font-size: var(--font-size-h3);
+      }
+
+      .tour-variant-panel__body {
+        display: grid;
+        gap: 0.65rem;
       }
 
       .tour-variant-collapsible {
@@ -104,7 +157,7 @@
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        padding: 1rem;
+        padding: 0.72rem 0.85rem;
         cursor: pointer;
         list-style: none;
         font-size: var(--font-size-h3);
@@ -131,12 +184,45 @@
 
       .tour-variant-collapsible__body {
         display: grid;
-        gap: 1rem;
-        padding: 0 1rem 1rem;
+        gap: 0.65rem;
+        padding: 0 0.85rem 0.85rem;
       }
 
-      .tour-variant-panel--customizer {
-        overflow: hidden;
+      .tour-variant-customizer-mount .tour-customize-embedded .tour-customize__workspace {
+        grid-template-rows: minmax(255px, 1fr) auto;
+        max-height: min(58vh, 570px);
+      }
+
+      .tour-variant-customizer-mount .tour-customize-map {
+        min-height: 255px;
+      }
+
+      .tour-variant-customizer-mount .tour-customize-options {
+        padding: 0.6rem;
+      }
+
+      .tour-variant-customizer-mount .tour-customize-options__list {
+        grid-template-columns: repeat(auto-fill, 108px);
+        gap: 0.45rem;
+        margin-top: 0.55rem;
+      }
+
+      .tour-variant-customizer-mount .tour-customize-option,
+      .tour-variant-customizer-mount .tour-customize-timeline__item {
+        width: 108px;
+        height: 144px;
+      }
+
+      .tour-variant-customizer-mount .tour-customize-timeline {
+        padding: 0.65rem 0.75rem 0.75rem;
+      }
+
+      .tour-variant-customizer-mount .tour-customize-timeline__header {
+        margin-bottom: 0.55rem;
+      }
+
+      .tour-variant-customizer-mount .tour-customize-timeline__list {
+        min-height: 9.5rem;
       }
 
       .tour-variant-customizer-heading {
@@ -149,8 +235,8 @@
 
       .tour-variant-fields {
         display: grid;
-        gap: 1rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.65rem 0.8rem;
+        grid-template-columns: minmax(7rem, 0.7fr) repeat(2, minmax(0, 1fr));
       }
 
       .tour-variant-fields .field--wide {
@@ -160,38 +246,101 @@
       .tour-variant-style-grid {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.4rem;
       }
 
       .tour-variant-style-grid label {
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        padding: 0.45rem 0.6rem;
+        padding: 0.35rem 0.5rem;
         border: 1px solid var(--line);
         border-radius: 8px;
         background: var(--surface-muted);
         font-weight: 600;
       }
 
-      .tour-variant-boundaries {
-        display: grid;
-        gap: 1rem;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .tour-variant-boundary-heading {
+        margin: 0 0 0.1rem;
+        font-size: var(--font-size-ui-md);
       }
 
-      .tour-variant-boundary {
-        display: grid;
-        gap: 0.75rem;
-        padding: 0.85rem;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: var(--surface-muted);
+      .tour-variant-boundary-fields {
+        grid-template-columns:
+          minmax(0, 1.45fr) minmax(7rem, 0.7fr)
+          1.5rem
+          minmax(0, 1.45fr) minmax(7rem, 0.7fr);
+        gap: 0.65rem 1rem;
+        align-items: start;
       }
 
-      .tour-variant-boundary h3 {
-        margin: 0;
-        font-size: var(--font-size-ui);
+      .tour-variant-boundary-heading--arrival {
+        grid-column: 1 / 3;
+        grid-row: 1;
+      }
+
+      .tour-variant-boundary-heading--departure {
+        grid-column: 4 / 6;
+        grid-row: 1;
+      }
+
+      .tour-variant-boundary-field--arrival.tour-variant-boundary-field--mode {
+        grid-column: 1;
+        grid-row: 2;
+      }
+
+      .tour-variant-boundary-field--arrival.tour-variant-boundary-field--airport-code {
+        grid-column: 2;
+        grid-row: 2;
+      }
+
+      .tour-variant-boundary-field--arrival.tour-variant-boundary-field--title {
+        grid-column: 1 / 3;
+        grid-row: 3;
+      }
+
+      .tour-variant-boundary-field--arrival.tour-variant-boundary-field--details {
+        grid-column: 1 / 3;
+        grid-row: 4;
+      }
+
+      .tour-variant-boundary-field--departure.tour-variant-boundary-field--mode {
+        grid-column: 4;
+        grid-row: 2;
+      }
+
+      .tour-variant-boundary-field--departure.tour-variant-boundary-field--airport-code {
+        grid-column: 5;
+        grid-row: 2;
+      }
+
+      .tour-variant-boundary-field--departure.tour-variant-boundary-field--title {
+        grid-column: 4 / 6;
+        grid-row: 3;
+      }
+
+      .tour-variant-boundary-field--departure.tour-variant-boundary-field--details {
+        grid-column: 4 / 6;
+        grid-row: 4;
+      }
+
+      .tour-variant-editor .field {
+        gap: 0.22rem;
+      }
+
+      .tour-variant-editor .field label,
+      .tour-variant-editor .field .field-label {
+        padding-left: 0;
+      }
+
+      .tour-variant-editor .field input,
+      .tour-variant-editor .field select,
+      .tour-variant-editor .field textarea {
+        padding: 0.5rem 0.62rem;
+      }
+
+      .tour-variant-editor .field textarea {
+        min-height: 4.6rem;
       }
 
       .tour-variant-source-tools {
@@ -205,7 +354,8 @@
       }
 
       .tour-variant-customizer-mount {
-        min-height: 28rem;
+        min-height: 23rem;
+        overflow: hidden;
       }
 
       .tour-variant-issues {
@@ -214,13 +364,70 @@
 
       @media (max-width: 980px) {
         .tour-variant-grid,
-        .tour-variant-fields,
-        .tour-variant-boundaries {
+        .tour-variant-fields {
           grid-template-columns: 1fr;
+        }
+
+        .tour-variant-boundary-fields {
+          grid-template-columns: minmax(0, 1.45fr) minmax(7rem, 0.7fr);
+        }
+
+        .tour-variant-boundary-heading--arrival {
+          grid-column: 1 / 3;
+          grid-row: 1;
+        }
+
+        .tour-variant-boundary-field--arrival.tour-variant-boundary-field--mode {
+          grid-column: 1;
+          grid-row: 2;
+        }
+
+        .tour-variant-boundary-field--arrival.tour-variant-boundary-field--airport-code {
+          grid-column: 2;
+          grid-row: 2;
+        }
+
+        .tour-variant-boundary-field--arrival.tour-variant-boundary-field--title {
+          grid-column: 1 / 3;
+          grid-row: 3;
+        }
+
+        .tour-variant-boundary-field--arrival.tour-variant-boundary-field--details {
+          grid-column: 1 / 3;
+          grid-row: 4;
+        }
+
+        .tour-variant-boundary-heading--departure {
+          grid-column: 1 / 3;
+          grid-row: 5;
+        }
+
+        .tour-variant-boundary-field--departure.tour-variant-boundary-field--mode {
+          grid-column: 1;
+          grid-row: 6;
+        }
+
+        .tour-variant-boundary-field--departure.tour-variant-boundary-field--airport-code {
+          grid-column: 2;
+          grid-row: 6;
+        }
+
+        .tour-variant-boundary-field--departure.tour-variant-boundary-field--title {
+          grid-column: 1 / 3;
+          grid-row: 7;
+        }
+
+        .tour-variant-boundary-field--departure.tour-variant-boundary-field--details {
+          grid-column: 1 / 3;
+          grid-row: 8;
         }
       }
 
       @media (max-width: 620px) {
+        .tour-variant-toolbar {
+          top: 68px;
+        }
+
         .tour-variant-source-tools {
           display: grid;
           grid-template-columns: 1fr;
@@ -247,118 +454,110 @@
     </header>
 
     <main id="main-content">
-      <section class="section">
+      <section class="section tour-variant-page-section">
         <div class="container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <section class="backend-section tour-variant-editor">
             <div class="tour-variant-toolbar">
-              <div>
-                <a id="tourVariantBackLink" href="tour_variants.html" class="micro">Tour Variants</a>
-                <h1 id="tourVariantHeading">Tour Variant</h1>
+              <div class="tour-variant-title">
+                <h1 class="visually-hidden" id="tourVariantHeading" data-i18n-id="backend.tour_variant.heading">Tour Variant</h1>
+                <label class="visually-hidden" for="tourVariantTitle" data-i18n-id="backend.tour_variant.title_label">Tour Variant title</label>
+                <input class="tour-variant-title-input" id="tourVariantTitle" type="text" placeholder="Tour Variant" data-i18n-placeholder-id="backend.tour_variant.heading" />
+                <label class="check-row tour-variant-published-toggle">
+                  <input id="tourVariantPublished" type="checkbox" />
+                  <span data-i18n-id="backend.tour_variant.published_on_webpage">Published on webpage</span>
+                </label>
               </div>
               <div class="tour-variant-toolbar__actions">
-                <button class="btn btn-ghost" id="tourVariantReloadBtn" type="button">Reload</button>
-                <button class="btn btn-primary" id="tourVariantSaveBtn" type="button">Save</button>
+                <button class="btn btn-ghost" id="tourVariantReloadBtn" type="button" data-i18n-id="backend.tour_variant.reload">Reload</button>
+                <button class="btn btn-primary" id="tourVariantSaveBtn" type="button" data-i18n-id="backend.tour_variant.save">Save</button>
               </div>
             </div>
 
+            <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>
+
             <div class="tour-variant-grid">
-              <details class="tour-variant-panel tour-variant-collapsible" open>
-                <summary>Tour Variant</summary>
-                <div class="tour-variant-collapsible__body">
+              <section class="tour-variant-panel">
+                <div class="tour-variant-panel__body">
                   <div class="tour-variant-fields">
                     <div class="field">
-                      <label for="tourVariantTitle">Name</label>
-                      <input id="tourVariantTitle" type="text" />
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantPriority">Priority</label>
+                      <label for="tourVariantPriority" data-i18n-id="backend.tour_variant.priority">Priority</label>
                       <input id="tourVariantPriority" type="number" min="0" max="100" step="1" />
                     </div>
+                    <div class="field">
+                      <label for="tourVariantSeasonStart" data-i18n-id="backend.tour_variant.season_start_month">Season start month</label>
+                      <select id="tourVariantSeasonStart">
+                        <option value=""></option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="tourVariantSeasonEnd" data-i18n-id="backend.tour_variant.season_end_month">Season end month</label>
+                      <select id="tourVariantSeasonEnd">
+                        <option value=""></option>
+                      </select>
+                    </div>
                     <div class="field field--wide">
-                      <label for="tourVariantShortDescription">Short description</label>
+                      <label for="tourVariantShortDescription" data-i18n-id="backend.tour_variant.short_description">Short description</label>
                       <textarea id="tourVariantShortDescription" rows="3"></textarea>
                     </div>
-                    <div class="field">
-                      <label for="tourVariantSeasonStart">Season start month</label>
-                      <input id="tourVariantSeasonStart" type="text" />
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantSeasonEnd">Season end month</label>
-                      <input id="tourVariantSeasonEnd" type="text" />
-                    </div>
-                    <label class="check-row field--wide">
-                      <input id="tourVariantPublished" type="checkbox" />
-                      <span>Published on webpage</span>
-                    </label>
                     <div class="field field--wide">
-                      <label>Styles</label>
+                      <label data-i18n-id="backend.tour_variant.styles">Styles</label>
                       <div id="tourVariantStyles" class="tour-variant-style-grid"></div>
                     </div>
                   </div>
                 </div>
-              </details>
+              </section>
             </div>
 
             <details class="tour-variant-panel tour-variant-collapsible" open>
-              <summary>Arrival and Departure</summary>
-              <div class="tour-variant-collapsible__body">
-                <div class="tour-variant-boundaries">
-                  <div class="tour-variant-boundary" data-boundary="arrival">
-                    <h3>Arrival</h3>
-                    <div class="field">
-                      <label for="tourVariantArrivalMode">Mode</label>
-                      <select id="tourVariantArrivalMode">
-                        <option value="none">None</option>
-                        <option value="first_day">First day</option>
-                        <option value="before_first_day">Before first day</option>
-                      </select>
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantArrivalTitle">Title</label>
-                      <input id="tourVariantArrivalTitle" type="text" />
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantArrivalAirportCode">Airport code</label>
-                      <input id="tourVariantArrivalAirportCode" type="text" />
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantArrivalDetails">Details</label>
-                      <textarea id="tourVariantArrivalDetails" rows="3"></textarea>
-                    </div>
-                  </div>
+              <summary data-i18n-id="backend.tour_variant.arrival_and_departure">Arrival and Departure</summary>
+              <div class="tour-variant-collapsible__body tour-variant-boundary-fields">
+                <h3 class="tour-variant-boundary-heading tour-variant-boundary-heading--arrival" data-i18n-id="backend.tour_variant.arrival">Arrival</h3>
+                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--mode">
+                  <label for="tourVariantArrivalMode" data-i18n-id="backend.tour_variant.mode">Mode</label>
+                  <select id="tourVariantArrivalMode">
+                    <option value="none" data-i18n-id="backend.tour_variant.none">None</option>
+                    <option value="first_day" data-i18n-id="backend.tour_variant.first_day">First day</option>
+                    <option value="before_first_day" data-i18n-id="backend.tour_variant.before_first_day">Before first day</option>
+                  </select>
+                </div>
+                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--title">
+                  <label for="tourVariantArrivalTitle" data-i18n-id="backend.tour_variant.title">Title</label>
+                  <input id="tourVariantArrivalTitle" type="text" />
+                </div>
+                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--airport-code">
+                  <label for="tourVariantArrivalAirportCode" data-i18n-id="backend.tour_variant.airport_code">Airport code</label>
+                  <input id="tourVariantArrivalAirportCode" type="text" />
+                </div>
+                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--details">
+                  <label for="tourVariantArrivalDetails" data-i18n-id="backend.tour_variant.details">Details</label>
+                  <textarea id="tourVariantArrivalDetails" rows="3"></textarea>
+                </div>
 
-                  <div class="tour-variant-boundary" data-boundary="departure">
-                    <h3>Departure</h3>
-                    <div class="field">
-                      <label for="tourVariantDepartureMode">Mode</label>
-                      <select id="tourVariantDepartureMode">
-                        <option value="none">None</option>
-                        <option value="last_day">Last day</option>
-                        <option value="after_last_day">After last day</option>
-                      </select>
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantDepartureTitle">Title</label>
-                      <input id="tourVariantDepartureTitle" type="text" />
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantDepartureAirportCode">Airport code</label>
-                      <input id="tourVariantDepartureAirportCode" type="text" />
-                    </div>
-                    <div class="field">
-                      <label for="tourVariantDepartureDetails">Details</label>
-                      <textarea id="tourVariantDepartureDetails" rows="3"></textarea>
-                    </div>
-                  </div>
+                <h3 class="tour-variant-boundary-heading tour-variant-boundary-heading--departure" data-i18n-id="backend.tour_variant.departure">Departure</h3>
+                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--mode">
+                  <label for="tourVariantDepartureMode" data-i18n-id="backend.tour_variant.mode">Mode</label>
+                  <select id="tourVariantDepartureMode">
+                    <option value="none" data-i18n-id="backend.tour_variant.none">None</option>
+                    <option value="last_day" data-i18n-id="backend.tour_variant.last_day">Last day</option>
+                    <option value="after_last_day" data-i18n-id="backend.tour_variant.after_last_day">After last day</option>
+                  </select>
+                </div>
+                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--title">
+                  <label for="tourVariantDepartureTitle" data-i18n-id="backend.tour_variant.title">Title</label>
+                  <input id="tourVariantDepartureTitle" type="text" />
+                </div>
+                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--airport-code">
+                  <label for="tourVariantDepartureAirportCode" data-i18n-id="backend.tour_variant.airport_code">Airport code</label>
+                  <input id="tourVariantDepartureAirportCode" type="text" />
+                </div>
+                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--details">
+                  <label for="tourVariantDepartureDetails" data-i18n-id="backend.tour_variant.details">Details</label>
+                  <textarea id="tourVariantDepartureDetails" rows="3"></textarea>
                 </div>
               </div>
             </details>
-
-            <div class="tour-variant-panel tour-variant-panel--customizer">
-              <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>
-            </div>
           </section>
         </div>
       </section>

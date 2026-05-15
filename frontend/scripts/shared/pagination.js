@@ -6,7 +6,7 @@ export function renderPagination(container, pager, onPageChange) {
   const total = pager.totalPages;
 
   const parts = [
-    buttonHtml({ label: "Previous", disabled: current <= 1, page: current - 1, cls: "backend-page-btn" })
+    buttonHtml({ label: backendT("common.previous", "Previous"), disabled: current <= 1, page: current - 1, cls: "backend-page-btn" })
   ];
 
   for (const page of visiblePages(current, total)) {
@@ -26,7 +26,7 @@ export function renderPagination(container, pager, onPageChange) {
     );
   }
 
-  parts.push(buttonHtml({ label: "Next", disabled: current >= total, page: current + 1, cls: "backend-page-btn" }));
+  parts.push(buttonHtml({ label: backendT("common.next", "Next"), disabled: current >= total, page: current + 1, cls: "backend-page-btn" }));
   container.innerHTML = parts.join("");
 
   container.querySelectorAll("button[data-page]").forEach((btn) => {
@@ -37,6 +37,10 @@ export function renderPagination(container, pager, onPageChange) {
       onPageChange(page);
     });
   });
+}
+
+function backendT(id, fallback) {
+  return typeof window.backendT === "function" ? window.backendT(id, fallback) : fallback;
 }
 
 function visiblePages(current, total) {

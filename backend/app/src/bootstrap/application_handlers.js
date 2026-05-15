@@ -397,6 +397,8 @@ export function createApplicationRoutes({
     nowIso: support.nowIso,
     randomUUID,
     persistTour: storeUtils.persistTour,
+    readTourVariants: storeUtils.readTourVariants,
+    tourVariantHelpers,
     repoRoot: runtime.paths.repoRoot,
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
     writeTravelPlanPdf,

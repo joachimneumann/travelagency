@@ -1011,6 +1011,341 @@
       "source_text": "{kind}: Time point is required.",
       "target_lang": "vi",
       "manual_override": "{kind}: Cần nhập thời điểm."
+    },
+    {
+      "source_text": "After last day",
+      "target_lang": "vi",
+      "manual_override": "Sau ngày cuối cùng"
+    },
+    {
+      "source_text": "At least one day is required.",
+      "target_lang": "vi",
+      "manual_override": "Cần ít nhất một ngày."
+    },
+    {
+      "source_text": "At least one style is required.",
+      "target_lang": "vi",
+      "manual_override": "Cần ít nhất một phong cách."
+    },
+    {
+      "source_text": "All",
+      "target_lang": "vi",
+      "manual_override": "Tất cả"
+    },
+    {
+      "source_text": "Arrival and Departure",
+      "target_lang": "vi",
+      "manual_override": "Đến và khởi hành"
+    },
+    {
+      "source_text": "Base marketing tour",
+      "target_lang": "vi",
+      "manual_override": "Tour marketing gốc"
+    },
+    {
+      "source_text": "Base marketing tour is required.",
+      "target_lang": "vi",
+      "manual_override": "Cần chọn tour marketing gốc."
+    },
+    {
+      "source_text": "Base marketing tour must be published.",
+      "target_lang": "vi",
+      "manual_override": "Tour marketing gốc phải được xuất bản."
+    },
+    {
+      "source_text": "Base marketing tour was not found.",
+      "target_lang": "vi",
+      "manual_override": "Không tìm thấy tour marketing gốc."
+    },
+    {
+      "source_text": "Before first day",
+      "target_lang": "vi",
+      "manual_override": "Trước ngày đầu tiên"
+    },
+    {
+      "source_text": "Choose a base marketing tour",
+      "target_lang": "vi",
+      "manual_override": "Chọn tour marketing gốc"
+    },
+    {
+      "source_text": "Choose a base marketing tour and create the Tour Variant first.",
+      "target_lang": "vi",
+      "manual_override": "Chọn tour marketing gốc và tạo biến thể tour trước."
+    },
+    {
+      "source_text": "Create",
+      "target_lang": "vi",
+      "manual_override": "Tạo"
+    },
+    {
+      "source_text": "Could not load Tour Variants.",
+      "target_lang": "vi",
+      "manual_override": "Không thể tải các biến thể tour."
+    },
+    {
+      "source_text": "Creating...",
+      "target_lang": "vi",
+      "manual_override": "Đang tạo..."
+    },
+    {
+      "source_text": "Day {day}",
+      "target_lang": "vi",
+      "manual_override": "Ngày {day}"
+    },
+    {
+      "source_text": "Delete {name}?",
+      "target_lang": "vi",
+      "manual_override": "Xóa {name}?"
+    },
+    {
+      "source_text": "Deleting...",
+      "target_lang": "vi",
+      "manual_override": "Đang xóa..."
+    },
+    {
+      "source_text": "Details",
+      "target_lang": "vi",
+      "manual_override": "Chi tiết"
+    },
+    {
+      "source_text": "Draft",
+      "target_lang": "vi",
+      "manual_override": "Bản nháp"
+    },
+    {
+      "source_text": "drop here",
+      "target_lang": "vi",
+      "manual_override": "thả vào đây"
+    },
+    {
+      "source_text": "Add at least one day to keep customizing.",
+      "target_lang": "vi",
+      "manual_override": "Thêm ít nhất một ngày để tiếp tục tùy chỉnh."
+    },
+    {
+      "source_text": "First day",
+      "target_lang": "vi",
+      "manual_override": "Ngày đầu tiên"
+    },
+    {
+      "source_text": "You do not have access to Tour Variants.",
+      "target_lang": "vi",
+      "manual_override": "Bạn không có quyền truy cập các biến thể tour."
+    },
+    {
+      "source_text": "Tour Variant",
+      "target_lang": "vi",
+      "manual_override": "Biến thể tour"
+    },
+    {
+      "source_text": "Tour Variant id is required.",
+      "target_lang": "vi",
+      "manual_override": "Cần có ID biến thể tour."
+    },
+    {
+      "source_text": "ID: {id}",
+      "target_lang": "vi",
+      "manual_override": "ID: {id}"
+    },
+    {
+      "source_text": "Last day",
+      "target_lang": "vi",
+      "manual_override": "Ngày cuối cùng"
+    },
+    {
+      "source_text": "Tour Variants",
+      "target_lang": "vi",
+      "manual_override": "Các biến thể tour"
+    },
+    {
+      "source_text": "Tour Variants pagination",
+      "target_lang": "vi",
+      "manual_override": "Phân trang các biến thể tour"
+    },
+    {
+      "source_text": "Could not load Tour Variant.",
+      "target_lang": "vi",
+      "manual_override": "Không thể tải biến thể tour."
+    },
+    {
+      "source_text": "Loading...",
+      "target_lang": "vi",
+      "manual_override": "Đang tải..."
+    },
+    {
+      "source_text": "Route map",
+      "target_lang": "vi",
+      "manual_override": "Bản đồ tuyến"
+    },
+    {
+      "source_text": "Mode",
+      "target_lang": "vi",
+      "manual_override": "Chế độ"
+    },
+    {
+      "source_text": "move here",
+      "target_lang": "vi",
+      "manual_override": "di chuyển đến đây"
+    },
+    {
+      "source_text": "New Tour Variant",
+      "target_lang": "vi",
+      "manual_override": "Biến thể tour mới"
+    },
+    {
+      "source_text": "No optional days are available for this route yet.",
+      "target_lang": "vi",
+      "manual_override": "Chưa có ngày tùy chọn nào cho tuyến này."
+    },
+    {
+      "source_text": "No published marketing tours",
+      "target_lang": "vi",
+      "manual_override": "Không có tour marketing đã xuất bản"
+    },
+    {
+      "source_text": "None",
+      "target_lang": "vi",
+      "manual_override": "Không"
+    },
+    {
+      "source_text": "Optional days",
+      "target_lang": "vi",
+      "manual_override": "Ngày tùy chọn"
+    },
+    {
+      "source_text": "Priority",
+      "target_lang": "vi",
+      "manual_override": "Độ ưu tiên"
+    },
+    {
+      "source_text": "Previous",
+      "target_lang": "vi",
+      "manual_override": "Trước"
+    },
+    {
+      "source_text": "Publication",
+      "target_lang": "vi",
+      "manual_override": "Trạng thái xuất bản"
+    },
+    {
+      "source_text": "Published",
+      "target_lang": "vi",
+      "manual_override": "Đã xuất bản"
+    },
+    {
+      "source_text": "Referenced days are missing: {refs}.",
+      "target_lang": "vi",
+      "manual_override": "Thiếu các ngày được tham chiếu: {refs}."
+    },
+    {
+      "source_text": "Referenced tours are not published: {refs}.",
+      "target_lang": "vi",
+      "manual_override": "Các tour được tham chiếu chưa được xuất bản: {refs}."
+    },
+    {
+      "source_text": "Reload",
+      "target_lang": "vi",
+      "manual_override": "Tải lại"
+    },
+    {
+      "source_text": "Reorder Route",
+      "target_lang": "vi",
+      "manual_override": "Sắp xếp lại tuyến"
+    },
+    {
+      "source_text": "Save",
+      "target_lang": "vi",
+      "manual_override": "Lưu"
+    },
+    {
+      "source_text": "Saved.",
+      "target_lang": "vi",
+      "manual_override": "Đã lưu."
+    },
+    {
+      "source_text": "Saving...",
+      "target_lang": "vi",
+      "manual_override": "Đang lưu..."
+    },
+    {
+      "source_text": "Season end month",
+      "target_lang": "vi",
+      "manual_override": "Tháng kết thúc mùa"
+    },
+    {
+      "source_text": "Season start month",
+      "target_lang": "vi",
+      "manual_override": "Tháng bắt đầu mùa"
+    },
+    {
+      "source_text": "Your backend session expired. Sign in again to continue.",
+      "target_lang": "vi",
+      "manual_override": "Phiên backend của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."
+    },
+    {
+      "source_text": "Short description",
+      "target_lang": "vi",
+      "manual_override": "Mô tả ngắn"
+    },
+    {
+      "source_text": "Styles",
+      "target_lang": "vi",
+      "manual_override": "Phong cách"
+    },
+    {
+      "source_text": "The selected days do not have enough public tour-card content.",
+      "target_lang": "vi",
+      "manual_override": "Các ngày đã chọn chưa có đủ nội dung thẻ tour công khai."
+    },
+    {
+      "source_text": "Title is required.",
+      "target_lang": "vi",
+      "manual_override": "Cần nhập tiêu đề."
+    },
+    {
+      "source_text": "Tour Variant timeline",
+      "target_lang": "vi",
+      "manual_override": "Dòng thời gian biến thể tour"
+    },
+    {
+      "source_text": "Tour Variant timeline ({count})",
+      "target_lang": "vi",
+      "manual_override": "Dòng thời gian biến thể tour ({count})"
+    },
+    {
+      "source_text": "Tour Variant title",
+      "target_lang": "vi",
+      "manual_override": "Tiêu đề biến thể tour"
+    },
+    {
+      "source_text": "Updated: {updated}",
+      "target_lang": "vi",
+      "manual_override": "Đã cập nhật: {updated}"
+    },
+    {
+      "source_text": "Zoom out",
+      "target_lang": "vi",
+      "manual_override": "Thu nhỏ"
+    },
+    {
+      "source_text": "{count} of {total}",
+      "target_lang": "vi",
+      "manual_override": "{count} trên {total}"
+    },
+    {
+      "source_text": "Next",
+      "target_lang": "vi",
+      "manual_override": "Tiếp"
+    },
+    {
+      "source_text": "No Tour Variants found.",
+      "target_lang": "vi",
+      "manual_override": "Không tìm thấy biến thể tour nào."
+    },
+    {
+      "source_text": "Search",
+      "target_lang": "vi",
+      "manual_override": "Tìm kiếm"
     }
   ]
 }

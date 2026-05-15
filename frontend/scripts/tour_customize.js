@@ -2586,14 +2586,19 @@ export function createTourCustomizer({
     cleanupPointerDrag();
   }
 
-  function startPointerDrag(element, event, root) {
-    if (!(element instanceof HTMLElement) || event.button !== 0 || activePointerDrag) return;
+  function startPointerDrag(element, event, root, {
+    startX = event?.clientX,
+    startY = event?.clientY,
+    hasMoved = false
+  } = {}) {
+    const isPrimaryAction = event?.button === 0 || (event?.type === "pointermove" && event?.buttons === 1);
+    if (!(element instanceof HTMLElement) || !isPrimaryAction || activePointerDrag) return false;
     const optionId = element.getAttribute("data-customize-option-id");
     const timelineId = element.getAttribute("data-customize-timeline-id");
     const id = normalizeText(optionId || timelineId);
     const kind = optionId ? "option" : timelineId ? "timeline" : "";
     const timeline = root.querySelector("[data-customize-timeline]");
-    if (!id || !kind || !(timeline instanceof HTMLElement)) return;
+    if (!id || !kind || !(timeline instanceof HTMLElement)) return false;
     event.preventDefault();
     const rect = element.getBoundingClientRect();
     const ghost = element.cloneNode(true);
@@ -2616,9 +2621,9 @@ export function createTourCustomizer({
       ghost,
       offsetX: event.clientX - rect.left,
       offsetY: event.clientY - rect.top,
-      startX: event.clientX,
-      startY: event.clientY,
-      hasMoved: false,
+      startX: Number(startX),
+      startY: Number(startY),
+      hasMoved: Boolean(hasMoved),
       sticky: false,
       timelineDropVisible: false,
       deleteActive: false,
@@ -2643,6 +2648,7 @@ export function createTourCustomizer({
     document.addEventListener("pointermove", handlePointerDragMove, { passive: false });
     document.addEventListener("pointerup", handlePointerDragEnd, { passive: false });
     document.addEventListener("pointercancel", handlePointerDragCancel);
+    return true;
   }
 
   function isCustomizeDragBlockedTarget(target) {
@@ -2657,14 +2663,78 @@ export function createTourCustomizer({
     ].join(",")));
   }
 
-  function bindCardImageCycleButtons(element) {
+  function bindCardImageCycleButtons(element, root = null) {
     if (!(element instanceof HTMLElement)) return;
     element.querySelectorAll("[data-customize-card-image]").forEach((button) => {
       if (!(button instanceof HTMLElement) || button.dataset.customizeImageCycleBound === "1") return;
       button.dataset.customizeImageCycleBound = "1";
+      let imagePointerIntent = null;
+      const cardElement = () => {
+        const card = button.closest("[data-customize-option-id], [data-customize-timeline-id]");
+        return card instanceof HTMLElement ? card : null;
+      };
+      const suppressNextImageClick = () => {
+        button.dataset.customizeSuppressImageClick = "1";
+      };
+      const clearImagePointerIntent = () => {
+        if (!imagePointerIntent) return;
+        document.removeEventListener("pointermove", handleImagePointerMove);
+        document.removeEventListener("pointerup", handleImagePointerEnd);
+        document.removeEventListener("pointercancel", handleImagePointerCancel);
+        try {
+          button.releasePointerCapture?.(imagePointerIntent.pointerId);
+        } catch {
+          // Pointer capture may have already ended.
+        }
+        imagePointerIntent = null;
+      };
+      const startImagePointerIntent = (event) => {
+        if (!(root instanceof HTMLElement) || !(cardElement() instanceof HTMLElement)) return;
+        clearImagePointerIntent();
+        imagePointerIntent = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY
+        };
+        try {
+          button.setPointerCapture?.(event.pointerId);
+        } catch {
+          // Some browsers deny pointer capture for nested button targets.
+        }
+        document.addEventListener("pointermove", handleImagePointerMove, { passive: false });
+        document.addEventListener("pointerup", handleImagePointerEnd, { passive: false });
+        document.addEventListener("pointercancel", handleImagePointerCancel);
+      };
+      function handleImagePointerMove(event) {
+        if (!imagePointerIntent || event.pointerId !== imagePointerIntent.pointerId) return;
+        const deltaX = Number(event.clientX) - Number(imagePointerIntent.startX);
+        const deltaY = Number(event.clientY) - Number(imagePointerIntent.startY);
+        if (Math.hypot(deltaX, deltaY) < TOUR_CUSTOMIZE_STICKY_DRAG_THRESHOLD_PX) return;
+        const card = cardElement();
+        const startX = imagePointerIntent.startX;
+        const startY = imagePointerIntent.startY;
+        clearImagePointerIntent();
+        if (!(root instanceof HTMLElement) || !(card instanceof HTMLElement)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        suppressNextImageClick();
+        if (startPointerDrag(card, event, root, { startX, startY, hasMoved: true })) {
+          updatePointerDragFromEvent(event);
+        }
+      }
+      function handleImagePointerEnd(event) {
+        if (!imagePointerIntent || event.pointerId !== imagePointerIntent.pointerId) return;
+        clearImagePointerIntent();
+      }
+      function handleImagePointerCancel(event) {
+        if (!imagePointerIntent || event.pointerId !== imagePointerIntent.pointerId) return;
+        suppressNextImageClick();
+        clearImagePointerIntent();
+      }
       button.addEventListener("pointerdown", (event) => {
         if (event.button !== 0) return;
         event.stopPropagation();
+        startImagePointerIntent(event);
       });
       button.addEventListener("dragstart", (event) => {
         event.preventDefault();
@@ -2672,7 +2742,22 @@ export function createTourCustomizer({
       button.addEventListener("click", (event) => {
         event.preventDefault();
         event.stopPropagation();
+        if (button.dataset.customizeSuppressImageClick === "1") {
+          delete button.dataset.customizeSuppressImageClick;
+          return;
+        }
+        if (event.detail > 1) return;
         cycleCardImage(button);
+      });
+      button.addEventListener("dblclick", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        clearImagePointerIntent();
+        const card = cardElement();
+        if (!(root instanceof HTMLElement) || !(card instanceof HTMLElement)) return;
+        if (startPointerDrag(card, event, root, { startX: event.clientX, startY: event.clientY, hasMoved: true })) {
+          activateStickyPointerDrag(event);
+        }
       });
     });
   }
@@ -2680,7 +2765,7 @@ export function createTourCustomizer({
   function bindDraggableElement(element, root) {
     if (!(element instanceof HTMLElement) || !(root instanceof HTMLElement) || element.dataset.customizeDragBound === "1") return;
     element.dataset.customizeDragBound = "1";
-    bindCardImageCycleButtons(element);
+    bindCardImageCycleButtons(element, root);
     if (element.matches("[data-customize-option-id], [data-customize-timeline-id]")) {
       element.addEventListener("pointerdown", (event) => {
         if (shouldSuppressDragStartAfterStickyRelease(event)) {

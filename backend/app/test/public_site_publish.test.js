@@ -69,6 +69,13 @@ function sampleTour() {
   };
 }
 
+test("public-site publish includes backend translations needed by runtime i18n", () => {
+  assert.ok(
+    PUBLIC_SITE_TRANSLATION_DOMAINS.includes("backend"),
+    "Publish Website must publish backend UI translations before strict runtime i18n generation."
+  );
+});
+
 test("public-site publish runs translations and homepage generation before writing a clean manifest", async () => {
   const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
   const tours = [sampleTour()];
@@ -175,6 +182,57 @@ test("public-site publish refreshes stale runtime snapshots when translated item
 
   service.startPublish();
   const finished = await waitForJob(service, "public-job-runtime-refresh", "succeeded");
+
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(seen, ["publish translations", "runtime_i18n", "homepage_assets"]);
+});
+
+test("public-site publish treats translated but unpublished content as ready to publish", async () => {
+  const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
+  const seen = [];
+  const service = createPublicSitePublishService({
+    repoRoot,
+    translationsSnapshotDir,
+    manifestPath,
+    readTours: async () => [],
+    nowIso: () => "2026-05-10T10:00:00.000Z",
+    idFactory: () => "public-job-translated-content",
+    translationMemoryStore: {
+      patchManualOverrides: async () => {}
+    },
+    staticTranslationService: {
+      getStatusSummary: async () => ({
+        ...cleanTranslationStatus(),
+        dirty: true,
+        translation_work_count: 0,
+        missing_count: 0,
+        stale_count: 0,
+        legacy_count: 0,
+        unpublished_count: 45,
+        untranslated_count: 45,
+        runtime_i18n: {
+          blocked: true,
+          error: "Runtime i18n snapshot validation failed: missing source keys"
+        }
+      }),
+      publishTranslations: async () => {
+        seen.push("publish translations");
+        return { total_items: 45, source_set_hash: "updated" };
+      }
+    },
+    runCommand: async (phase) => {
+      seen.push(phase.id);
+    }
+  });
+
+  const status = await service.getStatus();
+  assert.equal(status.dirty, true);
+  assert.equal(status.blocked, false);
+  assert.equal(status.translations.translation_work_count, 0);
+  assert.equal(status.translations.unpublished_count, 45);
+
+  service.startPublish();
+  const finished = await waitForJob(service, "public-job-translated-content", "succeeded");
 
   assert.equal(finished.status, "succeeded");
   assert.deepEqual(seen, ["publish translations", "runtime_i18n", "homepage_assets"]);
@@ -331,6 +389,37 @@ test("public-site status becomes dirty when marketing tours change after publish
   const status = await service.getStatus();
   assert.equal(status.dirty, true);
   assert.equal(status.source_dirty, true);
+});
+
+test("public-site status becomes dirty when content files change after publish", async () => {
+  const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
+  const contentDataPath = path.join(repoRoot, "content", "country_reference_info.json");
+  const service = createPublicSitePublishService({
+    repoRoot,
+    translationsSnapshotDir,
+    manifestPath,
+    readTours: async () => [],
+    nowIso: () => "2026-05-10T10:00:00.000Z",
+    idFactory: () => "public-job-content-hash",
+    translationMemoryStore: {
+      patchManualOverrides: async () => {}
+    },
+    staticTranslationService: {
+      getStatusSummary: async () => cleanTranslationStatus(),
+      publishTranslations: async () => ({ total_items: 0 })
+    },
+    runCommand: async () => {}
+  });
+
+  service.startPublish();
+  await waitForJob(service, "public-job-content-hash", "succeeded");
+  assert.equal((await service.getStatus()).dirty, false);
+
+  await writeFile(contentDataPath, `${JSON.stringify({ countries: [{ code: "VN" }] }, null, 2)}\n`, "utf8");
+  const status = await service.getStatus();
+  assert.equal(status.dirty, true);
+  assert.equal(status.source_dirty, true);
+  assert.equal(status.sources.content.file_count, 2);
 });
 
 test("public-site status becomes dirty when marketing-tour seasonality changes after publish", async () => {

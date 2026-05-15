@@ -1193,11 +1193,18 @@ export function createTourHandlers(deps) {
 
   function publicTourById(tours, tourId, destinationCatalogPayload = {}, tourVariants = []) {
     const normalizedTourId = normalizeText(tourId);
-    const storedTours = (Array.isArray(tours) ? tours : []).map((tour) => normalizeTourForStorage(tour));
-    const tour = typeof tourVariantHelpers?.resolvePublishedTourLikeById === "function"
-      ? tourVariantHelpers.resolvePublishedTourLikeById(normalizedTourId, storedTours, tourVariants, { publicOnly: true })
-      : storedTours.find((item) => normalizeText(item?.id) === normalizedTourId);
+    const tour = publicTourLikeById(tours, normalizedTourId, tourVariants);
     return tour ? normalizeTourForPublicWebpage(tour, destinationCatalogPayload) : null;
+  }
+
+  function publicTourLikeById(tours, tourId, tourVariants = []) {
+    const normalizedTourId = normalizeText(tourId);
+    const storedTours = (Array.isArray(tours) ? tours : []).map((tour) => normalizeTourForStorage(tour));
+    if (typeof tourVariantHelpers?.resolvePublishedTourLikeById === "function") {
+      return tourVariantHelpers.resolvePublishedTourLikeById(normalizedTourId, storedTours, tourVariants, { publicOnly: true });
+    }
+    const tour = storedTours.find((item) => normalizeText(item?.id) === normalizedTourId);
+    return tour && tour.published_on_webpage !== false ? tour : null;
   }
 
   function publicTourLocalizedTravelPlan(tour, lang) {
@@ -1217,7 +1224,7 @@ export function createTourHandlers(deps) {
     const destinationCatalogPayload = await readStore();
     const storedTours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
     const tourVariants = await readStoredTourVariants();
-    const baseTour = publicTourById(storedTours, baseTourId, destinationCatalogPayload, tourVariants);
+    const baseTour = publicTourLikeById(storedTours, baseTourId, tourVariants);
     if (!baseTour) return { ok: false, status: 404, error: "Tour not found" };
 
     const daySourcesByTourId = new Map();
@@ -1229,7 +1236,7 @@ export function createTourHandlers(deps) {
         return { ok: false, status: 400, error: "Selected days are invalid" };
       }
       if (!daySourcesByTourId.has(sourceTourId)) {
-        const publicSourceTour = publicTourById(storedTours, sourceTourId, destinationCatalogPayload, tourVariants);
+        const publicSourceTour = publicTourLikeById(storedTours, sourceTourId, tourVariants);
         if (!publicSourceTour) {
           return { ok: false, status: 400, error: "Selected day source is not available" };
         }
@@ -1509,10 +1516,9 @@ export function createTourHandlers(deps) {
 
   async function handleGetPublicTourOnePagerPdf(req, res, [tourId]) {
     const lang = requestLang(req.url);
-    const destinationCatalogPayload = await readStore();
     const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
     const tourVariants = await readStoredTourVariants();
-    const publicTour = publicTourById(tours, tourId, destinationCatalogPayload, tourVariants);
+    const publicTour = publicTourLikeById(tours, tourId, tourVariants);
     if (!publicTour) {
       sendJson(res, 404, { error: "Tour not found" });
       return;
