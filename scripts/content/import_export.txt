@@ -107,6 +107,7 @@ node scripts/i18n/build_runtime_i18n.mjs --strict
 
 rsync -av content/atp_staff/ backup/atp_staff/
 rsync -av --delete content/tours/ backup/tours/
+rsync -av --delete content/tour_variants/ backup/tour_variants/
 rsync -av --delete content/translations/ backup/translations/
 
 
@@ -114,6 +115,7 @@ rsync -av --delete content/translations/ backup/translations/
 
 rsync -av backup/atp_staff/ content/atp_staff/
 rsync -av --delete backup/tours/ content/tours/
+rsync -av --delete backup/tour_variants/ content/tour_variants/
 rsync -av --delete backup/translations/ content/translations/
 
 
