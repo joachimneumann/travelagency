@@ -156,6 +156,20 @@ case "tours":
   return RequestFactory.toursRequest(options);
 case "tour_create":
   return RequestFactory.tourCreateRequest(options);
+case "tour_variants":
+  return RequestFactory.tourVariantsRequest(options);
+case "tour_variant_create":
+  return RequestFactory.tourVariantCreateRequest(options);
+case "tour_variant_source_days":
+  return RequestFactory.tourVariantSourceDaysRequest(options);
+case "tour_variants_publish":
+  return RequestFactory.tourVariantsPublishRequest(options);
+case "tour_variant_detail":
+  return RequestFactory.tourVariantDetailRequest(options);
+case "tour_variant_update":
+  return RequestFactory.tourVariantUpdateRequest(options);
+case "tour_variant_delete":
+  return RequestFactory.tourVariantDeleteRequest(options);
 case "tour_travel_plan_day_search":
   return RequestFactory.tourTravelPlanDaySearchRequest(options);
 case "tour_travel_plan_service_search":

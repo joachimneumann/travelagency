@@ -521,6 +521,115 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await assert.rejects(stat(path.join(tourOutputDir, "tour_alpha", "alpha.webp")), { code: "ENOENT" });
 });
 
+test("generatePublicHomepageAssets reads Tour Variants from the temp content sibling root", async () => {
+  const root = await mkdtemp(path.join(os.tmpdir(), "public-homepage-assets-variants-"));
+  const contentRoot = path.join(root, "content");
+  const toursRoot = path.join(contentRoot, "tours");
+  const tourVariantsRoot = path.join(contentRoot, "tour_variants");
+  const staffRoot = path.join(contentRoot, "atp_staff");
+  const frontendDataDir = path.join(root, "frontend", "data", "generated", "homepage");
+  const frontendI18nDir = path.join(root, "frontend", "data", "i18n", "frontend");
+  const destinationCatalogPath = path.join(toursRoot, "destinations.json");
+  const tourOutputDir = path.join(root, "assets", "generated", "homepage", "tours");
+  const teamOutputDir = path.join(root, "assets", "generated", "homepage", "team");
+
+  await mkdir(path.join(toursRoot, "tour_base"), { recursive: true });
+  await mkdir(path.join(tourVariantsRoot, "tour_variant_featured"), { recursive: true });
+  await mkdir(frontendI18nDir, { recursive: true });
+  await writeJson(path.join(frontendI18nDir, "en.json"), {
+    "hero.title": "Private holidays in Vietnam",
+    "hero.title_with_destinations": "Private holidays in {destinations}"
+  });
+  await writeJson(path.join(contentRoot, "country_reference_info.json"), { items: [{ country: "VN", published_on_webpage: true }] });
+  await writeJson(destinationCatalogPath, {
+    destination_scope_destinations: [
+      { code: "VN", label: "Vietnam", sort_order: 1 }
+    ],
+    destination_places: [
+      { id: "place_hanoi", destination: "VN", code: "hanoi", name: "Hanoi", sort_order: 1 }
+    ]
+  });
+  await writeJson(path.join(toursRoot, "tour_base", "tour.json"), {
+    id: "tour_base",
+    title: { en: "Base tour" },
+    short_description: { en: "Base tour description" },
+    styles: ["culture"],
+    priority: 10,
+    published_on_webpage: true,
+    travel_plan: {
+      tour_card_image_ids: [
+        "travel_plan_service_image_hanoi",
+        "travel_plan_service_image_hanoi_detail"
+      ],
+      days: [
+        {
+          id: "day_hanoi",
+          day_number: 1,
+          primary_location_id: "place_hanoi",
+          title: "Hanoi",
+          services: [
+            {
+              title: "Hanoi walk",
+              image: {
+                id: "travel_plan_service_image_hanoi",
+                storage_path: "/public/v1/tour-images/tour_base/travel-plan-services/hanoi.png",
+                include_in_travel_tour_card: true
+              }
+            },
+            {
+              title: "Hanoi detail",
+              image: {
+                id: "travel_plan_service_image_hanoi_detail",
+                storage_path: "/public/v1/tour-images/tour_base/travel-plan-services/hanoi-detail.png",
+                include_in_travel_tour_card: true
+              }
+            }
+          ]
+        }
+      ]
+    },
+    updated_at: "2026-04-14T12:34:56.000Z"
+  });
+  await mkdir(path.join(toursRoot, "tour_base", "travel-plan-services"), { recursive: true });
+  await writeFile(path.join(toursRoot, "tour_base", "travel-plan-services", "hanoi.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+  await writeFile(path.join(toursRoot, "tour_base", "travel-plan-services", "hanoi-detail.png"), Buffer.from(TINY_PNG_BASE64, "base64"));
+  await writeJson(path.join(tourVariantsRoot, "tour_variant_featured", "tour_variant.json"), {
+    id: "tour_variant_featured",
+    title: "Featured variant",
+    short_description: "Variant description",
+    styles: ["culture"],
+    priority: 90,
+    published_on_webpage: true,
+    base_marketing_tour_id: "tour_base",
+    days: [
+      {
+        id: "tour_variant_day_1",
+        day_number: 1,
+        source_tour_id: "tour_base",
+        source_day_id: "day_hanoi"
+      }
+    ]
+  });
+
+  await generatePublicHomepageAssets({
+    toursRoot,
+    staffRoot,
+    countryReferenceInfoPath: path.join(contentRoot, "country_reference_info.json"),
+    destinationCatalogPath,
+    frontendDataDir,
+    tourOutputDir,
+    teamOutputDir,
+    frontendI18nDir,
+    languages: ["en"]
+  });
+
+  const publicToursEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.en.json"), "utf8"));
+  assert.deepEqual(
+    publicToursEn.items.map((tour) => tour.id),
+    ["tour_variant_featured", "tour_base"]
+  );
+});
+
 test("generatePublicHomepageAssets fails when a tour destination is not listed in destinations", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "public-homepage-assets-missing-destination-"));
   const contentRoot = path.join(root, "content");

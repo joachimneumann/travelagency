@@ -1085,18 +1085,136 @@ package api
 			typeName: "string"
 		}]
 	},
-	{
-		key:           "tours"
-		path:          "/api/v1/tours"
-		method:        "GET"
-		tag:           "Tours"
-		authenticated: true
-		responseType:  "TourList"
-	},
-	{
-		key:           "tour_travel_plan_day_search"
-		path:          "/api/v1/tours/travel-plan-days/search"
-		method:        "GET"
+		{
+			key:           "tours"
+			path:          "/api/v1/tours"
+			method:        "GET"
+			tag:           "Tours"
+			authenticated: true
+			responseType:  "TourList"
+		},
+		{
+			key:           "tour_variants"
+			path:          "/api/v1/tour-variants"
+			method:        "GET"
+			tag:           "Tours"
+			authenticated: true
+			responseType:  "TourVariantList"
+			parameters: [{
+				name:     "search"
+				location: "query"
+				required: false
+				typeName: "string"
+			}, {
+				name:     "published"
+				location: "query"
+				required: false
+				typeName: "string"
+			}, {
+				name:     "sort"
+				location: "query"
+				required: false
+				typeName: "string"
+			}, {
+				name:     "page"
+				location: "query"
+				required: false
+				typeName: "int"
+			}, {
+				name:     "page_size"
+				location: "query"
+				required: false
+				typeName: "int"
+			}]
+		},
+		{
+			key:           "tour_variant_source_days"
+			path:          "/api/v1/tour-variants/source-days"
+			method:        "GET"
+			tag:           "Tours"
+			authenticated: true
+			responseType:  "TourVariantSourceDayList"
+			parameters: [{
+				name:     "q"
+				location: "query"
+				required: false
+				typeName: "string"
+			}, {
+				name:     "limit"
+				location: "query"
+				required: false
+				typeName: "int"
+			}, {
+				name:     "offset"
+				location: "query"
+				required: false
+				typeName: "int"
+			}]
+		},
+		{
+			key:           "tour_variants_publish"
+			path:          "/api/v1/tour-variants/publish"
+			method:        "POST"
+			tag:           "Tours"
+			authenticated: true
+			responseType:  "TourVariantPublishResponse"
+		},
+		{
+			key:           "tour_variant_create"
+			path:          "/api/v1/tour-variants"
+			method:        "POST"
+			tag:           "Tours"
+			authenticated: true
+			requestType:   "TourVariantUpsertRequest"
+			responseType:  "TourVariantResponse"
+		},
+		{
+			key:           "tour_variant_detail"
+			path:          "/api/v1/tour-variants/{tour_variant_id}"
+			method:        "GET"
+			tag:           "Tours"
+			authenticated: true
+			responseType:  "TourVariantDetail"
+			parameters: [{
+				name:     "tour_variant_id"
+				location: "path"
+				required: true
+				typeName: "Identifier"
+			}]
+		},
+		{
+			key:           "tour_variant_update"
+			path:          "/api/v1/tour-variants/{tour_variant_id}"
+			method:        "PATCH"
+			tag:           "Tours"
+			authenticated: true
+			requestType:   "TourVariantUpsertRequest"
+			responseType:  "TourVariantResponse"
+			parameters: [{
+				name:     "tour_variant_id"
+				location: "path"
+				required: true
+				typeName: "Identifier"
+			}]
+		},
+		{
+			key:           "tour_variant_delete"
+			path:          "/api/v1/tour-variants/{tour_variant_id}"
+			method:        "DELETE"
+			tag:           "Tours"
+			authenticated: true
+			responseType:  "TourVariantDeleteResponse"
+			parameters: [{
+				name:     "tour_variant_id"
+				location: "path"
+				required: true
+				typeName: "Identifier"
+			}]
+		},
+		{
+			key:           "tour_travel_plan_day_search"
+			path:          "/api/v1/tours/travel-plan-days/search"
+			method:        "GET"
 		tag:           "Tours"
 		authenticated: true
 		responseType:  "TourTravelPlanDaySearchResponse"

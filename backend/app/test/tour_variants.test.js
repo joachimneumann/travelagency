@@ -1,8 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import path from "node:path";
 import { createTourVariantHelpers } from "../src/domain/tour_variants.js";
 import { createTourHelpers } from "../src/domain/tours_support.js";
 import { createTravelPlanHelpers } from "../src/domain/travel_plan.js";
+import { createTourVariantHandlers } from "../src/http/handlers/tour_variants.js";
 
 function safeInt(value) {
   const normalized = Number.parseInt(value, 10);
@@ -130,4 +132,104 @@ test("Tour Variant source-day options exclude unpublished marketing tours", () =
     options.items.map((item) => `${item.source_tour_id}:${item.source_day_id}`),
     ["tour_public:day_public"]
   );
+});
+
+test("Tour Variant publish blocks invalid published variants before homepage generation", async () => {
+  let generated = false;
+  const { handlePublishTourVariants } = createTourVariantHandlers({
+    normalizeText: (value) => String(value ?? "").trim(),
+    safeInt,
+    clamp: (value, min, max) => Math.min(Math.max(value, min), max),
+    readBodyJson: async () => ({}),
+    sendJson: (res, status, payload) => {
+      res.statusCode = status;
+      res.payload = payload;
+    },
+    readTours: async () => [
+      {
+        id: "tour_base",
+        title: "Base tour",
+        styles: ["culture"],
+        published_on_webpage: true,
+        travel_plan: {
+          tour_card_image_ids: [
+            "travel_plan_service_image_one",
+            "travel_plan_service_image_two"
+          ],
+          days: [
+            {
+              id: "day_existing",
+              title: "Existing day",
+              primary_location_id: "hanoi",
+              services: [
+                {
+                  title: "Image one",
+                  image: {
+                    id: "travel_plan_service_image_one",
+                    storage_path: "/public/v1/tour-images/tour_base/one.png",
+                    include_in_travel_tour_card: true
+                  }
+                },
+                {
+                  title: "Image two",
+                  image: {
+                    id: "travel_plan_service_image_two",
+                    storage_path: "/public/v1/tour-images/tour_base/two.png",
+                    include_in_travel_tour_card: true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    readTourVariants: async () => [
+      {
+        id: "tour_variant_bad",
+        title: "Broken variant",
+        styles: ["culture"],
+        published_on_webpage: true,
+        base_marketing_tour_id: "tour_base",
+        boundary_logistics: tourVariantHelpers.emptyBoundaryLogistics(),
+        days: [
+          {
+            id: "tour_variant_day_1",
+            day_number: 1,
+            source_tour_id: "tour_base",
+            source_day_id: "day_missing"
+          }
+        ]
+      }
+    ],
+    persistTourVariant: async () => {},
+    deleteTourVariant: async () => {},
+    normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
+    normalizeTourForRead: tourHelpers.normalizeTourForRead,
+    normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan,
+    collectTourOptions: () => ({}),
+    buildPaginatedListResponse: (payload) => payload,
+    paginate: (items) => ({ items, total: items.length, page: 1, page_size: items.length }),
+    getPrincipal: () => ({ id: "tester" }),
+    canReadTourVariants: () => true,
+    canEditTourVariants: () => true,
+    normalizeTourLang: (value) => String(value || "en").trim().toLowerCase() || "en",
+    tourVariantHelpers,
+    nowIso: () => "2026-05-15T00:00:00.000Z",
+    randomUUID: () => "fixed-id",
+    repoRoot: "/tmp/travelagency-test",
+    execFile: async () => {
+      generated = true;
+    },
+    path
+  });
+  const res = {};
+
+  await handlePublishTourVariants({ url: "/api/v1/tour-variants/publish?lang=en" }, res);
+
+  assert.equal(res.statusCode, 409);
+  assert.equal(res.payload?.code, "TOUR_VARIANTS_PUBLISH_BLOCKED");
+  assert.equal(res.payload?.invalid_tour_variants?.[0]?.id, "tour_variant_bad");
+  assert.match(res.payload?.invalid_tour_variants?.[0]?.issues?.join(" "), /day_missing/);
+  assert.equal(generated, false);
 });

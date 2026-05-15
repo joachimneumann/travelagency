@@ -190,6 +190,22 @@ export function createTourVariantHandlers(deps) {
     return { tours, tourVariants };
   }
 
+  function publishedTourVariantPublicationIssues(tours, tourVariants, { lang = "en" } = {}) {
+    return (Array.isArray(tourVariants) ? tourVariants : [])
+      .filter((variant) => variant?.published_on_webpage === true)
+      .map((variant) => {
+        const publication = tourVariantHelpers.validateTourVariantPublication(variant, tours);
+        if (publication.ok) return null;
+        const readModel = tourVariantHelpers.normalizeTourVariantForRead(variant, { lang });
+        return {
+          id: normalizeText(variant?.id),
+          title: normalizeText(readModel?.title) || normalizeText(variant?.id),
+          issues: publication.issues
+        };
+      })
+      .filter(Boolean);
+  }
+
   async function handleListTourVariants(req, res) {
     const principal = getPrincipal(req);
     if (!canReadTourVariants(principal)) {
@@ -383,9 +399,22 @@ export function createTourVariantHandlers(deps) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
     }
+    const lang = requestLang(req.url);
+    const { tours, tourVariants } = await readStoredToursAndVariants();
+    const invalidTourVariants = publishedTourVariantPublicationIssues(tours, tourVariants, { lang });
+    if (invalidTourVariants.length) {
+      sendJson(res, 409, {
+        ok: false,
+        error: "Published Tour Variants must be valid before publishing.",
+        code: "TOUR_VARIANTS_PUBLISH_BLOCKED",
+        invalid_tour_variants: invalidTourVariants
+      });
+      return;
+    }
     const homepageAssets = await regeneratePublicHomepageAssets("tour_variant_publish");
     sendJson(res, 200, {
       ok: homepageAssets.ok === true,
+      invalid_tour_variants: [],
       homepage_assets: homepageAssets
     });
   }

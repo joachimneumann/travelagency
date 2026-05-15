@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-14T05:37:08Z
+# 2026-05-15T08:14:09Z
 
 ---
 openapi: 3.1.0
@@ -5861,6 +5861,251 @@ components:
         search:
           type: string
           nullable: true
+    TourVariantListFilters:
+      type: object
+      required: []
+      properties:
+        search:
+          type: string
+          nullable: true
+        published:
+          type: string
+          nullable: true
+    PublicHomepageAssetsStatus:
+      type: object
+      required:
+      - ok
+      properties:
+        ok:
+          type: boolean
+        dirty:
+          type: boolean
+          nullable: true
+        reason:
+          type: string
+          nullable: true
+        error:
+          type: string
+          nullable: true
+        tour_variant_id:
+          type: string
+          nullable: true
+    TourVariantPublication:
+      type: object
+      required:
+      - ok
+      properties:
+        ok:
+          type: boolean
+        issues:
+          type: array
+          items:
+            type: string
+    TourVariantDayRef:
+      type: object
+      required:
+      - id
+      - day_number
+      - source_tour_id
+      - source_day_id
+      properties:
+        id:
+          type: string
+        day_number:
+          type: integer
+        source_tour_id:
+          type: string
+        source_day_id:
+          type: string
+        source_tour_title:
+          type: string
+          nullable: true
+        source_tour_published_on_webpage:
+          type: boolean
+          nullable: true
+        source_day_title:
+          type: string
+          nullable: true
+        source_day_exists:
+          type: boolean
+          nullable: true
+    TourVariantReadModel:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+        record_type:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        title_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        short_description:
+          type: string
+          nullable: true
+        short_description_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        styles:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourStyleCode"
+        style_codes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourStyleCode"
+        priority:
+          type: integer
+          nullable: true
+        published_on_webpage:
+          type: boolean
+          nullable: true
+        seasonality_start_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        seasonality_end_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        base_marketing_tour_id:
+          type: string
+          nullable: true
+        boundary_logistics:
+          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          nullable: true
+        days:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourVariantDayRef"
+        publication:
+          "$ref": "#/components/schemas/TourVariantPublication"
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+    TourVariantBaseTourOption:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        day_count:
+          type: integer
+          nullable: true
+        styles:
+          type: array
+          items:
+            type: string
+        style_codes:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourStyleCode"
+    TourVariantOptions:
+      type: object
+      required: []
+      properties:
+        styles:
+          type: array
+          items:
+            "$ref": "#/components/schemas/CatalogOption"
+        base_tours:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourVariantBaseTourOption"
+    TourVariantSourceDayOption:
+      type: object
+      required:
+      - source_tour_id
+      - source_day_id
+      properties:
+        source_tour_id:
+          type: string
+        source_tour_title:
+          type: string
+          nullable: true
+        source_day_id:
+          type: string
+        day_number:
+          type: integer
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        thumbnail_url:
+          type: string
+          nullable: true
+        thumbnail_urls:
+          type: array
+          items:
+            type: string
+        service_count:
+          type: integer
+          nullable: true
+        image_count:
+          type: integer
+          nullable: true
+        source_day:
+          "$ref": "#/components/schemas/TravelPlanDay"
+          nullable: true
+    TourVariantSourceDayList:
+      type: object
+      required:
+      - total
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourVariantSourceDayOption"
+        total:
+          type: integer
+    TourVariantPublishIssue:
+      type: object
+      required:
+      - id
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          nullable: true
+        issues:
+          type: array
+          items:
+            type: string
+    TourVariantPublishResponse:
+      type: object
+      required:
+      - ok
+      properties:
+        ok:
+          type: boolean
+        invalid_tour_variants:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourVariantPublishIssue"
+        homepage_assets:
+          "$ref": "#/components/schemas/PublicHomepageAssetsStatus"
+          nullable: true
     TourTravelPlanDaySearchResult:
       type: object
       required:
@@ -6123,6 +6368,26 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/CatalogOption"
+    TourVariantList:
+      type: object
+      required:
+      - pagination
+      properties:
+        items:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourVariantReadModel"
+        pagination:
+          "$ref": "#/components/schemas/Pagination"
+        filters:
+          "$ref": "#/components/schemas/TourVariantListFilters"
+          nullable: true
+        sort:
+          type: string
+          nullable: true
+        options:
+          "$ref": "#/components/schemas/TourVariantOptions"
+          nullable: true
     BookingDetail:
       type: object
       required:
@@ -6161,6 +6426,16 @@ components:
           "$ref": "#/components/schemas/Tour"
         options:
           "$ref": "#/components/schemas/TourOptions"
+    TourVariantDetail:
+      type: object
+      required:
+      - tour_variant
+      - options
+      properties:
+        tour_variant:
+          "$ref": "#/components/schemas/TourVariantReadModel"
+        options:
+          "$ref": "#/components/schemas/TourVariantOptions"
     KeycloakUserDirectoryEntry:
       type: object
       required:
@@ -6494,6 +6769,26 @@ components:
       properties:
         tour:
           "$ref": "#/components/schemas/Tour"
+    TourVariantResponse:
+      type: object
+      required:
+      - tour_variant
+      properties:
+        tour_variant:
+          "$ref": "#/components/schemas/TourVariantReadModel"
+        homepage_assets:
+          "$ref": "#/components/schemas/PublicHomepageAssetsStatus"
+          nullable: true
+    TourVariantDeleteResponse:
+      type: object
+      required:
+      - ok
+      properties:
+        ok:
+          type: boolean
+        homepage_assets:
+          "$ref": "#/components/schemas/PublicHomepageAssetsStatus"
+          nullable: true
     MobileBootstrap:
       type: object
       required:
@@ -7425,6 +7720,75 @@ components:
           type: string
           format: date-time
           nullable: true
+    TourVariantDayRefInput:
+      type: object
+      required:
+      - source_tour_id
+      - source_day_id
+      properties:
+        id:
+          type: string
+          nullable: true
+        day_number:
+          type: integer
+          nullable: true
+        source_tour_id:
+          type: string
+        source_day_id:
+          type: string
+    TourVariantUpsertRequest:
+      type: object
+      required: []
+      properties:
+        id:
+          type: string
+          nullable: true
+        expected_updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        title_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        short_description:
+          type: string
+          nullable: true
+        short_description_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        styles:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourStyleCode"
+        priority:
+          type: integer
+          nullable: true
+        published_on_webpage:
+          type: boolean
+          nullable: true
+        seasonality_start_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        seasonality_end_month:
+          "$ref": "#/components/schemas/MonthCode"
+          nullable: true
+        base_marketing_tour_id:
+          type: string
+          nullable: true
+        boundary_logistics:
+          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          nullable: true
+        days:
+          type: array
+          items:
+            "$ref": "#/components/schemas/TourVariantDayRefInput"
     TourTranslateFieldsRequest:
       type: object
       required:
@@ -10220,6 +10584,278 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/TourResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tour-variants":
+    get:
+      operationId: tour_variants
+      summary: Tour Variants
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: published
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: sort
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: page_size
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantList"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    post:
+      operationId: tour_variant_create
+      summary: Tour Variant Create
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourVariantUpsertRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tour-variants/source-days":
+    get:
+      operationId: tour_variant_source_days
+      summary: Tour Variant Source Days
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: q
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: string
+      - name: offset
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantSourceDayList"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tour-variants/publish":
+    post:
+      operationId: tour_variants_publish
+      summary: Tour Variants Publish
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters: []
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantPublishResponse"
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantPublishResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/tour-variants/{tour_variant_id}":
+    get:
+      operationId: tour_variant_detail
+      summary: Tour Variant Detail
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_variant_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantDetail"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: tour_variant_update
+      summary: Tour Variant Update
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_variant_id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/TourVariantUpsertRequest"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantResponse"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: tour_variant_delete
+      summary: Tour Variant Delete
+      tags:
+      - Tours
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: tour_variant_id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TourVariantDeleteResponse"
         '401':
           description: Unauthorized
           content:

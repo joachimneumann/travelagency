@@ -627,6 +627,58 @@ export function createTourCustomizer({
     };
   }
 
+  function fallbackTimelineItemFromDayRef(item, {
+    sourceTourId,
+    sourceDayId,
+    baseTourId,
+    timelineInstanceId = "",
+    rawDay = null
+  } = {}) {
+    const sourceId = sourceTourId && sourceDayId ? `${sourceTourId}:${sourceDayId}` : "";
+    if (!sourceId) return null;
+    const currentLang = lang();
+    const title = normalizeText(
+      resolveLocalizedField(rawDay, "title", currentLang)
+      || item?.sourceDayTitle
+      || item?.source_day_title
+      || item?.title
+      || sourceDayId
+    );
+    const sourceTourTitle = normalizeText(item?.sourceTourTitle || item?.source_tour_title || sourceTourId);
+    const day = rawDay && typeof rawDay === "object" && !Array.isArray(rawDay)
+      ? cloneJson(rawDay)
+      : {
+          id: sourceDayId,
+          day_number: Number(item?.day_number) || null,
+          title,
+          title_i18n: title ? { [currentLang]: title } : {},
+          services: []
+        };
+    return {
+      id: sourceId,
+      timelineInstanceId: normalizeText(timelineInstanceId) || createTimelineInstanceId(sourceId),
+      variantDayId: normalizeText(item?.variantDayId || item?.variant_day_id || item?.id),
+      source: sourceTourId === baseTourId ? "original" : "optional",
+      sourceTourId,
+      sourceDayId,
+      sourceTourTitle,
+      sourceDayExists: item?.sourceDayExists !== false && item?.source_day_exists !== false,
+      sourceTourPublished: item?.sourceTourPublished !== false && item?.source_tour_published_on_webpage !== false,
+      title,
+      locationLabel: sourceTourTitle || sourceTourId,
+      summary: item?.sourceDayExists === false || item?.source_day_exists === false
+        ? t("tour.customize.source_day_unavailable", "Source day unavailable")
+        : "",
+      thumbnailUrl: "",
+      routePoint: null,
+      routePoints: [],
+      mapPoint: null,
+      imageEntries: [],
+      imageUrls: [],
+      day
+    };
+  }
+
   function loadStoredCustomization(tourId) {
     const normalizedTourId = normalizeText(tourId);
     if (!normalizedTourId || customizations.has(normalizedTourId) || !canUseStorage) {
@@ -1054,7 +1106,15 @@ export function createTourCustomizer({
               sourceTourTitle: normalizeText(item?.sourceTourTitle || item?.source_tour_title)
             })
           : null);
-        const timelineItem = timelineItemFromModule(module, normalizeText(item?.timelineInstanceId || item?.timeline_instance_id || item?.id));
+        const timelineInstanceId = normalizeText(item?.timelineInstanceId || item?.timeline_instance_id || item?.id);
+        const timelineItem = timelineItemFromModule(module, timelineInstanceId)
+          || fallbackTimelineItemFromDayRef(item, {
+            sourceTourId,
+            sourceDayId,
+            baseTourId,
+            timelineInstanceId,
+            rawDay
+          });
         if (!timelineItem) return null;
         timelineItem.variantDayId = normalizeText(item?.variantDayId || item?.variant_day_id || item?.id);
         timelineItem.sourceTourTitle = normalizeText(item?.sourceTourTitle || item?.source_tour_title) || timelineItem.sourceTourTitle;

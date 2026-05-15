@@ -1155,20 +1155,169 @@ IR: {
 				{name: "sort", kind: "scalar", typeName: "string", required: false},
 			]
 		},
-		{
-			name:       "TourListFilters"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TourListFilters"
+			{
+				name:       "TourListFilters"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourListFilters"
 			fields: [
 				{name: "destination", kind: "enum", typeName: "CountryCode", required: false},
 				{name: "style", kind: "enum", typeName: "TourStyleCode", required: false},
-				{name: "search", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "TourTravelPlanDaySearchResult"
-			domain:     "api"
+					{name: "search", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
+				name:       "TourVariantListFilters"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantListFilters"
+				fields: [
+					{name: "search", kind: "scalar", typeName: "string", required: false},
+					{name: "published", kind: "scalar", typeName: "string", required: false},
+				]
+			},
+			{
+				name:       "PublicHomepageAssetsStatus"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#PublicHomepageAssetsStatus"
+				fields: [
+					{name: "ok", kind: "scalar", typeName: "bool", required: true},
+					{name: "dirty", kind: "scalar", typeName: "bool", required: false},
+					{name: "reason", kind: "scalar", typeName: "string", required: false},
+					{name: "error", kind: "scalar", typeName: "string", required: false},
+					{name: "tour_variant_id", kind: "scalar", typeName: "Identifier", required: false},
+				]
+			},
+			{
+				name:       "TourVariantPublication"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantPublication"
+				fields: [
+					{name: "ok", kind: "scalar", typeName: "bool", required: true},
+					{name: "issues", kind: "scalar", typeName: "string", required: true, isArray: true},
+				]
+			},
+			{
+				name:       "TourVariantDayRef"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantDayRef"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "day_number", kind: "scalar", typeName: "int", required: true},
+					{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "source_tour_title", kind: "scalar", typeName: "string", required: false},
+					{name: "source_tour_published_on_webpage", kind: "scalar", typeName: "bool", required: false},
+					{name: "source_day_title", kind: "scalar", typeName: "string", required: false},
+					{name: "source_day_exists", kind: "scalar", typeName: "bool", required: false},
+				]
+			},
+			{
+				name:       "TourVariantReadModel"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantReadModel"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "record_type", kind: "scalar", typeName: "string", required: false},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "title_i18n", kind: "map", typeName: "string", required: false},
+					{name: "short_description", kind: "scalar", typeName: "string", required: false},
+					{name: "short_description_i18n", kind: "map", typeName: "string", required: false},
+					{name: "styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
+					{name: "style_codes", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
+					{name: "priority", kind: "scalar", typeName: "int", required: false},
+					{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: false},
+					{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
+					{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
+					{name: "base_marketing_tour_id", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "boundary_logistics", kind: "entity", typeName: "TravelPlanBoundaryLogistics", required: false},
+					{name: "days", kind: "transport", typeName: "TourVariantDayRef", required: false, isArray: true},
+					{name: "publication", kind: "transport", typeName: "TourVariantPublication", required: false},
+					{name: "created_at", kind: "scalar", typeName: "Timestamp", required: false},
+					{name: "updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+				]
+			},
+			{
+				name:       "TourVariantBaseTourOption"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantBaseTourOption"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "day_count", kind: "scalar", typeName: "int", required: false},
+					{name: "styles", kind: "scalar", typeName: "string", required: false, isArray: true},
+					{name: "style_codes", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
+				]
+			},
+			{
+				name:       "TourVariantOptions"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantOptions"
+				fields: [
+					{name: "styles", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
+					{name: "base_tours", kind: "transport", typeName: "TourVariantBaseTourOption", required: false, isArray: true},
+				]
+			},
+			{
+				name:       "TourVariantSourceDayOption"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantSourceDayOption"
+				fields: [
+					{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "source_tour_title", kind: "scalar", typeName: "string", required: false},
+					{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "day_number", kind: "scalar", typeName: "int", required: false},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "notes", kind: "scalar", typeName: "string", required: false},
+					{name: "thumbnail_url", kind: "scalar", typeName: "string", required: false},
+					{name: "thumbnail_urls", kind: "scalar", typeName: "string", required: false, isArray: true},
+					{name: "service_count", kind: "scalar", typeName: "int", required: false},
+					{name: "image_count", kind: "scalar", typeName: "int", required: false},
+					{name: "source_day", kind: "entity", typeName: "TravelPlanDay", required: false},
+				]
+			},
+			{
+				name:       "TourVariantSourceDayList"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantSourceDayList"
+				fields: [
+					{name: "items", kind: "transport", typeName: "TourVariantSourceDayOption", required: true, isArray: true},
+					{name: "total", kind: "scalar", typeName: "int", required: true},
+				]
+			},
+			{
+				name:       "TourVariantPublishIssue"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantPublishIssue"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "issues", kind: "scalar", typeName: "string", required: true, isArray: true},
+				]
+			},
+			{
+				name:       "TourVariantPublishResponse"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantPublishResponse"
+				fields: [
+					{name: "ok", kind: "scalar", typeName: "bool", required: true},
+					{name: "invalid_tour_variants", kind: "transport", typeName: "TourVariantPublishIssue", required: false, isArray: true},
+					{name: "homepage_assets", kind: "transport", typeName: "PublicHomepageAssetsStatus", required: false},
+				]
+			},
+			{
+				name:       "TourTravelPlanDaySearchResult"
+				domain:     "api"
 			module:     "api"
 			sourceType: "api.#TourTravelPlanDaySearchResult"
 			fields: [
@@ -1314,23 +1463,36 @@ IR: {
 				{name: "catalog", kind: "transport", typeName: "DestinationScopeCatalogResponse", required: true},
 			]
 		},
-		{
-			name:       "TourList"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TourList"
+			{
+				name:       "TourList"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourList"
 			fields: [
 				{name: "items", kind: "entity", typeName: "Tour", required: true, isArray: true},
 				{name: "pagination", kind: "transport", typeName: "Pagination", required: true},
 				{name: "filters", kind: "transport", typeName: "TourListFilters", required: false},
 				{name: "sort", kind: "scalar", typeName: "string", required: false},
 				{name: "available_destinations", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
-				{name: "available_styles", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
-			]
-		},
-		{
-			name:       "BookingDetail"
-			domain:     "api"
+					{name: "available_styles", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
+				]
+			},
+			{
+				name:       "TourVariantList"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantList"
+				fields: [
+					{name: "items", kind: "transport", typeName: "TourVariantReadModel", required: true, isArray: true},
+					{name: "pagination", kind: "transport", typeName: "Pagination", required: true},
+					{name: "filters", kind: "transport", typeName: "TourVariantListFilters", required: false},
+					{name: "sort", kind: "scalar", typeName: "string", required: false},
+					{name: "options", kind: "transport", typeName: "TourVariantOptions", required: false},
+				]
+			},
+			{
+				name:       "BookingDetail"
+				domain:     "api"
 			module:     "api"
 			sourceType: "api.#BookingDetail"
 			fields: [
@@ -1357,16 +1519,26 @@ IR: {
 				{name: "styles", kind: "transport", typeName: "CatalogOption", required: false, isArray: true},
 			]
 		},
-		{
-			name:       "TourDetail"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TourDetail"
+			{
+				name:       "TourDetail"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourDetail"
 			fields: [
 				{name: "tour", kind: "entity", typeName: "Tour", required: true},
-				{name: "options", kind: "transport", typeName: "TourOptions", required: true},
-			]
-		},
+					{name: "options", kind: "transport", typeName: "TourOptions", required: true},
+				]
+			},
+			{
+				name:       "TourVariantDetail"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantDetail"
+				fields: [
+					{name: "tour_variant", kind: "transport", typeName: "TourVariantReadModel", required: true},
+					{name: "options", kind: "transport", typeName: "TourVariantOptions", required: true},
+				]
+			},
 		{
 			name:       "KeycloakUserDirectoryEntry"
 			domain:     "api"
@@ -1589,17 +1761,37 @@ IR: {
 				{name: "warning", kind: "scalar", typeName: "string", required: false},
 			]
 		},
-		{
-			name:       "TourResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TourResponse"
+			{
+				name:       "TourResponse"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourResponse"
 			fields: [
-				{name: "tour", kind: "entity", typeName: "Tour", required: true},
-			]
-		},
-		{
-			name:       "MobileBootstrap"
+					{name: "tour", kind: "entity", typeName: "Tour", required: true},
+				]
+			},
+			{
+				name:       "TourVariantResponse"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantResponse"
+				fields: [
+					{name: "tour_variant", kind: "transport", typeName: "TourVariantReadModel", required: true},
+					{name: "homepage_assets", kind: "transport", typeName: "PublicHomepageAssetsStatus", required: false},
+				]
+			},
+			{
+				name:       "TourVariantDeleteResponse"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantDeleteResponse"
+				fields: [
+					{name: "ok", kind: "scalar", typeName: "bool", required: true},
+					{name: "homepage_assets", kind: "transport", typeName: "PublicHomepageAssetsStatus", required: false},
+				]
+			},
+			{
+				name:       "MobileBootstrap"
 			domain:     "api"
 			module:     "api"
 			sourceType: "api.#MobileBootstrap"
@@ -2211,11 +2403,11 @@ IR: {
 				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
 			]
 		},
-		{
-			name:       "TourUpsertRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#TourUpsertRequest"
+			{
+				name:       "TourUpsertRequest"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourUpsertRequest"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
@@ -2226,11 +2418,45 @@ IR: {
 				{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
 				{name: "short_description", kind: "scalar", typeName: "string", required: false},
 				{name: "travel_plan", kind: "entity", typeName: "MarketingTourTravelPlan", required: false},
-				{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
-			]
-		},
-		{
-			name:       "TourTranslateFieldsRequest"
+					{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+				]
+			},
+			{
+				name:       "TourVariantDayRefInput"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantDayRefInput"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "day_number", kind: "scalar", typeName: "int", required: false},
+					{name: "source_tour_id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "source_day_id", kind: "scalar", typeName: "Identifier", required: true},
+				]
+			},
+			{
+				name:       "TourVariantUpsertRequest"
+				domain:     "api"
+				module:     "api"
+				sourceType: "api.#TourVariantUpsertRequest"
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "expected_updated_at", kind: "scalar", typeName: "Timestamp", required: false},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "title_i18n", kind: "map", typeName: "string", required: false},
+					{name: "short_description", kind: "scalar", typeName: "string", required: false},
+					{name: "short_description_i18n", kind: "map", typeName: "string", required: false},
+					{name: "styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
+					{name: "priority", kind: "scalar", typeName: "int", required: false},
+					{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: false},
+					{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
+					{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},
+					{name: "base_marketing_tour_id", kind: "scalar", typeName: "Identifier", required: false},
+					{name: "boundary_logistics", kind: "entity", typeName: "TravelPlanBoundaryLogistics", required: false},
+					{name: "days", kind: "transport", typeName: "TourVariantDayRefInput", required: false, isArray: true},
+				]
+			},
+			{
+				name:       "TourTranslateFieldsRequest"
 			domain:     "api"
 			module:     "api"
 			sourceType: "api.#TourTranslateFieldsRequest"

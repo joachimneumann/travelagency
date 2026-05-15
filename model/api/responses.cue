@@ -166,6 +166,110 @@ import (
 	search?:      string
 }
 
+#TourVariantListFilters: {
+	search?:    string
+	published?: "yes" | "no" | string
+}
+
+#PublicHomepageAssetsStatus: {
+	ok:      bool
+	dirty?:  bool
+	reason?: string
+	error?:  string
+	tour_variant_id?: common.#Identifier
+}
+
+#TourVariantPublication: {
+	ok:     bool
+	issues: [...string]
+}
+
+#TourVariantDayRef: {
+	id:                              common.#Identifier
+	day_number:                      >0 & int
+	source_tour_id:                  common.#Identifier
+	source_day_id:                   common.#Identifier
+	source_tour_title?:              string
+	source_tour_published_on_webpage?: bool
+	source_day_title?:               string
+	source_day_exists?:              bool
+}
+
+#TourVariantReadModel: {
+	id:                         common.#Identifier
+	record_type?:                "tour_variant"
+	title?:                      string
+	title_i18n?:                 [string]: string
+	short_description?:          string
+	short_description_i18n?:     [string]: string
+	styles?: [...enums.#TourStyleCode]
+	style_codes?: [...enums.#TourStyleCode]
+	priority?:                  int
+	published_on_webpage?:      bool
+	seasonality_start_month?:   enums.#MonthCode
+	seasonality_end_month?:     enums.#MonthCode
+	base_marketing_tour_id?:    common.#Identifier
+	boundary_logistics?:        databaseModel.#TravelPlanBoundaryLogistics
+	days?: [...#TourVariantDayRef]
+	publication?:               #TourVariantPublication
+	created_at?:                common.#Timestamp
+	updated_at?:                common.#Timestamp
+}
+
+#TourVariantBaseTourOption: {
+	id:          common.#Identifier
+	title?:      string
+	day_count?:  >=0 & int
+	styles?: [...string]
+	style_codes?: [...enums.#TourStyleCode]
+}
+
+#TourVariantOptions: {
+	styles?:     [...#CatalogOption]
+	base_tours?: [...#TourVariantBaseTourOption]
+}
+
+#TourVariantResponse: {
+	tour_variant:     #TourVariantReadModel
+	homepage_assets?: #PublicHomepageAssetsStatus
+}
+
+#TourVariantDeleteResponse: {
+	ok:               bool
+	homepage_assets?: #PublicHomepageAssetsStatus
+}
+
+#TourVariantSourceDayOption: {
+	source_tour_id:    common.#Identifier
+	source_tour_title?: string
+	source_day_id:     common.#Identifier
+	day_number?:       >0 & int
+	title?:            string
+	notes?:            string
+	thumbnail_url?:    common.#Url | string
+	thumbnail_urls?: [...string]
+	service_count?:    >=0 & int
+	image_count?:      >=0 & int
+	source_day?:       databaseModel.#TravelPlanDay
+}
+
+#TourVariantSourceDayList: {
+	items: [...#TourVariantSourceDayOption]
+	total: >=0 & int
+}
+
+#TourVariantPublishIssue: {
+	id:     common.#Identifier
+	title?: string
+	issues: [...string]
+}
+
+#TourVariantPublishResponse: {
+	ok:                    bool
+	invalid_tour_variants?: [...#TourVariantPublishIssue]
+	homepage_assets?:      #PublicHomepageAssetsStatus
+}
+
 #TourTravelPlanServiceSearchResult: {
 	source_tour_id:      common.#Identifier
 	source_tour_title?:  string

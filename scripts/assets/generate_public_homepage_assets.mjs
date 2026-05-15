@@ -2367,6 +2367,7 @@ async function generateTeamAssets({
 
 export async function generatePublicHomepageAssets({
   toursRoot = TOURS_ROOT,
+  tourVariantsRoot = "",
   staffRoot = ATP_STAFF_ROOT,
   staffProfilesPath = "",
   staffPhotosRoot = "",
@@ -2403,6 +2404,8 @@ export async function generatePublicHomepageAssets({
     || (staffRoot === ATP_STAFF_ROOT ? ATP_STAFF_PHOTOS_ROOT : path.join(staffRoot, "photos"));
   const resolvedDestinationCatalogPath = normalizeText(destinationCatalogPath)
     || (toursRoot === TOURS_ROOT ? DESTINATION_CATALOG_PATH : path.join(toursRoot, "destinations.json"));
+  const resolvedTourVariantsRoot = normalizeText(tourVariantsRoot)
+    || (toursRoot === TOURS_ROOT ? TOUR_VARIANTS_ROOT : path.join(path.dirname(toursRoot), "tour_variants"));
   const resolvedOnePagersManifestPath = normalizeText(onePagersManifestPath)
     || (toursRoot === TOURS_ROOT ? ONE_PAGERS_MANIFEST_PATH : path.join(path.dirname(toursRoot), "one-pagers", "manifest.json"));
   const resolvedTranslationsSnapshotDir = normalizeText(translationsSnapshotDir)
@@ -2414,6 +2417,7 @@ export async function generatePublicHomepageAssets({
   await cleanGeneratedFrontendData(frontendDataDir);
   const tours = await generateTourAssets({
     toursRoot,
+    tourVariantsRoot: resolvedTourVariantsRoot,
     outputRoot: tourOutputDir,
     frontendDataDir,
     countryReferenceInfoPath,

@@ -1236,6 +1236,125 @@ export function tourCreateRequest({ baseURL = '', params = {}, query = {}, body,
   };
 }
 
+export function tourVariantsPath(params = {}) {
+  return buildPath("/api/v1/tour-variants", params);
+}
+
+export function tourVariantsRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourVariantsPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_variants",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourVariantCreatePath(params = {}) {
+  return buildPath("/api/v1/tour-variants", params);
+}
+
+export function tourVariantCreateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourVariantCreatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_variant_create",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourVariantSourceDaysPath(params = {}) {
+  return buildPath("/api/v1/tour-variants/source-days", params);
+}
+
+export function tourVariantSourceDaysRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourVariantSourceDaysPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_variant_source_days",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourVariantsPublishPath(params = {}) {
+  return buildPath("/api/v1/tour-variants/publish", params);
+}
+
+export function tourVariantsPublishRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourVariantsPublishPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_variants_publish",
+    method: "POST",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourVariantDetailPath(params = {}) {
+  return buildPath("/api/v1/tour-variants/{tour_variant_id}", params);
+}
+
+export function tourVariantDetailRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourVariantDetailPath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_variant_detail",
+    method: "GET",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourVariantUpdatePath(params = {}) {
+  return buildPath("/api/v1/tour-variants/{tour_variant_id}", params);
+}
+
+export function tourVariantUpdateRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourVariantUpdatePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_variant_update",
+    method: "PATCH",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
+export function tourVariantDeletePath(params = {}) {
+  return buildPath("/api/v1/tour-variants/{tour_variant_id}", params);
+}
+
+export function tourVariantDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
+  const path = tourVariantDeletePath(params);
+  const url = buildURL(baseURL, path, query);
+  return {
+    key: "tour_variant_delete",
+    method: "DELETE",
+    authenticated: true,
+    url,
+    headers,
+    body
+  };
+}
+
 export function tourTravelPlanDaySearchPath(params = {}) {
   return buildPath("/api/v1/tours/travel-plan-days/search", params);
 }

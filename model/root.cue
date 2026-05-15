@@ -75,11 +75,13 @@ import (
 	}
 
 	api: {
-		BookingList:                                               apiModel.#BookingList
-		TourList:                                                  apiModel.#TourList
-		BookingDetail:                                             apiModel.#BookingDetail
-		TourDetail:                                                apiModel.#TourDetail
-		KeycloakUserDirectoryEntry:                                apiModel.#KeycloakUserDirectoryEntry
+			BookingList:                                               apiModel.#BookingList
+			TourList:                                                  apiModel.#TourList
+			TourVariantList:                                           apiModel.#TourVariantList
+			BookingDetail:                                             apiModel.#BookingDetail
+			TourDetail:                                                apiModel.#TourDetail
+			TourVariantDetail:                                         apiModel.#TourVariantDetail
+			KeycloakUserDirectoryEntry:                                apiModel.#KeycloakUserDirectoryEntry
 		KeycloakUserListResponse:                                  apiModel.#KeycloakUserListResponse
 		KeycloakUserStaffProfileEntry:                             apiModel.#KeycloakUserStaffProfileEntry
 		KeycloakUserStaffProfileEntryResponse:                     apiModel.#KeycloakUserStaffProfileEntryResponse
@@ -98,10 +100,23 @@ import (
 		SettingsObservabilityBookingActivity:                      apiModel.#SettingsObservabilityBookingActivity
 		SettingsObservabilityLatestChangedBooking:                 apiModel.#SettingsObservabilityLatestChangedBooking
 		SettingsObservabilityResponse:                             apiModel.#SettingsObservabilityResponse
-		CatalogOption:                                             apiModel.#CatalogOption
-		TourOptions:                                               apiModel.#TourOptions
-		TourResponse:                                              apiModel.#TourResponse
-		TourDeleteResponse:                                        apiModel.#TourDeleteResponse
+			CatalogOption:                                             apiModel.#CatalogOption
+			TourOptions:                                               apiModel.#TourOptions
+			TourVariantListFilters:                                    apiModel.#TourVariantListFilters
+			PublicHomepageAssetsStatus:                                apiModel.#PublicHomepageAssetsStatus
+			TourVariantPublication:                                    apiModel.#TourVariantPublication
+			TourVariantDayRef:                                         apiModel.#TourVariantDayRef
+			TourVariantReadModel:                                      apiModel.#TourVariantReadModel
+			TourVariantBaseTourOption:                                 apiModel.#TourVariantBaseTourOption
+			TourVariantOptions:                                        apiModel.#TourVariantOptions
+			TourVariantResponse:                                       apiModel.#TourVariantResponse
+			TourVariantDeleteResponse:                                 apiModel.#TourVariantDeleteResponse
+			TourVariantSourceDayOption:                                apiModel.#TourVariantSourceDayOption
+			TourVariantSourceDayList:                                  apiModel.#TourVariantSourceDayList
+			TourVariantPublishIssue:                                   apiModel.#TourVariantPublishIssue
+			TourVariantPublishResponse:                                apiModel.#TourVariantPublishResponse
+			TourResponse:                                              apiModel.#TourResponse
+			TourDeleteResponse:                                        apiModel.#TourDeleteResponse
 		OfferExchangeRatesResponse:                                apiModel.#OfferExchangeRatesResponse
 		BookingListFilters:                                        apiModel.#BookingListFilters
 		TourListFilters:                                           apiModel.#TourListFilters
@@ -171,9 +186,11 @@ import (
 		BookingPaymentDocumentCreateRequest:                       apiModel.#BookingPaymentDocumentCreateRequest
 		CountryPracticalInfoUpdateRequest:                         apiModel.#CountryPracticalInfoUpdateRequest
 		AtpStaffProfileUpdateRequest:                              apiModel.#AtpStaffProfileUpdateRequest
-		AtpStaffPhotoUploadRequest:                                apiModel.#AtpStaffPhotoUploadRequest
-		TourUpsertRequest:                                         apiModel.#TourUpsertRequest
-		EvidenceUpload:                                            apiModel.#EvidenceUpload
+			AtpStaffPhotoUploadRequest:                                apiModel.#AtpStaffPhotoUploadRequest
+			TourUpsertRequest:                                         apiModel.#TourUpsertRequest
+			TourVariantDayRefInput:                                    apiModel.#TourVariantDayRefInput
+			TourVariantUpsertRequest:                                  apiModel.#TourVariantUpsertRequest
+			EvidenceUpload:                                            apiModel.#EvidenceUpload
 		Endpoints:                                                 apiModel.#Endpoints
 	}
 }

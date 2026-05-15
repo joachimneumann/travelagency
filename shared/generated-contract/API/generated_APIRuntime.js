@@ -99,31 +99,67 @@
   "typeName": "Identifier"
 },
   PARAM_17: {
-  "name": "q",
+  "name": "search",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_18: {
-  "name": "service_kind",
+  "name": "published",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_19: {
-  "name": "exclude_tour_id",
+  "name": "sort",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_20: {
-  "name": "limit",
+  "name": "page",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
 },
   PARAM_21: {
+  "name": "page_size",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
+},
+  PARAM_22: {
+  "name": "q",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
+},
+  PARAM_23: {
+  "name": "limit",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
+},
+  PARAM_24: {
   "name": "offset",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
+},
+  PARAM_25: {
+  "name": "tour_variant_id",
+  "location": "path",
+  "required": true,
+  "typeName": "Identifier"
+},
+  PARAM_26: {
+  "name": "service_kind",
+  "location": "query",
+  "required": false,
+  "typeName": "Identifier"
+},
+  PARAM_27: {
+  "name": "exclude_tour_id",
   "location": "query",
   "required": false,
   "typeName": "Identifier"
@@ -960,6 +996,89 @@
         ]
       },
       {
+        key: "tour_variants",
+        path: "/api/v1/tour-variants",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourVariantList",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
+        ]
+      },
+      {
+        key: "tour_variant_create",
+        path: "/api/v1/tour-variants",
+        method: "POST",
+        authenticated: true,
+        requestType: "TourVariantUpsertRequest",
+        responseType: "TourVariantResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "tour_variant_source_days",
+        path: "/api/v1/tour-variants/source-days",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourVariantSourceDayList",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
+        ]
+      },
+      {
+        key: "tour_variants_publish",
+        path: "/api/v1/tour-variants/publish",
+        method: "POST",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourVariantPublishResponse",
+        parameters: [
+
+        ]
+      },
+      {
+        key: "tour_variant_detail",
+        path: "/api/v1/tour-variants/{tour_variant_id}",
+        method: "GET",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourVariantDetail",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_25)
+        ]
+      },
+      {
+        key: "tour_variant_update",
+        path: "/api/v1/tour-variants/{tour_variant_id}",
+        method: "PATCH",
+        authenticated: true,
+        requestType: "TourVariantUpsertRequest",
+        responseType: "TourVariantResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_25)
+        ]
+      },
+      {
+        key: "tour_variant_delete",
+        path: "/api/v1/tour-variants/{tour_variant_id}",
+        method: "DELETE",
+        authenticated: true,
+        requestType: null,
+        responseType: "TourVariantDeleteResponse",
+        parameters: [
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_25)
+        ]
+      },
+      {
         key: "tour_travel_plan_day_search",
         path: "/api/v1/tours/travel-plan-days/search",
         method: "GET",
@@ -967,11 +1086,11 @@
         requestType: null,
         responseType: "TourTravelPlanDaySearchResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_26),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_27),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
         ]
       },
       {
@@ -982,11 +1101,11 @@
         requestType: null,
         responseType: "TourTravelPlanServiceSearchResponse",
         parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_17),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_18),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_19),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_20),
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_21)
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_22),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_26),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_27),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_23),
+      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_24)
         ]
       },
       {

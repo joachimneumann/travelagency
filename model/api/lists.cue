@@ -18,6 +18,14 @@ import jsonModel "travelagency.local/model/json"
 	available_styles?: [...#CatalogOption]
 }
 
+#TourVariantList: {
+	items: [...#TourVariantReadModel]
+	pagination: #Pagination
+	filters?:   #TourVariantListFilters
+	sort?:      string
+	options?:   #TourVariantOptions
+}
+
 #BookingDetail: {
 	booking:    #BookingReadModel
 	unchanged?: bool
@@ -26,4 +34,9 @@ import jsonModel "travelagency.local/model/json"
 #TourDetail: {
 	tour:    jsonModel.#Tour
 	options: #TourOptions
+}
+
+#TourVariantDetail: {
+	tour_variant: #TourVariantReadModel
+	options:      #TourVariantOptions
 }

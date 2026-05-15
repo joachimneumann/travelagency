@@ -382,6 +382,30 @@ import (
 	expected_updated_at?: common.#Timestamp
 }
 
+#TourVariantDayRefInput: {
+	id?:             common.#Identifier
+	day_number?:     >0 & int
+	source_tour_id:  common.#Identifier
+	source_day_id:   common.#Identifier
+}
+
+#TourVariantUpsertRequest: {
+	id?:                       common.#Identifier
+	expected_updated_at?:      common.#Timestamp
+	title?:                    string
+	title_i18n?:               [string]: string
+	short_description?:        string
+	short_description_i18n?:   [string]: string
+	styles?: [...enums.#TourStyleCode]
+	priority?:                int
+	published_on_webpage?:    bool
+	seasonality_start_month?: enums.#MonthCode
+	seasonality_end_month?:   enums.#MonthCode
+	base_marketing_tour_id?:  common.#Identifier
+	boundary_logistics?:      databaseModel.#TravelPlanBoundaryLogistics
+	days?: [...#TourVariantDayRefInput]
+}
+
 #TourTranslateFieldsRequest: #TranslationEntriesRequest
 
 #EvidenceUpload: {

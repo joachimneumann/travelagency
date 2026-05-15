@@ -353,6 +353,27 @@
         min-width: min(20rem, 100%);
       }
 
+      .tour-variant-editor__feedback {
+        display: grid;
+        gap: 0.3rem;
+        margin: 0 0 0.8rem;
+        min-height: 1.5rem;
+      }
+
+      .tour-variant-meta,
+      .tour-variant-status {
+        color: var(--muted);
+        font-size: 0.86rem;
+      }
+
+      .tour-variant-create-base {
+        margin-bottom: 0.8rem;
+      }
+
+      .tour-variant-source-tools--search {
+        margin-bottom: 0.95rem;
+      }
+
       .tour-variant-customizer-mount {
         min-height: 23rem;
         overflow: hidden;
@@ -473,6 +494,27 @@
                 <button class="btn btn-ghost" id="tourVariantReloadBtn" type="button" data-i18n-id="backend.tour_variant.reload">Reload</button>
                 <button class="btn btn-primary" id="tourVariantSaveBtn" type="button" data-i18n-id="backend.tour_variant.save">Save</button>
               </div>
+            </div>
+
+            <div class="tour-variant-editor__feedback">
+              <div id="tourVariantStatus" class="tour-variant-status" role="status" aria-live="polite"></div>
+              <div id="tourVariantMeta" class="tour-variant-meta"></div>
+              <div id="tourVariantIssues" class="tour-variant-issues" role="status" aria-live="polite"></div>
+            </div>
+
+            <div id="tourVariantCreateBaseField" class="tour-variant-source-tools tour-variant-create-base" hidden>
+              <div class="field">
+                <label for="tourVariantBaseTour" data-i18n-id="backend.tour_variant.base_marketing_tour">Base marketing tour</label>
+                <select id="tourVariantBaseTour"></select>
+              </div>
+            </div>
+
+            <div class="tour-variant-source-tools tour-variant-source-tools--search">
+              <div class="field">
+                <label for="tourVariantSourceSearch" data-i18n-id="backend.tour_variant.source_day_search">Search optional days</label>
+                <input id="tourVariantSourceSearch" type="search" autocomplete="off" />
+              </div>
+              <button class="btn btn-ghost" id="tourVariantSourceSearchBtn" type="button" data-i18n-id="backend.tour_variant.search">Search</button>
             </div>
 
             <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>
