@@ -139,7 +139,6 @@ export function buildBookingNotificationEmail({
     ]),
     section("Trip request", [
       { label: "Trip name", value: bookingName === "New booking" ? "" : bookingName },
-      { label: "Destinations", value: joinList(submission.destinations) },
       { label: "Travel style", value: joinList(submission.travel_style) },
       { label: "Travel month", value: submission.travel_month },
       { label: "Travelers", value: submission.number_of_travelers },

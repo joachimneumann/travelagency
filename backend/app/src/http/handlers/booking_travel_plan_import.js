@@ -1,8 +1,3 @@
-import {
-  destinationScopeDestinations,
-  normalizeDestinationScope
-} from "../../domain/destination_scope.js";
-
 function assertPlainObject(value, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error(`${label} must be an object`);
@@ -14,17 +9,6 @@ function assertOptionalNonNegativeInteger(value, fieldName) {
   if (!Number.isInteger(value) || value < 0) {
     throw new Error(`${fieldName} must be a non-negative integer`);
   }
-}
-
-function mergeDestinationScopes(leftScope, rightScope) {
-  const merged = normalizeDestinationScope([
-    ...normalizeDestinationScope(leftScope),
-    ...normalizeDestinationScope(rightScope)
-  ]);
-  return {
-    destination_scope: merged,
-    destinations: destinationScopeDestinations(merged)
-  };
 }
 
 function assertRequiredIdentifier(value, fieldName) {
@@ -61,7 +45,6 @@ function validateTravelPlanDayImportPayload(value) {
   assertOptionalBoolean(value.include_images, "include_images");
   assertOptionalBoolean(value.include_customer_visible_images_only, "include_customer_visible_images_only");
   assertOptionalBoolean(value.include_notes, "include_notes");
-  assertOptionalBoolean(value.include_translations, "include_translations");
   assertOptionalString(value.actor, "actor");
 }
 
@@ -75,7 +58,6 @@ function validateTravelPlanServiceImportPayload(value) {
   assertOptionalBoolean(value.include_images, "include_images");
   assertOptionalBoolean(value.include_customer_visible_images_only, "include_customer_visible_images_only");
   assertOptionalBoolean(value.include_notes, "include_notes");
-  assertOptionalBoolean(value.include_translations, "include_translations");
   assertOptionalString(value.actor, "actor");
 }
 
@@ -203,10 +185,8 @@ export function createBookingTravelPlanImportHandlers(deps) {
         targetItems.push(importedItem);
       }
 
-      const mergedScope = mergeDestinationScopes(targetTravelPlan.destination_scope, source.sourceTravelPlan.destination_scope);
       const nextTravelPlan = {
         ...targetTravelPlan,
-        ...mergedScope,
         days: targetDays.map((day, index) => (
           index === targetDayIndex
             ? {
@@ -288,10 +268,8 @@ export function createBookingTravelPlanImportHandlers(deps) {
         bookingId: targetBooking.id,
         createdAt: nowIso()
       });
-      const mergedScope = mergeDestinationScopes(targetTravelPlan.destination_scope, source.sourceTravelPlan.destination_scope);
       const nextTravelPlan = {
         ...targetTravelPlan,
-        ...mergedScope,
         days: [...targetDays, importedDay]
       };
       const check = validateBookingTravelPlanInput(nextTravelPlan, targetBooking.offer);

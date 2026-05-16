@@ -315,39 +315,6 @@
         ]
       },
       {
-        key: "booking_delete",
-        path: "/api/v1/bookings/{booking_id}",
-        method: "DELETE",
-        authenticated: true,
-        requestType: "BookingDeleteRequest",
-        responseType: "BookingDeleteResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
-        key: "booking_clone",
-        path: "/api/v1/bookings/{booking_id}/clone",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingCloneRequest",
-        responseType: "BookingDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
-        key: "booking_chat",
-        path: "/api/v1/bookings/{booking_id}/chat",
-        method: "GET",
-        authenticated: true,
-        requestType: null,
-        responseType: "BookingChatResponse",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
         key: "booking_name",
         path: "/api/v1/bookings/{booking_id}/name",
         method: "PATCH",
@@ -375,17 +342,6 @@
         method: "PATCH",
         authenticated: true,
         requestType: "BookingSourceUpdateRequest",
-        responseType: "BookingDetail",
-        parameters: [
-      apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)
-        ]
-      },
-      {
-        key: "booking_image",
-        path: "/api/v1/bookings/{booking_id}/image",
-        method: "POST",
-        authenticated: true,
-        requestType: "BookingImageUploadRequest",
         responseType: "BookingDetail",
         parameters: [
       apiParameter(SHARED_API_PARAMETER_DEFS.PARAM_1)

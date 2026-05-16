@@ -26,8 +26,7 @@ import { createBookingPageLanguageController } from "./booking_page_language.js"
 import { createBookingPageDataController } from "./booking_page_data.js";
 import { initializeEnglishTextGuard } from "../shared/english_text_guard.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
-import { createBookingWhatsAppController } from "../booking/whatsapp.js";
-import { initializeBookingSections, renderBookingSectionHeader } from "../booking/sections.js";
+import { initializeBookingSections, renderBookingSectionHeader, setBookingSectionOpen } from "../booking/sections.js";
 import {
   formatMoneyDisplay,
   normalizeCurrencyCode,
@@ -46,7 +45,6 @@ import { createBookingPersonsModule } from "../booking/persons.js";
 import {
   getBookingPersons,
   getPersonInitials,
-  getRepresentativeTraveler,
   isTravelingPerson,
   normalizeStringList
 } from "../shared/booking_persons.js";
@@ -162,41 +160,6 @@ function logBookingSave(message, details = {}) {
   console.info(message, payload);
 }
 
-function setupBookingFilterPanels() {
-  const controls = [
-    { trigger: els.destinationsTrigger, panel: els.destinationsPanel },
-    { trigger: els.travelStylesTrigger, panel: els.travelStylesPanel }
-  ].filter((item) => item.trigger && item.panel);
-
-  if (!controls.length) return;
-
-  const closeAllPanels = () => {
-    controls.forEach(({ trigger, panel }) => {
-      panel.hidden = true;
-      trigger.setAttribute("aria-expanded", "false");
-    });
-  };
-
-  controls.forEach(({ trigger, panel }) => {
-    trigger.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const willOpen = panel.hidden;
-      closeAllPanels();
-      panel.hidden = !willOpen;
-      trigger.setAttribute("aria-expanded", willOpen ? "true" : "false");
-    });
-
-    panel.addEventListener("click", (event) => {
-      event.stopPropagation();
-    });
-  });
-
-  document.addEventListener("click", closeAllPanels);
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeAllPanels();
-  });
-}
-
 const qs = new URLSearchParams(window.location.search);
 const apiBase = (window.ASIATRAVELPLAN_API_BASE || "").replace(/\/$/, "");
 const apiOrigin = apiBase || window.location.origin;
@@ -273,9 +236,6 @@ state.pageDirtyBarStatus = "";
 state.pageSaveActionError = "";
 state.pendingSavedCustomerLanguage = "";
 state.lastMutationError = null;
-state.cloneBookingInFlight = false;
-
-let bookingWhatsApp = null;
 
 const els = {
   pageBody: document.body,
@@ -299,22 +259,10 @@ const els = {
   titleInput: document.getElementById("detail_title_input"),
   titleEditBtn: document.getElementById("detail_title_edit_btn"),
   subtitle: document.getElementById("detail_sub_title"),
-  heroPhotoBtn: document.getElementById("booking_hero_photo_btn"),
-  heroPhotoInput: document.getElementById("booking_hero_photo_input"),
-  heroImage: document.getElementById("booking_hero_image"),
-  heroInitials: document.getElementById("booking_hero_initials"),
   heroCopyBtn: document.getElementById("booking_hero_copy_btn"),
   heroCopyStatus: document.getElementById("booking_hero_copy_status"),
-  cloneTitleLabel: document.getElementById("booking_clone_title_label"),
-  cloneTitleInput: document.getElementById("booking_clone_title_input"),
-  cloneIncludeTravelersInput: document.getElementById("booking_clone_include_travelers_input"),
-  cloneIncludeTravelersLabel: document.getElementById("booking_clone_include_travelers_label"),
-  cloneBtn: document.getElementById("booking_clone_btn"),
-  cloneStatus: document.getElementById("booking_clone_status"),
-  deleteBtn: document.getElementById("booking_delete_btn"),
   error: document.getElementById("detail_error"),
   booking_data_view: document.getElementById("booking_data_view"),
-  actionsPanel: document.getElementById("booking_actions_panel"),
   notePanel: document.getElementById("booking_note_panel"),
   persons_editor_panel: document.getElementById("persons_editor_panel"),
   personsPanelSummary: document.getElementById("persons_editor_panel_summary"),
@@ -377,13 +325,6 @@ const els = {
   referralLabelInput: document.getElementById("booking_referral_label_input"),
   referralLabelHint: document.getElementById("booking_referral_label_hint"),
   referralStaffSelect: document.getElementById("booking_referral_staff_select"),
-  destinationsTrigger: document.getElementById("booking_destinations_trigger"),
-  destinationsSummary: document.getElementById("booking_destinations_summary"),
-  destinationsPanel: document.getElementById("booking_destinations_panel"),
-  destinationsOptions: document.getElementById("booking_destinations_options"),
-  travelStylesTrigger: document.getElementById("booking_travel_styles_trigger"),
-  travelStylesSummary: document.getElementById("booking_travel_styles_summary"),
-  travelStylesPanel: document.getElementById("booking_travel_styles_panel"),
   travelStylesOptions: document.getElementById("booking_travel_styles_options"),
   travelPlanPdfPersonalizationPanel: document.getElementById("travel_plan_pdf_personalization_panel"),
   offerPdfPersonalizationPanel: document.getElementById("offer_pdf_personalization_panel"),
@@ -449,8 +390,7 @@ const els = {
   offer_generation_route_mode: document.getElementById("offer_generation_route_mode"),
   offer_status: document.getElementById("offer_status"),
   activities_table: document.getElementById("activities_table"),
-  activitiesPanelSummary: document.getElementById("activities_panel_summary"),
-  meta_chat_mount: document.getElementById("booking_whatsapp_mount")
+  activitiesPanelSummary: document.getElementById("activities_panel_summary")
 };
 
 renderBookingPdfPersonalizationPanels(els);
@@ -631,15 +571,6 @@ function cleanStateBlockMessage() {
 function updateCleanStateActionAvailability() {
   const blocked = hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight;
   const message = cleanStateBlockMessage();
-  if (els.cloneBtn instanceof HTMLButtonElement) {
-    const cloneTitle = normalizeText(els.cloneTitleInput?.value);
-    els.cloneBtn.dataset.cleanStateBaseDisabled = (
-      !state.permissions.canEditBooking
-      || state.cloneBookingInFlight
-      || !state.booking?.id
-      || !cloneTitle
-    ) ? "true" : "false";
-  }
   document.querySelectorAll("[data-requires-clean-state]").forEach((element) => {
     if (!(element instanceof HTMLElement) || !("disabled" in element)) return;
     if (!Object.prototype.hasOwnProperty.call(element.dataset, "cleanStateBaseDisabled")) {
@@ -701,7 +632,6 @@ function captureControlSnapshot(root) {
 }
 
 window.addEventListener("beforeunload", (event) => {
-  bookingWhatsApp?.stopAutoRefresh();
   if (!hasUnsavedBookingChanges()) return;
   event.preventDefault();
   event.returnValue = "";
@@ -758,35 +688,16 @@ async function initBookingPage() {
     wireAuthLogoutLink(els.logoutLink, { apiBase: apiOrigin, returnTo });
   }
 
-  if (!bookingWhatsApp && els.meta_chat_mount) {
-    bookingWhatsApp = createBookingWhatsAppController({
-      apiOrigin,
-      fetchApi,
-      getBookingPersons,
-      formatPersonRoleLabel,
-      getPersonInitials,
-      resolvePersonPhotoSrc,
-      onNotice: setStatus
-    });
-    bookingWhatsApp.mount(els.meta_chat_mount);
-  }
-
   initializeBookingSections(document);
+  bindBookingWorkspaceLayoutPanels();
   renderStaticSectionHeaders();
   populateCurrencySelectFromModule(els.offer_currency_input);
   renderOfferCurrencyMenu(els.offer_currency_input, els.offerCurrencyMenuMount);
   populateContentLanguageSelect();
-  setupBookingFilterPanels();
   bookingDirtyBarController.bind();
   updatePageDirtyBar();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
-  if (els.heroPhotoBtn) els.heroPhotoBtn.addEventListener("click", triggerBookingPhotoPicker);
-  if (els.heroPhotoInput) {
-    els.heroPhotoInput.addEventListener("change", async () => {
-      await uploadBookingPhoto();
-    });
-  }
   if (els.titleEditBtn) els.titleEditBtn.addEventListener("click", startBookingTitleEdit);
   if (els.titleInput) {
     els.titleInput.addEventListener("input", updateCoreDirtyState);
@@ -802,12 +713,6 @@ async function initBookingPage() {
   }
   if (els.referralLabelInput) els.referralLabelInput.addEventListener("input", updateCoreDirtyState);
   if (els.referralStaffSelect) els.referralStaffSelect.addEventListener("change", updateCoreDirtyState);
-  if (els.destinationsOptions) {
-    els.destinationsOptions.addEventListener("change", () => {
-      updateCoreDirtyState();
-      renderActionControls();
-    });
-  }
   if (els.travelStylesOptions) {
     els.travelStylesOptions.addEventListener("change", () => {
       updateCoreDirtyState();
@@ -838,15 +743,6 @@ async function initBookingPage() {
       travelPlanModule.renderTravelPlanTranslationPanel?.();
     });
   });
-  if (els.deleteBtn) els.deleteBtn.addEventListener("click", deleteBooking);
-  if (els.cloneTitleInput) {
-    els.cloneTitleInput.addEventListener("input", () => {
-      const defaultValue = normalizeText(els.cloneTitleInput?.dataset.defaultValue);
-      els.cloneTitleInput.dataset.userEdited = normalizeText(els.cloneTitleInput.value) !== defaultValue ? "true" : "false";
-      updateCleanStateActionAvailability();
-    });
-  }
-  if (els.cloneBtn) els.cloneBtn.addEventListener("click", cloneBooking);
   if (els.noteInput) els.noteInput.addEventListener("input", updateNoteSaveButtonState);
   if (els.noteInput) els.noteInput.addEventListener("change", updateNoteSaveButtonState);
   if (els.personModal) {
@@ -965,11 +861,6 @@ function resolvePersonPhotoSrc(photoRef) {
   return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
 }
 
-function resolveBookingImageSrc(imageRef) {
-  const imagePath = normalizeText(imageRef) || "assets/img/profile_person.png";
-  return /^assets\//.test(imagePath) ? imagePath : resolveApiUrl(apiBase, imagePath);
-}
-
 function copyHeroIdToClipboard() {
   return coreModule.copyHeroIdToClipboard();
 }
@@ -1005,14 +896,6 @@ function getBookingRevision(field) {
 }
 function handleBookingDetailKeydown(event) {
   return coreModule.handleBookingDetailKeydown(event);
-}
-
-function triggerBookingPhotoPicker() {
-  return coreModule.triggerBookingPhotoPicker();
-}
-
-async function uploadBookingPhoto() {
-  return coreModule.uploadBookingPhoto();
 }
 
 function buildContactEntries(contact) {
@@ -1063,11 +946,6 @@ function getActiveTravelerDetailsDraft() {
 function getTravelerDetailsRecipientEmail() {
   const draft = getActiveTravelerDetailsDraft();
   return String(Array.isArray(draft?.emails) ? draft.emails[0] : "").trim();
-}
-
-function getTravelerDetailsRecipientPhone() {
-  const draft = getActiveTravelerDetailsDraft();
-  return String(Array.isArray(draft?.phone_numbers) ? draft.phone_numbers[0] : "").trim();
 }
 
 function travelerDetailsLinkUnavailableMessage(message = "") {
@@ -1206,29 +1084,6 @@ async function emailTravelerDetailsLink() {
   setTravelerDetailsLinkStatus(backendT("booking.traveler_details.email_opening", "Opening your mail client..."));
 }
 
-async function openTravelerDetailsWhatsAppLink() {
-  const result = await requestTravelerDetailsLink();
-  if (!result.ok || !result.link) {
-    setTravelerDetailsLinkStatus(travelerDetailsLinkUnavailableMessage(result.error));
-    return;
-  }
-  const draft = getActiveTravelerDetailsDraft();
-  const travelerName = normalizeText(draft?.name) || backendT("booking.persons.this_person", "this traveler");
-  const bookingName = normalizeText(state.booking?.name || state.booking?.web_form_submission?.booking_name || state.booking?.id)
-    || backendT("booking.title", "Booking");
-  const message = backendT(
-    "booking.traveler_details.whatsapp_body",
-    "Hello {traveler}, please fill in your traveler details for {booking} here: {link}",
-    { traveler: travelerName, booking: bookingName, link: result.link }
-  );
-  const recipientPhone = getTravelerDetailsRecipientPhone().replace(/\D+/g, "");
-  const whatsappUrl = new URL("https://api.whatsapp.com/send");
-  if (recipientPhone) whatsappUrl.searchParams.set("phone", recipientPhone);
-  whatsappUrl.searchParams.set("text", message);
-  window.open(whatsappUrl.toString(), "_blank", "noopener");
-  setTravelerDetailsLinkStatus(backendT("booking.traveler_details.whatsapp_opening", "Opening WhatsApp..."));
-}
-
 function formatPersonAddress(address) {
   if (!address || typeof address !== "object") return "";
   return [
@@ -1268,14 +1123,6 @@ function commitBookingTitleEdit() {
 
 function handleBookingTitleInputKeydown(event) {
   return coreModule.handleBookingTitleInputKeydown(event);
-}
-
-function deleteBooking() {
-  return coreModule.deleteBooking();
-}
-
-function cloneBooking() {
-  return coreModule.cloneBooking();
 }
 
 function renderPersonsEditor(options) {
@@ -1327,6 +1174,19 @@ function renderCommercialFlowGuide() {
   }
 }
 
+function bindBookingWorkspaceLayoutPanels() {
+  const financialPanel = document.getElementById("financial_aspects_panel");
+  const financialSummary = document.getElementById("financial_aspects_panel_summary");
+  if (!(financialPanel instanceof HTMLElement) || !(financialSummary instanceof HTMLElement)) return;
+  if (financialPanel.dataset.bookingWorkspaceLayoutBound === "true") return;
+  financialSummary.addEventListener("click", () => {
+    if (financialPanel.classList.contains("is-open")) {
+      setBookingSectionOpen(els.travel_plan_panel, false);
+    }
+  });
+  financialPanel.dataset.bookingWorkspaceLayoutBound = "true";
+}
+
 function renderStaticSectionHeaders() {
   renderBookingSectionHeader(els.personsPanelSummary, { primary: backendT("booking.no_persons", "No persons listed.") });
   renderBookingSectionHeader(els.travel_plan_panel_summary, {
@@ -1334,7 +1194,7 @@ function renderStaticSectionHeaders() {
     secondary: backendT("booking.no_travel_plan", "No travel plan yet.")
   });
   renderBookingSectionHeader(els.travel_plan_pdf_panel_summary, {
-    primary: backendT("booking.travel_plan.travel_plan_pdf", "Travel plan PDF")
+    primary: "Travel plan documents"
   });
   renderBookingSectionHeader(els.offerPanelSummary, { primary: backendT("booking.proposal", "Offer") });
   renderBookingSectionHeader(els.offerPaymentTermsPanelSummary, { primary: backendT("booking.payment_plan", "Payment plan") });
@@ -1677,7 +1537,6 @@ function buildBookingMarketingTourDayImportRequest({ apiOrigin: requestApiOrigin
       include_images: true,
       include_customer_visible_images_only: false,
       include_notes: true,
-      include_translations: false,
       actor: requestState.user
     }
   });
@@ -1700,8 +1559,6 @@ function buildBookingMarketingTourServiceImportRequest({ apiOrigin: requestApiOr
       include_images: true,
       include_customer_visible_images_only: false,
       include_notes: true,
-      include_translations: false,
-      include_offer_links: false,
       actor: requestState.user
     }
   });
@@ -1815,9 +1672,13 @@ travelPlanModule = createBookingTravelPlanModule({
   cloneTravelPlanServiceForLocalImport: cloneBookingMarketingTourServiceForLocalImport,
   travelPlanLibrarySource: "marketing_tour",
   features: {
-    dayImport: true,
+    dayImport: false,
     tourImport: false,
-    serviceImport: true
+    serviceImport: false,
+    destinationScope: false,
+    destinationScopeCreate: false,
+    allPrimaryMapPointOptions: true,
+    focusedBookingWorkspace: true
   }
 });
 
@@ -1866,30 +1727,20 @@ const coreModule = createBookingCoreModule({
   fetchBookingMutation,
   getBookingRevision,
   getBookingPersons,
-  getRepresentativeTraveler,
   getPersonInitials,
   normalizeText,
   escapeHtml,
   formatDateTime,
   resolveApiUrl,
   resolvePersonPhotoSrc,
-  resolveBookingImageSrc,
   displayKeycloakUser,
   resolveCurrentAuthKeycloakUser,
-  canReadAllBookingsInUi: () => (
-    state.roles.includes(ROLES.ADMIN)
-    || state.roles.includes(ROLES.MANAGER)
-    || state.roles.includes(ROLES.ACCOUNTANT)
-  ),
   setBookingSectionDirty,
   hasUnsavedBookingChanges,
-  reportPersistedActionBlocked: () => setStatus(cleanStateBlockMessage()),
   updateContentLangInUrl,
   setPendingSavedCustomerLanguage: (lang) => {
     state.pendingSavedCustomerLanguage = normalizeBookingContentLang(lang || "");
   },
-  setStatus,
-  rerenderWhatsApp: (booking) => bookingWhatsApp?.rerender(booking),
   renderPersonsEditor: (...args) => personsModule.renderPersonsEditor(...args)
 });
 
@@ -1921,8 +1772,7 @@ const bookingPageDataController = createBookingPageDataController({
   renderOfferPanel,
   loadActivities,
   loadPaymentDocuments,
-  ensureTourImageLoaded,
-  bookingWhatsAppRef: () => bookingWhatsApp
+  ensureTourImageLoaded
 });
 
 void init().catch((error) => {

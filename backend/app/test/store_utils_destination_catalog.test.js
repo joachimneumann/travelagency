@@ -54,10 +54,7 @@ test("store utils migrate tour destination catalog into content/tours/destinatio
     ],
     destination_places: [
       { id: "place_hoi_an", region_id: "region_central", code: "hoi-an", name: "Hoi An", sort_order: 1 }
-    ],
-    chat_channel_accounts: [],
-    chat_conversations: [],
-    chat_events: []
+    ]
   }, null, 2)}\n`, "utf8");
 
   const storeUtils = createTestStoreUtils({
@@ -110,10 +107,7 @@ test("store utils persist deleted destination regions and places to destination 
   await writeFile(dataPath, `${JSON.stringify({
     bookings: [],
     activities: [],
-    payment_documents: [],
-    chat_channel_accounts: [],
-    chat_conversations: [],
-    chat_events: []
+    payment_documents: []
   }, null, 2)}\n`, "utf8");
   await mkdir(contentToursDir, { recursive: true });
   await writeFile(tourDestinationsPath, `${JSON.stringify({
@@ -171,10 +165,7 @@ test("store utils strip embedded tour localized fields on content tour read and 
   await writeFile(dataPath, `${JSON.stringify({
     bookings: [],
     activities: [],
-    payment_documents: [],
-    chat_channel_accounts: [],
-    chat_conversations: [],
-    chat_events: []
+    payment_documents: []
   }, null, 2)}\n`, "utf8");
   await writeFile(tourJsonPath, `${JSON.stringify({
     id: "tour_1",

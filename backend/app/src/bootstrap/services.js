@@ -4,7 +4,6 @@ import { createTravelPlanHelpers } from "../domain/travel_plan.js";
 import { createBookingViewHelpers } from "../domain/booking_views.js";
 import { createTourHelpers } from "../domain/tours_support.js";
 import { createTourVariantHelpers } from "../domain/tour_variants.js";
-import { createMetaWebhookHandlers } from "../integrations/meta_webhook.js";
 import { createPaymentDocumentPdfWriter } from "../lib/payment_document_pdf.js";
 import { createOfferPdfWriter } from "../lib/offer_pdf.js";
 import { createTravelPlanPdfWriter } from "../lib/travel_plan_pdf.js";
@@ -23,7 +22,6 @@ export function createBackendServices({
   runtime,
   collections,
   httpHelpers,
-  stagingAccessHelpers,
   support
 }) {
   const writeQueueRef = { current: Promise.resolve() };
@@ -100,7 +98,6 @@ export function createBackendServices({
     translationEnabled: runtime.translationEnabled,
     normalizeStringArray: support.normalizeStringArray,
     normalizeEmail: support.normalizeEmail,
-    isLikelyPhoneMatch: support.isLikelyPhoneMatch,
     nowIso: support.nowIso,
     safeCurrency: pricingHelpers.safeCurrency,
     safeOptionalInt: support.safeOptionalInt,
@@ -164,24 +161,6 @@ export function createBackendServices({
     clearTranslationCaches: (options) => staticTranslationService.clearMachineTranslations(options),
     getStatusSummary: () => staticTranslationService.getStatusSummary(),
     nowIso: support.nowIso
-  });
-
-  const metaWebhookHandlers = createMetaWebhookHandlers({
-    metaWebhookEnabled: runtime.metaWebhookConfig.metaWebhookEnabled,
-    whatsappWebhookEnabled: runtime.metaWebhookConfig.whatsappWebhookEnabled,
-    metaWebhookVerifyToken: runtime.metaWebhookConfig.metaWebhookVerifyToken,
-    whatsappWebhookVerifyToken: runtime.metaWebhookConfig.whatsappWebhookVerifyToken,
-    metaAppSecret: runtime.metaWebhookConfig.metaAppSecret,
-    whatsappAppSecret: runtime.metaWebhookConfig.whatsappAppSecret,
-    nowIso: support.nowIso,
-    readBodyBuffer: httpHelpers.readBodyBuffer,
-    readStore: storeUtils.readStore,
-    persistStore: storeUtils.persistStore,
-    sendJson: httpHelpers.sendJson,
-    safeEqualText: stagingAccessHelpers.safeEqualText,
-    resolveBookingContactByExternalContact: bookingViewHelpers.resolveBookingContactByExternalContact,
-    resolveBookingById: bookingViewHelpers.resolveBookingById,
-    getMetaConversationOpenUrl: bookingViewHelpers.getMetaConversationOpenUrl
   });
 
   const tourHelpers = createTourHelpers({
@@ -283,7 +262,6 @@ export function createBackendServices({
     staticTranslationApplyJobs,
     publicSitePublishService,
     travelPlanPdfArtifacts,
-    metaWebhookHandlers,
     tourHelpers,
     tourVariantHelpers,
     writePaymentDocumentPdf,

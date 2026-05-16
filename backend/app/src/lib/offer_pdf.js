@@ -598,13 +598,7 @@ async function resolveBookingHeroTitle(booking, lang, readTours) {
     || pdfT(lang, "offer.subject", "Travel Offer");
 }
 
-async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }) {
-  const bookingImageRelative = extractPublicRelativePath(booking?.image, "/public/v1/booking-images/");
-  if (bookingImageRelative) {
-    const bookingImageAbsolute = path.resolve(bookingImagesDir, bookingImageRelative);
-    if (await fileExists(bookingImageAbsolute)) return bookingImageAbsolute;
-  }
-
+async function resolveBookingImageForPdf({ booking, readTours, resolveTourImageDiskPath }) {
   const tourId = textOrNull(booking?.web_form_submission?.tour_id);
   if (tourId && typeof readTours === "function" && typeof resolveTourImageDiskPath === "function") {
     const tours = await readTours().catch(() => []);
@@ -2460,7 +2454,7 @@ export function createOfferPdfWriter({
       : generatedOffer;
     const [logoImage, heroPath, fonts, heroTitle, itemThumbnailMap] = await Promise.all([
       rasterizeImage(logoPath, { width: 1000 }),
-      resolveBookingImageForPdf({ booking: renderBooking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
+      resolveBookingImageForPdf({ booking: renderBooking, readTours, resolveTourImageDiskPath }),
       resolvePdfFontsForLang({
         lang,
         regularCandidates: PDF_FONT_REGULAR_CANDIDATES,

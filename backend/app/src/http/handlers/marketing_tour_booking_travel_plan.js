@@ -2,12 +2,7 @@ import { existsSync } from "node:fs";
 import {
   normalizeBookingContentLang
 } from "../../domain/booking_content_i18n.js";
-import { normalizeDestinationScope } from "../../domain/destination_scope.js";
 import { normalizeExperienceHighlightIds } from "../../domain/tour_metadata.js";
-import {
-  DESTINATION_COUNTRY_CODES,
-  TOUR_DESTINATION_TO_COUNTRY_CODE
-} from "../../../../../shared/js/destination_country_codes.js";
 import {
   normalizeItemImageRef,
   publicBookingImagePath
@@ -77,7 +72,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
   const {
     normalizeText,
     normalizeMarketingTourTravelPlan,
-    tourDestinationCodes,
     randomUUID,
     nowIso,
     processTourServiceImageToWebp,
@@ -86,32 +80,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     path,
     logPrefix = "marketing-tour-booking-plan"
   } = deps;
-
-  function bookingDestinationCodesFromTour(tour) {
-    return Array.from(
-      new Set(
-        tourDestinationCodes(tour)
-          .map((code) => TOUR_DESTINATION_TO_COUNTRY_CODE[code] || normalizeText(code).toUpperCase())
-          .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
-      )
-    );
-  }
-
-  function bookingDestinationCodesFromValues(values) {
-    return Array.from(
-      new Set(
-        (Array.isArray(values) ? values : [])
-          .map((value) => {
-            const normalized = normalizeText(value);
-            if (!normalized) return "";
-            const mappedCode = TOUR_DESTINATION_TO_COUNTRY_CODE[normalized.toLowerCase()];
-            if (mappedCode) return mappedCode;
-            return normalized.toUpperCase();
-          })
-          .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
-      )
-    );
-  }
 
   async function copyTourServiceImageToBooking(image, {
     tourId,
@@ -292,10 +260,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     });
     const createdAt = nowIso();
     const bookingId = normalizeText(booking?.id);
-    const tourDestinations = bookingDestinationCodesFromTour(tour);
-    const destinations = tourDestinations.length
-      ? tourDestinations
-      : bookingDestinationCodesFromValues(options?.fallbackDestinations);
     const boundaryEntries = await Promise.all(
       Object.entries(normalized.boundary_logistics || {}).map(async ([boundaryKind, service]) => ([
         boundaryKind,
@@ -308,8 +272,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     );
     const boundaryLogistics = Object.fromEntries(boundaryEntries.filter(([, service]) => Boolean(service)));
     return {
-      destination_scope: normalizeDestinationScope(normalized.destination_scope, destinations),
-      destinations,
       ...(Object.keys(boundaryLogistics).length ? { boundary_logistics: boundaryLogistics } : {}),
       days: await Promise.all((Array.isArray(normalized.days) ? normalized.days : []).map((day, dayIndex) => (
         cloneMarketingTourDayForBooking(day, {
@@ -373,7 +335,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
   }
 
   return {
-    bookingDestinationCodesFromTour,
     cloneMarketingTourDayForBooking,
     cloneMarketingTourServiceForBooking,
     cloneMarketingTourTravelPlanForBooking,

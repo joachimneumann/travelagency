@@ -215,70 +215,6 @@
         padding: 0 0.85rem 0.85rem;
       }
 
-      .tour-variant-customizer-mount .tour-customize-embedded .tour-customize__workspace {
-        display: grid;
-        grid-template-rows: minmax(0, 1fr) auto;
-        height: 100%;
-        max-height: none;
-        overflow: hidden;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-map {
-        align-self: stretch;
-        height: 100%;
-        max-height: 100%;
-        min-height: 0;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-embedded {
-        height: 100%;
-        border-right: 0;
-        border-left: 0;
-        border-radius: 0;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-options {
-        display: grid;
-        grid-template-rows: auto minmax(0, 1fr);
-        min-height: 0;
-        overflow: hidden;
-        padding: 0.6rem;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-options__list {
-        min-height: 0;
-        overflow-x: hidden;
-        overflow-y: auto;
-        align-content: start;
-        grid-template-columns: repeat(auto-fill, 108px);
-        gap: 0.45rem;
-        margin-top: 0.55rem;
-        padding-right: 0.2rem;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-option,
-      .tour-variant-customizer-mount .tour-customize-timeline__item {
-        width: 108px;
-        height: 144px;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-timeline {
-        align-self: end;
-        min-height: 0;
-        overflow: hidden;
-        padding: 0.65rem 0.75rem 1.45rem;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-timeline__header {
-        margin-bottom: 0.55rem;
-      }
-
-      .tour-variant-customizer-mount .tour-customize-timeline__list {
-        min-height: 9.5rem;
-        max-height: 10.85rem;
-        padding-bottom: 1.1rem;
-      }
-
       .tour-variant-customizer-heading {
         display: flex;
         flex-wrap: wrap;
@@ -438,10 +374,6 @@
         outline-offset: 2px;
       }
 
-      .tour-variant-map-preview-mount .tour-customize-map__stage {
-        cursor: pointer;
-      }
-
       .tour-variant-day-summary {
         width: min(34rem, 46vw);
         max-height: 200px;
@@ -498,29 +430,6 @@
       .tour-variant-day-summary__source a:hover,
       .tour-variant-day-summary__source a:focus-visible {
         text-decoration: underline;
-      }
-
-      .tour-variant-map-preview-mount .tour-customize-embedded {
-        height: 100%;
-        border: 0;
-        border-radius: 0;
-      }
-
-      .tour-variant-map-preview-mount .tour-customize-embedded .tour-customize__workspace {
-        display: block;
-        height: 100%;
-        max-height: none;
-      }
-
-      .tour-variant-map-preview-mount .tour-customize-map {
-        height: 100%;
-        max-height: none;
-      }
-
-      .tour-variant-map-preview-mount .tour-customize-map__controls,
-      .tour-variant-map-preview-mount .tour-customize-options,
-      .tour-variant-map-preview-mount .tour-customize-timeline {
-        display: none;
       }
 
       .tour-variant-customizer-overlay[hidden] {
@@ -634,14 +543,6 @@
           width: min(100%, 22rem);
         }
 
-        .tour-variant-customizer-mount .tour-customize-embedded .tour-customize__workspace {
-          grid-template-columns: minmax(0, 1fr);
-          grid-template-rows: minmax(7rem, 0.4fr) minmax(0, 1fr) auto;
-        }
-
-        .tour-variant-customizer-mount .tour-customize-map {
-          min-height: 7rem;
-        }
       }
 
       @media (max-width: 620px) {
@@ -666,7 +567,7 @@
     <header class="header" id="top">
       <div class="container header-wrap">
         <a class="brand" id="backendHomeLink" href="bookings.html" aria-label="AsiaTravelPlan backend home">
-          <img class="brand-logo" src="/assets/generated/runtime/brand-logo.png" alt="AsiaTravelPlan" width="165" height="68" />
+          <img class="brand-logo" src="/assets/generated/runtime/brand-logo-backoffice.png" alt="AsiaTravelPlan" width="165" height="68" />
         </a>
         <div id="backendNavMount"></div>
       </div>

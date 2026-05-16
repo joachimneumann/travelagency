@@ -129,8 +129,6 @@ import (
 }
 
 #TravelPlan: {
-	destination_scope?: [...#TravelPlanDestinationScopeEntry]
-	destinations?: [...enums.#CountryCode]
 	tour_card_primary_image_id?: common.#Identifier
 	tour_card_image_ids?: [...common.#Identifier]
 	one_pager_hero_image_id?: common.#Identifier

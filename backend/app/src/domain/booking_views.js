@@ -21,7 +21,6 @@ export function createBookingViewHelpers({
   translationEnabled,
   normalizeStringArray,
   normalizeEmail,
-  isLikelyPhoneMatch,
   nowIso,
   safeCurrency,
   safeOptionalInt,
@@ -55,26 +54,6 @@ export function createBookingViewHelpers({
     }
     return assignableKeycloakUserLabelsPromise;
   }
-  function normalizePersonEmails(person) {
-    return Array.from(
-      new Set(
-        [...(Array.isArray(person?.emails) ? person.emails : [])]
-          .map((value) => normalizeEmail(value))
-          .filter(Boolean)
-      )
-    );
-  }
-
-  function normalizePersonPhoneNumbers(person) {
-    return Array.from(
-      new Set(
-        [...(Array.isArray(person?.phone_numbers) ? person.phone_numbers : [])]
-          .map((value) => normalizeText(value))
-          .filter(Boolean)
-      )
-    );
-  }
-
   function getSubmittedContact(booking) {
     const submission = booking?.web_form_submission || {};
     return {
@@ -92,63 +71,6 @@ export function createBookingViewHelpers({
       email: primary?.emails?.[0] || submitted.email || null,
       phone_number: primary?.phone_numbers?.[0] || submitted.phone_number || null
     };
-  }
-
-  function bookingContactMatches(booking, externalContactId) {
-    const normalizedContact = normalizeText(externalContactId);
-    if (!normalizedContact) return false;
-    const email = normalizeEmail(normalizedContact);
-    const persons = getBookingPersons(booking);
-    const submitted = getSubmittedContact(booking);
-    const phones = [
-      submitted.phone_number,
-      ...persons.flatMap((person) => person.phone_numbers)
-    ].filter(Boolean);
-    const emails = [
-      submitted.email,
-      ...persons.flatMap((person) => person.emails)
-    ].filter(Boolean);
-    if (email && emails.includes(email)) return true;
-    return phones.some((phone) => isLikelyPhoneMatch(phone, normalizedContact));
-  }
-
-  function resolveBookingForExternalContact(store, externalContactId) {
-    if (!externalContactId) return null;
-    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
-      .filter((booking) => bookingContactMatches(booking, externalContactId))
-      .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
-    return matches[0] || null;
-  }
-
-  function resolveBookingContactByExternalContact(store, externalContactId) {
-    const booking = resolveBookingForExternalContact(store, externalContactId);
-    if (!booking) return null;
-    const primary = getBookingPrimaryContact(booking);
-    const contact = getBookingContactProfile(booking);
-    return {
-      booking_id: booking.id,
-      person_id: normalizeText(primary?.id) || null,
-      name: contact.name || "",
-      email: contact.email || null,
-      phone_number: contact.phone_number || null
-    };
-  }
-
-  function resolveBookingById(store, bookingId) {
-    const normalizedBookingId = normalizeText(bookingId);
-    if (!normalizedBookingId) return null;
-    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
-      .filter((booking) => normalizeText(booking.id) === normalizedBookingId)
-      .sort((a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || "")));
-    return matches[0] || null;
-  }
-
-  function getMetaConversationOpenUrl(channel, externalContactId) {
-    if (channel === "whatsapp") {
-      const digits = String(externalContactId || "").replace(/\D+/g, "");
-      return digits ? `https://wa.me/${digits}` : null;
-    }
-    return null;
   }
 
   function validateCustomTourInputShape(value) {
@@ -362,6 +284,7 @@ export function createBookingViewHelpers({
       last_action: _legacyLastAction,
       last_action_at: _legacyLastActionAt,
       service_level_agreement_due_at: _legacyServiceLevelAgreementDueAt,
+      image: _legacyBookingImage,
       web_form_travel_month: _webFormTravelMonth,
       traveler_details_token_nonce: _travelerDetailsTokenNonce,
       traveler_details_token_created_at: _travelerDetailsTokenCreatedAt,
@@ -532,8 +455,7 @@ export function createBookingViewHelpers({
     };
   }
 
-  function filterAndSortBookings(store, query, deps = {}) {
-    const { ensureMetaChatCollections = () => {} } = deps;
+  function filterAndSortBookings(store, query) {
     const assignedKeycloakUserId = normalizeText(query.get("assigned_keycloak_user_id"));
     const rawSearch = normalizeText(query.get("search")).toLowerCase();
     const rawSearchNoSpace = rawSearch.replace(/\s+/g, "");
@@ -541,75 +463,6 @@ export function createBookingViewHelpers({
     const searchDigits = rawSearch.replace(/[^0-9]+/g, "");
     const searchLetters = rawSearch.replace(/[^a-z]+/g, "");
     const sort = normalizeText(query.get("sort")) || "created_at_desc";
-    ensureMetaChatCollections(store);
-
-    const conversationBookingIds = new Map();
-    const conversationIdToConversation = new Map();
-    const latestBookingById = new Map();
-    const sortedByRecency = [...store.bookings].sort(
-      (a, b) => String(b.updated_at || b.created_at || "").localeCompare(String(a.updated_at || a.created_at || ""))
-    );
-    for (const booking of sortedByRecency) {
-      const key = normalizeText(booking.id);
-      if (key && !latestBookingById.has(key)) latestBookingById.set(key, booking.id);
-    }
-
-    const getLatestBookingForContactMatch = (contact) => {
-      const matched = resolveBookingForExternalContact(store, contact);
-      return matched?.id || null;
-    };
-
-    for (const conversation of store.chat_conversations) {
-      const conversationId = normalizeText(conversation.id);
-      if (!conversationId) continue;
-
-      const linkedBookingId = normalizeText(conversation.booking_id);
-      const externalContactId = normalizeText(conversation.external_contact_id);
-      const canonicalBookingId = linkedBookingId || (externalContactId ? getLatestBookingForContactMatch(externalContactId) : null);
-      if (canonicalBookingId) {
-        conversationBookingIds.set(conversationId, [canonicalBookingId]);
-      }
-      conversationIdToConversation.set(conversationId, conversation);
-    }
-
-    const bookingChatTextMap = new Map();
-    for (const event of store.chat_events) {
-      const conversationId = normalizeText(event.conversation_id);
-      const eventText = normalizeText(event.text_preview).toLowerCase();
-      if (!eventText) continue;
-
-      const matchedBookingIds = new Set(conversationBookingIds.get(conversationId) || []);
-      if (!matchedBookingIds.size) {
-        const senderContact = normalizeText(event.sender_contact);
-        const matchedBookingId = getLatestBookingForContactMatch(senderContact);
-        if (matchedBookingId) matchedBookingIds.add(matchedBookingId);
-      }
-
-      if (!matchedBookingIds.size) {
-        const conversation = conversationIdToConversation.get(conversationId);
-        const conversationContact = normalizeText(conversation?.external_contact_id);
-        const matchedBookingId = getLatestBookingForContactMatch(conversationContact);
-        if (matchedBookingId) matchedBookingIds.add(matchedBookingId);
-      }
-      if (!matchedBookingIds.size) continue;
-
-      const normalizedMessage = eventText.toLowerCase().replace(/[^a-z0-9]+/g, "");
-      const messageVariants = [
-        eventText,
-        normalizedMessage,
-        eventText.replace(/\s+/g, ""),
-        normalizedMessage.replace(/[^0-9]+/g, ""),
-        normalizedMessage.replace(/[^a-z]+/g, "")
-      ];
-      const nextText = messageVariants.some((variant) => String(variant || "").trim())
-        ? [...new Set(messageVariants)].join(" ")
-        : eventText;
-
-      for (const bookingId of matchedBookingIds) {
-        const existing = bookingChatTextMap.get(bookingId) || "";
-        bookingChatTextMap.set(bookingId, existing ? `${existing} ${nextText}` : nextText);
-      }
-    }
 
     const filtered = store.bookings.filter((booking) => {
       if (assignedKeycloakUserId && getBookingAssignedKeycloakUserId(booking) !== assignedKeycloakUserId) return false;
@@ -626,7 +479,6 @@ export function createBookingViewHelpers({
         contact.email,
         contact.phone_number,
         ...persons.flatMap((person) => [person.name, ...person.emails, ...person.phone_numbers]),
-        bookingChatTextMap.get(booking.id),
         JSON.stringify(booking.offer)
       ]
         .filter(Boolean)
@@ -699,9 +551,6 @@ export function createBookingViewHelpers({
   }
 
   return {
-    resolveBookingContactByExternalContact,
-    resolveBookingById,
-    getMetaConversationOpenUrl,
     validateBookingInput,
     addActivity,
     canReadAllBookings,

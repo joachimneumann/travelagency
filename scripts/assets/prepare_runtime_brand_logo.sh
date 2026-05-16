@@ -3,14 +3,15 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 TARGET_DIR="$ROOT_DIR/assets/generated/runtime"
-TARGET_PATH="$TARGET_DIR/brand-logo.png"
+WEB_TARGET_PATH="$TARGET_DIR/brand-logo.png"
+BACKOFFICE_TARGET_PATH="$TARGET_DIR/brand-logo-backoffice.png"
 
 usage() {
   cat <<'EOF'
 Usage:
   ./scripts/assets/prepare_runtime_brand_logo.sh [production|staging|local]
 
-Copies the environment-specific header logo into the generated runtime asset path.
+Copies the environment-specific public and backoffice header logos into the generated runtime asset paths.
 EOF
 }
 
@@ -18,13 +19,16 @@ ENVIRONMENT="${1:-production}"
 
 case "$ENVIRONMENT" in
   production)
-    SOURCE_PATH="$ROOT_DIR/assets/img/logo-asiatravelplan.png"
+    WEB_SOURCE_PATH="$ROOT_DIR/assets/img/production.png"
+    BACKOFFICE_SOURCE_PATH="$ROOT_DIR/assets/img/production.backoffice.png"
     ;;
   staging)
-    SOURCE_PATH="$ROOT_DIR/assets/img/staging.png"
+    WEB_SOURCE_PATH="$ROOT_DIR/assets/img/staging.png"
+    BACKOFFICE_SOURCE_PATH="$ROOT_DIR/assets/img/staging.backoffice.png"
     ;;
   local)
-    SOURCE_PATH="$ROOT_DIR/assets/img/local.png"
+    WEB_SOURCE_PATH="$ROOT_DIR/assets/img/local.png"
+    BACKOFFICE_SOURCE_PATH="$ROOT_DIR/assets/img/local.backoffice.png"
     ;;
   -h|--help)
     usage
@@ -37,11 +41,17 @@ case "$ENVIRONMENT" in
     ;;
 esac
 
-if [[ ! -f "$SOURCE_PATH" ]]; then
-  echo "Missing source logo: $SOURCE_PATH" >&2
+if [[ ! -f "$WEB_SOURCE_PATH" ]]; then
+  echo "Missing source logo: $WEB_SOURCE_PATH" >&2
+  exit 1
+fi
+
+if [[ ! -f "$BACKOFFICE_SOURCE_PATH" ]]; then
+  echo "Missing backoffice source logo: $BACKOFFICE_SOURCE_PATH" >&2
   exit 1
 fi
 
 mkdir -p "$TARGET_DIR"
-cp "$SOURCE_PATH" "$TARGET_PATH"
-echo "Prepared runtime brand logo for $ENVIRONMENT: $TARGET_PATH"
+cp "$WEB_SOURCE_PATH" "$WEB_TARGET_PATH"
+cp "$BACKOFFICE_SOURCE_PATH" "$BACKOFFICE_TARGET_PATH"
+echo "Prepared runtime brand logos for $ENVIRONMENT: $WEB_TARGET_PATH, $BACKOFFICE_TARGET_PATH"

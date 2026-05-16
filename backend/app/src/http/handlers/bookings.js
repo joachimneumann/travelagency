@@ -10,14 +10,8 @@ import {
   isSuspiciousSentinelString,
   resolveBookingNameForStorage
 } from "../../domain/booking_names.js";
-import {
-  destinationScopeDestinations,
-  mergeDestinationScopeWithTravelPlanLocations,
-  normalizeDestinationScope
-} from "../../domain/destination_scope.js";
 import { normalizePdfLang } from "../../lib/pdf_i18n.js";
 import { createBookingNotificationEmailService } from "../../lib/booking_notification_email.js";
-import { cloneBookingForTesting } from "../../domain/booking_clone.js";
 import { createGeneratedOfferArtifactHelpers } from "../../domain/generated_offer_artifacts.js";
 import {
   normalizeTourDestinationCode,
@@ -25,7 +19,6 @@ import {
   sortTourStyleCodes
 } from "../../domain/tour_catalog_i18n.js";
 import { createBookingQueryModule } from "./booking_query.js";
-import { createBookingChatHandlers } from "./booking_chat.js";
 import { createBookingCoreHandlers } from "./booking_core.js";
 import { createBookingFinanceHandlers } from "./booking_finance.js";
 import { createBookingMediaHandlers } from "./booking_media.js";
@@ -38,6 +31,10 @@ import { createMarketingTourBookingTravelPlanCloner } from "./marketing_tour_boo
 import {
   DESTINATION_COUNTRY_CODES
 } from "../../../../../shared/js/destination_country_codes.js";
+import {
+  deriveDestinationScopeFromTravelPlanLocations,
+  destinationScopeDestinations
+} from "../../domain/destination_scope.js";
 
 const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
 const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
@@ -97,11 +94,6 @@ export function createBookingHandlers(deps) {
     buildBookingReadModel,
     paginate,
     buildPaginatedListResponse,
-    ensureMetaChatCollections,
-    clamp,
-    isLikelyPhoneMatch,
-    buildChatEventReadModel,
-    getMetaConversationOpenUrl,
     actorLabel,
     canChangeBookingAssignment,
     syncBookingAssignmentFields,
@@ -145,7 +137,6 @@ export function createBookingHandlers(deps) {
     TEMP_UPLOAD_DIR,
     TOURS_DIR,
     GENERATED_OFFERS_DIR,
-    TRAVEL_PLAN_PDFS_DIR,
     TRAVEL_PLAN_PDF_PREVIEW_DIR,
     BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
@@ -160,10 +151,6 @@ export function createBookingHandlers(deps) {
   const bookingNotificationEmail = createBookingNotificationEmailService({
     config: bookingNotificationEmailConfig
   });
-
-  function unique(values) {
-    return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
-  }
 
   function canonicalBookingTravelStyles(values) {
     return sortTourStyleCodes(
@@ -227,11 +214,9 @@ export function createBookingHandlers(deps) {
     logPrefix: "public-booking-tour"
   });
 
-  function defaultInitialBookingTravelPlan(destinations) {
+  function defaultInitialBookingTravelPlan() {
     return {
-      ...defaultBookingTravelPlan(),
-      destination_scope: destinations.map((destination) => ({ destination, regions: [], places: [] })),
-      destinations
+      ...defaultBookingTravelPlan()
     };
   }
 
@@ -274,16 +259,14 @@ export function createBookingHandlers(deps) {
     return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || "";
   }
 
-  function tourCountryCodesFromTour(tour) {
+  function tourCountryCodesFromTour(tour, destinationCatalogStore = {}) {
     return Array.from(
       new Set(
         [
+          ...destinationScopeDestinations(deriveDestinationScopeFromTravelPlanLocations(tour?.travel_plan, destinationCatalogStore)),
           ...tourDestinationCodes(tour),
           ...normalizeStringArray(tour?.destination_codes),
-          ...normalizeStringArray(tour?.destinations),
-          ...(Array.isArray(tour?.travel_plan?.destination_scope)
-            ? tour.travel_plan.destination_scope.map((entry) => entry?.destination)
-            : [])
+          ...normalizeStringArray(tour?.destinations)
         ]
           .map(destinationCountryCodeFromTourValue)
           .filter((code) => DESTINATION_COUNTRY_CODES.includes(code))
@@ -304,14 +287,11 @@ export function createBookingHandlers(deps) {
     return publishedCountryCodes;
   }
 
-  async function canSeedSubmittedTourFromPublicForm(tour, fallbackDestinations = []) {
-    const tourCountryCodes = tourCountryCodesFromTour(tour);
-    const candidateCountryCodes = tourCountryCodes.length
-      ? tourCountryCodes
-      : normalizeCountryCodes(fallbackDestinations, normalizeText);
-    if (!candidateCountryCodes.length) return false;
+  async function canSeedSubmittedTourFromPublicForm(tour, destinationCatalogStore = {}) {
+    const tourCountryCodes = tourCountryCodesFromTour(tour, destinationCatalogStore);
+    if (!tourCountryCodes.length) return false;
     const publishedCountryCodes = await publishedPublicWebpageCountryCodes();
-    return candidateCountryCodes.some((countryCode) => publishedCountryCodes.has(countryCode));
+    return tourCountryCodes.some((countryCode) => publishedCountryCodes.has(countryCode));
   }
 
   function sourceDaysByIdForCustomTour(tour) {
@@ -325,7 +305,7 @@ export function createBookingHandlers(deps) {
       .filter(([dayId]) => Boolean(dayId)));
   }
 
-  async function buildInitialTravelPlanFromSubmittedCustomTour(customTour, booking, fallbackDestinations, destinationCatalogStore) {
+  async function buildInitialTravelPlanFromSubmittedCustomTour(customTour, booking, destinationCatalogStore) {
     const normalizedCustomTour = normalizeSubmittedCustomTour(
       customTour,
       booking?.web_form_submission?.tour_id
@@ -350,7 +330,7 @@ export function createBookingHandlers(deps) {
     if (!baseTour) return null;
 
     try {
-      if (!(await canSeedSubmittedTourFromPublicForm(baseTour, fallbackDestinations))) {
+      if (!(await canSeedSubmittedTourFromPublicForm(baseTour, destinationCatalogStore))) {
         return null;
       }
     } catch (error) {
@@ -370,7 +350,7 @@ export function createBookingHandlers(deps) {
       const sourceTour = toursById.get(sourceTourId);
       if (!sourceTour) return null;
       try {
-        if (!(await canSeedSubmittedTourFromPublicForm(sourceTour, fallbackDestinations))) {
+        if (!(await canSeedSubmittedTourFromPublicForm(sourceTour, destinationCatalogStore))) {
           return null;
         }
       } catch (error) {
@@ -411,13 +391,7 @@ export function createBookingHandlers(deps) {
       return null;
     }
 
-    const destinationScope = normalizeDestinationScope(
-      mergeDestinationScopeWithTravelPlanLocations([], { days }, destinationCatalogStore),
-      fallbackDestinations
-    );
     const nextTravelPlan = {
-      destination_scope: destinationScope,
-      destinations: destinationScopeDestinations(destinationScope),
       days,
       attachments: []
     };
@@ -434,9 +408,9 @@ export function createBookingHandlers(deps) {
     return check.travel_plan;
   }
 
-  async function buildInitialTravelPlanFromSubmittedTour(tourId, booking, fallbackDestinations) {
+  async function buildInitialTravelPlanFromSubmittedTour(tourId, booking, destinationCatalogStore) {
     const normalizedTourId = normalizeText(tourId);
-    if (!normalizedTourId) return defaultInitialBookingTravelPlan(fallbackDestinations);
+    if (!normalizedTourId) return defaultInitialBookingTravelPlan();
 
     let tour = null;
     try {
@@ -448,14 +422,14 @@ export function createBookingHandlers(deps) {
         booking_id: booking?.id,
         error: String(error?.message || error)
       });
-      return defaultInitialBookingTravelPlan(fallbackDestinations);
+      return defaultInitialBookingTravelPlan();
     }
 
-    if (!tour) return defaultInitialBookingTravelPlan(fallbackDestinations);
+    if (!tour) return defaultInitialBookingTravelPlan();
 
     try {
-      if (!(await canSeedSubmittedTourFromPublicForm(tour, fallbackDestinations))) {
-        return defaultInitialBookingTravelPlan(fallbackDestinations);
+      if (!(await canSeedSubmittedTourFromPublicForm(tour, destinationCatalogStore))) {
+        return defaultInitialBookingTravelPlan();
       }
     } catch (error) {
       console.warn("[public-booking-tour] Could not verify submitted marketing tour publication state.", {
@@ -463,21 +437,19 @@ export function createBookingHandlers(deps) {
         booking_id: booking?.id,
         error: String(error?.message || error)
       });
-      return defaultInitialBookingTravelPlan(fallbackDestinations);
+      return defaultInitialBookingTravelPlan();
     }
 
     let nextTravelPlan;
     try {
-      nextTravelPlan = await marketingTourBookingTravelPlanCloner.cloneMarketingTourTravelPlanForBooking(tour, booking, {
-        fallbackDestinations
-      });
+      nextTravelPlan = await marketingTourBookingTravelPlanCloner.cloneMarketingTourTravelPlanForBooking(tour, booking);
     } catch (error) {
       console.warn("[public-booking-tour] Could not clone submitted marketing tour travel plan.", {
         tour_id: normalizedTourId,
         booking_id: booking?.id,
         error: String(error?.message || error)
       });
-      return defaultInitialBookingTravelPlan(fallbackDestinations);
+      return defaultInitialBookingTravelPlan();
     }
 
     const check = validateBookingTravelPlanInput(nextTravelPlan, booking.offer);
@@ -487,7 +459,7 @@ export function createBookingHandlers(deps) {
         booking_id: booking?.id,
         error: check.error
       });
-      return defaultInitialBookingTravelPlan(fallbackDestinations);
+      return defaultInitialBookingTravelPlan();
     }
 
     return check.travel_plan;
@@ -603,9 +575,7 @@ export function createBookingHandlers(deps) {
     buildBookingPayload,
     filterBookings,
     getBookingContactProfile,
-    getSubmittedContact,
-    normalizePersonEmails,
-    normalizePersonPhoneNumbers
+    getSubmittedContact
   } = queryModule;
 
   const {
@@ -643,143 +613,9 @@ export function createBookingHandlers(deps) {
     return true;
   }
 
-  function getBookingConversationMatchValues(booking) {
-    const persons = getBookingPersons(booking);
-    const submitted = getSubmittedContact(booking);
-    return {
-      phones: unique(
-        [
-          submitted.phone_number,
-          ...persons.flatMap((person) => normalizePersonPhoneNumbers(person))
-        ].filter(Boolean)
-      ),
-      emails: unique(
-        [
-          submitted.email,
-          ...persons.flatMap((person) => normalizePersonEmails(person))
-        ].filter(Boolean)
-      )
-    };
-  }
-
-  function resolveCanonicalConversationBookingId(store, conversation, excludedBookingId = "") {
-    const assignedBookingId = normalizeText(conversation?.booking_id);
-    if (assignedBookingId && assignedBookingId !== normalizeText(excludedBookingId)) {
-      const assignedBookingStillExists = (Array.isArray(store?.bookings) ? store.bookings : []).some(
-        (booking) => normalizeText(booking.id) === assignedBookingId
-      );
-      if (assignedBookingStillExists) return assignedBookingId;
-    }
-    const channel = normalizeText(conversation.channel).toLowerCase();
-    const externalContactId = normalizeText(conversation.external_contact_id);
-    if (channel === "whatsapp" && externalContactId) {
-      const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
-        .filter((booking) => normalizeText(booking.id) !== normalizeText(excludedBookingId))
-        .filter((booking) => {
-          const { phones } = getBookingConversationMatchValues(booking);
-          return phones.some((phone) => isLikelyPhoneMatch(phone, externalContactId));
-        })
-        .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
-      return normalizeText(matches[0]?.id) || "";
-    }
-    const normalizedEmail = externalContactId.toLowerCase();
-    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
-      .filter((booking) => normalizeText(booking.id) !== normalizeText(excludedBookingId))
-      .filter((booking) => {
-        const { emails } = getBookingConversationMatchValues(booking);
-        return emails.includes(normalizedEmail);
-      })
-      .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
-    return normalizeText(matches[0]?.id) || "";
-  }
-
-  function conversationMatchesBooking(store, conversation, bookingId) {
-    return resolveCanonicalConversationBookingId(store, conversation) === normalizeText(bookingId);
-  }
-
-  function buildConversationRelatedBookings(store, conversation, bookingId) {
-    const channel = normalizeText(conversation?.channel).toLowerCase();
-    const externalContactId = normalizeText(conversation?.external_contact_id);
-    if (!externalContactId) return [];
-
-    const matches = (Array.isArray(store?.bookings) ? store.bookings : [])
-      .filter((candidate) => normalizeText(candidate.id) !== normalizeText(bookingId))
-      .filter((candidate) => {
-        const { phones, emails } = getBookingConversationMatchValues(candidate);
-        if (channel === "whatsapp") return phones.some((phone) => isLikelyPhoneMatch(phone, externalContactId));
-        return emails.includes(externalContactId.toLowerCase());
-      })
-      .sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")));
-
-    return matches.map((candidate) => ({
-      booking_id: candidate.id,
-      name: normalizeText(candidate.name) || null
-    }));
-  }
-
-  async function deleteBookingArtifacts(store, bookingId) {
-    const removedBooking = Array.isArray(store.bookings)
-      ? store.bookings.find((booking) => booking.id === bookingId) || null
-      : null;
-    const removedPaymentDocuments = Array.isArray(store.payment_documents)
-      ? store.payment_documents.filter((document) => document.booking_id === bookingId)
-      : [];
-
-    store.bookings = Array.isArray(store.bookings) ? store.bookings.filter((booking) => booking.id !== bookingId) : [];
-    store.activities = Array.isArray(store.activities) ? store.activities.filter((activity) => activity.booking_id !== bookingId) : [];
-    store.payment_documents = Array.isArray(store.payment_documents) ? store.payment_documents.filter((document) => document.booking_id !== bookingId) : [];
-
-    ensureMetaChatCollections(store);
-    for (const conversation of store.chat_conversations) {
-      if (normalizeText(conversation.booking_id) === bookingId) {
-        conversation.booking_id = resolveCanonicalConversationBookingId(store, conversation, bookingId) || null;
-        conversation.updated_at = nowIso();
-      }
-    }
-
-    await Promise.all(
-      removedPaymentDocuments.map(async (document) => {
-        try {
-          await rm(paymentDocumentPdfPath(document.id, document.version), { force: true });
-        } catch {
-          // Ignore stale file cleanup failures.
-        }
-      })
-    );
-
-    await Promise.all(
-      (Array.isArray(removedBooking?.generated_offers) ? removedBooking.generated_offers : []).map(async (generatedOffer) => {
-        try {
-          await rm(generatedOfferPdfPath(generatedOffer.id), { force: true });
-        } catch {
-          // Ignore stale file cleanup failures.
-        }
-      })
-    );
-    await rm(path.join(TRAVEL_PLAN_PDFS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
-    await rm(path.join(BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR, bookingId), { recursive: true, force: true }).catch(() => {});
-  }
-
-  const { handleListBookingChatEvents } = createBookingChatHandlers({
-    readStore,
-    sendJson,
-    getPrincipal,
-    canAccessBooking,
-    ensureMetaChatCollections,
-    clamp,
-    safeInt,
-    conversationMatchesBooking,
-    resolveCanonicalConversationBookingId,
-    buildChatEventReadModel,
-    buildConversationRelatedBookings,
-    normalizeText,
-    getMetaConversationOpenUrl
-  });
-
   const {
     handlePublicBookingPersonPhoto,
     handlePublicBookingImage,
-    handleUploadBookingImage,
     handleUploadBookingPersonPhoto,
     handleUploadBookingPersonDocumentPicture
   } = createBookingMediaHandlers({
@@ -793,11 +629,9 @@ export function createBookingHandlers(deps) {
     path,
     randomUUID,
     TEMP_UPLOAD_DIR,
-    BOOKING_IMAGES_DIR,
     BOOKING_PERSON_PHOTOS_DIR,
     writeFile,
     rm,
-    processBookingImageToWebp,
     processBookingPersonImageToWebp,
     nowIso,
     addActivity,
@@ -1092,11 +926,9 @@ export function createBookingHandlers(deps) {
       return;
     }
 
-    const normalizedDestinations = normalizeCountryCodes(payload.destinations, normalizeText);
     const submittedTourId = normalizeText(payload.tour_id) || null;
     const submittedCustomTour = normalizeSubmittedCustomTour(payload.custom_tour, submittedTourId);
     const submission = {
-      destinations: normalizedDestinations,
       travel_style: canonicalBookingTravelStyles(payload.travel_style),
       booking_name: initialBookingName,
       tour_id: submittedTourId,
@@ -1142,7 +974,7 @@ export function createBookingHandlers(deps) {
       preferred_currency: preferredCurrency,
       notes: submission.notes,
       persons: [],
-      travel_plan: defaultInitialBookingTravelPlan(normalizedDestinations),
+      travel_plan: defaultInitialBookingTravelPlan(),
       web_form_submission: submission,
       offer: defaultBookingOffer(preferredCurrency),
       generated_offers: [],
@@ -1154,12 +986,11 @@ export function createBookingHandlers(deps) {
     booking.travel_plan = await buildInitialTravelPlanFromSubmittedCustomTour(
       submission.custom_tour,
       booking,
-      normalizedDestinations,
       store
     ) || await buildInitialTravelPlanFromSubmittedTour(
       submission.tour_id,
       booking,
-      normalizedDestinations
+      store
     );
 
     const primaryContact = buildPrimaryContactFromSubmission(booking);
@@ -1203,7 +1034,6 @@ export function createBookingHandlers(deps) {
     const travelerCount = payload?.number_of_travelers === undefined || payload?.number_of_travelers === null || payload?.number_of_travelers === ""
       ? null
       : safeInt(payload.number_of_travelers);
-    const destinations = normalizeCountryCodes(payload?.destinations, normalizeText);
     const booking = {
       id: bookingId,
       customer_language: preferredLanguage,
@@ -1223,11 +1053,7 @@ export function createBookingHandlers(deps) {
       preferred_currency: preferredCurrency,
       notes: "",
       persons: [],
-      travel_plan: {
-        ...defaultBookingTravelPlan(),
-        destination_scope: destinations.map((destination) => ({ destination, regions: [], places: [] })),
-        destinations
-      },
+      travel_plan: defaultBookingTravelPlan(),
       offer: defaultBookingOffer(preferredCurrency),
       generated_offers: [],
       created_at: now,
@@ -1297,97 +1123,16 @@ export function createBookingHandlers(deps) {
     sendJson(res, 200, await buildBookingDetailResponse(booking, req));
   }
 
-  async function handleDeleteBooking(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const store = await readStore();
-    const booking = store.bookings.find((item) => item.id === bookingId);
-    if (!booking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    if (!canEditBooking(principal, booking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(req, payload, booking, "expected_core_revision", "core_revision", res))) return;
-
-    await deleteBookingArtifacts(store, bookingId);
-    await persistStore(store);
-    sendJson(res, 200, { deleted: true, booking_id: bookingId });
-  }
-
-  async function handleCloneBooking(req, res, [bookingId]) {
-    let payload;
-    try {
-      payload = await readBodyJson(req);
-    } catch {
-      sendJson(res, 400, { error: "Invalid JSON payload" });
-      return;
-    }
-
-    const nextName = normalizeText(payload?.name);
-    if (!nextName) {
-      sendJson(res, 422, { error: "name is required" });
-      return;
-    }
-
-    const store = await readStore();
-    const sourceBooking = store.bookings.find((item) => item.id === bookingId);
-    if (!sourceBooking) {
-      sendJson(res, 404, { error: "Booking not found" });
-      return;
-    }
-
-    const principal = getPrincipal(req);
-    if (!canEditBooking(principal, sourceBooking)) {
-      sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (!(await assertExpectedRevision(req, payload, sourceBooking, "expected_core_revision", "core_revision", res))) return;
-
-    const clonedBooking = cloneBookingForTesting(sourceBooking, {
-      randomUUID,
-      nowIso,
-      name: nextName,
-      includeTravelers: payload?.include_travelers === true
-    });
-
-    store.bookings.push(clonedBooking);
-    addActivity(
-      store,
-      clonedBooking.id,
-      "BOOKING_CREATED",
-      actorLabel(principal, normalizeText(payload?.actor) || "keycloak_user"),
-      `Cloned from ${sourceBooking.id}`
-    );
-    await persistStore(store);
-
-    sendJson(res, 201, await buildBookingDetailResponse(clonedBooking, req));
-  }
-
   return {
     handleCreateBooking,
     handleCreateBackendBooking,
     handleListBookings,
     handleGetBooking,
-    handleDeleteBooking,
-    handleCloneBooking,
-    handleListBookingChatEvents,
     handlePublicBookingImage,
     handlePublicBookingPersonPhoto,
     handlePatchBookingName,
     handlePatchBookingCustomerLanguage,
     handlePatchBookingSource,
-    handleUploadBookingImage,
     handlePatchBookingOwner,
     handleTranslateBookingFields,
     handleCreateBookingPerson,

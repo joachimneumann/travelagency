@@ -58,12 +58,11 @@ import {
 } from "../booking/translation_status.js";
 import { setBookingPageOverlay } from "../booking/page_overlay.js";
 import {
-  destinationScopeDestinations,
   normalizeDestinationScope,
   normalizeDestinationScopeCatalog,
-  readDestinationScopeFromDom,
   renderDestinationScopeEditor
 } from "./destination_scope_editor.js";
+import { createTourCustomizerWorkspace } from "../tour_customize.js";
 
 export function resolveTravelPlanExperienceHighlightTitle(item, {
   displayLang = "en",
@@ -149,6 +148,26 @@ export function createBookingTravelPlanModule(ctx) {
   const pruneEmptyTravelPlanContentOnCollect = isFeatureEnabled("pruneEmptyTravelPlanContentOnCollect", false);
   const allowAllPrimaryMapPointOptions = isFeatureEnabled("allPrimaryMapPointOptions", false);
   const showDayDetailsAfterTitle = isFeatureEnabled("dayDetailsAfterTitle", false);
+  const useFocusedBookingWorkspace = isFeatureEnabled("focusedBookingWorkspace", false);
+  let travelPlanCustomizerPreviewWorkspace = null;
+  let travelPlanCustomizerOverlayWorkspace = null;
+  let travelPlanCustomizerSourceRowsPromise = null;
+  let travelPlanCustomizerDocumentEventsBound = false;
+  let travelPlanCustomizerOverlayOpen = false;
+
+  const travelPlanCustomizerLabels = {
+    map: "Route map",
+    optimize: "Reorder route",
+    zoomOut: "Zoom out",
+    optionalDays: "Optional days",
+    noOptionalDays: "No optional days are available from marketing tours yet.",
+    timeline: "Booking travel plan",
+    timelineWithCount: "Booking travel plan ({count})",
+    emptyTimeline: "Add at least one day to keep customizing.",
+    day: "Day {day}",
+    moveHere: "move here",
+    dropHere: "drop here"
+  };
 
   function destinationScopeEditorRoot() {
     if (els.travel_plan_destination_scope_editor instanceof HTMLElement) {
@@ -204,7 +223,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   async function loadDestinationScopeCatalog({ force = false } = {}) {
-    if (!allowDestinationScope) return null;
+    if (!allowDestinationScope && !allowAllPrimaryMapPointOptions) return null;
     if (state.destinationScopeCatalog && !force) return state.destinationScopeCatalog;
     try {
       const url = withBackendLangQuery(`${apiOrigin}/api/v1/destination-scope/catalog`);
@@ -644,10 +663,7 @@ export function createBookingTravelPlanModule(ctx) {
 
   function normalizeTravelPlanForEnabledFeatures(plan) {
     const source = plan && typeof plan === "object" && !Array.isArray(plan) ? plan : {};
-    const destination_scope = normalizeDestinationScope(source.destination_scope);
     const next = {
-      destination_scope,
-      destinations: destinationScopeDestinations(destination_scope),
       tour_card_primary_image_id: source.tour_card_primary_image_id || null,
       tour_card_image_ids: Array.isArray(source.tour_card_image_ids) ? source.tour_card_image_ids : [],
       one_pager_hero_image_id: source.one_pager_hero_image_id || null,
@@ -2392,6 +2408,656 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
+  function normalizeFocusedBoundaryKind(value) {
+    const normalized = String(value || "").trim();
+    return normalized === "arrival" || normalized === "departure" ? normalized : "";
+  }
+
+  function travelPlanDays() {
+    return Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
+  }
+
+  function ensureFocusedTravelPlanSelection() {
+    const requestedBoundary = normalizeFocusedBoundaryKind(state.travelPlanFocusedBoundaryKind);
+    if (requestedBoundary) {
+      state.travelPlanFocusedBoundaryKind = requestedBoundary;
+      state.travelPlanFocusedDayId = "";
+      return { type: "boundary", boundaryKind: requestedBoundary, dayId: "" };
+    }
+    const days = travelPlanDays();
+    const requestedDayId = String(state.travelPlanFocusedDayId || "").trim();
+    const selectedDay = requestedDayId
+      ? days.find((day) => String(day?.id || "").trim() === requestedDayId)
+      : null;
+    const fallbackDay = selectedDay || days[0] || null;
+    if (fallbackDay?.id) {
+      state.travelPlanFocusedDayId = String(fallbackDay.id || "").trim();
+      state.travelPlanFocusedBoundaryKind = "";
+      return { type: "day", dayId: state.travelPlanFocusedDayId, boundaryKind: "" };
+    }
+    state.travelPlanFocusedDayId = "";
+    state.travelPlanFocusedBoundaryKind = "arrival";
+    return { type: "boundary", boundaryKind: "arrival", dayId: "" };
+  }
+
+  function selectFocusedTravelPlanDay(dayId) {
+    syncTravelPlanDraftFromDom();
+    const normalizedDayId = String(dayId || "").trim();
+    if (!normalizedDayId) return;
+    state.travelPlanFocusedDayId = normalizedDayId;
+    state.travelPlanFocusedBoundaryKind = "";
+    renderTravelPlanPanel();
+  }
+
+  function selectFocusedTravelPlanBoundary(boundaryKind) {
+    syncTravelPlanDraftFromDom();
+    const normalizedBoundaryKind = normalizeFocusedBoundaryKind(boundaryKind);
+    if (!normalizedBoundaryKind) return;
+    state.travelPlanFocusedBoundaryKind = normalizedBoundaryKind;
+    state.travelPlanFocusedDayId = "";
+    renderTravelPlanPanel();
+  }
+
+  function travelPlanLocationOptionMap() {
+    return new Map(travelPlanLocationOptions({ includeAllLocations: true }).map((option) => [option.id, option]));
+  }
+
+  function travelPlanDayLocationLabel(day, optionMap = travelPlanLocationOptionMap()) {
+    const primaryId = String(day?.primary_location_id || "").trim();
+    const secondaryId = String(day?.secondary_location_id || "").trim();
+    const option = optionMap.get(primaryId) || optionMap.get(secondaryId);
+    return option?.label || bookingT("booking.travel_plan.location_none", "No map point");
+  }
+
+  function travelPlanDayDateLabel(day) {
+    const date = String(day?.date || "").trim();
+    if (date) return date;
+    const dateString = normalizeTravelPlanDayDateString(day?.date_string);
+    if (dateString === TRAVEL_PLAN_DAY_DATE_STRING.BEFORE_TRIP) {
+      return bookingT("booking.travel_plan.date_string.before_trip", "Before the trip");
+    }
+    if (dateString === TRAVEL_PLAN_DAY_DATE_STRING.AFTER_TRIP) {
+      return bookingT("booking.travel_plan.date_string.after_trip", "After the trip");
+    }
+    return "";
+  }
+
+  function travelPlanDayTitle(day, dayIndex) {
+    const title = resolveLocalizedDraftBranchText(day?.title_i18n ?? day?.title, bookingSourceLang(), "").trim();
+    const heading = formatTravelPlanDayHeading(dayIndex);
+    return title ? `${heading} · ${title}` : heading;
+  }
+
+  function travelPlanBoundaryDisplay(boundaryKind) {
+    const source = state.travelPlanDraft?.boundary_logistics?.[boundaryKind] || createEmptyTravelPlanBoundaryService(boundaryKind);
+    const item = normalizeTravelPlanBoundaryDraft(source, boundaryKind);
+    const title = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), "").trim();
+    const airport = String(item.airport_code || "").trim();
+    const fallback = item.enabled ? "" : "None";
+    return [title || fallback, airport].filter(Boolean).join(" · ") || "None";
+  }
+
+  function cloneTravelPlanCustomizerJson(value) {
+    return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
+  }
+
+  function normalizeTravelPlanCustomizerText(value) {
+    return String(value ?? "").trim();
+  }
+
+  function travelPlanCustomizerBookingTourId() {
+    const bookingId = normalizeTravelPlanCustomizerText(state.booking?.id || state.id || "draft");
+    return `booking_travel_plan_${bookingId || "draft"}`;
+  }
+
+  function travelPlanCustomizerBookingTourTitle() {
+    const booking = state.booking && typeof state.booking === "object" && !Array.isArray(state.booking)
+      ? state.booking
+      : {};
+    return normalizeTravelPlanCustomizerText(booking.tour_title || booking.title || booking.name || booking.id)
+      || "Booking travel plan";
+  }
+
+  function travelPlanCustomizerSourceRows() {
+    return Array.isArray(state.travelPlanCustomizerSourceRows) ? state.travelPlanCustomizerSourceRows : [];
+  }
+
+  function normalizeTravelPlanCustomizerSourceDayId(row) {
+    return normalizeTravelPlanCustomizerText(row?.source_day_id || row?.day_id || row?.source_day?.id);
+  }
+
+  function travelPlanCustomizerSourceDay(row) {
+    const sourceDayId = normalizeTravelPlanCustomizerSourceDayId(row);
+    const rawDay = row?.source_day && typeof row.source_day === "object" && !Array.isArray(row.source_day)
+      ? cloneTravelPlanCustomizerJson(row.source_day)
+      : {
+          id: sourceDayId,
+          day_number: Number(row?.day_number) || null,
+          title: normalizeTravelPlanCustomizerText(row?.title),
+          primary_location_id: normalizeTravelPlanCustomizerText(row?.primary_location_id),
+          secondary_location_id: normalizeTravelPlanCustomizerText(row?.secondary_location_id),
+          experience_highlight_ids: Array.isArray(row?.experience_highlight_ids) ? row.experience_highlight_ids : [],
+          notes: normalizeTravelPlanCustomizerText(row?.notes),
+          services: []
+        };
+    if (!rawDay || typeof rawDay !== "object" || Array.isArray(rawDay)) return null;
+    rawDay.id = normalizeTravelPlanCustomizerText(rawDay.id) || sourceDayId;
+    return rawDay.id ? rawDay : null;
+  }
+
+  function travelPlanCustomizerBookingTrip() {
+    return {
+      id: travelPlanCustomizerBookingTourId(),
+      title: travelPlanCustomizerBookingTourTitle(),
+      published_on_webpage: true,
+      travel_plan: {
+        days: travelPlanDays().map((day, index) => ({
+          ...(day && typeof day === "object" && !Array.isArray(day) ? cloneTravelPlanCustomizerJson(day) : {}),
+          id: normalizeTravelPlanCustomizerText(day?.id) || `booking_day_${index + 1}`,
+          day_number: index + 1
+        }))
+      }
+    };
+  }
+
+  function travelPlanCustomizerTrips() {
+    const tripsById = new Map();
+    const bookingTrip = travelPlanCustomizerBookingTrip();
+    tripsById.set(bookingTrip.id, { ...bookingTrip, dayIds: new Set() });
+    for (const row of travelPlanCustomizerSourceRows()) {
+      const sourceTourId = normalizeTravelPlanCustomizerText(row?.source_tour_id);
+      const sourceDayId = normalizeTravelPlanCustomizerSourceDayId(row);
+      const rawDay = travelPlanCustomizerSourceDay(row);
+      if (!sourceTourId || !sourceDayId || !rawDay) continue;
+      if (!tripsById.has(sourceTourId)) {
+        tripsById.set(sourceTourId, {
+          id: sourceTourId,
+          title: normalizeTravelPlanCustomizerText(row?.source_tour_title || row?.source_tour_code) || sourceTourId,
+          published_on_webpage: true,
+          travel_plan: { days: [] },
+          dayIds: new Set()
+        });
+      }
+      const trip = tripsById.get(sourceTourId);
+      if (trip.dayIds.has(sourceDayId)) continue;
+      trip.dayIds.add(sourceDayId);
+      trip.travel_plan.days.push({
+        ...rawDay,
+        id: normalizeTravelPlanCustomizerText(rawDay.id) || sourceDayId,
+        day_number: Number(rawDay.day_number || row?.day_number) || trip.travel_plan.days.length + 1
+      });
+    }
+    return Array.from(tripsById.values()).map(({ dayIds: _dayIds, ...trip }) => ({
+      ...trip,
+      travel_plan: {
+        ...trip.travel_plan,
+        days: [...(Array.isArray(trip.travel_plan?.days) ? trip.travel_plan.days : [])].sort((left, right) => {
+          const leftNumber = Number(left?.day_number);
+          const rightNumber = Number(right?.day_number);
+          if (Number.isFinite(leftNumber) && Number.isFinite(rightNumber) && leftNumber !== rightNumber) {
+            return leftNumber - rightNumber;
+          }
+          return normalizeTravelPlanCustomizerText(left?.id).localeCompare(normalizeTravelPlanCustomizerText(right?.id));
+        })
+      }
+    }));
+  }
+
+  function travelPlanCustomizerTravelPlanDays(trip) {
+    return Array.isArray(trip?.travel_plan?.days) ? trip.travel_plan.days : [];
+  }
+
+  function findTravelPlanCustomizerTripById(tourId) {
+    const normalizedTourId = normalizeTravelPlanCustomizerText(tourId);
+    return travelPlanCustomizerTrips().find((trip) => normalizeTravelPlanCustomizerText(trip?.id) === normalizedTourId) || null;
+  }
+
+  function travelPlanCustomizerSelectedDayRefs() {
+    const sourceTourId = travelPlanCustomizerBookingTourId();
+    return travelPlanDays().map((day, index) => ({
+      id: normalizeTravelPlanCustomizerText(day?.id) || `booking_day_${index + 1}`,
+      timelineInstanceId: normalizeTravelPlanCustomizerText(day?.id) || `booking_day_${index + 1}`,
+      source_tour_id: sourceTourId,
+      source_day_id: normalizeTravelPlanCustomizerText(day?.id) || `booking_day_${index + 1}`,
+      source_tour_title: travelPlanCustomizerBookingTourTitle(),
+      source_day_title: resolveLocalizedDraftBranchText(day?.title_i18n ?? day?.title, bookingSourceLang(), ""),
+      source_day_exists: true,
+      source_tour_published_on_webpage: true,
+      source_day: cloneTravelPlanCustomizerJson(day),
+      day: cloneTravelPlanCustomizerJson(day)
+    }));
+  }
+
+  function travelPlanCustomizerTripState({ forceDisabled = false } = {}) {
+    const bookingTrip = travelPlanCustomizerBookingTrip();
+    return {
+      baseTrip: bookingTrip,
+      selectedDayRefs: travelPlanCustomizerSelectedDayRefs(),
+      disabled: forceDisabled || !state.permissions.canEditBooking,
+      emptyOptionsLabel: "No optional days are available from marketing tours yet.",
+      emptyTimelineLabel: "Add at least one day to keep customizing.",
+      tourId: bookingTrip.id,
+      tourTitle: bookingTrip.title
+    };
+  }
+
+  function findTravelPlanCustomizerSourceRow(sourceTourId, sourceDayId) {
+    const normalizedTourId = normalizeTravelPlanCustomizerText(sourceTourId);
+    const normalizedDayId = normalizeTravelPlanCustomizerText(sourceDayId);
+    return travelPlanCustomizerSourceRows().find((row) => (
+      normalizeTravelPlanCustomizerText(row?.source_tour_id) === normalizedTourId
+      && normalizeTravelPlanCustomizerSourceDayId(row) === normalizedDayId
+    )) || null;
+  }
+
+  function cloneTravelPlanDayFromCustomizerItem(item, targetDayIndex) {
+    const sourceTourId = normalizeTravelPlanCustomizerText(item?.sourceTourId || item?.source_tour_id);
+    const sourceDayId = normalizeTravelPlanCustomizerText(item?.sourceDayId || item?.source_day_id);
+    const previousDays = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
+    if (sourceTourId === travelPlanCustomizerBookingTourId()) {
+      const previousDay = previousDays.find((day) => normalizeTravelPlanCustomizerText(day?.id) === sourceDayId);
+      if (previousDay) {
+        return {
+          ...cloneTravelPlanCustomizerJson(previousDay),
+          day_number: targetDayIndex + 1
+        };
+      }
+    }
+
+    const sourceRow = findTravelPlanCustomizerSourceRow(sourceTourId, sourceDayId);
+    const rawDay = sourceRow ? travelPlanCustomizerSourceDay(sourceRow) : (
+      item?.day && typeof item.day === "object" && !Array.isArray(item.day)
+        ? cloneTravelPlanCustomizerJson(item.day)
+        : null
+    );
+    if (!rawDay) return null;
+    if (typeof cloneTravelPlanDayForLocalImport === "function") {
+      const importedDay = cloneTravelPlanDayForLocalImport({
+        searchResult: {
+          ...(sourceRow && typeof sourceRow === "object" && !Array.isArray(sourceRow) ? cloneTravelPlanCustomizerJson(sourceRow) : {}),
+          source_tour_id: sourceTourId,
+          source_day_id: sourceDayId,
+          day_id: sourceDayId,
+          source_day: cloneTravelPlanCustomizerJson(rawDay)
+        },
+        targetTravelPlan: cloneTravelPlanCustomizerJson(state.travelPlanDraft || createEmptyTravelPlan()),
+        targetDayIndex
+      });
+      if (importedDay && typeof importedDay === "object" && !Array.isArray(importedDay)) {
+        return {
+          ...importedDay,
+          id: normalizeTravelPlanCustomizerText(importedDay.id),
+          day_number: targetDayIndex + 1
+        };
+      }
+    }
+    return {
+      ...cloneTravelPlanCustomizerJson(rawDay),
+      id: "",
+      day_number: targetDayIndex + 1,
+      date: null,
+      date_string: null,
+      services: (Array.isArray(rawDay.services) ? rawDay.services : []).map((service) => ({
+        ...(service && typeof service === "object" && !Array.isArray(service) ? cloneTravelPlanCustomizerJson(service) : {}),
+        id: ""
+      }))
+    };
+  }
+
+  function applyTravelPlanCustomizerTimeline(items) {
+    const timelineItems = Array.isArray(items) ? items : [];
+    const nextDays = timelineItems
+      .map((item, index) => cloneTravelPlanDayFromCustomizerItem(item, index))
+      .filter(Boolean)
+      .map((day, index) => ({
+        ...day,
+        day_number: index + 1
+      }));
+    state.travelPlanDraft = normalizeTravelPlanState({
+      ...(state.travelPlanDraft || createEmptyTravelPlan()),
+      days: nextDays
+    });
+    const activeDay = state.travelPlanDraft.days.find((day) => day.id === state.travelPlanFocusedDayId)
+      || state.travelPlanDraft.days[0]
+      || null;
+    state.travelPlanFocusedDayId = normalizeTravelPlanCustomizerText(activeDay?.id);
+    state.travelPlanFocusedBoundaryKind = state.travelPlanFocusedDayId ? "" : "arrival";
+    updateTravelPlanDirtyState();
+    renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
+    renderTravelPlanTranslationPanel();
+    renderOfferPanel?.();
+  }
+
+  function renderTravelPlanCustomizerLauncher() {
+    return `
+      <div class="travel-plan-customizer-card" aria-label="Route customizer preview">
+        <div class="travel-plan-customizer-card__head">
+          <span>Route customizer</span>
+          <span class="travel-plan-customizer-card__hint">Full screen</span>
+        </div>
+        <div
+          class="travel-plan-customizer-preview"
+          role="button"
+          tabindex="0"
+          aria-controls="travelPlanCustomizerOverlay"
+          aria-expanded="${travelPlanCustomizerOverlayOpen ? "true" : "false"}"
+          aria-label="Open route customizer"
+          data-travel-plan-open-customizer
+        >
+          <div class="travel-plan-customizer-preview__mount" data-travel-plan-customizer-preview></div>
+          <span class="travel-plan-customizer-preview__cta">Open customizer</span>
+        </div>
+        <div
+          id="travelPlanCustomizerOverlay"
+          class="travel-plan-customizer-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Route customizer"
+          ${travelPlanCustomizerOverlayOpen ? "" : "hidden"}
+        >
+          <div class="travel-plan-customizer-overlay__mount" data-travel-plan-customizer-overlay></div>
+        </div>
+        <button class="btn btn-ghost travel-plan-customizer-overlay__close" type="button" data-travel-plan-close-customizer${travelPlanCustomizerOverlayOpen ? "" : " hidden"}>Close</button>
+      </div>
+    `;
+  }
+
+  async function loadTravelPlanCustomizerSourceRows() {
+    if (!useFocusedBookingWorkspace) return [];
+    if (Array.isArray(state.travelPlanCustomizerSourceRows)) return state.travelPlanCustomizerSourceRows;
+    if (travelPlanCustomizerSourceRowsPromise) return travelPlanCustomizerSourceRowsPromise;
+    const url = withBackendLangQuery(`${apiOrigin}/api/v1/tours/travel-plan-days/search?limit=50`);
+    travelPlanCustomizerSourceRowsPromise = fetchBookingMutation(url, { method: "GET" })
+      .then((payload) => {
+        const rows = Array.isArray(payload?.items) ? payload.items : [];
+        state.travelPlanCustomizerSourceRows = rows;
+        return rows;
+      })
+      .catch((error) => {
+        state.travelPlanCustomizerSourceRows = [];
+        logBrowserConsoleError("[travel-plan-customizer] Failed to load marketing-tour source days.", {
+          booking_id: state.booking?.id || ""
+        }, error);
+        return [];
+      })
+      .finally(() => {
+        travelPlanCustomizerSourceRowsPromise = null;
+      });
+    return travelPlanCustomizerSourceRowsPromise;
+  }
+
+  function createTravelPlanCustomizerWorkspace(root, onTimelineChange = null, mode = "default") {
+    return createTourCustomizerWorkspace({
+      root,
+      mode,
+      labels: travelPlanCustomizerLabels,
+      escapeHTML: escapeHtml,
+      escapeAttr: escapeHtml,
+      currentFrontendLang: bookingSourceLang,
+      destinationScopeCatalog: () => state.destinationScopeCatalog,
+      travelPlanDays: travelPlanCustomizerTravelPlanDays,
+      allTrips: travelPlanCustomizerTrips,
+      findTripById: findTravelPlanCustomizerTripById,
+      ensureTourDetailsLoaded: async (tourId) => findTravelPlanCustomizerTripById(tourId),
+      onTimelineChange
+    });
+  }
+
+  function destroyTravelPlanCustomizerWorkspaces() {
+    travelPlanCustomizerPreviewWorkspace?.destroy?.();
+    travelPlanCustomizerOverlayWorkspace?.destroy?.();
+    travelPlanCustomizerPreviewWorkspace = null;
+    travelPlanCustomizerOverlayWorkspace = null;
+    removePortaledTravelPlanCustomizerElements();
+    document.body.classList.remove("travel-plan-customizer-open");
+    travelPlanCustomizerOverlayOpen = false;
+  }
+
+  function removePortaledTravelPlanCustomizerElements() {
+    const overlay = document.getElementById("travelPlanCustomizerOverlay");
+    if (overlay instanceof HTMLElement && overlay.parentElement === document.body) {
+      overlay.remove();
+    }
+    document.querySelectorAll("[data-travel-plan-close-customizer]").forEach((element) => {
+      if (element instanceof HTMLElement && element.parentElement === document.body) {
+        element.remove();
+      }
+    });
+  }
+
+  function travelPlanCustomizerOverlayElement() {
+    const overlay = document.getElementById("travelPlanCustomizerOverlay")
+      || els.travel_plan_editor?.querySelector?.("#travelPlanCustomizerOverlay");
+    return overlay instanceof HTMLElement ? overlay : null;
+  }
+
+  function travelPlanCustomizerCloseButtonElement() {
+    const closeButton = document.querySelector("[data-travel-plan-close-customizer]")
+      || els.travel_plan_editor?.querySelector?.("[data-travel-plan-close-customizer]");
+    return closeButton instanceof HTMLElement ? closeButton : null;
+  }
+
+  function refreshTravelPlanCustomizerPreviewTrigger() {
+    const trigger = els.travel_plan_editor?.querySelector?.("[data-travel-plan-open-customizer]");
+    if (!(trigger instanceof HTMLElement)) return;
+    trigger.setAttribute("aria-expanded", travelPlanCustomizerOverlayOpen ? "true" : "false");
+    trigger.setAttribute("title", "Open route customizer");
+    const previewMount = els.travel_plan_editor?.querySelector?.("[data-travel-plan-customizer-preview]");
+    previewMount?.querySelectorAll?.("button, [tabindex]").forEach((element) => {
+      if (!(element instanceof HTMLElement)) return;
+      element.setAttribute("tabindex", "-1");
+      element.setAttribute("aria-hidden", "true");
+    });
+  }
+
+  function refreshTravelPlanCustomizerWorkspaceState() {
+    const tripState = travelPlanCustomizerTripState();
+    const previewState = {
+      ...tripState,
+      disabled: true
+    };
+    void travelPlanCustomizerPreviewWorkspace?.setTripState?.(previewState)
+      ?.then?.(refreshTravelPlanCustomizerPreviewTrigger)
+      ?.catch?.((error) => {
+        logBrowserConsoleError("[travel-plan-customizer] Failed to render preview.", {
+          booking_id: state.booking?.id || ""
+        }, error);
+      });
+    void travelPlanCustomizerOverlayWorkspace?.setTripState?.(tripState)
+      ?.catch?.((error) => {
+        logBrowserConsoleError("[travel-plan-customizer] Failed to render overlay.", {
+          booking_id: state.booking?.id || ""
+        }, error);
+      });
+  }
+
+  function renderTravelPlanCustomizerWorkspaces() {
+    if (!useFocusedBookingWorkspace || !els.travel_plan_editor) return;
+    destroyTravelPlanCustomizerWorkspaces();
+    const previewRoot = els.travel_plan_editor.querySelector("[data-travel-plan-customizer-preview]");
+    const overlayRoot = els.travel_plan_editor.querySelector("[data-travel-plan-customizer-overlay]");
+    if (previewRoot instanceof HTMLElement) {
+      travelPlanCustomizerPreviewWorkspace = createTravelPlanCustomizerWorkspace(previewRoot, null, "preview");
+    }
+    if (overlayRoot instanceof HTMLElement) {
+      travelPlanCustomizerOverlayWorkspace = createTravelPlanCustomizerWorkspace(overlayRoot, applyTravelPlanCustomizerTimeline, "full");
+    }
+    refreshTravelPlanCustomizerWorkspaceState();
+    void loadTravelPlanCustomizerSourceRows().then(() => {
+      if (!els.travel_plan_editor?.querySelector?.("[data-travel-plan-customizer-preview]")) return;
+      refreshTravelPlanCustomizerWorkspaceState();
+    });
+  }
+
+  function openTravelPlanCustomizerOverlay() {
+    if (!useFocusedBookingWorkspace || !els.travel_plan_editor) return;
+    syncTravelPlanDraftFromDom();
+    renderTravelPlanCustomizerWorkspaces();
+    const overlay = els.travel_plan_editor.querySelector("#travelPlanCustomizerOverlay");
+    if (!(overlay instanceof HTMLElement)) return;
+    const closeButton = els.travel_plan_editor.querySelector("[data-travel-plan-close-customizer]");
+    document.body.appendChild(overlay);
+    if (closeButton instanceof HTMLElement) {
+      document.body.appendChild(closeButton);
+    }
+    travelPlanCustomizerOverlayOpen = true;
+    overlay.hidden = false;
+    if (closeButton instanceof HTMLElement) closeButton.hidden = false;
+    document.body.classList.add("travel-plan-customizer-open");
+    refreshTravelPlanCustomizerPreviewTrigger();
+    refreshTravelPlanCustomizerWorkspaceState();
+    window.setTimeout(() => {
+      if (!travelPlanCustomizerOverlayOpen) return;
+      closeButton?.focus?.();
+    }, 0);
+  }
+
+  function closeTravelPlanCustomizerOverlay({ rerender = true } = {}) {
+    if (!travelPlanCustomizerOverlayOpen) return;
+    travelPlanCustomizerOverlayOpen = false;
+    document.body.classList.remove("travel-plan-customizer-open");
+    const overlay = travelPlanCustomizerOverlayElement();
+    if (overlay instanceof HTMLElement) overlay.hidden = true;
+    const closeButton = travelPlanCustomizerCloseButtonElement();
+    if (closeButton instanceof HTMLElement) closeButton.hidden = true;
+    refreshTravelPlanCustomizerPreviewTrigger();
+    if (rerender) {
+      renderTravelPlanPanel();
+    } else {
+      removePortaledTravelPlanCustomizerElements();
+    }
+  }
+
+  function handleTravelPlanCustomizerDocumentClick(event) {
+    if (!travelPlanCustomizerOverlayOpen) return;
+    const button = event.target instanceof Element
+      ? event.target.closest("[data-travel-plan-close-customizer]")
+      : null;
+    if (!button) return;
+    event.preventDefault();
+    closeTravelPlanCustomizerOverlay();
+  }
+
+  function handleTravelPlanCustomizerDocumentKeydown(event) {
+    if (event.key !== "Escape" || !travelPlanCustomizerOverlayOpen) return;
+    event.preventDefault();
+    closeTravelPlanCustomizerOverlay();
+  }
+
+  function renderTravelPlanSidebar(selection) {
+    const days = travelPlanDays();
+    const optionMap = travelPlanLocationOptionMap();
+    const arrivalSelected = selection.type === "boundary" && selection.boundaryKind === "arrival";
+    const departureSelected = selection.type === "boundary" && selection.boundaryKind === "departure";
+    return `
+      <aside class="travel-plan-booking-sidebar" aria-label="Travel plan navigation">
+        ${renderTravelPlanCustomizerLauncher()}
+        <div class="travel-plan-route-list">
+          <button class="travel-plan-route-list__item${arrivalSelected ? " is-selected" : ""}" data-travel-plan-select-boundary="arrival" type="button">
+            <span class="travel-plan-route-list__badge travel-plan-route-list__badge--image" aria-hidden="true">
+              <img src="/assets/img/arrival.png" alt="" loading="lazy" decoding="async" />
+            </span>
+            <span class="travel-plan-route-list__copy">
+              <strong>${escapeHtml(boundaryLabel("arrival"))}</strong>
+              <small>${escapeHtml(travelPlanBoundaryDisplay("arrival"))}</small>
+            </span>
+          </button>
+          ${days.map((day, index) => {
+            const dayId = String(day?.id || "").trim();
+            const selected = selection.type === "day" && selection.dayId === dayId;
+            const meta = [travelPlanDayDateLabel(day), travelPlanDayLocationLabel(day, optionMap)].filter(Boolean).join(" · ");
+            return `
+              <button class="travel-plan-route-list__item${selected ? " is-selected" : ""}" data-travel-plan-select-day="${escapeHtml(dayId)}" type="button">
+                <span class="travel-plan-route-list__badge">${escapeHtml(String(index + 1))}</span>
+                <span class="travel-plan-route-list__copy">
+                  <strong>${escapeHtml(travelPlanDayTitle(day, index))}</strong>
+                  <small>${escapeHtml(meta || bookingT("booking.travel_plan.location_none", "No map point"))}</small>
+                </span>
+              </button>
+            `;
+          }).join("")}
+          <button class="travel-plan-route-list__item${departureSelected ? " is-selected" : ""}" data-travel-plan-select-boundary="departure" type="button">
+            <span class="travel-plan-route-list__badge travel-plan-route-list__badge--image" aria-hidden="true">
+              <img src="/assets/img/departure.png" alt="" loading="lazy" decoding="async" />
+            </span>
+            <span class="travel-plan-route-list__copy">
+              <strong>${escapeHtml(boundaryLabel("departure"))}</strong>
+              <small>${escapeHtml(travelPlanBoundaryDisplay("departure"))}</small>
+            </span>
+          </button>
+        </div>
+      </aside>
+    `;
+  }
+
+  function renderTravelPlanFocusedEditor(selection) {
+    if (selection.type === "boundary") {
+      const title = boundaryLabel(selection.boundaryKind);
+      return `
+        <section class="travel-plan-booking-editor" aria-label="${escapeHtml(title)}">
+          <div class="travel-plan-booking-editor__toolbar">
+            <div class="travel-plan-booking-editor__title">
+              <span class="travel-plan-booking-editor__badge">${selection.boundaryKind === "arrival" ? "A" : "D"}</span>
+              <div>
+                <h3>${escapeHtml(title)}</h3>
+                <p>${escapeHtml(travelPlanBoundaryDisplay(selection.boundaryKind))}</p>
+              </div>
+            </div>
+            <button class="btn btn-ghost booking-offer-add-btn travel-plan-booking-editor__add-day" data-travel-plan-add-day type="button">
+              <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
+              <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
+            </button>
+          </div>
+          ${renderTravelPlanBoundarySection(selection.boundaryKind)}
+        </section>
+      `;
+    }
+    const days = travelPlanDays();
+    const dayIndex = days.findIndex((day) => String(day?.id || "").trim() === selection.dayId);
+    const day = dayIndex >= 0 ? days[dayIndex] : null;
+    if (!day) {
+      return `
+        <section class="travel-plan-booking-editor travel-plan-booking-editor--empty">
+          <p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>
+          <button class="btn btn-ghost booking-offer-add-btn travel-plan-booking-editor__add-day" data-travel-plan-add-day type="button">
+            <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
+            <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
+          </button>
+        </section>
+      `;
+    }
+    const meta = [travelPlanDayDateLabel(day), travelPlanDayLocationLabel(day)].filter(Boolean).join(" · ");
+    return `
+      <section class="travel-plan-booking-editor" aria-label="${escapeHtml(travelPlanDayTitle(day, dayIndex))}">
+        <div class="travel-plan-booking-editor__toolbar">
+          <div class="travel-plan-booking-editor__title">
+            <span class="travel-plan-booking-editor__badge">${escapeHtml(String(dayIndex + 1))}</span>
+            <div>
+              <h3>${escapeHtml(travelPlanDayTitle(day, dayIndex))}</h3>
+              <p>${escapeHtml(meta || bookingT("booking.travel_plan.location_none", "No map point"))}</p>
+            </div>
+          </div>
+          <button class="btn btn-ghost booking-offer-add-btn travel-plan-booking-editor__add-day" data-travel-plan-add-day type="button">
+            <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
+            <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
+          </button>
+        </div>
+        ${renderTravelPlanDay(day, dayIndex)}
+      </section>
+    `;
+  }
+
+  function renderFocusedTravelPlanWorkspace({ destinationScopeMarkup = "" } = {}) {
+    const selection = ensureFocusedTravelPlanSelection();
+    return `
+      ${usesExternalDestinationScopeEditor() ? "" : destinationScopeMarkup}
+      <div class="travel-plan-booking-workspace">
+        ${renderTravelPlanSidebar(selection)}
+        ${renderTravelPlanFocusedEditor(selection)}
+      </div>
+    `;
+  }
+
   function readLocalizedFieldPayload(container, dataScope, field, existingValue = null) {
     const sourceInput = container?.querySelector(`[data-${dataScope}="${field}"][data-localized-role="source"]`);
     const sourceLang = bookingSourceLang();
@@ -2426,6 +3092,12 @@ export function createBookingTravelPlanModule(ctx) {
     const previous = previousBoundary && typeof previousBoundary === "object" && !Array.isArray(previousBoundary)
       ? previousBoundary
       : {};
+    if (!(node instanceof HTMLElement)) {
+      return normalizeTravelPlanBoundaryDraft(
+        Object.keys(previous).length ? previous : createEmptyTravelPlanBoundaryService(normalizedBoundaryKind),
+        normalizedBoundaryKind
+      );
+    }
     const item = createEmptyTravelPlanBoundaryService(normalizedBoundaryKind);
     item.id = String(previous.id || item.id || "").trim();
     item.boundary_kind = normalizedBoundaryKind;
@@ -2512,10 +3184,6 @@ export function createBookingTravelPlanModule(ctx) {
     draft.one_pager_image_ids = Array.isArray(state.travelPlanDraft?.one_pager_image_ids)
       ? [...state.travelPlanDraft.one_pager_image_ids]
       : [];
-    if (allowDestinationScope) {
-      draft.destination_scope = readDestinationScopeFromDom(destinationScopeEditorRoot());
-      draft.destinations = destinationScopeDestinations(draft.destination_scope);
-    }
     const previousBoundaryLogistics = state.travelPlanDraft?.boundary_logistics && typeof state.travelPlanDraft.boundary_logistics === "object" && !Array.isArray(state.travelPlanDraft.boundary_logistics)
       ? state.travelPlanDraft.boundary_logistics
       : {};
@@ -2525,7 +3193,7 @@ export function createBookingTravelPlanModule(ctx) {
       ...(arrivalBoundary.enabled || travelPlanBoundaryHasContent(arrivalBoundary) ? { arrival: arrivalBoundary } : {}),
       ...(departureBoundary.enabled || travelPlanBoundaryHasContent(departureBoundary) ? { departure: departureBoundary } : {})
     };
-    draft.days = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-day]")).map((dayNode, dayIndex) => {
+    const renderedDays = Array.from(els.travel_plan_editor.querySelectorAll("[data-travel-plan-day]")).map((dayNode, dayIndex) => {
       const dayId = String(dayNode.getAttribute("data-travel-plan-day") || "").trim();
       const day = createEmptyTravelPlanDay(dayIndex);
       day.id = dayId || day.id;
@@ -2634,6 +3302,31 @@ export function createBookingTravelPlanModule(ctx) {
       });
       return day;
     });
+    if (useFocusedBookingWorkspace) {
+      const renderedById = new Map(renderedDays.map((day) => [String(day?.id || "").trim(), day]));
+      const previousDays = Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : [];
+      const previousIds = new Set(previousDays.map((day) => String(day?.id || "").trim()).filter(Boolean));
+      draft.days = previousDays.map((previousDay, dayIndex) => {
+        const previousDayId = String(previousDay?.id || "").trim();
+        const nextDay = previousDayId && renderedById.has(previousDayId)
+          ? renderedById.get(previousDayId)
+          : previousDay && typeof previousDay === "object" && !Array.isArray(previousDay)
+            ? { ...previousDay }
+            : createEmptyTravelPlanDay(dayIndex);
+        nextDay.day_number = dayIndex + 1;
+        return nextDay;
+      });
+      for (const renderedDay of renderedDays) {
+        const renderedDayId = String(renderedDay?.id || "").trim();
+        if (!renderedDayId || previousIds.has(renderedDayId)) continue;
+        draft.days.push(renderedDay);
+      }
+      draft.days.forEach((day, dayIndex) => {
+        day.day_number = dayIndex + 1;
+      });
+    } else {
+      draft.days = renderedDays;
+    }
     if (allowPdfs) {
       draft.attachments = Array.isArray(state.travelPlanDraft?.attachments) ? state.travelPlanDraft.attachments : [];
     }
@@ -2660,6 +3353,10 @@ export function createBookingTravelPlanModule(ctx) {
     }
     days.push(nextDay);
     state.travelPlanDraft.days = days;
+    if (useFocusedBookingWorkspace) {
+      state.travelPlanFocusedDayId = String(nextDay.id || "").trim();
+      state.travelPlanFocusedBoundaryKind = "";
+    }
     renderTravelPlanPanel();
     renderOfferPanel?.();
   }
@@ -2697,6 +3394,11 @@ export function createBookingTravelPlanModule(ctx) {
     if (dayIndex < 0) return;
     if (!window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its services?"))) return;
     state.travelPlanDraft.days.splice(dayIndex, 1);
+    if (useFocusedBookingWorkspace && state.travelPlanFocusedDayId === dayId) {
+      const fallbackDay = state.travelPlanDraft.days[Math.min(dayIndex, state.travelPlanDraft.days.length - 1)] || null;
+      state.travelPlanFocusedDayId = String(fallbackDay?.id || "").trim();
+      state.travelPlanFocusedBoundaryKind = state.travelPlanFocusedDayId ? "" : "arrival";
+    }
     renderTravelPlanPanel();
     renderOfferPanel?.();
   }
@@ -4052,6 +4754,14 @@ export function createBookingTravelPlanModule(ctx) {
         }
       });
       els.travel_plan_editor.addEventListener("click", (event) => {
+        const customizerTrigger = event.target instanceof Element
+          ? event.target.closest("[data-travel-plan-open-customizer]")
+          : null;
+        if (customizerTrigger) {
+          event.preventDefault();
+          openTravelPlanCustomizerOverlay();
+          return;
+        }
         const dayToggleRegion = resolveTravelPlanToggleRegion(event.target, "[data-travel-plan-toggle-day-region]");
         if (dayToggleRegion) {
           toggleTravelPlanDayCollapsed(dayToggleRegion.getAttribute("data-travel-plan-toggle-day-region"));
@@ -4074,6 +4784,18 @@ export function createBookingTravelPlanModule(ctx) {
         }
         if (button.hasAttribute("data-destination-scope-add-country-place")) {
           void createDestinationScopePlace("", button.getAttribute("data-destination-scope-add-country-place"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-select-day")) {
+          selectFocusedTravelPlanDay(button.getAttribute("data-travel-plan-select-day"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-select-boundary")) {
+          selectFocusedTravelPlanBoundary(button.getAttribute("data-travel-plan-select-boundary"));
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-close-customizer")) {
+          closeTravelPlanCustomizerOverlay();
           return;
         }
         if (button.hasAttribute("data-travel-plan-add-day")) {
@@ -4174,7 +4896,20 @@ export function createBookingTravelPlanModule(ctx) {
           validateTravelPlanDateTextInput(target, { allowPartial: false });
         }
       });
+      els.travel_plan_editor.addEventListener("keydown", (event) => {
+        const customizerTrigger = event.target instanceof Element
+          ? event.target.closest("[data-travel-plan-open-customizer]")
+          : null;
+        if (!customizerTrigger || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        openTravelPlanCustomizerOverlay();
+      });
       els.travel_plan_editor.dataset.travelPlanBound = "true";
+      if (!travelPlanCustomizerDocumentEventsBound) {
+        document.addEventListener("click", handleTravelPlanCustomizerDocumentClick);
+        document.addEventListener("keydown", handleTravelPlanCustomizerDocumentKeydown);
+        travelPlanCustomizerDocumentEventsBound = true;
+      }
       window.setTimeout(() => {
         warnIfTravelPlanControlsMissing("post-load-watchdog");
       }, 1500);
@@ -4331,7 +5066,7 @@ export function createBookingTravelPlanModule(ctx) {
   function renderTravelPlanPanel() {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
     state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft || state.booking.travel_plan);
-    if (allowDestinationScope && !state.destinationScopeCatalog) {
+    if ((allowDestinationScope || allowAllPrimaryMapPointOptions) && !state.destinationScopeCatalog) {
       void loadDestinationScopeCatalog().then(() => renderTravelPlanPanel());
     }
     syncTravelPlanCollapsedServiceIds();
@@ -4356,29 +5091,37 @@ export function createBookingTravelPlanModule(ctx) {
     if (usesExternalDestinationScopeEditor()) {
       els.travel_plan_destination_scope_editor.innerHTML = destinationScopeMarkup;
     }
-    els.travel_plan_editor.innerHTML = `
-      ${usesExternalDestinationScopeEditor() ? "" : destinationScopeMarkup}
-      ${renderTravelPlanBoundaryLogistics()}
-      ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
-      <div class="travel-plan-footer">
-        <div class="travel-plan-footer__action-rows">
-          <div class="${primaryActionRowClass}">
-            <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn travel-plan-add-day-btn--combined" data-travel-plan-add-day type="button">
-              <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
-              <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
-            </button>
-            ${allowDayImport
-              ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>`
+    if (useFocusedBookingWorkspace) {
+      destroyTravelPlanCustomizerWorkspaces();
+    }
+    els.travel_plan_editor.innerHTML = useFocusedBookingWorkspace
+      ? renderFocusedTravelPlanWorkspace({ destinationScopeMarkup })
+      : `
+        ${usesExternalDestinationScopeEditor() ? "" : destinationScopeMarkup}
+        ${renderTravelPlanBoundaryLogistics()}
+        ${(Array.isArray(state.travelPlanDraft.days) ? state.travelPlanDraft.days : []).map((day, dayIndex) => renderTravelPlanDay(day, dayIndex)).join("") || `<p class="travel-plan-empty">${escapeHtml(bookingT("booking.travel_plan.no_days", "No travel-plan days yet."))}</p>`}
+        <div class="travel-plan-footer">
+          <div class="travel-plan-footer__action-rows">
+            <div class="${primaryActionRowClass}">
+              <button class="btn btn-ghost booking-offer-add-btn travel-plan-add-day-btn travel-plan-add-day-btn--combined" data-travel-plan-add-day type="button">
+                <span class="travel-plan-add-btn__icon" aria-hidden="true">+</span>
+                <span class="travel-plan-add-btn__label">${escapeHtml(bookingT("booking.travel_plan.new_day", "New day"))}</span>
+              </button>
+              ${allowDayImport
+                ? `<button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-day-import type="button">${escapeHtml(bookingT("booking.travel_plan.insert_existing_day", "Copy existing day"))}</button>`
+                : ""}
+            </div>
+            ${allowTourImport
+              ? `<div class="travel-plan-footer__action-row">
+                  <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-tour-import data-requires-clean-state type="button">${escapeHtml(tourTemplateLabel)}</button>
+                </div>`
               : ""}
           </div>
-          ${allowTourImport
-            ? `<div class="travel-plan-footer__action-row">
-                <button class="btn travel-plan-day-add-btn travel-plan-day-add-btn--service travel-plan-day-add-btn--day-copy" data-travel-plan-open-tour-import data-requires-clean-state type="button">${escapeHtml(tourTemplateLabel)}</button>
-              </div>`
-            : ""}
         </div>
-      </div>
-    `;
+      `;
+    if (useFocusedBookingWorkspace) {
+      renderTravelPlanCustomizerWorkspaces();
+    }
     if (allowPdfs && els.travel_plan_pdf_workspace) {
       els.travel_plan_pdf_workspace.innerHTML = buildBookingPdfWorkspaceMarkup({
         escapeHtml,

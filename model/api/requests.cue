@@ -13,7 +13,6 @@ import (
 }
 
 #WebsiteBookingFormBase: {
-	destinations?: [...string]
 	travel_style?: [...string]
 	travel_month?:             string
 	number_of_travelers?:      >=common.#MinTravelers & <=common.#MaxTravelers & int
@@ -52,17 +51,12 @@ import (
 	name:               string
 	preferred_language: enums.#LanguageCode
 	preferred_currency: enums.#CurrencyCode
-	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
 	primary_contact_name?:         string
 	primary_contact_email?:        common.#Email
 	primary_contact_phone_number?: string & !=""
 	number_of_travelers?:          >=common.#MinTravelers & <=common.#MaxTravelers & int
 	actor?:                        string
-}
-
-#BookingDeleteRequest: {
-	expected_core_revision?: >=0 & int
 }
 
 #BookingNameUpdateRequest: {
@@ -83,28 +77,15 @@ import (
 	referral_kind:           enums.#BookingReferralKind
 	referral_label?:         string
 	referral_staff_user_id?: common.#Identifier
-	destinations?: [...enums.#CountryCode]
 	travel_styles?: [...string]
 	pdf_personalization?: databaseModel.#BookingPdfPersonalization
 	actor?:               string
-}
-
-#BookingImageUploadRequest: #EvidenceUpload & {
-	expected_core_revision?: >=0 & int
-	actor?:                  string
 }
 
 #BookingOwnerUpdateRequest: {
 	expected_core_revision?:    >=0 & int
 	assigned_keycloak_user_id?: common.#Identifier
 	actor?:                     string
-}
-
-#BookingCloneRequest: {
-	expected_core_revision?: >=0 & int
-	name:                    string
-	include_travelers?:      bool
-	actor?:                  string
 }
 
 #BookingPersonCreateRequest: {
@@ -165,7 +146,6 @@ import (
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
-	include_translations:                 *true | bool
 	actor?:                               string
 }
 
@@ -178,7 +158,6 @@ import (
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
-	include_translations:                 *true | bool
 	actor?:                               string
 }
 
@@ -190,7 +169,6 @@ import (
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
-	include_translations:                 *true | bool
 	actor?:                               string
 }
 
@@ -203,7 +181,6 @@ import (
 	include_images:                       *true | bool
 	include_customer_visible_images_only: *false | bool
 	include_notes:                        *true | bool
-	include_translations:                 *true | bool
 	actor?:                               string
 }
 

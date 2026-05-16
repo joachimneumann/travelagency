@@ -5,7 +5,6 @@ import {
 import { bookingT } from "./i18n.js";
 import { TRAVEL_PLAN_SERVICE_KIND_OPTIONS } from "../shared/generated_catalogs.js";
 import { resolveTravelPlanImageSrc } from "./travel_plan_images.js";
-import { normalizeDestinationScope } from "../shared/destination_scope_editor.js";
 
 function normalizeText(value) {
   return String(value ?? "").trim();
@@ -140,16 +139,6 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
       return null;
     }
     return collected.payload;
-  }
-
-  function mergeDestinationScopeIntoTravelPlan(plan, sourceScope) {
-    return {
-      ...(plan && typeof plan === "object" ? plan : {}),
-      destination_scope: normalizeDestinationScope([
-        ...normalizeDestinationScope(plan?.destination_scope),
-        ...normalizeDestinationScope(sourceScope)
-      ])
-    };
   }
 
   function findTravelPlanDaySearchResult(sourceId, sourceDayId) {
@@ -586,13 +575,13 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           setTravelPlanLibraryStatus(bookingT("booking.travel_plan.day_insert_failed", "Could not insert this day."), "error");
           return;
         }
-        const nextTravelPlan = mergeDestinationScopeIntoTravelPlan({
+        const nextTravelPlan = {
           ...cloneJson(currentTravelPlan),
           days: [
             ...(Array.isArray(currentTravelPlan?.days) ? currentTravelPlan.days : []),
             importedDay
           ]
-        });
+        };
         applyLocalTravelPlanImport(nextTravelPlan, bookingT("booking.travel_plan.day_inserted", "Day inserted."));
         return;
       }
@@ -668,10 +657,10 @@ export function createBookingTravelPlanServiceLibraryModule(deps) {
           ...targetDays[targetDayIndex],
           services: targetServices
         };
-        const nextTravelPlan = mergeDestinationScopeIntoTravelPlan({
+        const nextTravelPlan = {
           ...cloneJson(currentTravelPlan),
           days: targetDays
-        });
+        };
         applyLocalTravelPlanImport(nextTravelPlan, bookingT("booking.travel_plan.item_inserted", "Service inserted."));
         return;
       }

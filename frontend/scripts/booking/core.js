@@ -1,8 +1,5 @@
 import {
-  bookingCloneRequest,
   bookingCustomerLanguageRequest,
-  bookingDeleteRequest,
-  bookingImageRequest,
   bookingNameRequest,
   bookingNotesRequest,
   bookingOwnerRequest,
@@ -33,10 +30,8 @@ import {
   normalizeBookingContentLang
 } from "./i18n.js";
 import {
-  COUNTRY_CODE_OPTIONS,
   TOUR_STYLE_CODE_OPTIONS
 } from "../shared/generated_catalogs.js";
-import { destinationScopeDestinations } from "../shared/destination_scope_editor.js";
 
 function labelizeKey(key) {
   return String(key || "")
@@ -90,32 +85,6 @@ const REFERRAL_MODE_CONFIG = Object.freeze({
   })
 });
 
-const COUNTRY_LABEL_BY_CODE = new Map(
-  COUNTRY_CODE_OPTIONS.map((option) => [
-    String(option.value || "").trim().toUpperCase(),
-    String(option.label || option.value || "").trim().replace(/^[A-Z]{2}\s+/, "")
-  ])
-);
-
-const TOUR_DESTINATION_OPTIONS = Object.freeze([
-  Object.freeze({ value: "VN", label: "Vietnam", aliases: ["vietnam", "vn"] }),
-  Object.freeze({ value: "TH", label: "Thailand", aliases: ["thailand", "th"] }),
-  Object.freeze({ value: "KH", label: "Cambodia", aliases: ["cambodia", "kh"] }),
-  Object.freeze({ value: "LA", label: "Laos", aliases: ["laos", "la"] })
-]);
-
-const TOUR_DESTINATION_LABEL_BY_CODE = new Map(
-  TOUR_DESTINATION_OPTIONS.map((option) => [option.value, option.label])
-);
-
-const TOUR_DESTINATION_VALUE_BY_ALIAS = new Map(
-  TOUR_DESTINATION_OPTIONS.flatMap((option) => [
-    [option.value.toLowerCase(), option.value],
-    [option.label.toLowerCase(), option.value],
-    ...option.aliases.map((alias) => [normalizeTextValue(alias).toLowerCase(), option.value])
-  ])
-);
-
 const TRAVEL_STYLE_LABEL_BY_VALUE = new Map(
   TOUR_STYLE_CODE_OPTIONS.map((option) => [
     String(option.value || "").trim().toLowerCase(),
@@ -129,14 +98,6 @@ function normalizeTextValue(value) {
 
 function unique(values) {
   return Array.from(new Set((Array.isArray(values) ? values : []).filter(Boolean)));
-}
-
-function normalizeCodeArray(values) {
-  return unique((Array.isArray(values) ? values : [])
-    .map((value) => TOUR_DESTINATION_VALUE_BY_ALIAS.get(normalizeTextValue(value).toLowerCase()) || normalizeTextValue(value).toUpperCase())
-    .filter(Boolean))
-    .filter((value) => TOUR_DESTINATION_LABEL_BY_CODE.has(value))
-    .sort((left, right) => (TOUR_DESTINATION_LABEL_BY_CODE.get(left) || left).localeCompare(TOUR_DESTINATION_LABEL_BY_CODE.get(right) || right));
 }
 
 function normalizeTravelStyleArray(values) {
@@ -156,18 +117,13 @@ function normalizeTravelStyleArray(values) {
     .sort((left, right) => (TRAVEL_STYLE_LABEL_BY_VALUE.get(left) || left).localeCompare(TRAVEL_STYLE_LABEL_BY_VALUE.get(right) || right));
 }
 
-function destinationLabels(values) {
-  return normalizeCodeArray(values).map((code) => TOUR_DESTINATION_LABEL_BY_CODE.get(code) || COUNTRY_LABEL_BY_CODE.get(code) || code);
-}
-
 function travelStyleLabels(values) {
   return normalizeTravelStyleArray(values).map((value) => TRAVEL_STYLE_LABEL_BY_VALUE.get(value) || value);
 }
 
 function bookingDestinations(booking) {
-  const scopedDestinations = destinationScopeDestinations(booking?.travel_plan?.destination_scope);
-  if (scopedDestinations.length) return normalizeCodeArray(scopedDestinations);
-  return normalizeCodeArray(booking?.travel_plan?.destinations);
+  const days = Array.isArray(booking?.travel_plan?.days) ? booking.travel_plan.days : [];
+  return unique(days.map((day) => normalizeTextValue(day?.primary_location_id)).filter(Boolean));
 }
 
 function normalizePdfTextField(value, mapValue) {
@@ -321,35 +277,25 @@ export function createBookingCoreModule(ctx) {
   const {
     state,
     els,
-    apiBase,
     apiOrigin,
     fetchApi,
     fetchBookingMutation,
     getBookingRevision,
-    getRepresentativeTraveler,
-    getPersonInitials,
     normalizeText,
     escapeHtml,
     formatDateTime,
     updateContentLangInUrl,
     setPendingSavedCustomerLanguage,
-    resolvePersonPhotoSrc,
-    resolveBookingImageSrc,
     displayKeycloakUser,
     resolveCurrentAuthKeycloakUser,
-    canReadAllBookingsInUi,
     setBookingSectionDirty,
     hasUnsavedBookingChanges,
-    reportPersistedActionBlocked,
-    setStatus,
-    rerenderWhatsApp,
     renderPersonsEditor
   } = ctx;
 
   let heroCopyClipboardPoll = null;
   let heroCopiedValue = "";
   let titleEditStartValue = "";
-  const DISCOVERY_CALL_FALLBACK_IMAGE = "assets/img/happy_tourists.webp";
 
   function withBackendLang(pathname, params = {}) {
     const url = new URL(pathname, window.location.origin);
@@ -373,31 +319,6 @@ export function createBookingCoreModule(ctx) {
     window.location.href = fallbackHref;
   }
 
-  function cloneStatus(message) {
-    if (els.cloneStatus instanceof HTMLElement) {
-      els.cloneStatus.textContent = message || "";
-    }
-  }
-
-  function defaultCloneTitle(booking = state.booking) {
-    const base = normalizeText(booking?.name) || normalizeText(booking?.id) || bookingT("booking.booking", "Booking");
-    return bookingT("booking.clone_title_default", "{name} Copy", { name: base });
-  }
-
-  function syncCloneTitleInput({ force = false } = {}) {
-    if (!(els.cloneTitleInput instanceof HTMLInputElement)) return;
-    const nextDefault = defaultCloneTitle(state.booking);
-    const previousDefault = normalizeText(els.cloneTitleInput.dataset.defaultValue);
-    const currentValue = normalizeText(els.cloneTitleInput.value);
-    const userEdited = els.cloneTitleInput.dataset.userEdited === "true";
-    if (force || !userEdited || !currentValue || currentValue === previousDefault) {
-      els.cloneTitleInput.value = nextDefault;
-      els.cloneTitleInput.dataset.userEdited = "false";
-    }
-    els.cloneTitleInput.dataset.defaultValue = nextDefault;
-    els.cloneTitleInput.placeholder = nextDefault;
-  }
-
   function ensureCoreDraft() {
     if (!state.coreDraft || typeof state.coreDraft !== "object") {
       state.coreDraft = {
@@ -408,7 +329,6 @@ export function createBookingCoreModule(ctx) {
         referral_kind: "none",
         referral_label: "",
         referral_staff_user_id: "",
-        destinations: [],
         travel_styles: [],
         pdf_personalization: normalizePdfPersonalization(),
         notes: ""
@@ -432,10 +352,23 @@ export function createBookingCoreModule(ctx) {
     return Number.isInteger(exactDays) && exactDays > 0 ? exactDays : 0;
   }
 
+  function travelPlanLocationLabel(locationId) {
+    const normalizedId = normalizeText(locationId);
+    if (!normalizedId) return "";
+    const catalog = state.destinationScopeCatalog && typeof state.destinationScopeCatalog === "object"
+      ? state.destinationScopeCatalog
+      : {};
+    const region = (Array.isArray(catalog.regions) ? catalog.regions : [])
+      .find((item) => normalizeText(item?.id) === normalizedId);
+    if (region) return normalizeText(region.label || region.name || region.code || region.id) || normalizedId;
+    const place = (Array.isArray(catalog.places) ? catalog.places : [])
+      .find((item) => normalizeText(item?.id) === normalizedId);
+    if (place) return normalizeText(place.label || place.name || place.code || place.id) || normalizedId;
+    return normalizedId;
+  }
+
   function computedPdfCountryLabel(booking = state.booking) {
-    const draft = ensureCoreDraft();
-    const labels = destinationLabels(Array.isArray(draft.destinations) && draft.destinations.length ? draft.destinations : bookingDestinations(booking));
-    return labels.join(", ");
+    return unique(bookingDestinations(booking).map(travelPlanLocationLabel).filter(Boolean)).join(", ");
   }
 
   function computedPdfTravelStyleLabel(booking = state.booking) {
@@ -613,25 +546,12 @@ export function createBookingCoreModule(ctx) {
     const draft = ensureCoreDraft();
     const disabled = !state.permissions.canEditBooking;
     renderCheckboxOptions(
-      els.destinationsOptions,
-      TOUR_DESTINATION_OPTIONS.map((option) => option.value),
-      normalizeCodeArray(draft.destinations),
-      "booking-destination-option",
-      disabled,
-      (value) => TOUR_DESTINATION_LABEL_BY_CODE.get(value) || value
-    );
-    renderCheckboxOptions(
       els.travelStylesOptions,
       TOUR_STYLE_CODE_OPTIONS.map((option) => String(option.value || "").trim().toLowerCase()).filter(Boolean),
       normalizeTravelStyleArray(draft.travel_styles),
       "booking-travel-style-option",
       disabled,
       (value) => TRAVEL_STYLE_LABEL_BY_VALUE.get(value) || value
-    );
-    updateMultiselectSummary(
-      els.destinationsSummary,
-      destinationLabels(draft.destinations),
-      bookingT("booking.destinations_placeholder", "Select destinations")
     );
     updateMultiselectSummary(
       els.travelStylesSummary,
@@ -764,7 +684,6 @@ export function createBookingCoreModule(ctx) {
       draft.referral_kind = normalizeText(state.booking.referral_kind).toLowerCase() || "none";
       draft.referral_label = normalizeText(state.booking.referral_label) || "";
       draft.referral_staff_user_id = normalizeText(state.booking.referral_staff_user_id) || "";
-      draft.destinations = bookingDestinations(state.booking);
       draft.travel_styles = normalizeTravelStyleArray(state.booking.travel_styles);
       draft.pdf_personalization = normalizePdfPersonalization(state.booking.pdf_personalization);
     }
@@ -829,7 +748,6 @@ export function createBookingCoreModule(ctx) {
       referral_staff_user_id: referralKind === "atp_staff"
         ? normalizeText(values.referral_staff_user_id) || ""
         : "",
-      destinations: JSON.stringify(normalizeCodeArray(values.destinations)),
       travel_styles: JSON.stringify(normalizeTravelStyleArray(values.travel_styles)),
       pdf_personalization: JSON.stringify(normalizeManagedPdfPersonalization(values.pdf_personalization))
     };
@@ -844,7 +762,6 @@ export function createBookingCoreModule(ctx) {
       referral_kind: normalizeText(state.booking?.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(state.booking?.referral_label) || "",
       referral_staff_user_id: normalizeText(state.booking?.referral_staff_user_id) || "",
-      destinations: bookingDestinations(state.booking),
       travel_styles: state.booking?.travel_styles,
       pdf_personalization: state.booking?.pdf_personalization
     });
@@ -860,7 +777,6 @@ export function createBookingCoreModule(ctx) {
       referral_kind: normalizeText(draft.referral_kind).toLowerCase() || "none",
       referral_label: normalizeText(draft.referral_label) || "",
       referral_staff_user_id: normalizeText(draft.referral_staff_user_id) || "",
-      destinations: draft.destinations,
       travel_styles: draft.travel_styles,
       pdf_personalization: draft.pdf_personalization
     });
@@ -886,7 +802,6 @@ export function createBookingCoreModule(ctx) {
     if (els.referralKindSelect) draft.referral_kind = normalizeText(els.referralKindSelect.value).toLowerCase() || "none";
     if (els.referralLabelInput) draft.referral_label = normalizeText(els.referralLabelInput.value) || "";
     if (els.referralStaffSelect) draft.referral_staff_user_id = normalizeText(els.referralStaffSelect.value) || "";
-    draft.destinations = normalizeCodeArray(readCheckedValues(els.destinationsOptions, "booking-destination-option"));
     draft.travel_styles = normalizeTravelStyleArray(readCheckedValues(els.travelStylesOptions, "booking-travel-style-option"));
     draft.pdf_personalization = readManagedPdfPersonalizationDraft(draft.pdf_personalization);
     if (draft.referral_kind === "none") {
@@ -976,12 +891,6 @@ export function createBookingCoreModule(ctx) {
     return latestValue;
   }
 
-  function blockPersistedAction() {
-    if (!hasUnsavedBookingChanges?.()) return false;
-    reportPersistedActionBlocked?.();
-    return true;
-  }
-
   function renderBookingHeader() {
     if (!state.booking) return;
     const draft = syncCoreDraftFromBooking();
@@ -994,16 +903,6 @@ export function createBookingCoreModule(ctx) {
     if (els.titleEditBtn) {
       els.titleEditBtn.hidden = !state.permissions.canEditBooking;
       els.titleEditBtn.disabled = !state.permissions.canEditBooking;
-    }
-    if (els.heroPhotoBtn) {
-      els.heroPhotoBtn.disabled = !state.permissions.canEditBooking;
-      els.heroPhotoBtn.classList.toggle("is-editable", state.permissions.canEditBooking);
-      els.heroPhotoBtn.setAttribute(
-        "aria-label",
-        state.permissions.canEditBooking
-          ? bookingT("booking.change_picture", "Change booking picture")
-          : bookingT("booking.picture", "Booking picture")
-      );
     }
     if (els.subtitle) {
       const bookingId = normalizeText(state.booking.id);
@@ -1033,71 +932,6 @@ export function createBookingCoreModule(ctx) {
     if (heroCopiedValue && heroCopiedValue !== getCurrentBookingIdentifier()) {
       clearHeroCopyStatus();
     }
-    renderBookingHeroImage();
-  }
-
-  function renderBookingHeroImage() {
-    if (!els.heroImage) return;
-    const bookingImage = normalizeText(state.booking?.image);
-    if (bookingImage) {
-      els.heroImage.src = resolveBookingImageSrc(bookingImage);
-      els.heroImage.alt = normalizeText(state.booking?.name) || bookingT("booking.picture", "Booking picture");
-      els.heroImage.hidden = false;
-      els.heroImage.style.display = "block";
-      if (els.heroInitials) els.heroInitials.hidden = true;
-      if (els.heroInitials) els.heroInitials.style.display = "none";
-      return;
-    }
-
-    if (normalizeText(state.tour_image)) {
-      els.heroImage.src = resolveBookingImageSrc(state.tour_image);
-      els.heroImage.alt = normalizeText(state.booking?.web_form_submission?.booking_name) || bookingT("booking.tour_picture", "Tour picture");
-      els.heroImage.hidden = false;
-      els.heroImage.style.display = "block";
-      if (els.heroInitials) els.heroInitials.hidden = true;
-      if (els.heroInitials) els.heroInitials.style.display = "none";
-      return;
-    }
-
-    if (shouldUseDiscoveryCallFallbackImage(state.booking)) {
-      els.heroImage.src = DISCOVERY_CALL_FALLBACK_IMAGE;
-      els.heroImage.alt = normalizeText(state.booking?.web_form_submission?.booking_name) || bookingT("booking.tour_picture", "Tour picture");
-      els.heroImage.hidden = false;
-      els.heroImage.style.display = "block";
-      if (els.heroInitials) els.heroInitials.hidden = true;
-      if (els.heroInitials) els.heroInitials.style.display = "none";
-      return;
-    }
-
-    const representativeTraveler = getRepresentativeTraveler(state.booking);
-
-    if (representativeTraveler && normalizeText(representativeTraveler.photo_ref)) {
-      els.heroImage.src = resolvePersonPhotoSrc(representativeTraveler.photo_ref);
-      els.heroImage.alt = representativeTraveler.name ? `${representativeTraveler.name}` : "";
-      els.heroImage.hidden = false;
-      els.heroImage.style.display = "block";
-      if (els.heroInitials) els.heroInitials.hidden = true;
-      if (els.heroInitials) els.heroInitials.style.display = "none";
-      return;
-    }
-
-    if (representativeTraveler && normalizeText(representativeTraveler.name)) {
-      els.heroImage.hidden = true;
-      els.heroImage.style.display = "none";
-      if (els.heroInitials) {
-        els.heroInitials.textContent = getPersonInitials(representativeTraveler.name);
-        els.heroInitials.hidden = false;
-        els.heroInitials.style.display = "block";
-      }
-      return;
-    }
-
-    els.heroImage.src = "assets/img/profile_person.png";
-    els.heroImage.alt = "";
-    els.heroImage.hidden = false;
-    els.heroImage.style.display = "block";
-    if (els.heroInitials) els.heroInitials.hidden = true;
-    if (els.heroInitials) els.heroInitials.style.display = "none";
   }
 
   function getCurrentBookingIdentifier() {
@@ -1152,14 +986,13 @@ export function createBookingCoreModule(ctx) {
 
   function renderBookingData() {
     if (!state.booking) return;
-    rerenderWhatsApp?.(state.booking);
     const booking = state.booking;
     const submittedContact = getSubmittedContact(booking);
     const submissionPreferredLanguage = normalizeText(booking.web_form_submission?.preferred_language)
       ? bookingContentLanguageLabel(normalizeBookingContentLang(booking.web_form_submission.preferred_language))
       : "";
     const sections = [{
-      title: bookingT("booking.web_form.title", "Web form submission"),
+      title: "Original request",
       summaryClassName: "booking-section__summary--inline-pad-16",
       entries: [
         ["name", booking.web_form_submission?.name || submittedContact?.name],
@@ -1168,7 +1001,6 @@ export function createBookingCoreModule(ctx) {
         ["booking_name", booking.web_form_submission?.booking_name],
         ["preferred_language", submissionPreferredLanguage],
         ["preferred_currency", booking.web_form_submission?.preferred_currency],
-        ["destinations", Array.isArray(booking.web_form_submission?.destinations) ? booking.web_form_submission.destinations.join(", ") : booking.web_form_submission?.destinations],
         ["travel_style", Array.isArray(booking.web_form_submission?.travel_style) ? booking.web_form_submission.travel_style.join(", ") : booking.web_form_submission?.travel_style],
         ["travel_month", booking.web_form_submission?.travel_month],
         ["number_of_travelers", booking.web_form_submission?.number_of_travelers],
@@ -1323,37 +1155,10 @@ export function createBookingCoreModule(ctx) {
     renderPdfPersonalizationFields();
     updateCoreDirtyState();
     updateNoteSaveButtonState();
-    if (els.cloneTitleLabel) {
-      els.cloneTitleLabel.textContent = bookingT("booking.clone_new_title", "New title");
-    }
-    if (els.cloneIncludeTravelersLabel) {
-      els.cloneIncludeTravelersLabel.textContent = bookingT("booking.clone_include_travelers", "Include travelers");
-    }
-    syncCloneTitleInput();
-    if (els.deleteBtn) {
-      els.deleteBtn.style.display = state.permissions.canEditBooking ? "" : "none";
-      els.deleteBtn.disabled = !state.permissions.canEditBooking;
-    }
-    if (els.cloneBtn) {
-      els.cloneBtn.textContent = bookingT("booking.clone_booking", "Clone booking");
-      els.cloneBtn.style.display = state.permissions.canEditBooking ? "" : "none";
-      els.cloneBtn.disabled = !state.permissions.canEditBooking || state.cloneBookingInFlight;
-    }
-    if (els.cloneTitleInput) {
-      els.cloneTitleInput.disabled = !state.permissions.canEditBooking || state.cloneBookingInFlight;
-    }
-    if (els.cloneIncludeTravelersInput) {
-      els.cloneIncludeTravelersInput.disabled = !state.permissions.canEditBooking || state.cloneBookingInFlight;
-    }
   }
 
   async function ensureTourImageLoaded() {
     if (!state.booking) return;
-    if (normalizeText(state.booking.image)) {
-      state.tour_image = "";
-      state.tour_image_tour_id = "";
-      return;
-    }
     const tourId = normalizeText(state.booking?.web_form_submission?.tour_id);
     if (!tourId) {
       state.tour_image = "";
@@ -1401,135 +1206,6 @@ export function createBookingCoreModule(ctx) {
     if (event.target === els.titleInput) return;
     event.preventDefault();
     closeBookingDetailScreen();
-  }
-
-  function triggerBookingPhotoPicker() {
-    if (!state.permissions.canEditBooking || blockPersistedAction()) return;
-    els.heroPhotoInput?.click();
-  }
-
-  async function uploadBookingPhoto() {
-    if (!state.permissions.canEditBooking || !state.booking || blockPersistedAction()) return;
-    const file = els.heroPhotoInput?.files?.[0] || null;
-    if (!file) return;
-    const base64 = await fileToBase64(file);
-    const request = bookingImageRequest({
-      baseURL: apiOrigin,
-      params: { booking_id: state.booking.id }
-    });
-    const result = await fetchBookingMutation(request.url, {
-      method: request.method,
-      body: {
-        expected_core_revision: getBookingRevision("core_revision"),
-        filename: file.name,
-        data_base64: base64,
-        actor: state.user
-      }
-    });
-    if (els.heroPhotoInput) els.heroPhotoInput.value = "";
-    if (!result?.booking) return;
-    applyBookingPayload(result);
-    renderBookingHeader();
-    renderBookingData();
-    renderActionControls();
-    renderPersonsEditor();
-  }
-
-  async function fileToBase64(file) {
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const value = String(reader.result || "");
-        const comma = value.indexOf(",");
-        resolve(comma >= 0 ? value.slice(comma + 1) : value);
-      };
-      reader.onerror = () => reject(new Error(bookingT("booking.error.read_file", "Failed to read file")));
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function deleteBooking() {
-    if (!state.permissions.canEditBooking || !state.booking?.id || blockPersistedAction()) return;
-    const label = normalizeText(getPrimaryContact(state.booking)?.name) || state.booking.id;
-    if (!window.confirm(bookingT("booking.delete_confirm", "Delete booking for {name}? This cannot be undone.", { name: label }))) return;
-
-    if (els.deleteBtn) els.deleteBtn.disabled = true;
-    const request = bookingDeleteRequest({ baseURL: apiOrigin, params: { booking_id: state.booking.id } });
-    const result = await fetchApi(request.url, {
-      method: request.method,
-      body: {
-        expected_core_revision: getBookingRevision("core_revision")
-      }
-    });
-    if (els.deleteBtn) els.deleteBtn.disabled = false;
-    if (!result?.deleted) return;
-
-    window.location.href = withBackendLang("/bookings.html", { section: "bookings" });
-  }
-
-  async function cloneBooking() {
-    if (!state.permissions.canEditBooking || !state.booking?.id || state.cloneBookingInFlight || blockPersistedAction()) return;
-    const nextName = normalizeText(els.cloneTitleInput?.value);
-    if (!nextName) {
-      cloneStatus(bookingT("booking.clone_missing_title", "Enter a title for the cloned booking."));
-      return;
-    }
-
-    const includeTravelers = els.cloneIncludeTravelersInput?.checked === true;
-    const label = normalizeText(getPrimaryContact(state.booking)?.name) || state.booking.id;
-    if (!window.confirm(
-      bookingT("booking.clone_confirm", "Clone booking for {name} as {title}?", {
-        name: label,
-        title: nextName
-      })
-    )) {
-      return;
-    }
-
-    state.cloneBookingInFlight = true;
-    cloneStatus(bookingT("booking.cloning", "Cloning booking..."));
-    renderActionControls();
-
-    try {
-      const request = bookingCloneRequest({
-        baseURL: apiBase,
-        params: { booking_id: state.booking.id },
-        body: {
-          expected_core_revision: getBookingRevision("core_revision"),
-          name: nextName,
-          include_travelers: includeTravelers,
-          actor: state.user
-        }
-      });
-      const result = await fetchBookingMutation(request.url, {
-        method: request.method,
-        body: request.body
-      });
-      const clonedId = normalizeText(result?.booking?.id);
-      if (!clonedId) {
-        cloneStatus(bookingT("booking.clone_failed", "Could not clone booking."));
-        return;
-      }
-      if (canReadAllBookingsInUi?.()) {
-        window.location.href = withBackendLang("/booking.html", {
-          id: clonedId,
-          content_lang: savedCustomerLanguage(result.booking)
-        });
-        return;
-      }
-      cloneStatus(bookingT(
-        "booking.clone_success_unassigned",
-        "Cloned as {bookingId}. The new booking is unassigned, so you may no longer be able to open it.",
-        { bookingId: clonedId }
-      ));
-      syncCloneTitleInput({ force: true });
-      if (els.cloneIncludeTravelersInput instanceof HTMLInputElement) {
-        els.cloneIncludeTravelersInput.checked = false;
-      }
-    } finally {
-      state.cloneBookingInFlight = false;
-      renderActionControls();
-    }
   }
 
   function updateNoteSaveButtonState() {
@@ -1606,7 +1282,6 @@ export function createBookingCoreModule(ctx) {
     const nextReferralStaffUserId = nextReferralKind === "atp_staff"
       ? normalizeText(draft.referral_staff_user_id) || null
       : null;
-    const nextDestinations = normalizeCodeArray(draft.destinations);
     const nextTravelStyles = normalizeTravelStyleArray(draft.travel_styles);
     const nextPdfPersonalization = mergeManagedPdfPersonalization(
       latestBooking.pdf_personalization,
@@ -1617,7 +1292,6 @@ export function createBookingCoreModule(ctx) {
       || nextReferralKind !== (normalizeText(latestBooking.referral_kind).toLowerCase() || "none")
       || nextReferralLabel !== (normalizeText(latestBooking.referral_label) || null)
       || nextReferralStaffUserId !== (normalizeText(latestBooking.referral_staff_user_id) || null)
-      || JSON.stringify(nextDestinations) !== JSON.stringify(bookingDestinations(latestBooking))
       || JSON.stringify(nextTravelStyles) !== JSON.stringify(normalizeTravelStyleArray(latestBooking.travel_styles))
       || JSON.stringify(normalizeManagedPdfPersonalization(nextPdfPersonalization))
         !== JSON.stringify(normalizeManagedPdfPersonalization(latestBooking.pdf_personalization))
@@ -1631,7 +1305,6 @@ export function createBookingCoreModule(ctx) {
           referral_kind: nextReferralKind,
           referral_label: nextReferralLabel,
           referral_staff_user_id: nextReferralStaffUserId,
-          destinations: nextDestinations,
           travel_styles: nextTravelStyles,
           pdf_personalization: nextPdfPersonalization,
           actor: state.user
@@ -1729,10 +1402,7 @@ export function createBookingCoreModule(ctx) {
     state.booking = payload.booking || state.booking || null;
     syncCoreDraftFromBooking({ force: options.forceDraftReset === true });
     const nextTourId = normalizeText(state.booking?.web_form_submission?.tour_id);
-    if (normalizeText(state.booking?.image)) {
-      state.tour_image = "";
-      state.tour_image_tour_id = "";
-    } else if (nextTourId !== previousTourId) {
+    if (nextTourId !== previousTourId) {
       state.tour_image = "";
       state.tour_image_tour_id = "";
     }
@@ -1752,13 +1422,6 @@ export function createBookingCoreModule(ctx) {
     return persons.find((person) => person.roles.includes("primary_contact")) || persons[0] || null;
   }
 
-  function shouldUseDiscoveryCallFallbackImage(booking) {
-    if (!booking) return false;
-    if (normalizeText(booking.image)) return false;
-    if (normalizeText(booking?.web_form_submission?.tour_id)) return false;
-    return Boolean(normalizeText(booking?.web_form_submission?.page_url));
-  }
-
   return {
     closeBookingDetailScreen,
     renderBookingHeader,
@@ -1766,8 +1429,6 @@ export function createBookingCoreModule(ctx) {
     renderActionControls,
     ensureTourImageLoaded,
     handleBookingDetailKeydown,
-    triggerBookingPhotoPicker,
-    uploadBookingPhoto,
     updateCoreDirtyState,
     updateNoteSaveButtonState,
     saveCoreEdits,
@@ -1776,8 +1437,6 @@ export function createBookingCoreModule(ctx) {
     commitBookingTitleEdit,
     handleBookingTitleInputKeydown,
     copyHeroIdToClipboard,
-    deleteBooking,
-    cloneBooking,
     applyBookingPayload
   };
 }

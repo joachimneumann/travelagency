@@ -233,10 +233,6 @@ const els = {
   bookingMonth: document.getElementById("bookingMonth"),
   bookingMonthMonth: document.getElementById("bookingMonthMonth"),
   bookingMonthYear: document.getElementById("bookingMonthYear"),
-  bookingDestinationTrigger: document.getElementById("bookingDestinationTrigger"),
-  bookingDestinationSummary: document.getElementById("bookingDestinationSummary"),
-  bookingDestinationPanel: document.getElementById("bookingDestinationPanel"),
-  bookingDestinationOptions: document.getElementById("bookingDestinationOptions"),
   bookingStyleTrigger: document.getElementById("bookingStyleTrigger"),
   bookingStyleSummary: document.getElementById("bookingStyleSummary"),
   bookingStylePanel: document.getElementById("bookingStylePanel"),
@@ -1225,12 +1221,8 @@ function renderTeamSection() {
 }
 
 function syncI18nManagedLabels() {
-  const bookingDestinationField = document.getElementById("bookingDestination");
   const bookingStyleField = document.getElementById("bookingStyle");
   const privacyLink = document.querySelector('a[href="/privacy.html"]');
-  if (bookingDestinationField) {
-    bookingDestinationField.setAttribute("data-empty-label", frontendT("filters.all_destinations", "All destinations"));
-  }
   if (bookingStyleField) {
     bookingStyleField.setAttribute("data-empty-label", frontendT("filters.all_styles", "All travel styles"));
   }
@@ -1722,10 +1714,6 @@ async function handleFrontendLanguageChanged() {
   state.lang = currentFrontendLang();
   markHomepageMobileStageReady("heroCopyReady");
   const selectedTourId = normalizeText(state.selectedTour?.id || els.booking_tour_id?.value);
-  const preservedBookingDestinationCodes = mapBookingSelectionLabelsToCodes(
-    readBookingStaticFieldValues("bookingDestination"),
-    "destination"
-  );
   const preservedBookingStyleCodes = mapBookingSelectionLabelsToCodes(
     readBookingStaticFieldValues("bookingStyle"),
     "style"
@@ -1761,9 +1749,6 @@ async function handleFrontendLanguageChanged() {
     populateFilterOptions();
     syncFilterInputs();
 
-    if (preservedBookingDestinationCodes.length) {
-      setBookingField("bookingDestination", filterLabels(preservedBookingDestinationCodes, "destination"));
-    }
     if (preservedBookingStyleCodes.length) {
       setBookingField("bookingStyle", filterLabels(preservedBookingStyleCodes, "style"));
     }
@@ -1913,7 +1898,6 @@ async function openBookingModalForTripId(tripId, trigger = null) {
 
   const selected = state.trips.find((trip) => normalizeText(trip?.id) === normalizedTripId);
   if (selected) {
-    setBookingField("bookingDestination", tourDestinations(selected));
     setBookingField("bookingStyle", selected.styles || []);
     setSelectedTourContext(selected);
     await openBookingModal();
@@ -2173,7 +2157,6 @@ async function submitBookingForm() {
 
   const formData = new FormData(els.bookingForm);
   const entries = Object.fromEntries(formData.entries());
-  const selectedDestinations = formData.getAll("destinations").map((value) => normalizeText(value)).filter(Boolean);
   const selectedStyles = formData.getAll("travel_style").map((value) => normalizeText(value)).filter(Boolean);
   const rawTravelersValue = normalizeText(entries.number_of_travelers);
   const travelersValue = rawTravelersValue ? Number.parseInt(rawTravelersValue, 10) : null;
@@ -2204,7 +2187,6 @@ async function submitBookingForm() {
   const selectedTourId = normalizeText(entries.tour_id);
   const customTour = customTourSubmissionForTrip?.(selectedTourId);
   const payload = {
-    destinations: selectedDestinations,
     travel_style: selectedStyles,
     travel_month: entries.travel_month || "",
     number_of_travelers: travelersValue,
@@ -2357,9 +2339,7 @@ function getQueryParam(name) {
 }
 
 function prefillBookingFormWithFilters() {
-  const bookingDestinations = state.selectedTour?.destinations || filterLabels(state.filters.dest, "destination");
   const bookingStyles = state.selectedTour?.styles || filterLabels(state.filters.style, "style");
-  setBookingField("bookingDestination", bookingDestinations);
   setBookingField("bookingStyle", bookingStyles);
   if (state.selectedTour) {
     const firstTravelMonth = buildFirstTravelMonthValue(state.selectedTour.seasonality_start_month);
@@ -2420,13 +2400,6 @@ function updateBookingSelectionFromOptions(fieldId, optionsContainer) {
 
 function syncBookingSelectionUi(fieldId, values, emptyLabel = "Not selected") {
   const selectedValues = Array.isArray(values) ? values.filter(Boolean) : [];
-  if (fieldId === "bookingDestination") {
-    setFilterCheckboxes(els.bookingDestinationOptions, selectedValues);
-    if (els.bookingDestinationSummary) {
-      els.bookingDestinationSummary.textContent = selectedValues.length ? selectedValues.join(", ") : emptyLabel;
-    }
-    return;
-  }
   if (fieldId === "bookingStyle") {
     setFilterCheckboxes(els.bookingStyleOptions, selectedValues);
     if (els.bookingStyleSummary) {

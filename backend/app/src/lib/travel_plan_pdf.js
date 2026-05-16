@@ -347,13 +347,7 @@ async function resolveBookingHeroTitle(booking, lang, readTours) {
   return explicitTitle || submittedTitle || pdfT(lang, "offer.travel_plan_title", "Travel plan overview");
 }
 
-async function resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }) {
-  const bookingImageRelative = extractPublicRelativePath(booking?.image, "/public/v1/booking-images/");
-  if (bookingImageRelative && bookingImagesDir) {
-    const bookingImageAbsolute = path.resolve(bookingImagesDir, bookingImageRelative);
-    if (await fileExists(bookingImageAbsolute)) return bookingImageAbsolute;
-  }
-
+async function resolveBookingImageForPdf({ booking, readTours, resolveTourImageDiskPath }) {
   const tourId = textOrNull(booking?.web_form_submission?.tour_id);
   if (tourId && typeof readTours === "function" && typeof resolveTourImageDiskPath === "function") {
     const tours = await readTours().catch(() => []);
@@ -902,7 +896,7 @@ export function createTravelPlanPdfWriter({
     const [heroTitle, logoImage, heroPath, itemThumbnailMap, guidePhoto] = await timing.measure("initial_assets", () => Promise.all([
       resolveBookingHeroTitle(booking, lang, readTours),
       rasterizeImage(logoPath, { width: 1000 }).catch(() => null),
-      resolveBookingImageForPdf({ booking, bookingImagesDir, readTours, resolveTourImageDiskPath }),
+      resolveBookingImageForPdf({ booking, readTours, resolveTourImageDiskPath }),
       buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, {
         resolveServiceImageDiskPath: resolveTravelPlanServiceImageDiskPath
       }),

@@ -215,10 +215,7 @@ function mergeStoreSnapshot(baseStore, latestStore, nextStore) {
   }
   for (const key of [
     "activities",
-    "payment_documents",
-    "chat_channel_accounts",
-    "chat_conversations",
-    "chat_events"
+    "payment_documents"
   ]) {
     result[key] = mergeCollectionByKey(baseStore?.[key], latestStore?.[key], nextStore?.[key]);
   }
@@ -253,10 +250,7 @@ export function createStoreUtils({
       bookings: [],
       activities: [],
       payment_documents: [],
-      ...(destinationCatalogPath ? {} : defaultDestinationCatalogDocument()),
-      chat_channel_accounts: [],
-      chat_conversations: [],
-      chat_events: []
+      ...(destinationCatalogPath ? {} : defaultDestinationCatalogDocument())
     };
   }
 
@@ -347,9 +341,12 @@ export function createStoreUtils({
     } else {
       parsed.destination_places ||= [];
     }
-    parsed.chat_channel_accounts ||= [];
-    parsed.chat_conversations ||= [];
-    parsed.chat_events ||= [];
+    for (const legacyChatField of ["chat_channel_accounts", "chat_conversations", "chat_events"]) {
+      if (Object.prototype.hasOwnProperty.call(parsed, legacyChatField)) {
+        delete parsed[legacyChatField];
+        legacyStoreWritebackNeeded = true;
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(parsed, "invoices")) {
       delete parsed.invoices;
       legacyStoreWritebackNeeded = true;

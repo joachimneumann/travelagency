@@ -30,16 +30,11 @@ import {
 } from "../shared/backend_page.js";
 import { BOOKING_CONTENT_LANGUAGE_OPTIONS } from "../booking/i18n.js";
 import {
-  COUNTRY_CODE_OPTIONS,
   TOUR_STYLE_CODE_OPTIONS
 } from "../shared/generated_catalogs.js";
 
 const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
-const DESTINATION_COUNTRY_CODES = Object.freeze(["VN", "TH", "KH", "LA"]);
-const DESTINATION_COUNTRY_OPTIONS = Object.freeze(
-  COUNTRY_CODE_OPTIONS.filter((option) => DESTINATION_COUNTRY_CODES.includes(option?.value))
-);
 
 const els = {
   homeLink: document.getElementById("backendHomeLink"),
@@ -59,7 +54,6 @@ const els = {
   bookingCreateTitleInput: document.getElementById("bookingCreateTitleInput"),
   bookingCreateLanguageInput: document.getElementById("bookingCreateLanguageInput"),
   bookingCreateCurrencyInput: document.getElementById("bookingCreateCurrencyInput"),
-  bookingCreateDestinationsInput: document.getElementById("bookingCreateDestinationsInput"),
   bookingCreateTravelStylesInput: document.getElementById("bookingCreateTravelStylesInput"),
   bookingCreatePrimaryContactNameInput: document.getElementById("bookingCreatePrimaryContactNameInput"),
   bookingCreatePrimaryContactEmailInput: document.getElementById("bookingCreatePrimaryContactEmailInput"),
@@ -221,16 +215,6 @@ function populateCreateBookingOptions() {
     els.bookingCreateCurrencyInput.value = normalizeCurrencyCode("USD");
   }
 
-  if (els.bookingCreateDestinationsInput instanceof HTMLSelectElement) {
-    els.bookingCreateDestinationsInput.innerHTML = DESTINATION_COUNTRY_OPTIONS
-      .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`)
-      .join("");
-  } else if (els.bookingCreateDestinationsInput instanceof HTMLElement) {
-    els.bookingCreateDestinationsInput.innerHTML = DESTINATION_COUNTRY_OPTIONS
-      .map((option) => renderCheckboxOption("bookingCreateDestination", option.value, option.label || option.value))
-      .join("");
-  }
-
   if (els.bookingCreateTravelStylesInput instanceof HTMLSelectElement) {
     els.bookingCreateTravelStylesInput.innerHTML = TOUR_STYLE_CODE_OPTIONS
       .map((option) => `<option value="${escapeHtml(option.value)}">${escapeHtml(option.label || option.value)}</option>`)
@@ -256,7 +240,6 @@ function setCreateBookingControlsDisabled(disabled) {
     els.bookingCreateTitleInput,
     els.bookingCreateLanguageInput,
     els.bookingCreateCurrencyInput,
-    els.bookingCreateDestinationsInput,
     els.bookingCreateTravelStylesInput,
     els.bookingCreatePrimaryContactNameInput,
     els.bookingCreatePrimaryContactEmailInput,
@@ -266,7 +249,7 @@ function setCreateBookingControlsDisabled(disabled) {
   for (const control of controls) {
     if (control) control.disabled = Boolean(disabled);
   }
-  [els.bookingCreateDestinationsInput, els.bookingCreateTravelStylesInput].forEach((container) => {
+  [els.bookingCreateTravelStylesInput].forEach((container) => {
     if (!(container instanceof HTMLElement)) return;
     Array.from(container.querySelectorAll('input[type="checkbox"]')).forEach((input) => {
       if (input instanceof HTMLInputElement) input.disabled = Boolean(disabled);
@@ -316,7 +299,6 @@ async function createBackendBooking() {
         name,
         preferred_language: normalizeText(els.bookingCreateLanguageInput?.value) || "en",
         preferred_currency: normalizeCurrencyCode(els.bookingCreateCurrencyInput?.value || "USD"),
-        destinations: selectedValues(els.bookingCreateDestinationsInput),
         travel_styles: selectedValues(els.bookingCreateTravelStylesInput),
         primary_contact_name: normalizeText(els.bookingCreatePrimaryContactNameInput?.value),
         primary_contact_email: normalizeText(els.bookingCreatePrimaryContactEmailInput?.value),
@@ -625,10 +607,7 @@ async function loadBookings() {
 
 function bookingsNeedTourImageCatalog(items) {
   if (state.tourImageCatalogLoaded || state.tourImagesById.size) return false;
-  return (Array.isArray(items) ? items : []).some((booking) => (
-    !normalizeText(booking?.image)
-    && normalizeText(booking?.web_form_submission?.tour_id)
-  ));
+  return (Array.isArray(items) ? items : []).some((booking) => normalizeText(booking?.web_form_submission?.tour_id));
 }
 
 function loadTourImageCatalogForRenderedBookings(items) {
@@ -775,11 +754,10 @@ function renderBookings(items) {
 }
 
 function renderBookingImageMarkup(booking) {
-  const bookingImage = normalizeText(booking?.image);
   const tourId = normalizeText(booking?.web_form_submission?.tour_id);
   const tourImage = tourId ? normalizeText(state.tourImagesById.get(tourId)) : "";
   const representativeTraveler = getRepresentativeTraveler(booking);
-  const imageRef = bookingImage || tourImage;
+  const imageRef = tourImage;
   const alt = normalizeText(booking?.name) || backendT("booking.picture", "Booking picture");
   const isDiscoveryCallWithoutTour = !imageRef && !tourId && Boolean(normalizeText(booking?.web_form_submission?.page_url));
 

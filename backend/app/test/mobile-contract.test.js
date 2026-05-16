@@ -357,10 +357,7 @@ async function resetStore() {
   await writeFile(STORE_PATH, `${JSON.stringify({
     bookings: [],
     activities: [],
-    payment_documents: [],
-    chat_channel_accounts: [],
-    chat_conversations: [],
-    chat_events: []
+    payment_documents: []
   }, null, 2)}\n`, "utf8");
 }
 
@@ -426,36 +423,15 @@ function buildDayOfferDraft(baseOffer, currency, dayAmounts, overrides = {}) {
   };
 }
 
-async function deleteBookingForTest(bookingId) {
+async function removeBookingFromStoreForTest(bookingId) {
   if (!bookingId) return;
-  const detailResult = await requestJson(
-    endpointPath("booking_detail").replace("{booking_id}", bookingId),
-    apiHeaders()
-  );
-  if (detailResult.status !== 200) return;
-
-  const deleteResult = await requestJson(
-    endpointPath("booking_delete").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "DELETE",
-      body: {
-        expected_core_revision: detailResult.body.booking.core_revision
-      }
-    }
-  );
-  assert.equal(deleteResult.status, 200);
-}
-
-async function cloneBookingForTest(bookingId, body = {}) {
-  return await requestJson(
-    `/api/v1/bookings/${encodeURIComponent(bookingId)}/clone`,
-    apiHeaders(),
-    {
-      method: "POST",
-      body
-    }
-  );
+  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
+  store.bookings = Array.isArray(store.bookings) ? store.bookings.filter((booking) => booking.id !== bookingId) : [];
+  store.activities = Array.isArray(store.activities) ? store.activities.filter((activity) => activity.booking_id !== bookingId) : [];
+  store.payment_documents = Array.isArray(store.payment_documents)
+    ? store.payment_documents.filter((document) => document.booking_id !== bookingId)
+    : [];
+  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
 }
 
 async function createBackendBookingForTest(body = {}, headers = apiHeaders()) {
@@ -498,7 +474,8 @@ function assertBookingShape(booking) {
   assert.ok(Array.isArray(booking.offer.visible_pricing.additional_items));
   assert.equal(typeof booking.travel_plan_revision, "number");
   assert.equal(typeof booking.travel_plan, "object");
-  assert.ok(Array.isArray(booking.travel_plan.destinations));
+  assert.equal(Object.hasOwn(booking.travel_plan, "destinations"), false);
+  assert.equal(Object.hasOwn(booking.travel_plan, "destination_scope"), false);
   assert.ok(Array.isArray(booking.travel_plan.days));
   if (booking.created_at) assertISODateLike(booking.created_at, "booking.created_at");
   if (booking.updated_at) assertISODateLike(booking.updated_at, "booking.updated_at");
@@ -532,126 +509,6 @@ test("bookings list response conforms to the mobile contract", async () => {
   assertBookingShape(result.body.items[0]);
 });
 
-test("booking clone endpoint applies the shared clone policy and can include travelers", async () => {
-  const createdBooking = await createPublicBooking({
-    name: "Original booking",
-    preferred_language: "de",
-    preferred_currency: "USD",
-    destinations: ["Vietnam", "Cambodia"],
-    travel_style: ["Culture", "Food"],
-    notes: "Original note"
-  });
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  const bookingRecord = store.bookings.find((booking) => booking.id === createdBooking.id);
-  bookingRecord.assigned_keycloak_user_id = "kc-staff";
-  bookingRecord.source_channel = "website";
-  bookingRecord.referral_kind = "atp_staff";
-  bookingRecord.referral_label = "Joachim";
-  bookingRecord.referral_staff_user_id = "kc-staff";
-  bookingRecord.accepted_offer_snapshot = { total_price_cents: 12300 };
-  bookingRecord.accepted_travel_plan_snapshot = { days: [{ id: "old_day_1" }] };
-  bookingRecord.accepted_offer_artifact_ref = "generated_offer_1";
-  bookingRecord.accepted_travel_plan_artifact_ref = "travel_plan_pdf_1";
-  bookingRecord.accepted_deposit_amount_cents = 3300;
-  bookingRecord.accepted_deposit_currency = "USD";
-  bookingRecord.deposit_received_at = "2026-03-25T09:15:00.000Z";
-  bookingRecord.travel_plan = {
-    destinations: ["VN", "KH"],
-    days: [
-      {
-        id: "travel_day_1",
-        day_number: 1,
-        title: "Arrival",
-        services: [
-          {
-            id: "travel_service_1",
-            title: "Airport pickup",
-            image: {
-              id: "travel_image_1",
-              storage_path: "booking_images/source/service.webp",
-              sort_order: 0
-            }
-          }
-        ]
-      }
-    ],
-    attachments: [
-      {
-        id: "attachment_1",
-        filename: "voucher.pdf",
-        storage_path: "booking_source/voucher.pdf",
-        page_count: 1,
-        sort_order: 0
-      }
-    ]
-  };
-  bookingRecord.offer = {
-    currency: "USD",
-    status: "OFFER_SENT",
-    offer_detail_level_internal: "day",
-    offer_detail_level_visible: "day",
-    category_rules: [{ category: "OTHER", tax_rate_basis_points: 0 }],
-    days_internal: [{
-      id: "offer_day_internal_1",
-      day_number: 1,
-      label: "Day 1",
-      amount_cents: 10000,
-      tax_rate_basis_points: 0,
-      currency: "USD"
-    }],
-    additional_items: [],
-    totals: {
-      net_amount_cents: 10000,
-      tax_amount_cents: 0,
-      gross_amount_cents: 10000,
-      total_price_cents: 10000,
-      items_count: 1
-    },
-    quotation_summary: {
-      tax_included: true,
-      subtotal_net_amount_cents: 10000,
-      total_tax_amount_cents: 0,
-      grand_total_amount_cents: 10000,
-      tax_breakdown: []
-    },
-    total_price_cents: 10000
-  };
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const cloneWithoutTravelers = await cloneBookingForTest(createdBooking.id, {
-    expected_core_revision: bookingRecord.core_revision,
-    name: "Cloned without travelers"
-  });
-  assert.equal(cloneWithoutTravelers.status, 201);
-  assert.equal(cloneWithoutTravelers.body.booking.name, "Cloned without travelers");
-  assert.equal(cloneWithoutTravelers.body.booking.assigned_keycloak_user_id, null);
-  assert.deepEqual(cloneWithoutTravelers.body.booking.persons, []);
-  assert.equal(cloneWithoutTravelers.body.booking.customer_language, "de");
-  assert.deepEqual(cloneWithoutTravelers.body.booking.travel_plan.destinations, ["VN", "KH"]);
-  assert.deepEqual(cloneWithoutTravelers.body.booking.travel_styles, ["culture", "gastronomic-experiences"]);
-  assert.equal(cloneWithoutTravelers.body.booking.source_channel, null);
-  assert.equal(cloneWithoutTravelers.body.booking.referral_kind, null);
-  assert.deepEqual(cloneWithoutTravelers.body.booking.accepted_record, { available: false });
-  assert.equal(cloneWithoutTravelers.body.booking.travel_plan.days[0].services[0].image.storage_path, "booking_images/source/service.webp");
-  assert.equal(cloneWithoutTravelers.body.booking.travel_plan.attachments[0].storage_path, "booking_source/voucher.pdf");
-  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.booking_name, "Cloned without travelers");
-  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.notes, `cloned from ${createdBooking.id}`);
-  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.name, undefined);
-  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.email, undefined);
-  assert.equal(cloneWithoutTravelers.body.booking.web_form_submission.phone_number, undefined);
-
-  const cloneWithTravelers = await cloneBookingForTest(createdBooking.id, {
-    expected_core_revision: bookingRecord.core_revision,
-    name: "Cloned with travelers",
-    include_travelers: true
-  });
-  assert.equal(cloneWithTravelers.status, 201);
-  assert.equal(cloneWithTravelers.body.booking.persons.length, 1);
-  assert.equal(cloneWithTravelers.body.booking.persons[0].name, "Original booking");
-  assert.equal(cloneWithTravelers.body.booking.persons[0].roles.includes("primary_contact"), true);
-});
-
 test("backend booking create endpoint creates an internal booking and assigns staff creators to themselves", async () => {
   await resetStore();
 
@@ -659,7 +516,6 @@ test("backend booking create endpoint creates an internal booking and assigns st
     name: "Kuala Lumpur Family Planning",
     preferred_language: "ms",
     preferred_currency: "USD",
-    destinations: ["MY", "SG"],
     travel_styles: ["culture", "family-friendly"],
     primary_contact_name: "Aina Rahman",
     primary_contact_email: "aina@example.com",
@@ -671,7 +527,8 @@ test("backend booking create endpoint creates an internal booking and assigns st
   assert.equal(result.body.booking.name, "Kuala Lumpur Family Planning");
   assert.equal(result.body.booking.customer_language, "ms");
   assert.equal(result.body.booking.preferred_currency, "USD");
-  assert.deepEqual(result.body.booking.travel_plan.destinations, ["MY", "SG"]);
+  assert.equal(Object.hasOwn(result.body.booking.travel_plan, "destinations"), false);
+  assert.equal(Object.hasOwn(result.body.booking.travel_plan, "destination_scope"), false);
   assert.deepEqual(result.body.booking.travel_styles, ["culture", "family-friendly"]);
   assert.equal(result.body.booking.assigned_keycloak_user_id, "kc-staff");
   assert.equal(result.body.booking.web_form_submission, undefined);
@@ -701,7 +558,6 @@ test("public booking discovery-call request can be created without destinations 
       email: "caller@example.com",
       preferred_language: "en",
       preferred_currency: "USD",
-      destinations: [],
       travel_style: [],
       booking_name: "",
       tour_id: "",
@@ -711,7 +567,8 @@ test("public booking discovery-call request can be created without destinations 
 
   assert.equal(result.status, 201);
   assertBookingShape(result.body.booking);
-  assert.deepEqual(result.body.booking.travel_plan.destinations, []);
+  assert.equal(Object.hasOwn(result.body.booking.travel_plan, "destinations"), false);
+  assert.equal(Object.hasOwn(result.body.booking.travel_plan, "destination_scope"), false);
   assert.deepEqual(result.body.booking.travel_styles, []);
   assert.equal(result.body.booking.persons.length, 1);
   assert.equal(result.body.booking.persons[0].name, "Discovery Caller");
@@ -740,6 +597,7 @@ test("public booking request inherits the selected marketing tour travel plan wi
               {
                 id: "public_booking_source_day_1",
                 day_number: 1,
+                primary_location_id: "VN",
                 title: "Day 1 English",
                 title_i18n: {
                   de: "Tag 1 Deutsch",
@@ -808,7 +666,6 @@ test("public booking request inherits the selected marketing tour travel plan wi
         email: "tour-seed@example.com",
         preferred_language: "de",
         preferred_currency: "USD",
-        destinations: ["Vietnam"],
         travel_style: ["Culture"],
         booking_name: "",
         tour_id: tourId,
@@ -818,41 +675,32 @@ test("public booking request inherits the selected marketing tour travel plan wi
 
     assert.equal(result.status, 201);
     const plan = result.body.booking.travel_plan;
-    assert.deepEqual(plan.destinations, ["VN"]);
+    assert.equal(Object.hasOwn(plan, "destinations"), false);
+    assert.equal(Object.hasOwn(plan, "destination_scope"), false);
     assert.equal(plan.days.length, 1);
 
     const day = plan.days[0];
     assert.equal(day.title, "Day 1 English");
     assert.deepEqual(day.title_i18n, {
-      de: "Tag 1 Deutsch",
-      en: "Day 1 English",
-      fr: "Jour 1 Francais"
+      en: "Day 1 English"
     });
     assert.equal(day.notes, "English day note");
     assert.deepEqual(day.notes_i18n, {
-      de: "Deutsche Tagesnotiz",
-      en: "English day note",
-      fr: "Note francaise"
+      en: "English day note"
     });
 
     const service = day.services[0];
     assert.equal(service.title, "English service title");
     assert.deepEqual(service.title_i18n, {
-      de: "Deutscher Service-Titel",
-      en: "English service title",
-      fr: "Titre de service francais"
+      en: "English service title"
     });
     assert.equal(service.image_subtitle, "English image subtitle");
     assert.deepEqual(service.image_subtitle_i18n, {
-      de: "Deutscher Bilduntertitel",
-      en: "English image subtitle",
-      fr: "Sous-titre francais"
+      en: "English image subtitle"
     });
     assert.equal(service.details, "This service detail should reach the booking");
     assert.deepEqual(service.details_i18n, {
-      de: "Deutsches Detail",
-      en: "This service detail should reach the booking",
-      fr: "Detail francais"
+      en: "This service detail should reach the booking"
     });
     assert.equal(service.timing_kind, "not_applicable");
     assert.equal(service.time_label, null);
@@ -896,6 +744,7 @@ test("public booking request materializes submitted custom tour day selections",
               {
                 id: "custom_booking_base_day_1",
                 day_number: 1,
+                primary_location_id: "VN",
                 title: "Base day one",
                 services: [
                   {
@@ -910,6 +759,7 @@ test("public booking request materializes submitted custom tour day selections",
               {
                 id: "custom_booking_base_day_2",
                 day_number: 2,
+                primary_location_id: "VN",
                 title: "Base day two selected",
                 services: [
                   {
@@ -946,6 +796,7 @@ test("public booking request materializes submitted custom tour day selections",
               {
                 id: "custom_booking_optional_day",
                 day_number: 1,
+                primary_location_id: "VN",
                 title: "Optional day selected first",
                 services: [
                   {
@@ -972,7 +823,6 @@ test("public booking request materializes submitted custom tour day selections",
         email: "custom-tour@example.com",
         preferred_language: "en",
         preferred_currency: "USD",
-        destinations: ["Vietnam"],
         travel_style: ["Culture"],
         booking_name: "Custom Hanoi and Hue tour",
         tour_id: baseTourId,
@@ -995,7 +845,8 @@ test("public booking request materializes submitted custom tour day selections",
       { source_tour_id: optionalTourId, source_day_id: "custom_booking_optional_day" },
       { source_tour_id: baseTourId, source_day_id: "custom_booking_base_day_2" }
     ]);
-    assert.deepEqual(booking.travel_plan.destinations, ["VN"]);
+    assert.equal(Object.hasOwn(booking.travel_plan, "destinations"), false);
+    assert.equal(Object.hasOwn(booking.travel_plan, "destination_scope"), false);
     assert.deepEqual(booking.travel_plan.days.map((day) => day.day_number), [1, 2]);
     assert.deepEqual(booking.travel_plan.days.map((day) => day.title), [
       "Optional day selected first",
@@ -1947,7 +1798,8 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
       }
     );
     assert.equal(applyResult.status, 200);
-    assert.deepEqual(applyResult.body.booking.travel_plan.destinations, []);
+    assert.equal(Object.hasOwn(applyResult.body.booking.travel_plan, "destinations"), false);
+    assert.equal(Object.hasOwn(applyResult.body.booking.travel_plan, "destination_scope"), false);
     assert.equal(applyResult.body.booking.travel_plan.days.length, 1);
     assert.equal(applyResult.body.booking.travel_plan.days[0].title, "Marketing tour day marker");
     assert.equal(applyResult.body.booking.travel_plan.days[0].date, null);
@@ -2080,8 +1932,7 @@ test("marketing tour editor can import days and services from other marketing to
           source_day_id: "marketing_library_target_day_1",
           include_images: true,
           include_customer_visible_images_only: false,
-          include_notes: true,
-          include_translations: true
+          include_notes: true
         }
       }
     );
@@ -2113,8 +1964,7 @@ test("marketing tour editor can import days and services from other marketing to
           })(),
           include_images: true,
           include_customer_visible_images_only: false,
-          include_notes: true,
-          include_translations: true
+          include_notes: true
         }
       }
     );
@@ -2124,9 +1974,7 @@ test("marketing tour editor can import days and services from other marketing to
     const importedService = serviceImportResult.body.tour.travel_plan.days[0].services[1];
     assert.equal(importedService.title, "Library lantern service");
     assert.equal(importedService.details, "Library lantern service details");
-    assert.deepEqual(importedService.details_i18n, {
-      de: "Laternen Service Details"
-    });
+    assert.equal(Object.hasOwn(importedService, "details_i18n"), false);
     assert.notEqual(importedService.id, "marketing_library_source_service_1");
     assert.equal(importedService.image.include_in_travel_tour_card, true);
     assert.notEqual(importedService.image.id, "marketing_library_source_image_1");
@@ -2147,8 +1995,7 @@ test("marketing tour editor can import days and services from other marketing to
           })(),
           include_images: true,
           include_customer_visible_images_only: false,
-          include_notes: true,
-          include_translations: true
+          include_notes: true
         }
       }
     );
@@ -2156,13 +2003,11 @@ test("marketing tour editor can import days and services from other marketing to
     assert.equal(dayImportResult.body.tour.travel_plan.days.length, 2);
     assert.equal(dayImportResult.body.tour.travel_plan.days[0].notes, "Unsaved note before day import");
     assert.equal(dayImportResult.body.tour.travel_plan.days[1].title, "Library source market day");
-    assert.deepEqual(dayImportResult.body.tour.travel_plan.days[1].title_i18n, {});
+    assert.equal(Object.hasOwn(dayImportResult.body.tour.travel_plan.days[1], "title_i18n"), false);
     assert.notEqual(dayImportResult.body.tour.travel_plan.days[1].id, "marketing_library_source_day_1");
     assert.equal(dayImportResult.body.tour.travel_plan.days[1].services[0].title, "Library lantern service");
     assert.equal(dayImportResult.body.tour.travel_plan.days[1].services[0].details, "Library lantern service details");
-    assert.deepEqual(dayImportResult.body.tour.travel_plan.days[1].services[0].details_i18n, {
-      de: "Laternen Service Details"
-    });
+    assert.equal(Object.hasOwn(dayImportResult.body.tour.travel_plan.days[1].services[0], "details_i18n"), false);
   } finally {
     for (const tourId of [targetTourId, sourceTourId].filter(Boolean)) {
       await requestJson(
@@ -2226,8 +2071,6 @@ test("booking editor can import days and services from marketing tours", async (
     const targetRecord = store.bookings.find((item) => item.id === targetBooking.id);
     assert.ok(targetRecord);
     targetRecord.travel_plan = {
-      destination_scope: [],
-      destinations: [],
       days: [
         {
           id: "booking_marketing_target_day_1",
@@ -2252,8 +2095,6 @@ test("booking editor can import days and services from marketing tours", async (
           source_tour_id: sourceTourId,
           source_service_id: "booking_marketing_source_service_1",
           target_travel_plan: {
-            destination_scope: [],
-            destinations: [],
             days: [
               {
                 id: "booking_marketing_target_day_1",
@@ -2273,8 +2114,7 @@ test("booking editor can import days and services from marketing tours", async (
           },
           include_images: true,
           include_customer_visible_images_only: false,
-          include_notes: true,
-          include_translations: true
+          include_notes: true
         }
       }
     );
@@ -2284,7 +2124,8 @@ test("booking editor can import days and services from marketing tours", async (
     const importedService = serviceImportResult.body.booking.travel_plan.days[0].services[1];
     assert.equal(importedService.title, "Reusable booking service");
     assert.equal(importedService.details, "Reusable booking service details");
-    assert.equal(importedService.details_i18n?.de, "Wiederverwendbare Buchungsdetails");
+    assert.equal(importedService.details_i18n?.en, "Reusable booking service details");
+    assert.equal(importedService.details_i18n?.de, undefined);
     assert.notEqual(importedService.id, "booking_marketing_source_service_1");
     assert.equal(importedService.timing_kind, "not_applicable");
 
@@ -2304,8 +2145,7 @@ test("booking editor can import days and services from marketing tours", async (
           })(),
           include_images: true,
           include_customer_visible_images_only: false,
-          include_notes: true,
-          include_translations: true
+          include_notes: true
         }
       }
     );
@@ -2314,10 +2154,13 @@ test("booking editor can import days and services from marketing tours", async (
     assert.equal(dayImportResult.body.booking.travel_plan.days[0].notes, "Unsaved note before booking day import");
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].title, "Reusable booking day");
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].title_i18n?.de, undefined);
+    assert.equal(dayImportResult.body.booking.travel_plan.days[1].title_i18n?.en, "Reusable booking day");
     assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details, "Reusable booking service details");
-    assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details_i18n?.de, "Wiederverwendbare Buchungsdetails");
+    assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details_i18n?.en, "Reusable booking service details");
+    assert.equal(dayImportResult.body.booking.travel_plan.days[1].services[0].details_i18n?.de, undefined);
     assert.notEqual(dayImportResult.body.booking.travel_plan.days[1].id, "booking_marketing_source_day_1");
-    assert.deepEqual(dayImportResult.body.booking.travel_plan.destination_scope, []);
+    assert.equal(Object.hasOwn(dayImportResult.body.booking.travel_plan, "destination_scope"), false);
+    assert.equal(Object.hasOwn(dayImportResult.body.booking.travel_plan, "destinations"), false);
   } finally {
     if (sourceTourId) {
       await requestJson(
@@ -3642,19 +3485,22 @@ test("booking generated offer pdf wiring keeps the commercial summary before the
   assert.equal(pdfResult.headers["content-type"], "application/pdf");
   assert.match(String(pdfResult.headers["content-disposition"] || ""), /ATP offer \d{4}-\d{2}-\d{2}\.pdf/);
   const source = await readFile(path.join(__dirname, "..", "src", "lib", "offer_pdf.js"), "utf8");
+  const itinerarySummaryIndex = source.indexOf("y = drawOfferItinerarySummary(doc, renderGeneratedOffer, renderBooking, y, fonts, lang);");
+  const offerTableIndex = source.indexOf("y = drawOfferTable(doc, renderGeneratedOffer, y, renderMoney, fonts, lang");
+  const paymentTermsIndex = source.indexOf("y = drawPaymentTerms(doc, renderGeneratedOffer, y, renderMoney, fonts, lang");
+  const bankDetailsIndex = source.indexOf("y = drawBankDetails(doc, companyProfile, y, fonts, lang);");
+  const closingIndex = source.indexOf("y = drawClosing(doc, y, fonts, lang, renderGeneratedOffer, renderMoney, attachmentPaths.length);");
+  const appendixIndex = source.indexOf("y = drawOfferDetailedTravelPlanAppendix(doc, renderGeneratedOffer, renderBooking, y, fonts, lang, itemThumbnailMap);");
   assert.ok(
-    source.indexOf("y = drawOfferItinerarySummary(doc, generatedOffer, booking, y, fonts, lang);")
-      < source.indexOf("y = drawOfferTable(doc, generatedOffer, y, renderMoney, fonts, lang);"),
+    itinerarySummaryIndex >= 0 && offerTableIndex >= 0 && itinerarySummaryIndex < offerTableIndex,
     "Expected the offer PDF writer to render the short itinerary summary before the financial overview"
   );
   assert.ok(
-    source.indexOf("y = drawPaymentTerms(doc, generatedOffer, y, renderMoney, fonts, lang);")
-      < source.indexOf("y = drawBankDetails(doc, companyProfile, y, fonts, lang);"),
+    paymentTermsIndex >= 0 && bankDetailsIndex >= 0 && paymentTermsIndex < bankDetailsIndex,
     "Expected the offer PDF writer to render bank details after payment terms"
   );
   assert.ok(
-    source.indexOf("y = drawClosing(doc, y, fonts, lang, generatedOffer, renderMoney, {")
-      < source.indexOf("y = drawOfferDetailedTravelPlanAppendix(doc, generatedOffer, booking, y, fonts, lang, itemThumbnailMap);"),
+    closingIndex >= 0 && appendixIndex >= 0 && closingIndex < appendixIndex,
     "Expected the detailed travel-plan appendix to be rendered after the commercial offer sections"
   );
 });
@@ -4579,7 +4425,8 @@ test("booking source update persists trip context and pdf personalization", asyn
     }
   );
   assert.equal(sourceUpdateResult.status, 200);
-  assert.deepEqual(sourceUpdateResult.body.booking.travel_plan.destinations, ["VN", "KH"]);
+  assert.equal(Object.hasOwn(sourceUpdateResult.body.booking.travel_plan, "destinations"), false);
+  assert.equal(Object.hasOwn(sourceUpdateResult.body.booking.travel_plan, "destination_scope"), false);
   assert.deepEqual(sourceUpdateResult.body.booking.travel_styles, ["grand-expeditions", "culture"]);
   assert.equal(
     sourceUpdateResult.body.booking.pdf_personalization.travel_plan.subtitle,
@@ -4619,7 +4466,8 @@ test("booking source update persists trip context and pdf personalization", asyn
     apiHeaders()
   );
   assert.equal(detailAfter.status, 200);
-  assert.deepEqual(detailAfter.body.booking.travel_plan.destinations, ["VN", "KH"]);
+  assert.equal(Object.hasOwn(detailAfter.body.booking.travel_plan, "destinations"), false);
+  assert.equal(Object.hasOwn(detailAfter.body.booking.travel_plan, "destination_scope"), false);
   assert.deepEqual(detailAfter.body.booking.travel_styles, ["grand-expeditions", "culture"]);
   assert.equal(
     detailAfter.body.booking.pdf_personalization.travel_plan.welcome,
@@ -4758,201 +4606,6 @@ test("booking activity create uses the core revision", async () => {
   assert.equal(createResult.status, 201);
   assert.equal(createResult.body.activity.type, "BOOKING_UPDATED");
   assert.equal(createResult.body.booking.core_revision, core_revision + 1);
-});
-
-test("booking chat stays on one canonical booking and exposes related bookings", async () => {
-  await resetStore();
-
-  const firstBookingResult = await requestJson(endpointPath("public_bookings"), {}, {
-    method: "POST",
-    body: {
-      name: "Joachim",
-      email: "joachim@example.com",
-      phone_number: "+84354999192",
-      preferred_language: "en",
-      preferred_currency: "USD",
-      destinations: ["Vietnam"],
-      travel_style: ["Culture"],
-      number_of_travelers: 1,
-      booking_name: "Vietnam Journey"
-    }
-  });
-  assert.equal(firstBookingResult.status, 201);
-
-  const secondBookingResult = await requestJson(endpointPath("public_bookings"), {}, {
-    method: "POST",
-    body: {
-      name: "Joachim",
-      email: "joachim@example.com",
-      phone_number: "+84354999192",
-      preferred_language: "en",
-      preferred_currency: "USD",
-      destinations: ["Laos"],
-      travel_style: ["Grand Expeditions"],
-      number_of_travelers: 1,
-      booking_name: "Laos Journey"
-    }
-  });
-  assert.equal(secondBookingResult.status, 201);
-
-  const firstBookingId = firstBookingResult.body.booking.id;
-  const secondBookingId = secondBookingResult.body.booking.id;
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  store.chat_channel_accounts.push({
-    id: "chatacct_whatsapp",
-    channel: "whatsapp",
-    external_account_id: "wa_phone",
-    name: "WhatsApp",
-    metadata: {},
-    created_at: "2026-03-11T00:00:00.000Z",
-    updated_at: "2026-03-11T00:00:00.000Z"
-  });
-  store.chat_conversations.push({
-    id: "chatconv_primary",
-    channel: "whatsapp",
-    channel_account_id: "chatacct_whatsapp",
-    external_conversation_id: "84354999192",
-    external_contact_id: "84354999192",
-    booking_id: firstBookingId,
-    latest_preview: "Hello from WhatsApp",
-    last_event_at: "2026-03-11T10:00:00.000Z",
-    created_at: "2026-03-11T10:00:00.000Z",
-    updated_at: "2026-03-11T10:00:00.000Z"
-  });
-  store.chat_events.push({
-    id: "chatevt_primary",
-    conversation_id: "chatconv_primary",
-    channel: "whatsapp",
-    event_type: "message",
-    direction: "inbound",
-    external_message_id: "wamid.1",
-    external_status: null,
-    sender_display: "Joachim",
-    sender_contact: "84354999192",
-    text_preview: "Hello from WhatsApp",
-    sent_at: "2026-03-11T10:00:00.000Z",
-    received_at: "2026-03-11T10:00:01.000Z",
-    payload_json: {},
-    created_at: "2026-03-11T10:00:01.000Z"
-  });
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const primaryChatResult = await requestJson(
-    endpointPath("booking_chat").replace("{booking_id}", firstBookingId),
-    apiHeaders()
-  );
-  assert.equal(primaryChatResult.status, 200);
-  assert.equal(primaryChatResult.body.conversations.length, 1);
-  assert.equal(primaryChatResult.body.conversations[0].booking_id, firstBookingId);
-  assert.deepEqual(
-    primaryChatResult.body.conversations[0].related_bookings.map((booking) => booking.booking_id),
-    [secondBookingId]
-  );
-
-  const secondaryChatResult = await requestJson(
-    endpointPath("booking_chat").replace("{booking_id}", secondBookingId),
-    apiHeaders()
-  );
-  assert.equal(secondaryChatResult.status, 200);
-  assert.equal(secondaryChatResult.body.conversations.length, 0);
-  assert.equal(secondaryChatResult.body.items.length, 0);
-});
-
-test("booking chat ignores stale deleted booking ids and rematches by phone", async () => {
-  await resetStore();
-
-  const bookingResult = await requestJson(endpointPath("public_bookings"), {}, {
-    method: "POST",
-    body: {
-      name: "Joachim",
-      email: "joachim@example.com",
-      phone_number: "+84354999192",
-      preferred_language: "en",
-      preferred_currency: "USD",
-      destinations: ["Vietnam"],
-      travel_style: ["Grand Expeditions"],
-      number_of_travelers: 2,
-      booking_name: "Vietnam Journey"
-    }
-  });
-  assert.equal(bookingResult.status, 201);
-  const bookingId = bookingResult.body.booking.id;
-
-  const detailResult = await requestJson(
-    endpointPath("booking_detail").replace("{booking_id}", bookingId),
-    apiHeaders()
-  );
-  assert.equal(detailResult.status, 200);
-  const booking = detailResult.body.booking;
-  const personsRevision = booking.persons_revision;
-
-  const createPersonResult = await requestJson(
-    endpointPath("booking_person_create").replace("{booking_id}", bookingId),
-    apiHeaders(),
-    {
-      method: "POST",
-      body: {
-        expected_persons_revision: personsRevision,
-        person: {
-          name: "Van Nguyen",
-          phone_numbers: ["+84387451111"],
-          roles: ["traveler"]
-        },
-        actor: "joachim"
-      }
-    }
-  );
-  assert.equal(createPersonResult.status, 201);
-
-  const store = JSON.parse(await readFile(STORE_PATH, "utf8"));
-  store.chat_channel_accounts.push({
-    id: "chatacct_whatsapp",
-    channel: "whatsapp",
-    external_account_id: "wa_phone",
-    name: "WhatsApp",
-    metadata: {},
-    created_at: "2026-03-12T00:00:00.000Z",
-    updated_at: "2026-03-12T00:00:00.000Z"
-  });
-  store.chat_conversations.push({
-    id: "chatconv_stale",
-    channel: "whatsapp",
-    channel_account_id: "chatacct_whatsapp",
-    external_conversation_id: "84387451111",
-    external_contact_id: "84387451111",
-    booking_id: "booking_deleted_old_reference",
-    latest_preview: "Hello from WhatsApp",
-    last_event_at: "2026-03-12T10:00:00.000Z",
-    created_at: "2026-03-12T10:00:00.000Z",
-    updated_at: "2026-03-12T10:00:00.000Z"
-  });
-  store.chat_events.push({
-    id: "chatevt_stale",
-    conversation_id: "chatconv_stale",
-    channel: "whatsapp",
-    event_type: "message",
-    direction: "inbound",
-    external_message_id: "wamid.stale",
-    external_status: null,
-    sender_display: "Van Nguyen",
-    sender_contact: "84387451111",
-    text_preview: "Hello from WhatsApp",
-    sent_at: "2026-03-12T10:00:00.000Z",
-    received_at: "2026-03-12T10:00:01.000Z",
-    payload_json: {},
-    created_at: "2026-03-12T10:00:01.000Z"
-  });
-  await writeFile(STORE_PATH, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-
-  const chatResult = await requestJson(
-    endpointPath("booking_chat").replace("{booking_id}", bookingId),
-    apiHeaders()
-  );
-  assert.equal(chatResult.status, 200);
-  assert.equal(chatResult.body.conversations.length, 1);
-  assert.equal(chatResult.body.conversations[0].booking_id, bookingId);
-  assert.equal(chatResult.body.items.length, 1);
 });
 
 test("booking person photo endpoint updates the booking when ImageMagick is available", async (t) => {
@@ -6135,7 +5788,7 @@ test("public tours only expose destinations published on webpage and hide unpubl
                 id: "visible_public_tour_day_1",
                 day_number: 1,
                 title: "Visible Vietnam day",
-                primary_location_id: "place_hanoi",
+                primary_location_id: "VN",
                 services: [
                   {
                     id: "visible_public_tour_service_1",
@@ -6191,6 +5844,7 @@ test("public tours only expose destinations published on webpage and hide unpubl
                 id: "hidden_public_tour_day_1",
                 day_number: 1,
                 title: "Hidden Laos day",
+                primary_location_id: "LA",
                 services: []
               }
             ]
@@ -6230,14 +5884,14 @@ test("public tours only expose destinations published on webpage and hide unpubl
         email: "hidden-tour-customer@example.com",
         preferred_language: "en",
         preferred_currency: "USD",
-        destinations: ["Laos"],
         travel_style: ["Culture"],
         tour_id: hiddenTourId,
         notes: "Forged hidden tour id"
       }
     });
     assert.equal(hiddenTourBooking.status, 201);
-    assert.deepEqual(hiddenTourBooking.body.booking.travel_plan.destinations, ["LA"]);
+    assert.equal(Object.hasOwn(hiddenTourBooking.body.booking.travel_plan, "destinations"), false);
+    assert.equal(Object.hasOwn(hiddenTourBooking.body.booking.travel_plan, "destination_scope"), false);
     assert.deepEqual(hiddenTourBooking.body.booking.travel_plan.days, []);
   } finally {
     await resetStore();
@@ -6305,7 +5959,7 @@ test("tour delete is blocked while bookings still reference the tour", async () 
     );
     assert.equal(detailResult.status, 200);
   } finally {
-    await deleteBookingForTest(bookingId);
+    await removeBookingFromStoreForTest(bookingId);
     await deleteTourForTest(tourId);
   }
 });

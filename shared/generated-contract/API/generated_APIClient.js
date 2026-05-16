@@ -36,20 +36,12 @@ case "booking_create":
   return RequestFactory.bookingCreateRequest(options);
 case "booking_detail":
   return RequestFactory.bookingDetailRequest(options);
-case "booking_delete":
-  return RequestFactory.bookingDeleteRequest(options);
-case "booking_clone":
-  return RequestFactory.bookingCloneRequest(options);
-case "booking_chat":
-  return RequestFactory.bookingChatRequest(options);
 case "booking_name":
   return RequestFactory.bookingNameRequest(options);
 case "booking_customer_language":
   return RequestFactory.bookingCustomerLanguageRequest(options);
 case "booking_source":
   return RequestFactory.bookingSourceRequest(options);
-case "booking_image":
-  return RequestFactory.bookingImageRequest(options);
 case "booking_owner":
   return RequestFactory.bookingOwnerRequest(options);
 case "booking_translate_fields":

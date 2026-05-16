@@ -53,7 +53,8 @@ test("booking notification email includes submitted booking details", () => {
   assert.match(email.htmlBody, /Open booking in backend/);
   assert.match(email.htmlBody, /Ada Customer/);
   assert.match(email.htmlBody, /ada@example\.com/);
-  assert.match(email.htmlBody, /VN, KH/);
+  assert.doesNotMatch(email.htmlBody, /VN, KH/);
+  assert.doesNotMatch(email.htmlBody, /Destinations/);
   assert.match(email.htmlBody, /7 - 10 days/);
   assert.match(email.htmlBody, /USD 2000 - 3000/);
   assert.match(email.htmlBody, /booking@asiatravelplan\.com/);

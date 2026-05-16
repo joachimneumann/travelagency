@@ -1108,6 +1108,12 @@ html.tour-customize-modal-open {
 }
 
 .tour-customize {
+  --tour-customize-card-width: 116px;
+  --tour-customize-card-height: 154px;
+  --tour-customize-options-gap: 0.56rem;
+  --tour-customize-card-border-color: var(--line-focus-strong, rgba(104, 133, 145, 0.95));
+  --tour-customize-line-color: var(--line, #deeaef);
+  --tour-customize-workspace-background: #f7f9f7;
   position: fixed;
   top: var(--tour-customize-modal-top, 0px);
   right: 0;
@@ -1123,6 +1129,16 @@ html.tour-customize-modal-open {
   background: rgba(14, 28, 32, 0.48);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
+}
+
+.tour-customize-runtime-root,
+.tour-customize-embedded {
+  --tour-customize-card-width: 116px;
+  --tour-customize-card-height: 154px;
+  --tour-customize-options-gap: 0.56rem;
+  --tour-customize-card-border-color: var(--line-focus-strong, rgba(104, 133, 145, 0.95));
+  --tour-customize-line-color: var(--line, #deeaef);
+  --tour-customize-workspace-background: #f7f9f7;
 }
 
 .tour-customize__dialog {
@@ -1210,18 +1226,62 @@ html.tour-customize-modal-open {
   grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
   overflow: hidden;
-  background: #f7f9f7;
+  background: var(--tour-customize-workspace-background);
 }
 
 .tour-customize-embedded {
   overflow: hidden;
-  border: 1px solid var(--line);
+  border: 1px solid var(--tour-customize-line-color);
   border-radius: 8px;
-  background: #f7f9f7;
+  background: var(--tour-customize-workspace-background);
 }
 
 .tour-customize-embedded .tour-customize__workspace {
   max-height: min(72vh, 760px);
+}
+
+.tour-customize-embedded--full {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.tour-customize-embedded--full .tour-customize__workspace {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
+.tour-customize-embedded--preview {
+  width: 100%;
+  height: 100%;
+  min-height: var(--tour-customize-preview-min-height, 0);
+  border: 0;
+  border-radius: 0;
+}
+
+.tour-customize-embedded--preview .tour-customize__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: var(--tour-customize-preview-min-height, 0);
+  max-height: none;
+}
+
+.tour-customize-embedded--preview .tour-customize-map {
+  width: 100%;
+  height: 100%;
+  min-height: var(--tour-customize-preview-min-height, 0);
+  border: 0;
+}
+
+.tour-customize-embedded--preview .tour-customize-map__controls,
+.tour-customize-embedded--preview .tour-customize-options,
+.tour-customize-embedded--preview .tour-customize-timeline {
+  display: none;
 }
 
 .tour-customize-embedded.is-disabled .tour-customize-option,
@@ -1443,8 +1503,8 @@ html.tour-customize-modal-open {
 
 .tour-customize-options__list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 116px);
-  gap: 0.56rem;
+  grid-template-columns: repeat(auto-fill, var(--tour-customize-card-width));
+  gap: var(--tour-customize-options-gap);
   align-content: start;
   justify-content: start;
   min-height: 0;
@@ -1455,9 +1515,9 @@ html.tour-customize-modal-open {
 }
 
 .tour-customize-option {
-  width: 116px;
+  width: var(--tour-customize-card-width);
   max-width: none;
-  height: 154px;
+  height: var(--tour-customize-card-height);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
@@ -1465,7 +1525,7 @@ html.tour-customize-modal-open {
   gap: 0.26rem;
   min-height: 0;
   padding: 0.34rem 0.34rem 0.88rem;
-  border: 2px solid var(--line-focus-strong);
+  border: 2px solid var(--tour-customize-card-border-color);
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(17, 27, 33, 0.08);
@@ -1536,9 +1596,11 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   z-index: 2400;
   margin: 0;
   pointer-events: none;
-  opacity: 0.98;
+  opacity: 1;
   visibility: visible;
+  background: #fff;
   box-shadow: 0 16px 36px rgba(16, 27, 43, 0.26);
+  isolation: isolate;
   transform: rotate(-1deg);
 }
 
@@ -1552,15 +1614,18 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 .tour-customize-drag-ghost.tour-customize-drag-ghost--card,
 .tour-customize-drag-ghost.tour-customize-drag-ghost--card.is-dragging {
   z-index: 2400;
-  border-color: var(--line);
-  border-style: solid;
-  background: #fff;
-  opacity: 1;
-  visibility: visible;
+  border: 2px solid var(--tour-customize-card-border-color);
+  background: #fff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 .tour-customize-drag-ghost.tour-customize-drag-ghost--card > * {
   visibility: visible;
+}
+
+.tour-customize-drag-ghost.tour-customize-drag-ghost--card .tour-customize-option__body {
+  background: #fff !important;
 }
 
 .tour-customize-drag-ghost.tour-customize-drag-ghost--card .tour-customize-timeline__move-placeholder {
@@ -1605,7 +1670,7 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 .tour-customize-drag-ghost.is-smoke-dissolving {
   overflow: visible;
   border-color: transparent;
-  background: transparent;
+  background: transparent !important;
   box-shadow: none;
 }
 
@@ -1874,7 +1939,7 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 }
 
 .tour-customize-timeline__item {
-  flex: 0 0 116px;
+  flex: 0 0 var(--tour-customize-card-width);
   z-index: 1;
   scroll-snap-align: start;
 }
@@ -1930,9 +1995,9 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 }
 
 .tour-customize-timeline__drop-slot {
-  flex: 0 0 116px;
-  width: 116px;
-  height: 154px;
+  flex: 0 0 var(--tour-customize-card-width);
+  width: var(--tour-customize-card-width);
+  height: var(--tour-customize-card-height);
   display: grid;
   place-items: center;
   align-content: center;
@@ -2027,12 +2092,12 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   }
 
   .tour-customize-timeline__item {
-    flex-basis: 116px;
+    flex-basis: var(--tour-customize-card-width);
     grid-template-columns: minmax(0, 1fr);
   }
 
   .tour-customize-timeline__drop-slot {
-    flex-basis: 116px;
+    flex-basis: var(--tour-customize-card-width);
   }
 }
 

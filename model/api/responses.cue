@@ -50,11 +50,6 @@ import (
 	total: >=0 & int
 }
 
-#BookingDeleteResponse: {
-	deleted:    bool
-	booking_id: common.#Identifier
-}
-
 #BookingActivitiesResponse: {
 	items: [...databaseModel.#BookingActivity]
 	activities: [...databaseModel.#BookingActivity]
@@ -74,43 +69,6 @@ import (
 #BookingPaymentDocumentResponse: {
 	document: databaseModel.#BookingPaymentDocument
 	booking:  #BookingReadModel
-}
-
-#BookingChatEvent: {
-	id:               common.#Identifier
-	channel:          string
-	direction:        string
-	event_type:       string
-	external_status?: string
-	text_preview:     string
-	sender_display?:  string
-	sender_contact?:  string
-	sent_at?:         common.#Timestamp
-	received_at?:     common.#Timestamp
-	conversation_id:  common.#Identifier
-	open_url?:        string
-}
-
-#BookingChatConversation: {
-	id:                   common.#Identifier
-	channel:              string
-	external_contact_id?: string
-	booking_id?:          common.#Identifier
-	related_bookings?: [...{
-		booking_id: common.#Identifier
-		name?:      string
-	}]
-	last_event_at?:  common.#Timestamp
-	latest_preview?: string
-	open_url?:       string
-}
-
-#BookingChatResponse: {
-	mode?: string
-	items: [...#BookingChatEvent]
-	total: >=0 & int
-	conversations: [...#BookingChatConversation]
-	conversation_total: >=0 & int
 }
 
 #SettingsObservabilityLoggedInUser: {
@@ -519,7 +477,6 @@ import (
 #BookingReadModel: {
 	id:                                 common.#Identifier
 	name?:                              string
-	image?:                             string
 	core_revision?:                     >=0 & int
 	notes_revision?:                    >=0 & int
 	persons_revision?:                  >=0 & int

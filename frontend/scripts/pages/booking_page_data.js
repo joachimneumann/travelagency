@@ -46,8 +46,7 @@ export function createBookingPageDataController(ctx) {
     renderOfferPanel,
     loadActivities,
     loadPaymentDocuments,
-    ensureTourImageLoaded,
-    bookingWhatsAppRef
+    ensureTourImageLoaded
   } = ctx;
 
   function hasAnyRole(...candidateRoles) {
@@ -276,9 +275,7 @@ export function createBookingPageDataController(ctx) {
     renderTravelPlanPanel();
     renderOfferPanel();
     await loadActivities();
-    await bookingWhatsAppRef()?.load(state.booking);
     await loadPaymentDocuments();
-    bookingWhatsAppRef()?.startAutoRefresh(() => state.booking);
     return true;
   }
 

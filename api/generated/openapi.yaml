@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-15T15:43:07Z
+# 2026-05-16T13:18:58Z
 
 ---
 openapi: 3.1.0
@@ -4218,14 +4218,6 @@ components:
       type: object
       required: []
       properties:
-        destination_scope:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelPlanDestinationScopeEntry"
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
         tour_card_primary_image_id:
           type: string
           nullable: true
@@ -4611,14 +4603,6 @@ components:
       type: object
       required: []
       properties:
-        destination_scope:
-          type: array
-          items:
-            "$ref": "#/components/schemas/TravelPlanDestinationScopeEntry"
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
         tour_card_primary_image_id:
           type: string
           nullable: true
@@ -5244,10 +5228,6 @@ components:
       type: object
       required: []
       properties:
-        destinations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/CountryCode"
         travel_style:
           type: array
           items:
@@ -5334,9 +5314,6 @@ components:
         id:
           type: string
         name:
-          type: string
-          nullable: true
-        image:
           type: string
           nullable: true
         assigned_keycloak_user_id:
@@ -5721,9 +5698,6 @@ components:
         id:
           type: string
         name:
-          type: string
-          nullable: true
-        image:
           type: string
           nullable: true
         assigned_keycloak_user_id:
@@ -6564,95 +6538,6 @@ components:
           type: array
           items:
             "$ref": "#/components/schemas/TranslationEntry"
-    BookingChatEvent:
-      type: object
-      required:
-      - id
-      - channel
-      - direction
-      - event_type
-      - text_preview
-      - conversation_id
-      properties:
-        id:
-          type: string
-        channel:
-          type: string
-        direction:
-          type: string
-        event_type:
-          type: string
-        external_status:
-          type: string
-          nullable: true
-        text_preview:
-          type: string
-        sender_display:
-          type: string
-          nullable: true
-        sender_contact:
-          type: string
-          nullable: true
-        sent_at:
-          type: string
-          format: date-time
-          nullable: true
-        received_at:
-          type: string
-          format: date-time
-          nullable: true
-        conversation_id:
-          type: string
-        open_url:
-          type: string
-          nullable: true
-    BookingChatConversation:
-      type: object
-      required:
-      - id
-      - channel
-      properties:
-        id:
-          type: string
-        channel:
-          type: string
-        external_contact_id:
-          type: string
-          nullable: true
-        booking_id:
-          type: string
-          nullable: true
-        last_event_at:
-          type: string
-          format: date-time
-          nullable: true
-        latest_preview:
-          type: string
-          nullable: true
-        open_url:
-          type: string
-          nullable: true
-    BookingChatResponse:
-      type: object
-      required:
-      - total
-      - conversation_total
-      properties:
-        mode:
-          type: string
-          nullable: true
-        items:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingChatEvent"
-        total:
-          type: integer
-        conversations:
-          type: array
-          items:
-            "$ref": "#/components/schemas/BookingChatConversation"
-        conversation_total:
-          type: integer
     SettingsObservabilityLoggedInUser:
       type: object
       required:
@@ -6908,10 +6793,6 @@ components:
       - name
       - preferred_language
       properties:
-        destinations:
-          type: array
-          items:
-            type: string
         travel_style:
           type: array
           items:
@@ -6960,10 +6841,6 @@ components:
       - name
       - preferred_language
       properties:
-        destinations:
-          type: array
-          items:
-            type: string
         travel_style:
           type: array
           items:
@@ -7032,13 +6909,6 @@ components:
       x-require-one-of:
       - - email
         - phone_number
-    BookingDeleteRequest:
-      type: object
-      required: []
-      properties:
-        expected_core_revision:
-          type: integer
-          nullable: true
     BookingNameUpdateRequest:
       type: object
       required: []
@@ -7087,25 +6957,6 @@ components:
         actor:
           type: string
           nullable: true
-    BookingImageUploadRequest:
-      type: object
-      required:
-      - filename
-      - data_base64
-      properties:
-        filename:
-          type: string
-        mime_type:
-          type: string
-          nullable: true
-        data_base64:
-          type: string
-        expected_core_revision:
-          type: integer
-          nullable: true
-        actor:
-          type: string
-          nullable: true
     BookingOwnerUpdateRequest:
       type: object
       required: []
@@ -7115,22 +6966,6 @@ components:
           nullable: true
         assigned_keycloak_user_id:
           type: string
-          nullable: true
-        actor:
-          type: string
-          nullable: true
-    BookingCloneRequest:
-      type: object
-      required:
-      - name
-      properties:
-        expected_core_revision:
-          type: integer
-          nullable: true
-        name:
-          type: string
-        include_travelers:
-          type: boolean
           nullable: true
         actor:
           type: string
@@ -7316,7 +7151,6 @@ components:
       - include_images
       - include_customer_visible_images_only
       - include_notes
-      - include_translations
       properties:
         expected_updated_at:
           type: string
@@ -7334,8 +7168,6 @@ components:
         include_customer_visible_images_only:
           type: boolean
         include_notes:
-          type: boolean
-        include_translations:
           type: boolean
         actor:
           type: string
@@ -7348,7 +7180,6 @@ components:
       - include_images
       - include_customer_visible_images_only
       - include_notes
-      - include_translations
       properties:
         expected_updated_at:
           type: string
@@ -7370,8 +7201,6 @@ components:
           type: boolean
         include_notes:
           type: boolean
-        include_translations:
-          type: boolean
         actor:
           type: string
           nullable: true
@@ -7383,7 +7212,6 @@ components:
       - include_images
       - include_customer_visible_images_only
       - include_notes
-      - include_translations
       properties:
         expected_travel_plan_revision:
           type: integer
@@ -7401,8 +7229,6 @@ components:
           type: boolean
         include_notes:
           type: boolean
-        include_translations:
-          type: boolean
         actor:
           type: string
           nullable: true
@@ -7414,7 +7240,6 @@ components:
       - include_images
       - include_customer_visible_images_only
       - include_notes
-      - include_translations
       properties:
         expected_travel_plan_revision:
           type: integer
@@ -7434,8 +7259,6 @@ components:
         include_customer_visible_images_only:
           type: boolean
         include_notes:
-          type: boolean
-        include_translations:
           type: boolean
         actor:
           type: string
@@ -8185,122 +8008,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
-    delete:
-      operationId: booking_delete
-      summary: Booking Delete
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingDeleteRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDeleteResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/clone":
-    post:
-      operationId: booking_clone
-      summary: Booking Clone
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingCloneRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/chat":
-    get:
-      operationId: booking_chat
-      summary: Booking Chat
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingChatResponse"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/bookings/{booking_id}/name":
     patch:
       operationId: booking_name
@@ -8402,51 +8109,6 @@ paths:
       responses:
         '200':
           description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/bookings/{booking_id}/image":
-    post:
-      operationId: booking_image
-      summary: Booking Image
-      tags:
-      - Bookings
-      security:
-      - bearerAuth: []
-      parameters:
-      - name: booking_id
-        in: path
-        required: true
-        schema:
-          type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/BookingImageUploadRequest"
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/BookingDetail"
-        '201':
-          description: Created
           content:
             application/json:
               schema:

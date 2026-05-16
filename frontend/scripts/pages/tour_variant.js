@@ -105,9 +105,10 @@ const fetchApi = createApiFetcher({
 const customizerLabels = {};
 updateCustomizerLabels();
 
-function createTourVariantCustomizerWorkspace(root, onTimelineChange = null) {
+function createTourVariantCustomizerWorkspace(root, onTimelineChange = null, mode = "default") {
   return createTourCustomizerWorkspace({
     root,
+    mode,
     escapeHTML: escapeHtml,
     escapeAttr: escapeHtml,
     currentFrontendLang: currentLang,
@@ -121,8 +122,8 @@ function createTourVariantCustomizerWorkspace(root, onTimelineChange = null) {
   });
 }
 
-const tourVariantMapPreview = createTourVariantCustomizerWorkspace(els.mapPreview);
-const tourVariantCustomizer = createTourVariantCustomizerWorkspace(els.customizer, applyCustomizerTimeline);
+const tourVariantMapPreview = createTourVariantCustomizerWorkspace(els.mapPreview, null, "preview");
+const tourVariantCustomizer = createTourVariantCustomizerWorkspace(els.customizer, applyCustomizerTimeline, "full");
 
 function tourVariantT(key, fallback, vars) {
   return backendT(`backend.tour_variant.${key}`, fallback, vars);

@@ -3,10 +3,6 @@ import {
   TRAVEL_PLAN_SERVICE_KIND_VALUES,
   TRAVEL_PLAN_TIMING_KIND_VALUES
 } from "../lib/generated_catalogs.js";
-import {
-  destinationScopeDestinations,
-  normalizeTravelPlanDestinationScope
-} from "./destination_scope.js";
 import { normalizeExperienceHighlightIds } from "./tour_metadata.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
 import {
@@ -179,8 +175,6 @@ function buildDefaultTravelPlan() {
 function buildDefaultBookingTravelPlan() {
   return {
     ...buildDefaultTravelPlan(),
-    destination_scope: [],
-    destinations: [],
     attachments: []
   };
 }
@@ -670,8 +664,6 @@ export function createTravelPlanHelpers() {
       ? stripLocalizedStorageFields(rawSource)
       : rawSource;
     const flatMode = options?.flatMode === "localized" ? "localized" : "source";
-    const destination_scope = normalizeTravelPlanDestinationScope(source);
-    const destinations = destinationScopeDestinations(destination_scope);
     const boundary_logistics = normalizeTravelPlanBoundaryLogistics(source.boundary_logistics, {
       ...options,
       flatMode
@@ -689,8 +681,6 @@ export function createTravelPlanHelpers() {
     const normalizedDays = applyTravelPlanTourCardImageSelection(days, tour_card_image_ids);
     const tour_card_primary_image_id = tour_card_image_ids[0] || null;
     return normalizeTravelPlanTranslationMeta({
-      destination_scope,
-      destinations,
       ...(tour_card_image_ids.length ? { tour_card_image_ids } : {}),
       ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),
@@ -706,8 +696,7 @@ export function createTravelPlanHelpers() {
       ...options,
       ignoreLocalizedFields: true
     });
-    const { destination_scope: _destinationScope, destinations: _destinations, ...withoutTourLevelLocations } = normalized;
-    return stripLocalizedStorageFields(withoutTourLevelLocations);
+    return stripLocalizedStorageFields(normalized);
   }
 
   function normalizeBookingTravelPlan(rawTravelPlan, offer = null, options = {}) {
@@ -724,7 +713,6 @@ export function createTravelPlanHelpers() {
       flatMode
     });
 
-    const destination_scope = normalizeTravelPlanDestinationScope(source);
     const tour_card_image_ids = normalizeTravelPlanTourCardImageIds(source, days);
     const hasExplicitOnePagerImageIds = Object.prototype.hasOwnProperty.call(source || {}, "one_pager_image_ids");
     const one_pager_hero_image_id = normalizeTravelPlanOnePagerHeroImageId(source, days);
@@ -734,8 +722,6 @@ export function createTravelPlanHelpers() {
     const normalizedDays = applyTravelPlanTourCardImageSelection(days, tour_card_image_ids);
     const tour_card_primary_image_id = tour_card_image_ids[0] || null;
     return normalizeTravelPlanTranslationMeta({
-      destination_scope,
-      destinations: destinationScopeDestinations(destination_scope),
       ...(tour_card_image_ids.length ? { tour_card_image_ids } : {}),
       ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),

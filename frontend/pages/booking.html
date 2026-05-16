@@ -163,7 +163,7 @@
     <header class="header" id="top">
       <div class="container header-wrap">
         <a class="brand" id="backendHomeLink" href="bookings.html" aria-label="AsiaTravelPlan backend home">
-          <img class="brand-logo" src="/assets/generated/runtime/brand-logo.png" alt="AsiaTravelPlan" width="165" height="68" />
+          <img class="brand-logo" src="/assets/generated/runtime/brand-logo-backoffice.png" alt="AsiaTravelPlan" width="165" height="68" />
         </a>
 
         <div id="backendNavMount"></div>
@@ -193,8 +193,8 @@
           <div class="booking-detail-page__bar-gap" aria-hidden="true"></div>
           <div class="booking-detail-page__scroll">
             <div class="booking-page-shell">
-              <section class="booking-top-card">
-                <div class="booking-hero">
+              <section class="booking-top-card booking-top-card--compact">
+                <div class="booking-hero booking-hero--compact">
                   <div class="booking-hero__main">
                     <div class="booking-hero__copy">
                       <div class="booking-hero__title-row">
@@ -208,106 +208,26 @@
                         <p class="booking-hero__id booking-hero__id-updated" id="detail_sub_title_updated"></p>
                         <span class="booking-hero__id-copy-status" id="booking_hero_copy_status" aria-live="polite"></span>
                       </div>
-                    </div>
-                    <div class="booking-top-card__fields">
-                      <div class="field booking-top-card__field booking-top-card__field--staff">
-                        <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP Staff</label>
-                        <select id="booking_owner_select"></select>
-                      </div>
-                      <div class="field booking-content-language-field booking-top-card__field" id="booking_content_language_field">
-                        <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
-                        <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
-                        <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-                      </div>
-                      <div class="field booking-top-card__field booking-top-card__field--currency">
-                        <label for="offer_currency_input">
-                          <span data-i18n-id="booking.customer_currency">Customer Currency</span>
-                        </label>
-                        <div class="booking-currency-menu-mount" id="booking_currency_menu_mount"></div>
-                        <select id="offer_currency_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
-                      </div>
-                      <div class="field booking-top-card__field booking-top-card__field--context booking-top-card__field--context-row" hidden>
-                        <label for="booking_destinations_trigger" data-i18n-id="booking.destinations">Destinations</label>
-                        <div class="select-wrap booking-top-card__select-wrap">
-                          <button
-                            id="booking_destinations_trigger"
-                            class="filter-select-trigger booking-top-card__filter-trigger"
-                            type="button"
-                            aria-expanded="false"
-                            aria-controls="booking_destinations_panel"
-                          >
-                            <span id="booking_destinations_summary">Select destinations</span>
-                            <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
-                          </button>
-                          <div id="booking_destinations_panel" class="filter-select-panel booking-top-card__filter-panel" hidden>
-                            <div id="booking_destinations_options" class="filter-checkbox-list" role="group" aria-label="Booking destinations"></div>
-                          </div>
+                      <div class="booking-title-control-row" aria-label="Booking assignment and customer language">
+                        <div class="field booking-title-control-row__field booking-title-control-row__field--staff">
+                          <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP Staff</label>
+                          <select id="booking_owner_select"></select>
                         </div>
-                      </div>
-                      <div class="field booking-top-card__field booking-top-card__field--context booking-top-card__field--context-row booking-top-card__field--travel-style">
-                        <label for="booking_travel_styles_trigger" data-i18n-id="booking.travel_style">Travel style</label>
-                        <div class="select-wrap booking-top-card__select-wrap">
-                          <button
-                            id="booking_travel_styles_trigger"
-                            class="filter-select-trigger booking-top-card__filter-trigger"
-                            type="button"
-                            aria-expanded="false"
-                            aria-controls="booking_travel_styles_panel"
-                          >
-                            <span id="booking_travel_styles_summary">Select travel style</span>
-                            <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
-                          </button>
-                          <div id="booking_travel_styles_panel" class="filter-select-panel booking-top-card__filter-panel" hidden>
-                            <div id="booking_travel_styles_options" class="filter-checkbox-list" role="group" aria-label="Booking travel styles"></div>
-                          </div>
+                        <div class="field booking-content-language-field booking-title-control-row__field" id="booking_content_language_field">
+                          <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
+                          <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
+                          <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
                         </div>
                       </div>
                     </div>
-                    <div id="offer_currency_hint" class="micro booking-inline-status booking-offer-currency-hint booking-top-card__currency-hint" hidden></div>
-                  </div>
-                  <div class="booking-hero__side">
-                    <button class="booking-hero__photo" id="booking_hero_photo_btn" type="button" aria-label="Change booking picture" data-i18n-aria-label-id="booking.change_picture" data-requires-clean-state>
-                      <img class="booking-hero__photo-image" id="booking_hero_image" src="assets/img/profile_person.png" alt="" />
-                      <span class="booking-hero__photo-initials" id="booking_hero_initials" hidden>P</span>
-                    </button>
-                    <input id="booking_hero_photo_input" type="file" accept="image/*" hidden />
                   </div>
                 </div>
               </section>
-              <article id="booking_actions_panel" class="booking-control-deck" style="margin-bottom: 1rem;">
-                <div class="booking-control-deck__fields">
-                </div>
-              </article>
+
               <div id="detail_error" class="backend-message" role="alert" aria-live="assertive"></div>
-
-          <article id="booking_note_panel" style="margin-bottom: 1rem;">
-            <div class="field">
-              <label for="booking_note_input" data-i18n-id="booking.note_title">Booking notes (ATP internal)</label>
-              <div class="backend-controls" style="align-items: flex-start; gap: 0.6rem;">
-                <textarea class="booking-note-input booking-text-field booking-text-field--internal" id="booking_note_input" rows="4" placeholder="Booking notes..." style="flex: 1;" data-i18n-placeholder-id="booking.note_placeholder"></textarea>
-                <span id="booking_action_status" class="micro"></span>
+              <div class="booking-hidden-core-controls" hidden aria-hidden="true">
+                <div id="booking_travel_styles_options" class="filter-checkbox-list" role="group" aria-label="Booking travel styles"></div>
               </div>
-            </div>
-          </article>
-
-          <article class="booking-source-panel" style="margin-bottom: 1rem;">
-            <div class="booking-control-deck__fields booking-source-panel__fields">
-              <div class="field booking-source-panel__source-field">
-                <label for="booking_source_channel_select" data-i18n-id="booking.source_channel">Source channel</label>
-                <select id="booking_source_channel_select"></select>
-              </div>
-              <div class="field booking-source-panel__referral-field">
-                <label for="booking_referral_kind_select" data-i18n-id="booking.referred_by">Referred by</label>
-                <select id="booking_referral_kind_select"></select>
-              </div>
-            </div>
-            <div class="field booking-control-deck__detail-field booking-source-panel__conditional" id="booking_referral_label_field" hidden>
-              <label for="booking_referral_label_input" id="booking_referral_label_label" data-i18n-id="booking.partner_name">Partner name</label>
-              <input id="booking_referral_label_input" type="text" />
-              <select id="booking_referral_staff_select" hidden></select>
-              <span class="micro" id="booking_referral_label_hint"></span>
-            </div>
-          </article>
 
           <div
             class="modal booking-person-modal"
@@ -739,7 +659,7 @@
           <input id="travel_plan_service_image_input" type="file" accept="image/*" hidden />
           <input id="travel_plan_attachment_input" type="file" accept="application/pdf,.pdf" multiple hidden />
 
-          <article id="travel_plan_panel" class="booking-section">
+          <article id="travel_plan_panel" class="booking-section is-open">
             <div class="booking-section__head">
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_panel_summary" type="button"></button>
             </div>
@@ -754,27 +674,104 @@
             </div>
           </article>
 
-          <article id="travel_plan_pdf_panel" class="booking-section">
+          <article id="travel_plan_translation_section" class="booking-section is-open" hidden>
             <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_pdf_panel_summary" type="button"></button>
-            </div>
-            <div class="booking-section__body travel-plan-pdf-section__body">
-              <div id="travel_plan_pdf_personalization_panel"></div>
-              <div id="travel_plan_pdf_workspace" class="travel-plan-pdf-section__workspace"></div>
-            </div>
-          </article>
-
-          <article id="persons_editor_panel" class="booking-section is-open">
-            <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="persons_editor_panel_summary" type="button"></button>
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_translation_summary" type="button">
+                <span data-translation-summary-title data-i18n-id="booking.translation.section_title">Translations</span>
+              </button>
             </div>
             <div class="booking-section__body">
-              <span id="booking_persons_editor_status" class="micro booking-persons-editor-status"></span>
-              <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
-              <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+              <div id="travel_plan_translation_panel" class="tour-travel-plan-translation"></div>
             </div>
           </article>
 
+          <article id="booking_overview_panel" class="booking-section booking-overview-panel">
+            <div class="booking-section__head">
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="booking_overview_panel_summary" type="button">
+                <span class="backend-section-header">
+                  <span class="backend-section-header__primary">Details</span>
+                </span>
+              </button>
+            </div>
+            <div class="booking-section__body">
+              <div class="booking-details-control-grid">
+                <div class="field booking-top-card__field booking-top-card__field--currency">
+                  <label for="offer_currency_input">
+                    <span data-i18n-id="booking.customer_currency">Customer Currency</span>
+                  </label>
+                  <div class="booking-currency-menu-mount" id="booking_currency_menu_mount"></div>
+                  <select id="offer_currency_input" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                </div>
+                <div class="field booking-source-panel__source-field">
+                  <label for="booking_source_channel_select" data-i18n-id="booking.source_channel">Source channel</label>
+                  <select id="booking_source_channel_select"></select>
+                </div>
+                <div class="field booking-source-panel__referral-field">
+                  <label for="booking_referral_kind_select" data-i18n-id="booking.referred_by">Referred by</label>
+                  <select id="booking_referral_kind_select"></select>
+                </div>
+                <div class="field booking-control-deck__detail-field booking-source-panel__conditional" id="booking_referral_label_field" hidden>
+                  <label for="booking_referral_label_input" id="booking_referral_label_label" data-i18n-id="booking.partner_name">Partner name</label>
+                  <input id="booking_referral_label_input" type="text" />
+                  <select id="booking_referral_staff_select" hidden></select>
+                  <span class="micro" id="booking_referral_label_hint"></span>
+                </div>
+              </div>
+              <div id="offer_currency_hint" class="micro booking-inline-status booking-offer-currency-hint booking-top-card__currency-hint" hidden></div>
+              <div class="booking-overview-grid">
+                <article id="persons_editor_panel" class="booking-section is-open">
+                  <div class="booking-section__head">
+                    <button class="booking-section__summary booking-section__summary--inline-pad-16" id="persons_editor_panel_summary" type="button"></button>
+                  </div>
+                  <div class="booking-section__body">
+                    <span id="booking_persons_editor_status" class="micro booking-persons-editor-status"></span>
+                    <p id="booking_persons_mismatch_warning" class="booking-persons-mismatch-warning" hidden></p>
+                    <div id="booking_persons_editor_list" class="booking-persons-editor-list"></div>
+                  </div>
+                </article>
+
+                <article id="travel_plan_pdf_panel" class="booking-section is-open">
+                  <div class="booking-section__head">
+                    <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_pdf_panel_summary" type="button"></button>
+                  </div>
+                  <div class="booking-section__body travel-plan-pdf-section__body">
+                    <div id="travel_plan_pdf_personalization_panel"></div>
+                    <div id="travel_plan_pdf_workspace" class="travel-plan-pdf-section__workspace"></div>
+                  </div>
+                </article>
+
+                <article id="booking_note_panel" class="booking-section booking-note-panel is-open">
+                  <div class="booking-section__head">
+                    <button class="booking-section__summary booking-section__summary--inline-pad-16" id="booking_note_panel_summary" type="button">
+                      <span class="backend-section-header">
+                        <span class="backend-section-header__primary" data-i18n-id="booking.note_title">Booking notes (ATP internal)</span>
+                      </span>
+                    </button>
+                  </div>
+                  <div class="booking-section__body">
+                    <div class="field">
+                      <label for="booking_note_input" data-i18n-id="booking.note_title">Booking notes (ATP internal)</label>
+                      <div class="backend-controls booking-note-panel__controls">
+                        <textarea class="booking-note-input booking-text-field booking-text-field--internal" id="booking_note_input" rows="4" placeholder="Booking notes..." data-i18n-placeholder-id="booking.note_placeholder"></textarea>
+                        <span id="booking_action_status" class="micro"></span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </article>
+
+          <article id="financial_aspects_panel" class="booking-section booking-financial-panel">
+            <div class="booking-section__head">
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="financial_aspects_panel_summary" type="button">
+                <span class="backend-section-header">
+                  <span class="backend-section-header__primary">Financial aspects</span>
+                  <span class="backend-section-header__secondary">Offer, payment plan, and payment documents</span>
+                </span>
+              </button>
+            </div>
+            <div class="booking-section__body">
           <section id="proposal_workspace" class="booking-workspace" aria-labelledby="proposal_workspace_title">
             <div class="booking-workspace__head">
               <div class="booking-workspace__copy">
@@ -825,55 +822,37 @@
           <div id="payments_workspace" class="booking-payment-sections">
             <div id="payment_flow_sections" class="booking-payment-sections__list" hidden></div>
           </div>
+            </div>
+          </article>
 
-          <article id="travel_plan_translation_section" class="booking-section is-open" hidden>
+          <article id="technical_details_panel" class="booking-section booking-technical-panel">
             <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_translation_summary" type="button">
-                <span data-translation-summary-title data-i18n-id="booking.translation.section_title">Translations</span>
+              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="technical_details_panel_summary" type="button">
+                <span class="backend-section-header">
+                  <span class="backend-section-header__primary">Technical details</span>
+                  <span class="backend-section-header__secondary">Activity log and original request</span>
+                </span>
               </button>
             </div>
             <div class="booking-section__body">
-              <div id="travel_plan_translation_panel" class="tour-travel-plan-translation"></div>
-            </div>
-          </article>
+              <div class="booking-technical-grid">
+                <article id="activities_panel" class="booking-section">
+                  <div class="booking-section__head">
+                    <button class="booking-section__summary booking-section__summary--inline-pad-16" id="activities_panel_summary" type="button"></button>
+                  </div>
+                  <div class="booking-section__body">
+                    <div class="backend-table-wrap">
+                      <table class="backend-table" id="activities_table"></table>
+                    </div>
+                  </div>
+                </article>
 
-          <article id="activities_panel" class="booking-section">
-            <div class="booking-section__head">
-              <button class="booking-section__summary booking-section__summary--inline-pad-16" id="activities_panel_summary" type="button"></button>
-            </div>
-            <div class="booking-section__body">
-              <div class="backend-table-wrap">
-                <table class="backend-table" id="activities_table"></table>
+                <article class="booking-data-panel">
+                  <div id="booking_data_view"></div>
+                </article>
               </div>
             </div>
           </article>
-
-          <article class="booking-data-panel" style="margin-bottom: 1rem;">
-            <div id="booking_data_view"></div>
-          </article>
-
-          <div id="booking_whatsapp_mount"></div>
-
-          <section class="booking-danger-zone">
-            <h2 class="section-title u-title-compact" data-i18n-id="booking.danger_zone">DANGER ZONE</h2>
-            <div class="booking-danger-zone__actions">
-              <div class="booking-danger-zone__clone">
-                <div class="field">
-                  <label for="booking_clone_title_input" id="booking_clone_title_label">New title</label>
-                  <input id="booking_clone_title_input" type="text" autocomplete="off" />
-                </div>
-                <label class="booking-danger-zone__checkbox" for="booking_clone_include_travelers_input">
-                  <input id="booking_clone_include_travelers_input" type="checkbox" />
-                  <span id="booking_clone_include_travelers_label">Include travelers</span>
-                </label>
-                <button class="btn btn-primary booking-danger-zone__clone-btn" id="booking_clone_btn" type="button" data-requires-clean-state>Clone booking</button>
-                <div class="backend-controls">
-                  <span id="booking_clone_status" class="micro"></span>
-                </div>
-              </div>
-              <button class="btn booking-danger-zone__delete" id="booking_delete_btn" type="button" data-i18n-id="booking.delete_booking" data-requires-clean-state>Delete booking</button>
-            </div>
-          </section>
           </div>
         </div>
         </div>

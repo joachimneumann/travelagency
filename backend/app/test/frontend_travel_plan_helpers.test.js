@@ -198,7 +198,7 @@ test("normalizeTravelPlanDraft does not restore a cleared source field from tran
   });
 });
 
-test("normalizeTravelPlanDraft ignores legacy destinations without explicit scope", async () => {
+test("normalizeTravelPlanDraft drops legacy destination fields", async () => {
   const { normalizeTravelPlanDraft } = await loadHelpers();
 
   const legacyOnly = normalizeTravelPlanDraft({
@@ -206,8 +206,8 @@ test("normalizeTravelPlanDraft ignores legacy destinations without explicit scop
     destination_scope: [],
     days: []
   });
-  assert.deepEqual(legacyOnly.destination_scope, []);
-  assert.deepEqual(legacyOnly.destinations, []);
+  assert.equal(Object.hasOwn(legacyOnly, "destination_scope"), false);
+  assert.equal(Object.hasOwn(legacyOnly, "destinations"), false);
 
   const scoped = normalizeTravelPlanDraft({
     destinations: ["TH"],
@@ -216,8 +216,8 @@ test("normalizeTravelPlanDraft ignores legacy destinations without explicit scop
     ],
     days: []
   });
-  assert.deepEqual(scoped.destination_scope, [{ destination: "VN", regions: [], places: [] }]);
-  assert.deepEqual(scoped.destinations, ["VN"]);
+  assert.equal(Object.hasOwn(scoped, "destination_scope"), false);
+  assert.equal(Object.hasOwn(scoped, "destinations"), false);
 });
 
 test("normalizeTravelPlanDraft preserves boundary placement choices", async () => {

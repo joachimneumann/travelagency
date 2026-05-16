@@ -56,16 +56,14 @@ test("wipe bookings script clears booking-owned store collections and artifacts"
     assert.equal(result.summary.bookings, 1);
     assert.equal(result.summary.activities, 1);
     assert.equal(result.summary.payment_documents, 1);
-    assert.equal(result.summary.chat_conversations, 1);
-    assert.equal(result.summary.chat_events, 1);
 
     const persisted = JSON.parse(await readFile(storePath, "utf8"));
     assert.deepEqual(persisted.bookings, []);
     assert.deepEqual(persisted.activities, []);
     assert.deepEqual(persisted.payment_documents, []);
-    assert.deepEqual(persisted.chat_conversations, []);
-    assert.deepEqual(persisted.chat_events, []);
-    assert.deepEqual(persisted.chat_channel_accounts, [{ id: "acct_1", channel: "whatsapp" }]);
+    assert.equal(Object.hasOwn(persisted, "chat_conversations"), false);
+    assert.equal(Object.hasOwn(persisted, "chat_events"), false);
+    assert.equal(Object.hasOwn(persisted, "chat_channel_accounts"), false);
     assert.deepEqual(persisted.extra_metadata, { keep: true });
 
     for (const directory of artifactDirs) {

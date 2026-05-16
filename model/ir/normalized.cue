@@ -311,12 +311,10 @@ IR: {
 		{
 			name:       "TravelPlan"
 			domain:     "booking"
-			module:     "database"
-			sourceType: "database.#TravelPlan"
-			fields: [
-				{name: "destination_scope", kind: "entity", typeName: "TravelPlanDestinationScopeEntry", required: false, isArray: true},
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				module:     "database"
+				sourceType: "database.#TravelPlan"
+				fields: [
+					{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
@@ -510,12 +508,10 @@ IR: {
 		{
 			name:       "BookingTravelPlan"
 			domain:     "booking"
-			module:     "database"
-			sourceType: "database.#BookingTravelPlan"
-			fields: [
-				{name: "destination_scope", kind: "entity", typeName: "TravelPlanDestinationScopeEntry", required: false, isArray: true},
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
+				module:     "database"
+				sourceType: "database.#BookingTravelPlan"
+				fields: [
+					{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
@@ -865,11 +861,10 @@ IR: {
 		{
 			name:       "BookingWebFormSubmission"
 			domain:     "booking"
-			module:     "database"
-			sourceType: "database.#BookingWebFormSubmission"
-			fields: [
-				{name: "destinations", kind: "enum", typeName: "CountryCode", required: false, isArray: true},
-				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				module:     "database"
+				sourceType: "database.#BookingWebFormSubmission"
+				fields: [
+					{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "booking_name", kind: "scalar", typeName: "string", required: false},
 				{name: "tour_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "custom_tour", kind: "entity", typeName: "BookingWebFormCustomTour", required: false},
@@ -900,11 +895,10 @@ IR: {
 			domain:     "booking"
 			module:     "database"
 			sourceType: "database.#Booking"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "name", kind: "scalar", typeName: "string", required: false},
-				{name: "image", kind: "scalar", typeName: "string", required: false},
-				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "name", kind: "scalar", typeName: "string", required: false},
+					{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "source_channel", kind: "enum", typeName: "BookingSourceChannel", required: false},
 				{name: "referral_kind", kind: "enum", typeName: "BookingReferralKind", required: false},
 				{name: "referral_label", kind: "scalar", typeName: "string", required: false},
@@ -1096,11 +1090,10 @@ IR: {
 			domain:     "api"
 			module:     "api"
 			sourceType: "api.#BookingReadModel"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "name", kind: "scalar", typeName: "string", required: false},
-				{name: "image", kind: "scalar", typeName: "string", required: false},
-				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
+				fields: [
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "name", kind: "scalar", typeName: "string", required: false},
+					{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "source_channel", kind: "enum", typeName: "BookingSourceChannel", required: false},
 				{name: "referral_kind", kind: "enum", typeName: "BookingReferralKind", required: false},
 				{name: "referral_label", kind: "scalar", typeName: "string", required: false},
@@ -1647,54 +1640,6 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingChatEvent"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingChatEvent"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "channel", kind: "scalar", typeName: "string", required: true},
-				{name: "direction", kind: "scalar", typeName: "string", required: true},
-				{name: "event_type", kind: "scalar", typeName: "string", required: true},
-				{name: "external_status", kind: "scalar", typeName: "string", required: false},
-				{name: "text_preview", kind: "scalar", typeName: "string", required: true},
-				{name: "sender_display", kind: "scalar", typeName: "string", required: false},
-				{name: "sender_contact", kind: "scalar", typeName: "string", required: false},
-				{name: "sent_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "received_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "conversation_id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "open_url", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingChatConversation"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingChatConversation"
-			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "channel", kind: "scalar", typeName: "string", required: true},
-				{name: "external_contact_id", kind: "scalar", typeName: "string", required: false},
-				{name: "booking_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "last_event_at", kind: "scalar", typeName: "Timestamp", required: false},
-				{name: "latest_preview", kind: "scalar", typeName: "string", required: false},
-				{name: "open_url", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingChatResponse"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingChatResponse"
-			fields: [
-				{name: "mode", kind: "scalar", typeName: "string", required: false},
-				{name: "items", kind: "transport", typeName: "BookingChatEvent", required: true, isArray: true},
-				{name: "total", kind: "scalar", typeName: "int", required: true},
-				{name: "conversations", kind: "transport", typeName: "BookingChatConversation", required: true, isArray: true},
-				{name: "conversation_total", kind: "scalar", typeName: "int", required: true},
-			]
-		},
-		{
 			name:       "SettingsObservabilityLoggedInUser"
 			domain:     "api"
 			module:     "api"
@@ -1884,11 +1829,10 @@ IR: {
 			name:       "WebsiteBookingForm"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#WebsiteBookingForm"
-			requireOneOf: [["email", "phone_number"]]
-			fields: [
-				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				sourceType: "api.#WebsiteBookingForm"
+				requireOneOf: [["email", "phone_number"]]
+				fields: [
+					{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: true},
@@ -1907,11 +1851,10 @@ IR: {
 			name:       "PublicBookingCreateRequest"
 			domain:     "api"
 			module:     "api"
-			sourceType: "api.#PublicBookingCreateRequest"
-			requireOneOf: [["email", "phone_number"]]
-			fields: [
-				{name: "destinations", kind: "scalar", typeName: "string", required: false, isArray: true},
-				{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
+				sourceType: "api.#PublicBookingCreateRequest"
+				requireOneOf: [["email", "phone_number"]]
+				fields: [
+					{name: "travel_style", kind: "scalar", typeName: "string", required: false, isArray: true},
 				{name: "travel_month", kind: "scalar", typeName: "string", required: false},
 				{name: "number_of_travelers", kind: "scalar", typeName: "int", required: false},
 				{name: "preferred_currency", kind: "enum", typeName: "CurrencyCode", required: true},
@@ -1933,15 +1876,6 @@ IR: {
 				{name: "utm_medium", kind: "scalar", typeName: "string", required: false},
 				{name: "utm_campaign", kind: "scalar", typeName: "string", required: false},
 				{name: "idempotency_key", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingDeleteRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingDeleteRequest"
-			fields: [
-				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 			]
 		},
 		{
@@ -1981,19 +1915,6 @@ IR: {
 			]
 		},
 		{
-			name:       "BookingImageUploadRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingImageUploadRequest"
-			fields: [
-				{name: "filename", kind: "scalar", typeName: "string", required: true},
-				{name: "mime_type", kind: "scalar", typeName: "string", required: false},
-				{name: "data_base64", kind: "scalar", typeName: "string", required: true},
-				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
 			name:       "BookingOwnerUpdateRequest"
 			domain:     "api"
 			module:     "api"
@@ -2001,18 +1922,6 @@ IR: {
 			fields: [
 				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
 				{name: "assigned_keycloak_user_id", kind: "scalar", typeName: "Identifier", required: false},
-				{name: "actor", kind: "scalar", typeName: "string", required: false},
-			]
-		},
-		{
-			name:       "BookingCloneRequest"
-			domain:     "api"
-			module:     "api"
-			sourceType: "api.#BookingCloneRequest"
-			fields: [
-				{name: "expected_core_revision", kind: "scalar", typeName: "int", required: false},
-				{name: "name", kind: "scalar", typeName: "string", required: true},
-				{name: "include_travelers", kind: "scalar", typeName: "bool", required: false},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -2166,7 +2075,6 @@ IR: {
 				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
-				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -2184,7 +2092,6 @@ IR: {
 				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
-				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -2201,7 +2108,6 @@ IR: {
 				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
-				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},
@@ -2219,7 +2125,6 @@ IR: {
 				{name: "include_images", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_customer_visible_images_only", kind: "scalar", typeName: "bool", required: true},
 				{name: "include_notes", kind: "scalar", typeName: "bool", required: true},
-				{name: "include_translations", kind: "scalar", typeName: "bool", required: true},
 				{name: "actor", kind: "scalar", typeName: "string", required: false},
 			]
 		},

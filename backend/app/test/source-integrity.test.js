@@ -397,28 +397,37 @@ test("travel plan and payment PDFs share the same workspace helper", async () =>
   );
 });
 
-test("discovery-call bookings without a selected tour use a neutral fallback image instead of a fake tour id", async () => {
+test("booking detail removes the old hero image while list and PDF fallbacks stay neutral", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const bookingListPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking_list.js");
   const runtimePath = path.resolve(__dirname, "..", "src", "config", "runtime.js");
-  const bookingCoreSource = await readFile(bookingCorePath, "utf8");
-  const bookingListSource = await readFile(bookingListPath, "utf8");
-  const runtimeSource = await readFile(runtimePath, "utf8");
+  const [bookingPageSource, bookingCoreSource, bookingListSource, runtimeSource] = await Promise.all([
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingCorePath, "utf8"),
+    readFile(bookingListPath, "utf8"),
+    readFile(runtimePath, "utf8")
+  ]);
 
-  assert.match(
-    bookingCoreSource,
-    /const DISCOVERY_CALL_FALLBACK_IMAGE = "assets\/img\/happy_tourists\.webp";[\s\S]*if \(shouldUseDiscoveryCallFallbackImage\(state\.booking\)\) \{[\s\S]*els\.heroImage\.src = DISCOVERY_CALL_FALLBACK_IMAGE;/,
-    "Booking detail should use a neutral fallback image for public discovery-call bookings that have no selected tour"
+  assert.doesNotMatch(
+    bookingPageSource,
+    /booking_hero_photo|booking_hero_image|booking_hero_initials/,
+    "Booking detail should no longer render a booking hero image/photo uploader"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingCoreSource,
-    /function shouldUseDiscoveryCallFallbackImage\(booking\) \{[\s\S]*web_form_submission\?\.tour_id[\s\S]*web_form_submission\?\.page_url[\s\S]*\}/,
-    "Booking detail should detect discovery-call bookings by the public form payload and absence of a selected tour"
+    /DISCOVERY_CALL_FALLBACK_IMAGE|renderBookingHeroImage|bookingImageRequest|uploadBookingPhoto|heroImage/,
+    "Booking detail script should not keep stale hero-image upload or fallback code"
   );
   assert.match(
     bookingListSource,
     /const isDiscoveryCallWithoutTour = !imageRef && !tourId && Boolean\(normalizeText\(booking\?\.web_form_submission\?\.page_url\)\);[\s\S]*assets\/img\/happy_tourists\.webp/,
     "Booking list thumbnails should use the same neutral fallback image for discovery-call bookings without a selected tour"
+  );
+  assert.doesNotMatch(
+    bookingListSource,
+    /booking\?\.image|booking\.image/,
+    "Booking list thumbnails should not read a removed booking-level image field"
   );
   assert.match(
     runtimeSource,
@@ -949,8 +958,8 @@ test("booking page scrolls across the full main-content section while keeping th
   );
   assert.match(
     bookingStyles,
-    /\.booking-detail-page :is\(\.booking-dirty-bar-row, \.booking-page-shell\) \{\s*[\s\S]*width: min\(100%, 1080px\);[\s\S]*margin-inline: auto;/,
-    "The dirty-bar row and booking content should stay centered within the shared detail-page width"
+    /\.booking-detail-page :is\(\.booking-dirty-bar-row, \.booking-page-shell\) \{\s*[\s\S]*width: 100%;[\s\S]*max-width: none;[\s\S]*margin-inline: auto;/,
+    "The dirty-bar row and booking content should use the full browser width inside the backend workspace"
   );
   assert.doesNotMatch(
     bookingStyles,
@@ -1139,13 +1148,16 @@ test("booking page orders the visible sections in the requested workflow sequenc
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageSource = await readFile(bookingPagePath, "utf8");
   const orderedIds = [
-    "booking_actions_panel",
-    "booking_note_panel",
     "travel_plan_panel",
+    "booking_overview_panel",
     "persons_editor_panel",
+    "travel_plan_pdf_panel",
+    "booking_note_panel",
+    "financial_aspects_panel",
     "offer_panel",
     "offer_payment_terms_panel",
     "payments_workspace",
+    "technical_details_panel",
     "activities_panel",
     "booking_data_view"
   ];
@@ -1175,6 +1187,47 @@ test("booking page removes the standalone proposal PDFs section", async () => {
     bookingPageSource,
     /id="booking_confirmation_panel"|id="booking_confirmation_panel_summary"|id="generated_offers_table"|id="generate_offer_btn"/,
     "Proposal PDFs should no longer render as a standalone booking section"
+  );
+});
+
+test("booking details section sits below the travel plan while its inner cards stay ready", async () => {
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageSource = await readFile(bookingPagePath, "utf8");
+
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="booking_actions_panel"|Booking details|booking_travel_styles_trigger|booking_travel_styles_panel/,
+    "The removed Booking details section and visible travel-style picker should not remain in booking.html"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="booking_overview_panel" class="booking-section booking-overview-panel"/,
+    "The details wrapper should start collapsed"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /id="booking_overview_panel" class="booking-section booking-overview-panel is-open"/,
+    "The details wrapper should not be open initially"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="travel_plan_panel"[\s\S]*id="booking_overview_panel"[\s\S]*backend-section-header__primary">Details<\/span>(?![\s\S]{0,220}backend-section-header__secondary)/,
+    "The Details section should appear after the travel plan and should not render a subtitle"
+  );
+  assert.match(
+    bookingPageSource,
+    /booking-title-control-row[\s\S]*id="booking_owner_select"[\s\S]*id="booking_content_language_select"[\s\S]*id="travel_plan_panel"/,
+    "ATP staff and customer language should stay visible below the title before the travel plan"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="booking_overview_panel"[\s\S]*booking-details-control-grid[\s\S]*id="offer_currency_input"[\s\S]*id="booking_source_channel_select"[\s\S]*id="booking_referral_kind_select"/,
+    "Currency, source channel, and referral controls should live in the Details section"
+  );
+  assert.match(
+    bookingPageSource,
+    /id="booking_overview_panel"[\s\S]*id="travel_plan_pdf_panel" class="booking-section is-open"/,
+    "The travel-plan documents card should stay open inside the collapsed Details section"
   );
 });
 
@@ -1600,24 +1653,24 @@ test("payments no longer depend on the old flow-state helper module", async () =
   );
 });
 
-test("booking page top control row keeps staff and customer language visually aligned", async () => {
+test("booking title control row keeps staff and customer language always visible", async () => {
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
   const bookingStyles = await readFile(bookingStylesPath, "utf8");
 
   assert.match(
     bookingStyles,
-    /#booking_actions_panel \.backend-controls \{\s*[\s\S]*align-items: start;/,
-    "The booking top control row should align fields from the top so the labels share the same vertical position"
+    /\.booking-title-control-row \{[\s\S]*grid-template-columns: minmax\(180px, 220px\) minmax\(170px, 220px\);[\s\S]*margin-top: 0\.85rem;/,
+    "The booking title area should reserve an always-visible row for staff and customer language"
   );
   assert.match(
     bookingStyles,
-    /#booking_actions_panel \.booking-content-language-field \{\s*[\s\S]*gap: 0\.35rem;/,
+    /\.booking-title-control-row__field \{[\s\S]*gap: 0\.35rem;/,
     "The booking customer-language field should use the same label-to-control gap as the neighboring fields"
   );
   assert.match(
     bookingStyles,
-    /#booking_actions_panel \.lang-menu-trigger \{\s*[\s\S]*justify-content: center;[\s\S]*padding: 0\.68rem 0\.9rem;/,
-    "The booking customer-language trigger should match the booking control height scale and center its contents"
+    /\.booking-title-control-row \.lang-menu-trigger \{[\s\S]*justify-content: flex-start;[\s\S]*padding: 0\.68rem 0\.9rem;/,
+    "The booking customer-language trigger should match the booking control height scale and align with the staff control"
   );
 });
 
@@ -1990,31 +2043,65 @@ test("travel plan PDF table exposes sent and delete controls backed by dedicated
   );
 });
 
-test("booking danger zone exposes clone controls before delete", async () => {
+test("booking workspace removes clone, delete, WhatsApp chat, and booking-image API surfaces", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
-  const [bookingPageSource, bookingPageScriptSource, routesSource] = await Promise.all([
+  const backendServicesPath = path.resolve(__dirname, "..", "src", "bootstrap", "services.js");
+  const backendApplicationHandlersPath = path.resolve(__dirname, "..", "src", "bootstrap", "application_handlers.js");
+  const apiRequestFactoryPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "API", "generated_APIRequestFactory.js");
+  const metaWebhookPath = path.resolve(__dirname, "..", "src", "integrations", "meta_webhook.js");
+  const [bookingPageSource, bookingPageScriptSource, bookingCoreSource, routesSource, backendServicesSource, backendApplicationHandlersSource, apiRequestFactorySource, metaWebhookStat] = await Promise.all([
     readFile(bookingPagePath, "utf8"),
     readFile(bookingPageScriptPath, "utf8"),
-    readFile(routesPath, "utf8")
+    readFile(bookingCorePath, "utf8"),
+    readFile(routesPath, "utf8"),
+    readFile(backendServicesPath, "utf8"),
+    readFile(backendApplicationHandlersPath, "utf8"),
+    readFile(apiRequestFactoryPath, "utf8"),
+    stat(metaWebhookPath).catch((error) => {
+      if (error?.code === "ENOENT") return null;
+      throw error;
+    })
   ]);
 
-  assert.match(
+  assert.doesNotMatch(
     bookingPageSource,
-    /id="booking_clone_title_input"[\s\S]*id="booking_clone_include_travelers_input"[\s\S]*id="booking_clone_btn"[\s\S]*id="booking_delete_btn"/,
-    "booking.html should expose clone controls in the danger zone before the delete button"
+    /id="booking_clone_title_input"|id="booking_clone_include_travelers_input"|id="booking_clone_btn"|id="booking_delete_btn"|id="booking_whatsapp_mount"/,
+    "booking.html should omit clone, delete, and WhatsApp controls from the new workspace layout"
   );
-  assert.match(
+  assert.doesNotMatch(
     bookingPageScriptSource,
-    /cloneTitleInput[\s\S]*cloneIncludeTravelersInput[\s\S]*cloneBtn[\s\S]*addEventListener\("click", cloneBooking\)/,
-    "booking page script should wire the clone danger-zone controls"
+    /createBookingWhatsAppController|booking_whatsapp_mount|cloneBooking\(|deleteBooking\(|bookingChatRequest|bookingCloneRequest|bookingDeleteRequest/,
+    "booking.js should not keep stale clone, delete, or WhatsApp chat wiring"
   );
-  assert.match(
+  assert.doesNotMatch(
+    bookingCoreSource,
+    /bookingCloneRequest|bookingDeleteRequest|cloneBooking\(|deleteBooking\(|state\.booking\.image/,
+    "Booking core should not keep removed booking clone, delete, or booking-image behavior"
+  );
+  assert.doesNotMatch(
     routesSource,
-    /POST", path: "\/api\/v1\/bookings\/\{booking_id\}\/clone", handlerKey: "handleCloneBooking"/,
-    "The booking routes should expose a clone endpoint"
+    /handlerKey: "handleCloneBooking"|handlerKey: "handleDeleteBooking"|handlerKey: "handleListBookingChatEvents"|handlerKey: "handleUploadBookingImage"|\/api\/v1\/bookings\/\{booking_id\}\/clone|\/api\/v1\/bookings\/\{booking_id\}\/chat|\/api\/v1\/bookings\/\{booking_id\}\/image/,
+    "The booking routes should not expose removed booking clone, delete, chat, or image endpoints"
   );
+  assert.doesNotMatch(
+    routesSource,
+    /handleMetaWebhook|\/integrations\/meta\/webhook|\/api\/whatsapp\/webhook/,
+    "Operational routes should not expose removed WhatsApp/Meta webhook endpoints"
+  );
+  assert.doesNotMatch(
+    `${backendServicesSource}\n${backendApplicationHandlersSource}`,
+    /createMetaWebhookHandlers|metaWebhookHandlers|ensureMetaChatCollections|buildChatEventReadModel|getMetaConversationOpenUrl/,
+    "Backend bootstrap should not keep removed WhatsApp/Meta chat plumbing"
+  );
+  assert.doesNotMatch(
+    apiRequestFactorySource,
+    /bookingCloneRequest|bookingDeleteRequest|bookingChatRequest|bookingImageRequest/,
+    "Generated request factory should not expose removed booking clone, delete, chat, or image requests"
+  );
+  assert.equal(metaWebhookStat, null, "Removed WhatsApp/Meta webhook implementation should not remain in backend integrations");
 });
 
 test("travel-plan PDF personalization exposes children policy and exclusions fields and renders them before the closing block", async () => {
@@ -3093,12 +3180,12 @@ test("booking read models and backend startup strip legacy stage persistence fie
 
   assert.match(
     bookingViewsSource,
-    /stage:\s*_legacyStage,[\s\S]*milestones:\s*_legacyMilestones,[\s\S]*last_action:\s*_legacyLastAction,[\s\S]*last_action_at:\s*_legacyLastActionAt,[\s\S]*service_level_agreement_due_at:\s*_legacyServiceLevelAgreementDueAt,[\s\S]*\.\.\.normalizedBooking/,
+    /stage:\s*_legacyStage,[\s\S]*milestones:\s*_legacyMilestones,[\s\S]*last_action:\s*_legacyLastAction,[\s\S]*last_action_at:\s*_legacyLastActionAt,[\s\S]*service_level_agreement_due_at:\s*_legacyServiceLevelAgreementDueAt,[\s\S]*image:\s*_legacyBookingImage,[\s\S]*\.\.\.normalizedBooking/,
     "Booking read models should drop legacy stage persistence fields before spreading the normalized booking payload"
   );
   assert.match(
     serverSource,
-    /function pruneLegacyBookingState\(store\) \{[\s\S]*delete booking\.stage;[\s\S]*delete booking\.milestones;[\s\S]*delete booking\.last_action;[\s\S]*delete booking\.last_action_at;[\s\S]*delete booking\.service_level_agreement_due_at;[\s\S]*\}[\s\S]*const prunedLegacyBookingState = pruneLegacyBookingState\(startupStore\);[\s\S]*\|\| prunedLegacyBookingState[\s\S]*persistStore\(startupStore\)/,
+    /function pruneLegacyBookingState\(store\) \{[\s\S]*delete booking\.stage;[\s\S]*delete booking\.milestones;[\s\S]*delete booking\.last_action;[\s\S]*delete booking\.last_action_at;[\s\S]*delete booking\.service_level_agreement_due_at;[\s\S]*delete booking\.image;[\s\S]*\}[\s\S]*const prunedLegacyBookingState = pruneLegacyBookingState\(startupStore\);[\s\S]*\|\| prunedLegacyBookingState[\s\S]*persistStore\(startupStore\)/,
     "Backend startup should prune persisted legacy booking stage fields before serving requests"
   );
 });
@@ -5103,44 +5190,52 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "emergency.html should mount the emergency page script"
   );
   for (const source of [
-    bookingsHtml,
-    bookingHtml,
-    emergencyHtml,
     indexHtml,
-    marketingTourHtml,
-    marketingToursHtml,
-    tourVariantHtml,
-    tourVariantsHtml,
     privacyHtml,
-    settingsHtml,
-    translationsHtml,
     travelerDetailsHtml
   ]) {
     assert.match(
       source,
       /\/assets\/generated\/runtime\/brand-logo\.png/,
-      "Frontend entry pages should read the top-left brand logo from the generated runtime asset path"
+      "Public frontend entry pages should read the top-left brand logo from the generated web runtime asset path"
+    );
+  }
+  for (const source of [
+    bookingsHtml,
+    bookingHtml,
+    emergencyHtml,
+    marketingTourHtml,
+    marketingToursHtml,
+    tourVariantHtml,
+    tourVariantsHtml,
+    settingsHtml,
+    translationsHtml
+  ]) {
+    assert.match(
+      source,
+      /\/assets\/generated\/runtime\/brand-logo-backoffice\.png/,
+      "Backoffice entry pages should read the top-left brand logo from the generated backoffice runtime asset path"
     );
   }
   assert.match(
     runtimeBrandLogoScript,
-    /TARGET_DIR="\$ROOT_DIR\/assets\/generated\/runtime"[\s\S]*TARGET_PATH="\$TARGET_DIR\/brand-logo\.png"/,
-    "The runtime brand logo helper should write to the generated runtime logo path"
+    /TARGET_DIR="\$ROOT_DIR\/assets\/generated\/runtime"[\s\S]*WEB_TARGET_PATH="\$TARGET_DIR\/brand-logo\.png"[\s\S]*BACKOFFICE_TARGET_PATH="\$TARGET_DIR\/brand-logo-backoffice\.png"/,
+    "The runtime brand logo helper should write to the generated web and backoffice runtime logo paths"
   );
   assert.match(
     runtimeBrandLogoScript,
-    /production\)[\s\S]*SOURCE_PATH="\$ROOT_DIR\/assets\/img\/logo-asiatravelplan\.png"/,
-    "The runtime brand logo helper should use the production PNG for production deploys"
+    /production\)[\s\S]*WEB_SOURCE_PATH="\$ROOT_DIR\/assets\/img\/production\.png"[\s\S]*BACKOFFICE_SOURCE_PATH="\$ROOT_DIR\/assets\/img\/production\.backoffice\.png"/,
+    "The runtime brand logo helper should use production.png and production.backoffice.png for production deploys"
   );
   assert.match(
     runtimeBrandLogoScript,
-    /staging\)[\s\S]*SOURCE_PATH="\$ROOT_DIR\/assets\/img\/staging\.png"/,
-    "The runtime brand logo helper should use staging.png for staging deploys"
+    /staging\)[\s\S]*WEB_SOURCE_PATH="\$ROOT_DIR\/assets\/img\/staging\.png"[\s\S]*BACKOFFICE_SOURCE_PATH="\$ROOT_DIR\/assets\/img\/staging\.backoffice\.png"/,
+    "The runtime brand logo helper should use staging.png and staging.backoffice.png for staging deploys"
   );
   assert.match(
     runtimeBrandLogoScript,
-    /local\)[\s\S]*SOURCE_PATH="\$ROOT_DIR\/assets\/img\/local\.png"/,
-    "The runtime brand logo helper should use local.png for local deploys"
+    /local\)[\s\S]*WEB_SOURCE_PATH="\$ROOT_DIR\/assets\/img\/local\.png"[\s\S]*BACKOFFICE_SOURCE_PATH="\$ROOT_DIR\/assets\/img\/local\.backoffice\.png"/,
+    "The runtime brand logo helper should use local.png and local.backoffice.png for local deploys"
   );
   assert.match(
     localFrontendScript,
@@ -6653,7 +6748,7 @@ test("booking travel plan copies days and services from marketing tours only", a
   assert.match(bookingPageScriptSource, /TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500[\s\S]*tourTravelPlanServiceSearchRequest[\s\S]*limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT/, "Booking editor should request enough reusable services to avoid truncating the copy-existing-service list");
   assert.match(bookingPageScriptSource, /buildBookingMarketingTourDayImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan[\s\S]*buildBookingMarketingTourServiceImportRequest[\s\S]*source_tour_id:\s*normalizedSourceTourId[\s\S]*target_travel_plan:\s*targetTravelPlan/, "Booking editor should import selected marketing-tour days and services with source_tour_id and optional dirty draft payloads");
   assert.match(bookingPageScriptSource, /cloneTravelPlanDayForLocalImport:\s*cloneBookingMarketingTourDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport:\s*cloneBookingMarketingTourServiceForLocalImport/, "Booking editor should provide local reusable-content clone hooks");
-  assert.match(bookingPageScriptSource, /travelPlanLibrarySource:\s*"marketing_tour"[\s\S]*dayImport:\s*true[\s\S]*tourImport:\s*false[\s\S]*serviceImport:\s*true/, "Booking travel plan should expose only day and service copy actions from the marketing-tour library");
+  assert.match(bookingPageScriptSource, /travelPlanLibrarySource:\s*"marketing_tour"[\s\S]*dayImport:\s*false[\s\S]*tourImport:\s*false[\s\S]*serviceImport:\s*false/, "Booking travel plan should keep marketing-tour day and service imports out of booking.html; reusable day composition happens in the customizer and services stay booking-local");
   assert.doesNotMatch(bookingPageScriptSource, /planImport/, "Booking travel plan should not expose full booking travel-plan import");
   assert.match(bookingImportHandlersSource, /validateTravelPlanDayImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*assertOptionalPlainObject\(value\.target_travel_plan[\s\S]*validateTravelPlanServiceImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*assertOptionalPlainObject\(value\.target_travel_plan/, "Booking import handlers should require marketing-tour import sources and accept optional draft travel plans");
   assert.doesNotMatch(bookingImportHandlersSource, /source_booking_id/, "Booking import handlers should not accept booking import sources");
@@ -6668,6 +6763,136 @@ test("booking travel plan copies days and services from marketing tours only", a
   assert.doesNotMatch(apiRequestFactorySource, /travelPlanDaySearchRequest|travelPlanServiceSearchRequest|travelPlanSearchRequest|bookingTravelPlanImportRequest/, "Generated request factory should not expose booking travel-plan library endpoints");
   assert.doesNotMatch(routesSource, /\/api\/v1\/travel-plan-days\/search|\/api\/v1\/travel-plan-services\/search|\/api\/v1\/travel-plan\/plans|\/api\/v1\/bookings\/\{booking_id\}\/travel-plan\/import/, "Routes should not expose booking travel-plan library endpoints");
   assert.doesNotMatch(travelPlanLibrarySource, /bookingTravelPlanImportRequest|travelPlanDaySearchRequest|travelPlanServiceSearchRequest|travelPlanSearchRequest|data-travel-plan-import-source-plan-booking|openTravelPlanLibrary/, "Shared library should not call booking travel-plan library endpoints");
+});
+
+test("tour customizer floating drag elements stay inside the active customizer runtime root", async () => {
+  const tourCustomizerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "tour_customize.js");
+  const tourCustomizerStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
+  const bookingTravelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const tourVariantPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tour_variant.html");
+  const bookingTravelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
+  const tourVariantScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_variant.js");
+  const [
+    tourCustomizerSource,
+    tourCustomizerStyles,
+    bookingTravelPlanStyles,
+    tourVariantPageSource,
+    bookingTravelPlanEditorSource,
+    tourVariantScriptSource
+  ] = await Promise.all([
+    readFile(tourCustomizerPath, "utf8"),
+    readFile(tourCustomizerStylesPath, "utf8"),
+    readFile(bookingTravelPlanStylesPath, "utf8"),
+    readFile(tourVariantPagePath, "utf8"),
+    readFile(bookingTravelPlanEditorPath, "utf8"),
+    readFile(tourVariantScriptPath, "utf8")
+  ]);
+
+  assert.match(
+    tourCustomizerSource,
+    /function appendCustomizerFloatingElement\(element\) \{[\s\S]*const root = modal instanceof HTMLElement[\s\S]*root\.appendChild\(element\);[\s\S]*return true;/,
+    "Customizer drag ghosts and animation clones should be appended through the active customizer root, not directly to the host page"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function renderEmbeddedWorkspace\(\) \{[\s\S]*modal = embeddedWorkspaceRoot;[\s\S]*modal\.classList\.add\("tour-customize-runtime-root"\);[\s\S]*function destroy\(\) \{[\s\S]*root\.classList\.remove\("tour-customize-runtime-root"\);/,
+    "Embedded customizer mounts should mark the actual runtime root so floating cards inherit the shared component CSS scope"
+  );
+  assert.doesNotMatch(
+    tourCustomizerSource,
+    /document\.body\.appendChild\((?:clone|ghost)\)/,
+    "Customizer drag ghosts and animation clones should not escape to document.body"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /activePointerDrag = \{[\s\S]*ownerDocument,[\s\S]*setCustomizerDocumentClass\("tour-customize-pointer-dragging", true, ownerDocument\);[\s\S]*ownerDocument\.addEventListener\("pointermove", handlePointerDragMove/,
+    "Pointer-drag event listeners and cursor classes should be scoped to the customizer document captured at drag start"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function forceOpaqueDragGhostCard\(ghost\) \{[\s\S]*ghost\.classList\.add\("tour-customize-drag-ghost--card"\);[\s\S]*ghost\.classList\.remove\("is-dragging", "is-sticky-dragging", "is-reordering", "is-move-placeholder"\);[\s\S]*ghost\.style\.setProperty\("box-sizing", "border-box", "important"\);[\s\S]*ghost\.style\.setProperty\("border", "2px solid var\(--tour-customize-card-border-color, rgba\(104, 133, 145, 0\.95\)\)", "important"\);[\s\S]*ghost\.style\.setProperty\("opacity", "1", "important"\);[\s\S]*ghost\.style\.setProperty\("background", "#fff", "important"\);/,
+    "Customizer drag ghosts should be forced opaque with the component border when cloned so host drag/source-card styling cannot change the moving card"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function bindDraggableElement\(element, root\) \{[\s\S]*element\.draggable = false;[\s\S]*element\.setAttribute\("draggable", "false"\);[\s\S]*element\.addEventListener\("dragstart", \(event\) => \{[\s\S]*event\.preventDefault\(\);[\s\S]*event\.stopPropagation\(\);[\s\S]*\}\);/,
+    "Customizer day cards should use the shared pointer-drag implementation and explicitly suppress browser-native drag images"
+  );
+  assert.doesNotMatch(
+    tourCustomizerSource,
+    /dataTransfer\.setData|effectAllowed|dropEffect|dragPayloadFromEvent|dropIntoTimeline|addEventListener\("dragover"|addEventListener\("drop"|addEventListener\("dragend"/,
+    "Customizer drag handling should not keep the stale native HTML drag-and-drop path alongside the pointer-drag ghost"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /const ghost = element\.cloneNode\(true\);[\s\S]*ghost\.classList\.add\("tour-customize-drag-ghost"\);[\s\S]*forceOpaqueDragGhostCard\(ghost\);[\s\S]*appendCustomizerFloatingElement\(ghost\)/,
+    "The active drag ghost should be made opaque before it is inserted into the customizer layer"
+  );
+  assert.match(
+    tourCustomizerStyles,
+    /\.tour-customize-drag-ghost \{[\s\S]*opacity: 1;[\s\S]*background: #fff;[\s\S]*\.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*background: #fff !important;[\s\S]*opacity: 1 !important;/,
+    "Shared customizer CSS should keep floating drag cards visually opaque across every host page"
+  );
+  assert.match(
+    tourCustomizerStyles,
+    /\.tour-customize \{[\s\S]*--tour-customize-card-border-color: var\(--line-focus-strong, rgba\(104, 133, 145, 0\.95\)\);[\s\S]*\.tour-customize-runtime-root,[\s\S]*\.tour-customize-embedded \{[\s\S]*--tour-customize-card-border-color: var\(--line-focus-strong, rgba\(104, 133, 145, 0\.95\)\);[\s\S]*\.tour-customize-option \{[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);[\s\S]*\.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);/,
+    "Shared customizer CSS should define the card border on the customizer runtime scope and reuse it for normal and floating day cards"
+  );
+  assert.doesNotMatch(
+    tourCustomizerStyles,
+    /border: 2px solid var\(--line-focus-strong\)|border-color: var\(--line\);/,
+    "Customizer day-card borders should not depend directly on host page tokens or weak generic line colors"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /export function createTourCustomizerWorkspace\(\{[\s\S]*mode = "default"[\s\S]*return runtime\.mountWorkspace\(\{ root, mode, onTimelineChange \}\);[\s\S]*function renderEmbeddedWorkspace\(\)[\s\S]*tour-customize-embedded--\$\{embeddedWorkspaceMode\}/,
+    "Embedded customizer workspaces should expose explicit shared modes instead of relying on host-page CSS to style internals"
+  );
+  assert.match(
+    `${bookingTravelPlanEditorSource}\n${tourVariantScriptSource}`,
+    /createTravelPlanCustomizerWorkspace\(previewRoot, null, "preview"\)[\s\S]*createTravelPlanCustomizerWorkspace\(overlayRoot, applyTravelPlanCustomizerTimeline, "full"\)[\s\S]*createTourVariantCustomizerWorkspace\(els\.mapPreview, null, "preview"\)[\s\S]*createTourVariantCustomizerWorkspace\(els\.customizer, applyCustomizerTimeline, "full"\)/,
+    "Booking and Tour Variant pages should reuse the shared customizer modes for previews and full editors"
+  );
+  assert.match(
+    tourCustomizerStyles,
+    /\.tour-customize-embedded--full \{[\s\S]*height: 100%;[\s\S]*\.tour-customize-embedded--preview \{[\s\S]*\.tour-customize-embedded--preview \.tour-customize-map__controls,[\s\S]*\.tour-customize-embedded--preview \.tour-customize-options,[\s\S]*\.tour-customize-embedded--preview \.tour-customize-timeline \{[\s\S]*display: none;/,
+    "Preview/full customizer layout CSS should live in the shared customizer stylesheet"
+  );
+  assert.doesNotMatch(
+    `${bookingTravelPlanStyles}\n${tourVariantPageSource}`,
+    /(?:travel-plan-customizer-preview__mount|travel-plan-customizer-overlay__mount|tour-variant-customizer-mount|tour-variant-map-preview-mount)\s+\.tour-customize|body\.travel-plan-customizer-open\s+\.tour-customize/,
+    "Host page CSS should not style customizer internals; the customizer component owns its CSS"
+  );
+});
+
+test("booking customizer opens as a body-level layer above the dirty booking workspace", async () => {
+  const travelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
+  const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const [travelPlanEditorSource, travelPlanStyles] = await Promise.all([
+    readFile(travelPlanEditorPath, "utf8"),
+    readFile(travelPlanStylesPath, "utf8")
+  ]);
+
+  assert.match(
+    travelPlanEditorSource,
+    /function removePortaledTravelPlanCustomizerElements\(\) \{[\s\S]*overlay\.parentElement === document\.body[\s\S]*element\.parentElement === document\.body/,
+    "Customizer cleanup should only remove overlay controls after they have been portaled to body, not the freshly rendered editor markup"
+  );
+  assert.match(
+    travelPlanEditorSource,
+    /document\.body\.appendChild\(overlay\);[\s\S]*document\.body\.appendChild\(closeButton\);[\s\S]*document\.body\.classList\.add\("travel-plan-customizer-open"\)/,
+    "Opening the booking customizer should portal both the overlay and close button before activating the page-level layer"
+  );
+  assert.match(
+    travelPlanEditorSource,
+    /document\.addEventListener\("click", handleTravelPlanCustomizerDocumentClick\);[\s\S]*document\.addEventListener\("keydown", handleTravelPlanCustomizerDocumentKeydown\);/,
+    "The portaled close button should be handled by document-level events"
+  );
+  assert.match(
+    travelPlanStyles,
+    /body\.travel-plan-customizer-open #main-content \{[\s\S]*visibility: hidden;[\s\S]*body\.travel-plan-customizer-open \.booking-dirty-bar-row,[\s\S]*\.booking-dirty-bar \{[\s\S]*visibility: hidden !important;/,
+    "Opening the customizer should hide booking content and the dirty bar underneath the body-level overlay"
+  );
 });
 
 test("travel plan library cards keep media separate from copy and actions", async () => {

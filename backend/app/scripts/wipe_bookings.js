@@ -110,22 +110,21 @@ function summarizeStore(store) {
   return {
     bookings: Array.isArray(store.bookings) ? store.bookings.length : 0,
     activities: Array.isArray(store.activities) ? store.activities.length : 0,
-    payment_documents: Array.isArray(store.payment_documents) ? store.payment_documents.length : 0,
-    chat_conversations: Array.isArray(store.chat_conversations) ? store.chat_conversations.length : 0,
-    chat_events: Array.isArray(store.chat_events) ? store.chat_events.length : 0
+    payment_documents: Array.isArray(store.payment_documents) ? store.payment_documents.length : 0
   };
 }
 
 function buildWipedStore(store) {
-  return {
+  const next = {
     ...store,
     bookings: [],
     activities: [],
-    payment_documents: [],
-    chat_channel_accounts: Array.isArray(store.chat_channel_accounts) ? store.chat_channel_accounts : [],
-    chat_conversations: [],
-    chat_events: []
+    payment_documents: []
   };
+  delete next.chat_channel_accounts;
+  delete next.chat_conversations;
+  delete next.chat_events;
+  return next;
 }
 
 async function confirmDestructiveAction(paths) {

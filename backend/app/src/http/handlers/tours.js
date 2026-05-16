@@ -16,7 +16,6 @@ import {
 import { createMarketingTourBookingTravelPlanCloner } from "./marketing_tour_booking_travel_plan.js";
 import {
   destinationScopeTourDestinations,
-  filterDestinationScopeByTourDestinations,
   mergeDestinationScopeWithTravelPlanLocations,
   normalizeDestinationScopeCatalog,
   validateTravelPlanDayLocationIdsAgainstCatalog
@@ -70,6 +69,7 @@ export function createTourHandlers(deps) {
     addActivity,
     actorLabel,
     readBodyJson,
+    readCountryPracticalInfo,
     nowIso,
     randomUUID,
     persistTour,
@@ -769,28 +769,43 @@ export function createTourHandlers(deps) {
     };
   }
 
-  function normalizeTourForPublicWebpage(tour, destinationCatalogPayload = {}) {
+  async function readPublishedPublicTourDestinationCodes() {
+    if (typeof readCountryPracticalInfo !== "function") return null;
+    const payload = await readCountryPracticalInfo();
+    return new Set((Array.isArray(payload?.items) ? payload.items : [])
+      .filter((item) => item?.published_on_webpage !== false)
+      .map((item) => normalizeTourDestinationCode(item?.country))
+      .filter(Boolean));
+  }
+
+  function filterPublishedPublicTourDestinations(destinations, publishedDestinationCodes) {
+    const normalizedDestinations = Array.from(new Set((Array.isArray(destinations) ? destinations : [])
+      .map((destination) => normalizeTourDestinationCode(destination))
+      .filter(Boolean)));
+    if (!(publishedDestinationCodes instanceof Set)) return normalizedDestinations;
+    return normalizedDestinations.filter((destination) => publishedDestinationCodes.has(destination));
+  }
+
+  function normalizeTourForPublicWebpage(tour, destinationCatalogPayload = {}, options = {}) {
     const stored = normalizeTourForStorage(tour);
     if (stored.published_on_webpage === false) return null;
     const travelPlan = stored.travel_plan && typeof stored.travel_plan === "object" && !Array.isArray(stored.travel_plan)
       ? stored.travel_plan
       : {};
+    const {
+      destination_scope: _legacyDestinationScope,
+      destinations: _legacyTravelPlanDestinations,
+      ...travelPlanWithoutDerivedLocations
+    } = travelPlan;
     const destination_scope = deriveTourDestinationScopeFromDayLocations(stored, destinationCatalogPayload);
-    const scopedStored = {
-      ...stored,
-      travel_plan: {
-        ...travelPlan,
-        destination_scope
-      }
-    };
-    const visibleDestinations = destinationScopeTourDestinations(destination_scope);
+    const visibleDestinations = filterPublishedPublicTourDestinations(
+      destinationScopeTourDestinations(destination_scope),
+      options?.publishedDestinationCodes
+    );
     if (!visibleDestinations.length) return null;
     return {
       ...stored,
-      travel_plan: {
-        ...travelPlan,
-        destination_scope: filterDestinationScopeByTourDestinations(destination_scope, visibleDestinations)
-      },
+      travel_plan: travelPlanWithoutDerivedLocations,
       destinations: visibleDestinations
     };
   }
@@ -804,18 +819,18 @@ export function createTourHandlers(deps) {
     ));
   }
 
-  async function readPublicTourLikeObjects(destinationCatalogPayload = {}) {
+  async function readPublicTourLikeObjects(destinationCatalogPayload = {}, options = {}) {
     const storedTours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
     const tourVariants = await readStoredTourVariants();
     const publicTours = storedTours
-      .map((tour) => normalizeTourForPublicWebpage(tour, destinationCatalogPayload))
+      .map((tour) => normalizeTourForPublicWebpage(tour, destinationCatalogPayload, options))
       .filter(Boolean);
     const publicTourVariants = typeof tourVariantHelpers?.resolveTourVariantToTour === "function"
       ? tourVariants
         .filter((variant) => variant.published_on_webpage === true)
         .filter((variant) => tourVariantHelpers.validateTourVariantPublication(variant, storedTours).ok)
         .map((variant) => tourVariantHelpers.resolveTourVariantToTour(variant, storedTours, { publicOnly: true }))
-        .map((tour) => normalizeTourForPublicWebpage(tour, destinationCatalogPayload))
+        .map((tour) => normalizeTourForPublicWebpage(tour, destinationCatalogPayload, options))
         .filter(Boolean)
       : [];
     return {
@@ -831,7 +846,8 @@ export function createTourHandlers(deps) {
   async function handlePublicListTours(req, res) {
     const lang = requestLang(req.url);
     const destinationCatalogPayload = await readStore();
-    const { publicTours } = await readPublicTourLikeObjects(destinationCatalogPayload);
+    const publishedDestinationCodes = await readPublishedPublicTourDestinationCodes();
+    const { publicTours } = await readPublicTourLikeObjects(destinationCatalogPayload, { publishedDestinationCodes });
     const tours = await localizeMarketingToursForRead(publicTours, lang);
     const requestUrl = new URL(req.url, "http://localhost");
     const destination = normalizeTourDestinationCode(requestUrl.searchParams.get("destination"));
@@ -854,10 +870,7 @@ export function createTourHandlers(deps) {
         ...readModel,
         destination_codes: destinationCodes,
         destinations: destinationCodes,
-        travel_plan: {
-          ...readModel.travel_plan,
-          destination_scope: tour?.travel_plan?.destination_scope || []
-        }
+        travel_plan: readModel.travel_plan
       };
     });
     const options = collectTourOptions(tours, { lang });
@@ -1217,10 +1230,9 @@ export function createTourHandlers(deps) {
           title: customizedTitle,
           customized_title_candidates: customizedTitleCandidates
         } : {}),
+        destinations,
         travel_plan: {
           ...baseTravelPlan,
-          destination_scope: destinationScope,
-          destinations,
           days: nextDays
         }
       }

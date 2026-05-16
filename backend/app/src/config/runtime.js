@@ -134,15 +134,6 @@ export const MOBILE_APP_CONFIG = Object.freeze({
   forceUpdate: String(process.env.MOBILE_FORCE_UPDATE || "").trim().toLowerCase() === "true"
 });
 
-export const META_WEBHOOK_CONFIG = Object.freeze({
-  metaWebhookEnabled: String(process.env.META_WEBHOOK_ENABLED || "").trim().toLowerCase() === "true",
-  whatsappWebhookEnabled: String(process.env.WHATSAPP_WEBHOOK_ENABLED || "").trim().toLowerCase() === "true",
-  metaWebhookVerifyToken: normalizeText(process.env.META_WEBHOOK_VERIFY_TOKEN || ""),
-  whatsappWebhookVerifyToken: normalizeText(process.env.WHATSAPP_VERIFY_TOKEN || ""),
-  metaAppSecret: normalizeText(process.env.META_APP_SECRET || ""),
-  whatsappAppSecret: normalizeText(process.env.WHATSAPP_APP_SECRET || "")
-});
-
 export const KEYCLOAK_DIRECTORY_CONFIG = Object.freeze({
   keycloakEnabled: String(process.env.KEYCLOAK_ENABLED || "").trim().toLowerCase() === "true",
   keycloakBaseUrl: process.env.KEYCLOAK_BASE_URL,

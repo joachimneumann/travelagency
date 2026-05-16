@@ -216,57 +216,6 @@ export function bookingDetailRequest({ baseURL = '', params = {}, query = {}, bo
   };
 }
 
-export function bookingDeletePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}", params);
-}
-
-export function bookingDeleteRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingDeletePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_delete",
-    method: "DELETE",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingClonePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/clone", params);
-}
-
-export function bookingCloneRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingClonePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_clone",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingChatPath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/chat", params);
-}
-
-export function bookingChatRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingChatPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_chat",
-    method: "GET",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function bookingNamePath(params = {}) {
   return buildPath("/api/v1/bookings/{booking_id}/name", params);
 }
@@ -311,23 +260,6 @@ export function bookingSourceRequest({ baseURL = '', params = {}, query = {}, bo
   return {
     key: "booking_source",
     method: "PATCH",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
-export function bookingImagePath(params = {}) {
-  return buildPath("/api/v1/bookings/{booking_id}/image", params);
-}
-
-export function bookingImageRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = bookingImagePath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "booking_image",
-    method: "POST",
     authenticated: true,
     url,
     headers,

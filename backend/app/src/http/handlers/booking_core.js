@@ -3,28 +3,11 @@ import {
   validateBookingSourceUpdateRequest,
   validateTranslationEntriesRequest
 } from "../../../Generated/API/generated_APIModels.js";
-import {
-  getBookingTravelPlanDestinations,
-  setBookingTravelPlanDestinations
-} from "../../lib/booking_persons.js";
-import { enumValueSetFor } from "../../lib/generated_catalogs.js";
 import { normalizeBookingPdfPersonalization } from "../../lib/booking_pdf_personalization.js";
 import {
   normalizeBookingContentLang,
   normalizeBookingSourceLang
 } from "../../domain/booking_content_i18n.js";
-
-const COUNTRY_CODE_SET = enumValueSetFor("CountryCode");
-
-function normalizeCountryCodes(items, normalizeText) {
-  return Array.from(
-    new Set(
-      (Array.isArray(items) ? items : [])
-        .map((item) => normalizeText(item).toUpperCase())
-        .filter((item) => item && COUNTRY_CODE_SET.has(item))
-    )
-  );
-}
 
 export function createBookingCoreHandlers(deps) {
   const {
@@ -228,10 +211,6 @@ export function createBookingCoreHandlers(deps) {
     const currentReferralKind = normalizeText(booking?.referral_kind).toLowerCase() || null;
     const currentReferralLabel = normalizeText(booking?.referral_label) || null;
     const currentReferralStaffUserId = normalizeText(booking?.referral_staff_user_id) || null;
-    const nextDestinations = payload?.destinations !== undefined
-      ? normalizeCountryCodes(payload.destinations, normalizeText)
-      : getBookingTravelPlanDestinations(booking);
-    const currentDestinations = getBookingTravelPlanDestinations(booking);
     const nextTravelStyles = payload?.travel_styles !== undefined
       ? canonicalBookingTravelStyles(normalizeStringArray(payload.travel_styles))
       : canonicalBookingTravelStyles(normalizeStringArray(booking?.travel_styles));
@@ -260,7 +239,6 @@ export function createBookingCoreHandlers(deps) {
       && nextReferralKind === currentReferralKind
       && nextReferralLabel === currentReferralLabel
       && nextReferralStaffUserId === currentReferralStaffUserId
-      && JSON.stringify(nextDestinations) === JSON.stringify(currentDestinations)
       && JSON.stringify(nextTravelStyles) === JSON.stringify(currentTravelStyles)
       && JSON.stringify(nextPdfPersonalization) === JSON.stringify(currentPdfPersonalization)
     ) {
@@ -272,7 +250,6 @@ export function createBookingCoreHandlers(deps) {
     booking.referral_kind = nextReferralKind || null;
     booking.referral_label = nextReferralLabel;
     booking.referral_staff_user_id = nextReferralStaffUserId;
-    setBookingTravelPlanDestinations(booking, nextDestinations);
     booking.travel_styles = nextTravelStyles;
     booking.pdf_personalization = nextPdfPersonalization;
     incrementBookingRevision(booking, "core_revision");

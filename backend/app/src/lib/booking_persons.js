@@ -1,14 +1,9 @@
 import { normalizeText } from "./text.js";
 import {
-  normalizeTourDestinationCode,
   normalizeTourStyleCode,
   normalizeTourStyleLabels,
   sortTourStyleCodes
 } from "../domain/tour_catalog_i18n.js";
-import {
-  destinationScopeDestinations,
-  normalizeDestinationScope
-} from "../domain/destination_scope.js";
 import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   languageByApiValue,
@@ -65,22 +60,6 @@ function normalizeStringArray(value) {
   }
   const single = optionalText(value);
   return single ? [single] : [];
-}
-
-const DESTINATION_COUNTRY_CODE_BY_TOUR_CODE = Object.freeze({
-  vietnam: "VN",
-  thailand: "TH",
-  cambodia: "KH",
-  laos: "LA"
-});
-
-function normalizeCountryCodes(value) {
-  return Array.from(new Set(normalizeStringArray(value).map((entry) => {
-    const directCode = optionalUppercaseText(entry);
-    if (directCode && directCode.length === 2) return directCode;
-    const tourCode = normalizeTourDestinationCode(entry);
-    return DESTINATION_COUNTRY_CODE_BY_TOUR_CODE[tourCode] || directCode;
-  }).filter(Boolean)));
 }
 
 function compactObject(value) {
@@ -276,30 +255,12 @@ export function normalizeSingleBookingPersonPayload(bookingId, person, fallbackI
 }
 
 export function getBookingTravelPlanDestinations(booking) {
-  const scopedDestinations = destinationScopeDestinations(booking?.travel_plan?.destination_scope);
-  return scopedDestinations.length
-    ? scopedDestinations
-    : normalizeCountryCodes(booking?.travel_plan?.destinations || booking?.destinations);
-}
-
-export function setBookingTravelPlanDestinations(booking, destinations) {
-  const nextDestinations = normalizeCountryCodes(destinations);
-  const currentTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
-    ? booking.travel_plan
-    : {};
-  const nextDestinationScope = normalizeDestinationScope(currentTravelPlan.destination_scope, nextDestinations)
-    .filter((entry) => nextDestinations.includes(entry.destination));
-  for (const destination of nextDestinations) {
-    if (!nextDestinationScope.some((entry) => entry.destination === destination)) {
-      nextDestinationScope.push({ destination, regions: [], places: [] });
-    }
-  }
-  booking.travel_plan = {
-    ...currentTravelPlan,
-    destination_scope: normalizeDestinationScope(nextDestinationScope),
-    destinations: nextDestinations
-  };
-  return booking.travel_plan;
+  const days = Array.isArray(booking?.travel_plan?.days) ? booking.travel_plan.days : [];
+  return Array.from(new Set(
+    days
+      .map((day) => optionalText(day?.primary_location_id))
+      .filter(Boolean)
+  ));
 }
 
 function normalizeWebFormSubmission(booking) {
@@ -308,9 +269,12 @@ function normalizeWebFormSubmission(booking) {
   if (!submission || typeof submission !== "object" || Array.isArray(submission)) {
     if (!source || typeof source !== "object" || Array.isArray(source)) return null;
   }
+  const {
+    destinations: _legacySubmissionDestinations,
+    ...submissionWithoutDestinations
+  } = submission && typeof submission === "object" && !Array.isArray(submission) ? submission : {};
   return compactObject({
-    ...submission,
-    destinations: normalizeStringArray(submission?.destinations || getBookingTravelPlanDestinations(booking)),
+    ...submissionWithoutDestinations,
     travel_style: normalizeTourStyleLabels(submission?.travel_style || booking?.travel_styles, "en"),
     booking_name: optionalText(submission?.booking_name || booking?.name),
     tour_id: optionalText(submission?.tour_id || source?.tour_id),
@@ -338,7 +302,6 @@ function normalizeWebFormSubmission(booking) {
 }
 
 export function normalizeStoredBookingRecord(booking, _store = {}) {
-  const normalizedDestinations = getBookingTravelPlanDestinations(booking);
   const normalizedTravelStyles = sortTourStyleCodes(
     normalizeStringArray(booking?.travel_styles)
       .map((value) => normalizeTourStyleCode(value))
@@ -346,6 +309,7 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
   );
   const {
     destinations: _legacyDestinations,
+    image: _legacyBookingImage,
     public_traveler_details_token_nonce: _legacyTravelerDetailsTokenNonce,
     public_traveler_details_token_created_at: _legacyTravelerDetailsTokenCreatedAt,
     public_traveler_details_token_expires_at: _legacyTravelerDetailsTokenExpiresAt,
@@ -353,20 +317,16 @@ export function normalizeStoredBookingRecord(booking, _store = {}) {
     ...bookingWithoutLegacyFields
   } = booking || {};
   const normalizedTravelPlan = booking?.travel_plan && typeof booking.travel_plan === "object" && !Array.isArray(booking.travel_plan)
-    ? {
-        ...booking.travel_plan,
-        destination_scope: normalizeDestinationScope(booking.travel_plan.destination_scope, normalizedDestinations),
-        destinations: normalizedDestinations
-      }
-    : (normalizedDestinations.length ? {
-        destination_scope: normalizeDestinationScope([], normalizedDestinations),
-        destinations: normalizedDestinations
-      } : booking?.travel_plan);
+    ? (({
+        destination_scope: _legacyDestinationScope,
+        destinations: _legacyTravelPlanDestinations,
+        ...travelPlanWithoutLegacyLocations
+      }) => travelPlanWithoutLegacyLocations)(booking.travel_plan)
+    : booking?.travel_plan;
   const normalizedBooking = {
     ...bookingWithoutLegacyFields,
     customer_language: optionalLanguageCode(booking?.customer_language || booking?.web_form_submission?.preferred_language),
     name: optionalText(booking?.name || booking?.web_form_submission?.booking_name),
-    image: optionalText(booking?.image),
     core_revision: nonNegativeInt(booking?.core_revision, 0),
     notes_revision: nonNegativeInt(booking?.notes_revision, 0),
     persons_revision: nonNegativeInt(booking?.persons_revision, 0),

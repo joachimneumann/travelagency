@@ -85,18 +85,14 @@ import (
 		KeycloakUserListResponse:                                  apiModel.#KeycloakUserListResponse
 		KeycloakUserStaffProfileEntry:                             apiModel.#KeycloakUserStaffProfileEntry
 		KeycloakUserStaffProfileEntryResponse:                     apiModel.#KeycloakUserStaffProfileEntryResponse
-		KeycloakUserStaffProfileListResponse:                      apiModel.#KeycloakUserStaffProfileListResponse
-		PublicAtpStaffTeamResponse:                                apiModel.#PublicAtpStaffTeamResponse
-		CountryPracticalInfoListResponse:                          apiModel.#CountryPracticalInfoListResponse
-		BookingActivitiesResponse:                                 apiModel.#BookingActivitiesResponse
-		BookingActivityResponse:                                   apiModel.#BookingActivityResponse
-		BookingDeleteResponse:                                     apiModel.#BookingDeleteResponse
-		BookingPaymentDocumentsResponse:                           apiModel.#BookingPaymentDocumentsResponse
-		BookingPaymentDocumentResponse:                            apiModel.#BookingPaymentDocumentResponse
-		BookingChatEvent:                                          apiModel.#BookingChatEvent
-		BookingChatConversation:                                   apiModel.#BookingChatConversation
-		BookingChatResponse:                                       apiModel.#BookingChatResponse
-		SettingsObservabilityLoggedInUser:                         apiModel.#SettingsObservabilityLoggedInUser
+			KeycloakUserStaffProfileListResponse:                      apiModel.#KeycloakUserStaffProfileListResponse
+			PublicAtpStaffTeamResponse:                                apiModel.#PublicAtpStaffTeamResponse
+			CountryPracticalInfoListResponse:                          apiModel.#CountryPracticalInfoListResponse
+			BookingActivitiesResponse:                                 apiModel.#BookingActivitiesResponse
+			BookingActivityResponse:                                   apiModel.#BookingActivityResponse
+			BookingPaymentDocumentsResponse:                           apiModel.#BookingPaymentDocumentsResponse
+			BookingPaymentDocumentResponse:                            apiModel.#BookingPaymentDocumentResponse
+			SettingsObservabilityLoggedInUser:                         apiModel.#SettingsObservabilityLoggedInUser
 		SettingsObservabilityBookingActivity:                      apiModel.#SettingsObservabilityBookingActivity
 		SettingsObservabilityLatestChangedBooking:                 apiModel.#SettingsObservabilityLatestChangedBooking
 		SettingsObservabilityResponse:                             apiModel.#SettingsObservabilityResponse
@@ -148,17 +144,14 @@ import (
 		BookingOfferReadModel:                                     apiModel.#BookingOfferReadModel
 		BookingAcceptedRecordReadModel:                            apiModel.#BookingAcceptedRecordReadModel
 		GeneratedBookingOfferReadModel:                            apiModel.#GeneratedBookingOfferReadModel
-		BookingTravelPlanPdfReadModel:                             apiModel.#BookingTravelPlanPdfReadModel
-		TravelPlanPdfArtifactCreateResponse:                       apiModel.#TravelPlanPdfArtifactCreateResponse
-		BookingReadModel:                                          apiModel.#BookingReadModel
-		BookingDeleteRequest:                                      apiModel.#BookingDeleteRequest
-		BookingNameUpdateRequest:                                  apiModel.#BookingNameUpdateRequest
-		BookingCustomerLanguageUpdateRequest:                      apiModel.#BookingCustomerLanguageUpdateRequest
-		BookingSourceUpdateRequest:                                apiModel.#BookingSourceUpdateRequest
-		BookingImageUploadRequest:                                 apiModel.#BookingImageUploadRequest
-		BookingOwnerUpdateRequest:                                 apiModel.#BookingOwnerUpdateRequest
-		BookingCloneRequest:                                       apiModel.#BookingCloneRequest
-		BookingPersonCreateRequest:                                apiModel.#BookingPersonCreateRequest
+			BookingTravelPlanPdfReadModel:                             apiModel.#BookingTravelPlanPdfReadModel
+			TravelPlanPdfArtifactCreateResponse:                       apiModel.#TravelPlanPdfArtifactCreateResponse
+			BookingReadModel:                                          apiModel.#BookingReadModel
+			BookingNameUpdateRequest:                                  apiModel.#BookingNameUpdateRequest
+			BookingCustomerLanguageUpdateRequest:                      apiModel.#BookingCustomerLanguageUpdateRequest
+			BookingSourceUpdateRequest:                                apiModel.#BookingSourceUpdateRequest
+			BookingOwnerUpdateRequest:                                 apiModel.#BookingOwnerUpdateRequest
+			BookingPersonCreateRequest:                                apiModel.#BookingPersonCreateRequest
 		BookingPersonUpdateRequest:                                apiModel.#BookingPersonUpdateRequest
 		BookingPersonDeleteRequest:                                apiModel.#BookingPersonDeleteRequest
 		BookingPersonPhotoUploadRequest:                           apiModel.#BookingPersonPhotoUploadRequest

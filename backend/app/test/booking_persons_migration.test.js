@@ -43,10 +43,7 @@ test("store utils backfill missing booking persons from the public submission an
       }
     ],
     activities: [],
-    payment_documents: [],
-    chat_channel_accounts: [],
-    chat_conversations: [],
-    chat_events: []
+    payment_documents: []
   }, null, 2)}\n`, "utf8");
 
   const storeUtils = createStoreUtils({
@@ -147,10 +144,7 @@ test("store utils prune legacy invoice data and strict-normalize accepted travel
       }
     ],
     suppliers: [],
-    payment_documents: [],
-    chat_channel_accounts: [],
-    chat_conversations: [],
-    chat_events: []
+    payment_documents: []
   }, null, 2)}\n`, "utf8");
 
   const storeUtils = createStoreUtils({
@@ -216,10 +210,7 @@ test("store utils preserve independent concurrent booking writes", async () => {
       }
     ],
     activities: [],
-    payment_documents: [],
-    chat_channel_accounts: [],
-    chat_conversations: [],
-    chat_events: []
+    payment_documents: []
   }, null, 2)}\n`, "utf8");
 
   const storeUtils = createStoreUtils({

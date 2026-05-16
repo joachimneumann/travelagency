@@ -13,10 +13,6 @@ import {
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
 } from "./localized_editor.js";
-import {
-  destinationScopeDestinations,
-  normalizeDestinationScope
-} from "../shared/destination_scope_editor.js";
 
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
 
@@ -306,8 +302,6 @@ export function createEmptyTravelPlanDay(index = 0) {
 
 export function createEmptyTravelPlan() {
   return {
-    destination_scope: [],
-    destinations: [],
     tour_card_primary_image_id: null,
     tour_card_image_ids: [],
     one_pager_hero_image_id: null,
@@ -563,15 +557,12 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
       };
     });
 
-  const destination_scope = normalizeDestinationScope(source.destination_scope);
   const tour_card_image_ids = normalizeTourCardImageIds(source, days);
   const one_pager_hero_image_id = normalizeOnePagerHeroImageId(source, days);
   const one_pager_image_ids = normalizeAvailableImageIdList(source.one_pager_image_ids, days)
     .filter((imageId) => imageId !== one_pager_hero_image_id)
     .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
   const normalized = {
-    destination_scope,
-    destinations: destinationScopeDestinations(destination_scope),
     tour_card_primary_image_id: tour_card_image_ids[0] || null,
     tour_card_image_ids,
     one_pager_hero_image_id: one_pager_hero_image_id || null,

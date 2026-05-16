@@ -4,7 +4,6 @@ import { mkdir, readdir, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  isLikelyPhoneMatch,
   normalizeEmail,
   normalizePhone
 } from "./domain/phone_matching.js";
@@ -28,7 +27,6 @@ import {
   GENERATED_CURRENCY_HELPERS,
   GMAIL_DRAFTS_CONFIG,
   KEYCLOAK_DIRECTORY_CONFIG,
-  META_WEBHOOK_CONFIG,
   MOBILE_APP_CONFIG,
   nowIso,
   OFFER_CATEGORIES,
@@ -180,6 +178,37 @@ function pruneLegacyBookingState(store) {
       delete booking.service_level_agreement_due_at;
       changed = true;
     }
+    if (Object.prototype.hasOwnProperty.call(booking, "destinations")) {
+      delete booking.destinations;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(booking, "image")) {
+      delete booking.image;
+      changed = true;
+    }
+    if (
+      booking.travel_plan
+      && typeof booking.travel_plan === "object"
+      && !Array.isArray(booking.travel_plan)
+    ) {
+      if (Object.prototype.hasOwnProperty.call(booking.travel_plan, "destination_scope")) {
+        delete booking.travel_plan.destination_scope;
+        changed = true;
+      }
+      if (Object.prototype.hasOwnProperty.call(booking.travel_plan, "destinations")) {
+        delete booking.travel_plan.destinations;
+        changed = true;
+      }
+    }
+    if (
+      booking.web_form_submission
+      && typeof booking.web_form_submission === "object"
+      && !Array.isArray(booking.web_form_submission)
+      && Object.prototype.hasOwnProperty.call(booking.web_form_submission, "destinations")
+    ) {
+      delete booking.web_form_submission.destinations;
+      changed = true;
+    }
   }
   return changed;
 }
@@ -198,7 +227,6 @@ const services = createBackendServices({
     bookingNotificationEmailConfig: BOOKING_NOTIFICATION_EMAIL_CONFIG,
     travelerDetailsTokenConfig: TRAVELER_DETAILS_TOKEN_CONFIG,
     keycloakDirectoryConfig: KEYCLOAK_DIRECTORY_CONFIG,
-    metaWebhookConfig: META_WEBHOOK_CONFIG,
     offerCategories: OFFER_CATEGORIES,
     offerCategoryOrder: OFFER_CATEGORY_ORDER,
     paymentStatuses: PAYMENT_STATUSES,
@@ -234,16 +262,10 @@ const services = createBackendServices({
     fallbackBookingImagePath: RUNTIME_PATHS.fallbackBookingImagePath
   },
   httpHelpers: {
-    readBodyBuffer: httpHelpers.readBodyBuffer,
-    sendJson: httpHelpers.sendJson,
-    sendFileWithCache: httpHelpers.sendFileWithCache
-  },
-  stagingAccessHelpers: {
-    safeEqualText: stagingAccessHandlers.safeEqualText
+    sendJson: httpHelpers.sendJson
   },
   support: {
     clamp,
-    isLikelyPhoneMatch,
     normalizeEmail,
     normalizeStringArray,
     nowIso,
@@ -285,8 +307,7 @@ const applicationSupport = Object.freeze({
   safeFloat,
   safeInt,
   getRequestIpAddress,
-  guessCountryFromRequest,
-  isLikelyPhoneMatch
+  guessCountryFromRequest
 });
 
 export async function createBackendHandler({ port = PORT } = {}) {

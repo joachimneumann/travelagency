@@ -929,7 +929,7 @@ test("tour customizer modal chrome follows the frontend language", async () => {
     await customizer.open(trip.id);
 
     const markup = modalElement?.innerHTML || "";
-    assert.match(markup, /Passen Sie diese Tour individuell an/);
+    assert.match(markup, /<h2 id="tour_customize_title">Original Tour Title<\/h2>/);
     assert.match(markup, /Tour zurücksetzen/);
     assert.match(markup, /Optionale Tage/);
     assert.match(markup, /Ihre Reiseroute: Original Tour Title/);
@@ -1082,14 +1082,14 @@ test("tour customizer uses happy confirmation only after customization and reset
 
     await customizer.open(trip.id);
 
-    assert.match(modalElement?.innerHTML || "", />I am happy<\/button>/);
+    assert.match(modalElement?.innerHTML || "", />Happy with this idea\? Our local travel team will refine it from here<\/button>/);
     assert.doesNotMatch(modalElement?.innerHTML || "", /with this Tour/);
 
     assert.equal(typeof resetHandler, "function");
     resetHandler();
 
     assert.match(modalElement?.innerHTML || "", />Close<\/button>/);
-    assert.doesNotMatch(modalElement?.innerHTML || "", />I am happy<\/button>/);
+    assert.doesNotMatch(modalElement?.innerHTML || "", />Happy with this idea\? Our local travel team will refine it from here<\/button>/);
   } finally {
     global.document = previousDocument;
     global.HTMLElement = previousHTMLElement;

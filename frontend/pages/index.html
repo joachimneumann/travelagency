@@ -678,14 +678,6 @@
             <section class="step active" data-step="1">
               <div hidden aria-hidden="true">
                 <div
-                  id="bookingDestination"
-                  data-booking-static-list
-                  data-booking-input-name="destinations"
-                  data-empty-label="All destinations"
-                  aria-label="Destination countries"
-                  data-i18n-aria-label-id="a11y.booking_destinations"
-                ></div>
-                <div
                   id="bookingStyle"
                   data-booking-static-list
                   data-booking-input-name="travel_style"
@@ -764,24 +756,6 @@
             <section class="step" data-step="3">
               <h3 id="bookingStepThreeTitle" data-i18n-id="modal.step3.title">Step 3: Trip details and notes</h3>
               <div class="field-grid" id="bookingStepThreeContent">
-                <div class="field">
-                  <div class="select-wrap">
-                    <label for="bookingDestinationTrigger" data-i18n-id="modal.step3.destinations">Destinations</label>
-                    <button
-                      id="bookingDestinationTrigger"
-                      class="filter-select-trigger"
-                      type="button"
-                      aria-expanded="false"
-                      aria-controls="bookingDestinationPanel"
-                    >
-                      <span id="bookingDestinationSummary" data-i18n-id="filters.all_destinations">All destinations</span>
-                      <span class="filter-select-trigger__caret" aria-hidden="true">▾</span>
-                    </button>
-                    <div id="bookingDestinationPanel" class="filter-select-panel" hidden>
-                      <div id="bookingDestinationOptions" class="filter-checkbox-list" role="group" aria-label="Booking destinations" data-i18n-aria-label-id="a11y.booking_destinations"></div>
-                    </div>
-                  </div>
-                </div>
                 <div class="field">
                   <div class="select-wrap">
                     <label for="bookingStyleTrigger" data-i18n-id="modal.step3.styles">Travel styles</label>

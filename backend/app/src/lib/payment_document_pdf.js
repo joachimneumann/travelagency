@@ -291,11 +291,8 @@ function resolveTravelPlanForDepositRequest(booking, buildBookingTravelPlanReadM
   });
 }
 
-async function resolveDepositHeroImage(booking, bookingImagesDir, fallbackImagePath) {
-  const relativePath = extractPublicRelativePath(booking?.image, "/public/v1/booking-images/");
-  const imagePath = relativePath
-    ? path.resolve(String(bookingImagesDir || ""), relativePath)
-    : String(fallbackImagePath || "");
+async function resolveDepositHeroImage(fallbackImagePath) {
+  const imagePath = String(fallbackImagePath || "");
   return rasterizeImage(imagePath, {
     width: 1200,
     height: 780
@@ -567,7 +564,7 @@ export function createPaymentDocumentPdfWriter({
       : null;
     const [heroImage, guidePhoto, itemThumbnailMap] = depositRequestMode
       ? await Promise.all([
-          resolveDepositHeroImage(booking, bookingImagesDir, fallbackImagePath),
+          resolveDepositHeroImage(fallbackImagePath),
           guideContext?.photoDiskPath
             ? rasterizeImage(guideContext.photoDiskPath, {
                 width: 420,

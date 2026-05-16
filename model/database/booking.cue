@@ -18,7 +18,6 @@ import (
 }
 
 #BookingWebFormSubmission: {
-	destinations?: [...enums.#CountryCode]
 	travel_style?: [...string]
 	booking_name?:             string
 	tour_id?:                  common.#Identifier | string
@@ -103,7 +102,6 @@ import (
 
 #Booking: #BaseBookingWithPersons & {
 	id:                              common.#Identifier
-	image?:                          string
 	core_revision?:                  >=0 & int
 	notes_revision?:                 >=0 & int
 	persons_revision?:               >=0 & int
