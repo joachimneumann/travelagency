@@ -1249,6 +1249,7 @@ function renderTable(section) {
       ${rows.map((row) => {
         const overrideValue = rowOverrideValue(section, row);
         const id = rowIdentity(row);
+        const overrideFieldId = `translation_override_${safeDomId(id)}`;
         const isDirty = section.dirty.has(id);
         const isUntranslated = isUntranslatedRow(row, overrideValue);
         const metadata = JSON.stringify({
@@ -1284,7 +1285,7 @@ function renderTable(section) {
             </td>
             <td class="translations-table__text translations-table__translation-cell">${renderCachedTranslationCell(row)}</td>
             <td class="translations-table__translation-cell">
-              <textarea class="translations-table__override" data-override-key="${escapeHtml(id)}" rows="2" ${canEditManualOverrides && !state.isSaving && !state.isJobRunning && !state.isLoadingSections ? "" : "disabled"}>${escapeHtml(overrideValue)}</textarea>
+              <textarea id="${escapeHtml(overrideFieldId)}" name="${escapeHtml(overrideFieldId)}" class="translations-table__override" data-override-key="${escapeHtml(id)}" rows="2" ${canEditManualOverrides && !state.isSaving && !state.isJobRunning && !state.isLoadingSections ? "" : "disabled"}>${escapeHtml(overrideValue)}</textarea>
             </td>
             <td class="translations-table__state-cell">
               ${renderStatePills(row)}
