@@ -153,7 +153,8 @@ export function createBackendServices({
     translationMemoryStore,
     translateEntriesWithMeta: translationClient.translateEntriesWithMeta,
     nowIso: support.nowIso,
-    writesEnabled: runtime.translationOverrideWritesEnabled !== false
+    writesEnabled: runtime.translationOverrideWritesEnabled !== false,
+    snapshotPublishEnabled: runtime.translationSnapshotPublishEnabled !== false
   });
 
   const staticTranslationApplyJobs = createStaticTranslationApplyJobs({
@@ -161,7 +162,6 @@ export function createBackendServices({
     applyTranslations: (options) => staticTranslationService.applyMissingTranslations(options),
     protectTranslations: (options) => staticTranslationService.applyProtectedTerms(options),
     clearTranslationCaches: (options) => staticTranslationService.clearMachineTranslations(options),
-    publishTranslations: () => staticTranslationService.publishTranslations(),
     getStatusSummary: () => staticTranslationService.getStatusSummary(),
     nowIso: support.nowIso
   });

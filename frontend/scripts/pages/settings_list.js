@@ -207,6 +207,8 @@ const TOUR_DESTINATION_TO_COUNTRY_CODE = Object.freeze({
 
 const INVALID_TEAM_ORDER = "__invalid_team_order__";
 const DEFAULT_TEAM_ORDER = 10;
+const STAFF_PHOTO_TARGET_WIDTH = 400;
+const STAFF_PHOTO_WEBP_QUALITY = 0.84;
 
 const state = {
   authUser: null,
@@ -2414,6 +2416,81 @@ function editorHasPendingPhoto() {
   return Boolean(normalizeText(state.editor?.pendingPhoto?.dataBase64));
 }
 
+function dataUrlBase64(dataUrl) {
+  const normalized = String(dataUrl || "");
+  const commaIndex = normalized.indexOf(",");
+  return commaIndex >= 0 ? normalized.slice(commaIndex + 1) : "";
+}
+
+function staffPhotoWebpFilename(file, username) {
+  const baseName = normalizeText(file?.name)
+    .replace(/\.[^.]*$/, "")
+    .replace(/[^\w.-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    || normalizeText(username)
+    || "staff-photo";
+  return `${baseName}.webp`;
+}
+
+function loadImageElement(src) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not decode image"));
+    image.src = src;
+  });
+}
+
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob), type, quality);
+  });
+}
+
+async function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Failed to read image blob"));
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function convertStaffPhotoFileToWebp(file, username) {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = await loadImageElement(objectUrl);
+    const sourceWidth = Number(image.naturalWidth || image.width || 0);
+    const sourceHeight = Number(image.naturalHeight || image.height || 0);
+    if (!sourceWidth || !sourceHeight) {
+      throw new Error("Image has no readable dimensions");
+    }
+    const outputWidth = STAFF_PHOTO_TARGET_WIDTH;
+    const outputHeight = Math.max(1, Math.round((sourceHeight / sourceWidth) * outputWidth));
+    const canvas = document.createElement("canvas");
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      throw new Error("Could not prepare image canvas");
+    }
+    context.drawImage(image, 0, 0, outputWidth, outputHeight);
+    const blob = await canvasToBlob(canvas, "image/webp", STAFF_PHOTO_WEBP_QUALITY);
+    if (!blob || blob.type !== "image/webp") {
+      throw new Error("Could not convert image to WebP");
+    }
+    const previewSrc = await blobToDataUrl(blob);
+    return {
+      filename: staffPhotoWebpFilename(file, username),
+      mimeType: "image/webp",
+      dataBase64: dataUrlBase64(previewSrc),
+      previewSrc
+    };
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
+}
+
 function updateEditorSaveButtonState() {
   if (!els.staffEditorSaveBtn) return;
   els.staffEditorSaveBtn.disabled = !state.permissions.canEditStaffProfiles
@@ -3353,8 +3430,10 @@ async function handleStaffPhotoSelected(event) {
   const user = getSelectedUser();
   if (!user || !state.permissions.canEditStaffProfiles) return;
 
-  const base64 = await fileToBase64(file);
-  if (!base64) {
+  let photoDraft;
+  try {
+    photoDraft = await convertStaffPhotoFileToWebp(file, user.username);
+  } catch {
     showEditorStatus(backendT("backend.users.picture_invalid", "Could not read picture file."), true);
     return;
   }
@@ -3362,12 +3441,7 @@ async function handleStaffPhotoSelected(event) {
   if (els.staffEditorPhotoInput) {
     els.staffEditorPhotoInput.value = "";
   }
-  state.editor.pendingPhoto = {
-    filename: file.name || `${user.username}.upload`,
-    mimeType: file.type || "image/*",
-    dataBase64: base64,
-    previewSrc: `data:${file.type || "image/*"};base64,${base64}`
-  };
+  state.editor.pendingPhoto = photoDraft;
   clearError();
   showEditorStatus(backendT("backend.users.picture_ready", "Picture ready to save."));
   renderEditor();
@@ -3434,17 +3508,4 @@ function getDisplayedKeycloakRoles(user) {
 
 function formatKeycloakRolesCell(user) {
   return escapeHtml(formatKeycloakRoleList(getDisplayedKeycloakRoles(user)));
-}
-
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || "");
-      const commaIndex = result.indexOf(",");
-      resolve(commaIndex >= 0 ? result.slice(commaIndex + 1) : "");
-    };
-    reader.onerror = () => reject(reader.error || new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  }).catch(() => "");
 }

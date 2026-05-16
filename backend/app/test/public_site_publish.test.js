@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import os from "node:os";
 import path from "node:path";
-import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, stat, writeFile } from "node:fs/promises";
 import {
   PUBLIC_SITE_TRANSLATION_DOMAINS,
   createPublicSitePublishService
@@ -120,7 +120,7 @@ test("public-site publish runs translations and homepage generation before writi
   const finished = await waitForJob(service, "public-job-1", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.deepEqual(seen, ["publish translations", "runtime_i18n", "homepage_assets"]);
+  assert.deepEqual(seen, ["publish translations", "runtime_brand_logo", "runtime_i18n", "homepage_assets"]);
   assert.deepEqual(publishOptions, [{ domains: PUBLIC_SITE_TRANSLATION_DOMAINS }]);
   assert.equal(statusOptions.every((options) => JSON.stringify(options) === JSON.stringify({ domains: PUBLIC_SITE_TRANSLATION_DOMAINS })), true);
   assert.deepEqual(memoryUpdates, [{
@@ -184,7 +184,7 @@ test("public-site publish refreshes stale runtime snapshots when translated item
   const finished = await waitForJob(service, "public-job-runtime-refresh", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.deepEqual(seen, ["publish translations", "runtime_i18n", "homepage_assets"]);
+  assert.deepEqual(seen, ["publish translations", "runtime_brand_logo", "runtime_i18n", "homepage_assets"]);
 });
 
 test("public-site publish treats translated but unpublished content as ready to publish", async () => {
@@ -235,10 +235,10 @@ test("public-site publish treats translated but unpublished content as ready to 
   const finished = await waitForJob(service, "public-job-translated-content", "succeeded");
 
   assert.equal(finished.status, "succeeded");
-  assert.deepEqual(seen, ["publish translations", "runtime_i18n", "homepage_assets"]);
+  assert.deepEqual(seen, ["publish translations", "runtime_brand_logo", "runtime_i18n", "homepage_assets"]);
 });
 
-test("public-site publish still blocks runtime failures when no unpublished translations can refresh them", async () => {
+test("public-site publish does not block on stale runtime preflight when translations are otherwise clean", async () => {
   const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
   const seen = [];
   const service = createPublicSitePublishService({
@@ -268,18 +268,16 @@ test("public-site publish still blocks runtime failures when no unpublished tran
   });
 
   const status = await service.getStatus();
-  assert.equal(status.blocked, true);
-  assert.equal(status.block_reasons[0].code, "runtime_i18n_blocked");
+  assert.equal(status.blocked, false);
 
   service.startPublish();
-  const finished = await waitForJob(service, "public-job-runtime-blocked", "failed");
+  const finished = await waitForJob(service, "public-job-runtime-blocked", "succeeded");
 
-  assert.equal(finished.status, "failed");
-  assert.equal(finished.error_code, "PUBLIC_SITE_PUBLISH_BLOCKED");
-  assert.deepEqual(seen, []);
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(seen, ["publish translations", "runtime_brand_logo", "runtime_i18n", "homepage_assets"]);
 });
 
-test("public-site publish marks the job failed when translations need work", async () => {
+test("public-site publish allows unfinished translations with English fallback", async () => {
   const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
   const seen = [];
   const service = createPublicSitePublishService({
@@ -313,16 +311,15 @@ test("public-site publish marks the job failed when translations need work", asy
   });
 
   const status = await service.getStatus();
-  assert.equal(status.blocked, true);
-  assert.equal(status.block_reasons[0].code, "translations_need_work");
+  assert.equal(status.blocked, false);
+  assert.equal(status.translation_fallback_count, 1);
+  assert.equal(status.warnings[0].code, "english_fallback");
 
   service.startPublish();
-  const finished = await waitForJob(service, "public-job-blocked", "failed");
+  const finished = await waitForJob(service, "public-job-blocked", "succeeded");
 
-  assert.equal(finished.status, "failed");
-  assert.equal(finished.error_code, "PUBLIC_SITE_PUBLISH_BLOCKED");
-  assert.match(finished.error, /need translation or update/);
-  assert.deepEqual(seen, []);
+  assert.equal(finished.status, "succeeded");
+  assert.deepEqual(seen, ["publish translations", "runtime_brand_logo", "runtime_i18n", "homepage_assets"]);
 });
 
 test("public-site publish rejects concurrent jobs", async () => {
@@ -420,6 +417,82 @@ test("public-site status becomes dirty when content files change after publish",
   assert.equal(status.dirty, true);
   assert.equal(status.source_dirty, true);
   assert.equal(status.sources.content.file_count, 2);
+});
+
+test("public-site content dirty detection hashes file bytes instead of metadata only", async () => {
+  const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
+  const contentDataPath = path.join(repoRoot, "content", "same_size.json");
+  await writeFile(contentDataPath, `${JSON.stringify({ value: "one" })}\n`, "utf8");
+  const constantMetadataStat = async (filePath) => {
+    const stats = await stat(filePath);
+    return {
+      size: stats.size,
+      mtimeMs: 1
+    };
+  };
+  const service = createPublicSitePublishService({
+    repoRoot,
+    translationsSnapshotDir,
+    manifestPath,
+    readTours: async () => [],
+    nowIso: () => "2026-05-10T10:00:00.000Z",
+    idFactory: () => "public-job-content-bytes",
+    statFn: constantMetadataStat,
+    translationMemoryStore: {
+      patchManualOverrides: async () => {}
+    },
+    staticTranslationService: {
+      getStatusSummary: async () => cleanTranslationStatus(),
+      publishTranslations: async () => ({ total_items: 0 })
+    },
+    runCommand: async () => {}
+  });
+
+  service.startPublish();
+  await waitForJob(service, "public-job-content-bytes", "succeeded");
+  assert.equal((await service.getStatus()).dirty, false);
+
+  await writeFile(contentDataPath, `${JSON.stringify({ value: "two" })}\n`, "utf8");
+  const status = await service.getStatus();
+  assert.equal(status.dirty, true);
+  assert.equal(status.source_dirty, true);
+});
+
+test("public-site publish fails instead of writing a clean manifest when content changes during generation", async () => {
+  const { repoRoot, translationsSnapshotDir, manifestPath } = await createTempRepo();
+  const contentDataPath = path.join(repoRoot, "content", "publish-race.json");
+  const seen = [];
+  const service = createPublicSitePublishService({
+    repoRoot,
+    translationsSnapshotDir,
+    manifestPath,
+    readTours: async () => [],
+    nowIso: () => "2026-05-10T10:00:00.000Z",
+    idFactory: () => "public-job-race",
+    translationMemoryStore: {
+      patchManualOverrides: async () => {}
+    },
+    staticTranslationService: {
+      getStatusSummary: async () => cleanTranslationStatus(),
+      publishTranslations: async () => ({ total_items: 0 })
+    },
+    runCommand: async (phase) => {
+      seen.push(phase.id);
+      if (phase.id === "runtime_i18n") {
+        await writeFile(contentDataPath, `${JSON.stringify({ changed: true })}\n`, "utf8");
+      }
+    }
+  });
+
+  service.startPublish();
+  const finished = await waitForJob(service, "public-job-race", "failed");
+
+  assert.equal(finished.status, "failed");
+  assert.equal(finished.error_code, "PUBLIC_SITE_CONTENT_CHANGED_DURING_PUBLISH");
+  assert.deepEqual(seen, ["runtime_brand_logo", "runtime_i18n", "homepage_assets"]);
+  const status = await service.getStatus();
+  assert.equal(status.dirty, true);
+  assert.equal(status.source_dirty, true);
 });
 
 test("public-site status becomes dirty when marketing-tour seasonality changes after publish", async () => {

@@ -162,8 +162,6 @@ case "tour_variant_create":
   return RequestFactory.tourVariantCreateRequest(options);
 case "tour_variant_source_days":
   return RequestFactory.tourVariantSourceDaysRequest(options);
-case "tour_variants_publish":
-  return RequestFactory.tourVariantsPublishRequest(options);
 case "tour_variant_detail":
   return RequestFactory.tourVariantDetailRequest(options);
 case "tour_variant_update":

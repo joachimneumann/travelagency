@@ -2121,7 +2121,6 @@ body.tour-details-modal-open {
   z-index: 2200;
   display: grid;
   place-items: center;
-  padding: clamp(0.85rem, 3vw, 2rem);
 }
 
 .tour-details-modal__backdrop {
@@ -2142,7 +2141,6 @@ body.tour-details-modal-open {
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--surface-accent) 56%, #fff 44%);
   box-shadow: 0 34px 90px rgba(12, 30, 36, 0.34);
-  padding: clamp(0.9rem, 2vw, 1.5rem);
 }
 
 .tour-details-modal__dialog:focus {
@@ -2195,7 +2193,6 @@ body.tour-details-modal-open {
 
 @media (max-width: 760px) {
   .tour-details-modal {
-    padding: 0.75rem;
     align-items: start;
   }
 
@@ -2203,7 +2200,6 @@ body.tour-details-modal-open {
     width: min(100%, 92vw);
     height: calc(100vh - 1.5rem);
     max-height: calc(100vh - 1.5rem);
-    padding: 0.75rem;
     border-radius: calc(var(--radius) - 4px);
   }
 
@@ -2538,11 +2534,17 @@ html.tour-customize-modal-open {
 
 .tour-customize {
   position: fixed;
-  inset: 0;
+  top: var(--tour-customize-modal-top, 0px);
+  right: 0;
+  bottom: 0;
+  left: 0;
   z-index: 2300;
   display: grid;
   place-items: center;
-  padding: clamp(0.85rem, 3vw, 2rem);
+  width: 100vw;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
   background: rgba(14, 28, 32, 0.48);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
@@ -2551,12 +2553,13 @@ html.tour-customize-modal-open {
 .tour-customize__dialog {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  width: min(1120px, 92vw);
-  height: min(88vh, 900px);
-  max-height: min(88vh, 900px);
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
   overflow: hidden;
   border: 1px solid rgba(16, 27, 43, 0.14);
-  border-radius: 8px;
+  border-radius: 0;
   background: #fff;
   box-shadow: 0 24px 70px rgba(16, 27, 43, 0.22);
 }
@@ -2629,9 +2632,9 @@ html.tour-customize-modal-open {
 .tour-customize__workspace {
   display: grid;
   grid-template-columns: 270px minmax(0, 1fr);
-  grid-template-rows: minmax(310px, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
   background: #f7f9f7;
 }
 
@@ -2654,11 +2657,36 @@ html.tour-customize-modal-open {
 
 .tour-customize-map {
   position: relative;
-  min-height: 330px;
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
   overflow: hidden;
+  background: #e7f5f7;
+  container-type: size;
   cursor: zoom-in;
   touch-action: manipulation;
   user-select: none;
+}
+
+.tour-customize-map__stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  aspect-ratio: 1 / 2;
+}
+
+@supports (width: 1cqw) {
+  .tour-customize-map__stage {
+    width: min(100cqw, 50cqh);
+    height: min(100cqh, 200cqw);
+  }
 }
 
 .tour-customize-map__region {
@@ -2829,19 +2857,26 @@ html.tour-customize-modal-open {
 }
 
 .tour-customize-options {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   padding: 1rem;
   border-bottom: 1px solid var(--line);
   background: #fff;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .tour-customize-options__list {
   display: grid;
   grid-template-columns: repeat(auto-fill, 116px);
   gap: 0.56rem;
+  align-content: start;
   justify-content: start;
+  min-height: 0;
   margin-top: 0.8rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 0.2rem;
 }
 
 .tour-customize-option {
@@ -3221,21 +3256,14 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
 .tour-customize-timeline {
   grid-column: 1 / -1;
-  overflow: visible;
+  min-height: 0;
+  overflow: hidden;
   padding: 0.85rem 1rem 0.95rem;
-  background: #fff;
+  background: #f4faf5;
 }
 
 .tour-customize-timeline--drop-active {
-  background: #fbfdfb;
-}
-
-.tour-customize-timeline__header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 0.8rem;
+  background: #eef8f0;
 }
 
 .tour-customize-timeline__day {
@@ -3246,12 +3274,12 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   width: 100%;
   max-width: 100%;
   color: var(--accent);
-  font-size: 0.7rem;
+  font-size: 0.82rem;
   font-weight: var(--font-weight-bold);
   overflow: hidden;
   text-align: center;
   text-overflow: ellipsis;
-  text-transform: lowercase;
+  text-transform: none;
   transform: translateX(-50%);
   white-space: nowrap;
 }
@@ -3375,15 +3403,14 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
 
 @media (max-width: 760px) {
   .tour-customize {
-    padding: 0.75rem;
     align-items: start;
   }
 
   .tour-customize__dialog {
-    width: min(100%, 92vw);
-    height: calc(100vh - 1.5rem);
-    max-height: calc(100vh - 1.5rem);
-    border-radius: calc(var(--radius) - 4px);
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
   }
 
   .tour-customize__header {
@@ -3403,7 +3430,8 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   }
 
   .tour-customize__workspace {
-    display: block;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(7rem, 0.4fr) minmax(0, 1fr) auto;
   }
 
   .tour-customize-embedded .tour-customize__workspace {
@@ -3411,7 +3439,7 @@ html.tour-customize-pointer-dragging .tour-customize-timeline {
   }
 
   .tour-customize-map {
-    min-height: 280px;
+    min-height: 7rem;
   }
 
   .tour-customize-options {

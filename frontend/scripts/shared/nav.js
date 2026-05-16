@@ -276,6 +276,8 @@ function ensurePublicSitePublishOverlay() {
       <div class="booking-page-overlay__panel" role="status" aria-live="assertive">
         <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
         <span class="booking-page-overlay__text" id="backendPublicSitePublishOverlayText"></span>
+        <span class="backend-public-site-publish-progress" id="backendPublicSitePublishOverlayProgress" hidden></span>
+        <pre class="backend-public-site-publish-log" id="backendPublicSitePublishOverlayLog" hidden></pre>
       </div>
     `;
     document.body?.append(overlay);
@@ -288,12 +290,51 @@ function isPublicSitePublishOverlayVisible() {
   return overlay instanceof HTMLElement && !overlay.hidden;
 }
 
-function setPublicSitePublishOverlay(mount, visible, message = "") {
+function currentPublicSitePublishPhase(job) {
+  const phases = Array.isArray(job?.phases) ? job.phases : [];
+  return phases.find((phase) => phase?.status === "running")
+    || phases.find((phase) => phase?.status === "failed")
+    || phases.find((phase) => phase?.status === "pending")
+    || null;
+}
+
+function publicSitePublishJobMessage(job) {
+  const phase = currentPublicSitePublishPhase(job);
+  if (phase?.label) return `${backendT("nav.public_site_publish_publishing", "Publishing...")} ${phase.label}`;
+  if (job?.status === "succeeded") return backendT("nav.public_site_publish_finished", "Publish finished.");
+  if (job?.status === "failed") return normalizePublishError(job.error) || backendT("nav.public_site_publish_failed", "Publish failed.");
+  return backendT("nav.public_site_publish_overlay", "Publishing website. Please wait.");
+}
+
+function publicSitePublishProgressText(job) {
+  const phases = Array.isArray(job?.phases) ? job.phases : [];
+  if (!phases.length) return "";
+  const finished = phases.filter((phase) => phase?.status === "succeeded").length;
+  const total = phases.length;
+  const failed = phases.some((phase) => phase?.status === "failed");
+  if (failed) return `${finished}/${total} ${backendT("nav.public_site_publish_steps_completed", "steps completed")}`;
+  return `${finished}/${total} ${backendT("nav.public_site_publish_steps_completed", "steps completed")}`;
+}
+
+function setPublicSitePublishOverlay(mount, visible, message = "", job = null) {
   const overlay = ensurePublicSitePublishOverlay();
   if (!(overlay instanceof HTMLElement)) return;
   const overlayText = overlay.querySelector("#backendPublicSitePublishOverlayText");
+  const overlayProgress = overlay.querySelector("#backendPublicSitePublishOverlayProgress");
+  const overlayLog = overlay.querySelector("#backendPublicSitePublishOverlayLog");
   const text = String(message || backendT("nav.public_site_publish_overlay", "Publishing website. Please wait.")).trim();
   if (overlayText instanceof HTMLElement) overlayText.textContent = text;
+  if (overlayProgress instanceof HTMLElement) {
+    const progressText = publicSitePublishProgressText(job);
+    overlayProgress.hidden = !visible || !progressText;
+    overlayProgress.textContent = progressText;
+  }
+  if (overlayLog instanceof HTMLElement) {
+    const logLines = Array.isArray(job?.log) ? job.log.map((line) => String(line || "").trim()).filter(Boolean) : [];
+    overlayLog.hidden = !visible || logLines.length === 0;
+    overlayLog.textContent = logLines.slice(-80).join("\n");
+    overlayLog.scrollTop = overlayLog.scrollHeight;
+  }
   document.body?.classList.toggle("backend-public-site-publish--busy", Boolean(visible));
   if (visible && document.activeElement instanceof HTMLElement) {
     document.activeElement.blur();
@@ -303,6 +344,10 @@ function setPublicSitePublishOverlay(mount, visible, message = "") {
   if (mount) mount.__backendPublicSitePublishOverlayVisible = Boolean(visible);
 }
 
+function setPublicSitePublishJobOverlay(mount, job) {
+  setPublicSitePublishOverlay(mount, true, publicSitePublishJobMessage(job), job);
+}
+
 function normalizePublishError(error) {
   return String(error?.message || error || "").trim();
 }
@@ -310,7 +355,9 @@ function normalizePublishError(error) {
 function publicSitePublishStatusMessage(status) {
   const reason = Array.isArray(status?.block_reasons) ? status.block_reasons.find(Boolean) : null;
   if (reason?.message) return reason.message;
-  if (status?.blocked) return backendT("nav.public_site_publish_blocked_title", "Translate missing or stale website strings before publishing.");
+  if (status?.blocked) return backendT("nav.public_site_publish_blocked_title", "Public-site publish is blocked. Check the status details.");
+  const warning = Array.isArray(status?.warnings) ? status.warnings.find(Boolean) : null;
+  if (warning?.message && status?.dirty) return `${backendT("nav.public_site_publish_dirty_title", "Publish saved website changes.")} ${warning.message}`;
   if (status?.dirty) return backendT("nav.public_site_publish_dirty_title", "Publish saved website changes.");
   return backendT("nav.public_site_publish_clean_title", "Website is up to date.");
 }
@@ -347,7 +394,7 @@ function setPublicSitePublishState(mount, status = {}, options = {}) {
     return;
   }
   if (blocked) {
-    button.textContent = backendT("nav.public_site_publish_blocked", "Translate First");
+    button.textContent = backendT("nav.public_site_publish_blocked", "Publish Blocked");
     button.title = publicSitePublishStatusMessage(status);
     return;
   }
@@ -383,7 +430,7 @@ async function refreshPublicSitePublishState(mount, apiBase, options = {}) {
     const runningJobId = String(payload?.running_job?.id || "").trim();
     if (runningJobId) {
       mount.__backendPublicSitePublishLocalRunning = true;
-      setPublicSitePublishOverlay(mount, true);
+      setPublicSitePublishJobOverlay(mount, payload.running_job);
       schedulePublicSitePublishJobPoll(mount, apiBase, runningJobId);
     } else if (isPublicSitePublishOverlayVisible() && !mount.__backendPublicSitePublishLocalRunning) {
       setPublicSitePublishOverlay(mount, false);
@@ -422,7 +469,7 @@ async function pollPublicSitePublishJob(mount, apiBase, jobId) {
     if (job?.status === "running") {
       mount.__backendPublicSitePublishLocalRunning = true;
       setPublicSitePublishState(mount, { dirty: true }, { running: true });
-      setPublicSitePublishOverlay(mount, true);
+      setPublicSitePublishJobOverlay(mount, job);
       schedulePublicSitePublishJobPoll(mount, apiBase, normalizedJobId);
       return;
     }
@@ -472,6 +519,7 @@ async function startPublicSitePublish(mount, apiBase) {
     }
     const jobId = String(payload?.job?.id || "").trim();
     if (jobId) {
+      setPublicSitePublishJobOverlay(mount, payload.job);
       await pollPublicSitePublishJob(mount, apiBase, jobId);
       return;
     }
@@ -521,6 +569,62 @@ function bindPublicSitePublishRefresh(mount, apiBase) {
   window.addEventListener("backend-translations-status-refresh", mount.__backendPublicSiteTranslationRefreshHandler);
 }
 
+function resolveBackendViewportHeight() {
+  return Number(window.visualViewport?.height || window.innerHeight || document.documentElement?.clientHeight || 0);
+}
+
+function syncBackendViewportMetrics(mount) {
+  const header = mount?.closest?.(".header") || document.querySelector(".header");
+  const headerHeight = Math.max(0, Math.ceil(Number(header?.getBoundingClientRect?.().height || 74)));
+  const availableHeight = Math.max(0, resolveBackendViewportHeight() - headerHeight);
+  const rootStyle = document.documentElement?.style;
+  if (!rootStyle) return;
+  rootStyle.setProperty("--backend-menu-height", `${headerHeight}px`);
+  rootStyle.setProperty("--backend-available-height", `${availableHeight}px`);
+  rootStyle.setProperty("--tour-customize-modal-top", `${headerHeight}px`);
+}
+
+function bindBackendViewportMetrics(mount) {
+  if (typeof mount.__backendViewportMetricsCleanup === "function") {
+    mount.__backendViewportMetricsCleanup();
+    mount.__backendViewportMetricsCleanup = null;
+  }
+  let frameId = 0;
+  const requestFrame =
+    typeof window.requestAnimationFrame === "function"
+      ? window.requestAnimationFrame.bind(window)
+      : (callback) => window.setTimeout(callback, 0);
+  const cancelFrame =
+    typeof window.cancelAnimationFrame === "function"
+      ? window.cancelAnimationFrame.bind(window)
+      : (id) => window.clearTimeout(id);
+  const sync = () => {
+    if (frameId) return;
+    frameId = requestFrame(() => {
+      frameId = 0;
+      syncBackendViewportMetrics(mount);
+    });
+  };
+  const header = mount.closest?.(".header") || document.querySelector(".header");
+  const observer =
+    typeof window.ResizeObserver === "function" && header
+      ? new window.ResizeObserver(sync)
+      : null;
+  if (observer && header) observer.observe(header);
+  window.addEventListener("resize", sync);
+  window.visualViewport?.addEventListener?.("resize", sync);
+  mount.__backendViewportMetricsCleanup = () => {
+    if (frameId) {
+      cancelFrame(frameId);
+      frameId = 0;
+    }
+    observer?.disconnect?.();
+    window.removeEventListener("resize", sync);
+    window.visualViewport?.removeEventListener?.("resize", sync);
+  };
+  sync();
+}
+
 export function mountBackendNav(mount, options = {}) {
   if (!mount) return;
   if (mount.__backendPublicSitePublishPollTimer) {
@@ -566,6 +670,7 @@ export function mountBackendNav(mount, options = {}) {
     </nav>
   `;
 
+  bindBackendViewportMetrics(mount);
   window.dispatchEvent(new CustomEvent("backend-nav-mounted"));
 
   wireAuthLogoutLink(mount.querySelector("#backendLogoutLink"), {

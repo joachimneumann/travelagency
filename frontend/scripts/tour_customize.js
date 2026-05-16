@@ -918,9 +918,19 @@ export function createTourCustomizer({
       : t("tour.customize.timeline", "Your Itinerary");
   }
 
+  function draftModalTitle() {
+    const proposedTitle = draftTitleProposals()[0] || "";
+    return proposedTitle
+      || normalizeText(draft?.tourTitle)
+      || t("tour.customize.title_proposal_custom", "Custom Tour");
+  }
+
   function closeActionLabel() {
     return draftHasCustomizedTimeline()
-      ? t("tour.customize.confirm", "I am happy")
+      ? t(
+          "tour.customize.confirm_refine",
+          "Happy with this idea? Our local travel team will refine it from here"
+        )
       : t("tour.customize.close", "Close");
   }
 
@@ -939,10 +949,24 @@ export function createTourCustomizer({
     return true;
   }
 
+  function refreshModalTitleDom() {
+    if (!modal || isEmbeddedWorkspace()) return false;
+    const title = modal.querySelector("#tour_customize_title");
+    if (!(title instanceof HTMLElement)) return false;
+    title.textContent = draftModalTitle();
+    return true;
+  }
+
   function tourTitleForTimeline(trip) {
     const currentLang = lang();
     return resolveLocalizedText(trip?.title_i18n, currentLang)
       || resolveLocalizedText(trip?.title, currentLang);
+  }
+
+  function isTourVariantLikeTrip(trip) {
+    const recordType = normalizeText(trip?.record_type).toLowerCase();
+    if (recordType === "tour_variant") return true;
+    return Boolean(normalizeText(trip?.base_marketing_tour_id));
   }
 
   function customizedTitleForTrip(trip) {
@@ -1007,7 +1031,11 @@ export function createTourCustomizer({
     const baseTourId = normalizeText(baseTrip?.id);
     const destinationCatalog = typeof destinationScopeCatalog === "function" ? destinationScopeCatalog() : null;
     const trips = typeof allTrips === "function" ? allTrips() : [];
-    await Promise.all((Array.isArray(trips) ? trips : []).map(async (trip) => {
+    const sourceTrips = (Array.isArray(trips) ? trips : []).filter((trip) => {
+      const tripId = normalizeText(trip?.id);
+      return tripId && (tripId === baseTourId || !isTourVariantLikeTrip(trip));
+    });
+    await Promise.all(sourceTrips.map(async (trip) => {
       const tripId = normalizeText(trip?.id);
       if (!tripId || (typeof travelPlanDays === "function" && travelPlanDays(trip).length)) return;
       try {
@@ -1016,7 +1044,7 @@ export function createTourCustomizer({
         // Optional days are opportunistic; skip tours whose details fail to load.
       }
     }));
-    const modules = (Array.isArray(trips) ? trips : []).flatMap((trip) => {
+    const modules = sourceTrips.flatMap((trip) => {
       const sourceTourId = normalizeText(trip?.id);
       const sourceTourTitle = tourTitleForTimeline(trip);
       return (typeof travelPlanDays === "function" ? travelPlanDays(trip) : [])
@@ -1318,28 +1346,30 @@ export function createTourCustomizer({
     const optimizeDisabled = isEmbeddedWorkspace() && (embeddedWorkspaceDisabled || draft.timelineDays.length <= 1);
     return `
       <section class="tour-customize-map${zoomClass}"${zoomStyle} aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
-        <div class="tour-customize-map__region" aria-hidden="true"></div>
-        <div class="tour-customize-map__controls">
-          <button class="tour-customize-map__optimize" type="button" data-customize-optimize data-customize-map-control aria-label="${escapeAttr(t("tour.customize.optimize", "Optimize"))}" title="${escapeAttr(t("tour.customize.optimize", "Optimize"))}"${optimizeDisabled ? " disabled" : ""}>
-            ${escapeHTML(t("tour.customize.optimize", "Optimize"))}
-          </button>
-          <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out data-customize-map-control aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
-            <span aria-hidden="true"></span>
-          </button>
-        </div>
-        <svg class="tour-customize-map__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-          ${path ? `<path d="${escapeAttr(path)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
-        </svg>
-        ${groups.map((group) => {
-          const label = formatDayNumbers(group.dayNumbers);
-          const location = group.locationLabel || group.item.locationLabel;
-          const aria = t("tour.customize.marker_label", "Days {days}, {location}", { days: label, location });
-          return `
-            <button class="tour-customize-map__marker" type="button" data-customize-route-key="${escapeAttr(group.key)}" style="left:${group.mapPoint.x}%;top:${group.mapPoint.y}%;" aria-label="${escapeAttr(aria)}" title="${escapeAttr(aria)}">
-              ${escapeHTML(label)}
+        <div class="tour-customize-map__stage">
+          <div class="tour-customize-map__region" aria-hidden="true"></div>
+          <div class="tour-customize-map__controls">
+            <button class="tour-customize-map__optimize" type="button" data-customize-optimize data-customize-map-control aria-label="${escapeAttr(t("tour.customize.optimize", "Optimize"))}" title="${escapeAttr(t("tour.customize.optimize", "Optimize"))}"${optimizeDisabled ? " disabled" : ""}>
+              ${escapeHTML(t("tour.customize.optimize", "Optimize"))}
             </button>
-          `;
-        }).join("")}
+            <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out data-customize-map-control aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
+              <span aria-hidden="true"></span>
+            </button>
+          </div>
+          <svg class="tour-customize-map__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            ${path ? `<path d="${escapeAttr(path)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
+          </svg>
+          ${groups.map((group) => {
+            const label = formatDayNumbers(group.dayNumbers);
+            const location = group.locationLabel || group.item.locationLabel;
+            const aria = t("tour.customize.marker_label", "Days {days}, {location}", { days: label, location });
+            return `
+              <button class="tour-customize-map__marker" type="button" data-customize-route-key="${escapeAttr(group.key)}" style="left:${group.mapPoint.x}%;top:${group.mapPoint.y}%;" aria-label="${escapeAttr(aria)}" title="${escapeAttr(aria)}">
+                ${escapeHTML(label)}
+              </button>
+            `;
+          }).join("")}
+        </div>
       </section>
     `;
   }
@@ -1444,9 +1474,6 @@ export function createTourCustomizer({
             </div>
             </section>
             <section class="tour-customize-timeline" aria-label="${escapeAttr(timelineTitle)}">
-              <div class="tour-customize-timeline__header">
-            <h3>${escapeHTML(timelineTitle)}</h3>
-          </div>
           <div class="tour-customize-timeline__list" data-customize-timeline>
                 ${draft.timelineDays.length
                 ? draft.timelineDays.map(renderTimelineItem).join("")
@@ -1487,12 +1514,10 @@ export function createTourCustomizer({
 
     function refreshTimelineTitle(root) {
       if (!root || !draft) return false;
-      const title = root.querySelector(".tour-customize-timeline__header h3");
       const section = root.querySelector(".tour-customize-timeline");
-      if (!(title instanceof HTMLElement)) return false;
       const timelineTitle = draftTimelineTitle();
-      title.textContent = timelineTitle;
-      if (section instanceof HTMLElement) section.setAttribute("aria-label", timelineTitle);
+      if (!(section instanceof HTMLElement)) return false;
+      section.setAttribute("aria-label", timelineTitle);
       return true;
     }
 
@@ -1561,12 +1586,12 @@ export function createTourCustomizer({
   const customizerWorkspaceModule = createTourCustomizerWorkspaceModule();
 
   function renderModalBody() {
+    const modalTitle = draftModalTitle();
     return `
       <div class="tour-customize__dialog" role="dialog" aria-modal="true" aria-labelledby="tour_customize_title">
         <header class="tour-customize__header">
           <div>
-            <h2 id="tour_customize_title">${escapeHTML(t("tour.customize.title", "Customize this tour"))}</h2>
-            <p>${escapeHTML(t("tour.customize.subtitle", "Adapt the day-by-day route before previewing your trip."))}</p>
+            <h2 id="tour_customize_title">${escapeHTML(modalTitle)}</h2>
           </div>
           <div class="tour-customize__header-actions">
             <button class="btn btn-secondary" type="button" data-customize-reset>${escapeHTML(t("tour.customize.reset", "Reset tour"))}</button>
@@ -1637,6 +1662,7 @@ export function createTourCustomizer({
     refreshMapDom();
     if (refreshOptions) refreshOptionsDom();
     refreshTimelineTitleDom();
+    refreshModalTitleDom();
     refreshCloseActionDom();
     notifyEmbeddedWorkspaceTimelineChange();
   }
@@ -2313,7 +2339,9 @@ export function createTourCustomizer({
     const mapPoint = displayedMapPoint(item.mapPoint);
     marker.style.left = `${mapPoint.x}%`;
     marker.style.top = `${mapPoint.y}%`;
-    modal?.querySelector(".tour-customize-map")?.appendChild(marker);
+    const mapStage = modal?.querySelector(".tour-customize-map__stage")
+      || modal?.querySelector(".tour-customize-map");
+    mapStage?.appendChild(marker);
   }
 
   function removePointerDragListeners() {
@@ -2869,6 +2897,10 @@ export function createTourCustomizer({
     const zoomOutButton = map.querySelector("[data-customize-map-zoom-out]");
     const optimizeButton = map.querySelector("[data-customize-optimize]");
     const isMapControlTarget = (target) => target instanceof Element && Boolean(target.closest("[data-customize-map-control]"));
+    const mapCoordinateRect = () => {
+      const stage = map.querySelector(".tour-customize-map__stage");
+      return (stage instanceof HTMLElement ? stage : map).getBoundingClientRect();
+    };
     const applyZoomStateToCurrentMap = () => {
       const zoom = currentMapZoom();
       map.classList.toggle("is-zoomed", zoom.zoomed);
@@ -2927,7 +2959,7 @@ export function createTourCustomizer({
         zoomOut();
         return;
       }
-      const rect = map.getBoundingClientRect();
+      const rect = mapCoordinateRect();
       if (!rect.width || !rect.height) return;
       const x = clampMapZoomCenter(((event.clientX - rect.left) / rect.width) * 100);
       const y = clampMapZoomCenter(((event.clientY - rect.top) / rect.height) * 100);
@@ -2954,7 +2986,7 @@ export function createTourCustomizer({
     map.addEventListener("pointermove", (event) => {
       if (!activeMapPan || activeMapPan.pointerId !== event.pointerId || activeMapPan.map !== map) return;
       event.preventDefault();
-      const rect = map.getBoundingClientRect();
+      const rect = mapCoordinateRect();
       if (!rect.width || !rect.height || !draft) return;
       draft.mapZoom = {
         zoomed: true,

@@ -99,6 +99,7 @@
   "tour.plan.no_days": "No travel plan days listed yet.",
   "tour.customize.close": "Close",
   "tour.customize.confirm": "I am happy",
+  "tour.customize.confirm_refine": "Happy with this idea? Our local travel team will refine it from here",
   "tour.customize.day": "Day {day}",
   "tour.customize.day_image": "Day image",
   "tour.customize.drop_here": "Drop here",

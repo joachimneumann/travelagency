@@ -1035,17 +1035,6 @@
         ]
       },
       {
-        key: "tour_variants_publish",
-        path: "/api/v1/tour-variants/publish",
-        method: "POST",
-        authenticated: true,
-        requestType: null,
-        responseType: "TourVariantPublishResponse",
-        parameters: [
-
-        ]
-      },
-      {
         key: "tour_variant_detail",
         path: "/api/v1/tour-variants/{tour_variant_id}",
         method: "GET",

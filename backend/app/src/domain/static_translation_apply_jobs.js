@@ -200,14 +200,6 @@ function targetArgs(targetLangs) {
   return uniqueNormalized(targetLangs).flatMap((lang) => ["--target", lang]);
 }
 
-function runtimeI18nPhase() {
-  return commandPhase("runtime_i18n", "Generate runtime i18n from content/translations", process.execPath, ["scripts/i18n/build_runtime_i18n.mjs", "--strict"]);
-}
-
-function homepageAssetsPhase() {
-  return commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]);
-}
-
 function centralApplyOptions(entries) {
   const targetLangsByDomain = {};
   for (const entry of entries) {
@@ -285,20 +277,6 @@ async function applyPhases({ applyTranslations, getStatusSummary } = {}) {
   }
 
   return phases;
-}
-
-async function publishPhases({ publishTranslations }) {
-  return [
-    callbackPhase("validate_translation_store", "Validate content/translations", async (_phase, job, helpers) => {
-      const manifest = await publishTranslations();
-      helpers.appendLog(
-        job,
-        `Validated ${manifest.total_items || 0} content/translations item${manifest.total_items === 1 ? "" : "s"}. source_set_hash=${manifest.source_set_hash || ""}`
-      );
-    }),
-    runtimeI18nPhase(),
-    homepageAssetsPhase()
-  ];
 }
 
 function retranslatePhases({ mode, targetLang, clearTranslationCaches }) {
@@ -408,7 +386,6 @@ export function createStaticTranslationApplyJobs({
   applyTranslations = null,
   protectTranslations = null,
   clearTranslationCaches = null,
-  publishTranslations = null,
   getStatusSummary = null,
   spawnCommand = spawn,
   runCommand = null,
@@ -502,12 +479,6 @@ export function createStaticTranslationApplyJobs({
         type: "apply",
         phases: await applyPhases({ applyTranslations, getStatusSummary })
       });
-    },
-    async startPublish() {
-      if (typeof publishTranslations !== "function") {
-        throw apiError(500, "STATIC_TRANSLATION_PUBLISH_UNAVAILABLE", "Translation store validation is not configured.");
-      }
-      return startJob({ type: "publish", phases: await publishPhases({ publishTranslations }) });
     },
     startRetranslate({ mode, target_lang: targetLang } = {}) {
       if (mode === "protected_terms") {

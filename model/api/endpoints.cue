@@ -1152,14 +1152,6 @@ package api
 			}]
 		},
 		{
-			key:           "tour_variants_publish"
-			path:          "/api/v1/tour-variants/publish"
-			method:        "POST"
-			tag:           "Tours"
-			authenticated: true
-			responseType:  "TourVariantPublishResponse"
-		},
-		{
 			key:           "tour_variant_create"
 			path:          "/api/v1/tour-variants"
 			method:        "POST"

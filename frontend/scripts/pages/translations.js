@@ -340,8 +340,8 @@ function runtimeI18nBlocked(status = state.translationStatus) {
   return Boolean(status?.runtimeI18n?.blocked);
 }
 
-function runtimeI18nHardBlocked(status = state.translationStatus) {
-  return runtimeI18nBlocked(status) && numberCount(status?.publishReadyCount) <= 0;
+function runtimeI18nHardBlocked(_status = state.translationStatus) {
+  return false;
 }
 
 function runtimeI18nErrorMessage(status = state.translationStatus) {
@@ -349,12 +349,10 @@ function runtimeI18nErrorMessage(status = state.translationStatus) {
 }
 
 function updateRuntimeWarning(status = state.translationStatus) {
-  const blocked = runtimeI18nHardBlocked(status);
+  const blocked = false;
   if (els.runtimeWarning) els.runtimeWarning.hidden = !blocked;
   if (els.runtimeWarningMessage) {
-    els.runtimeWarningMessage.textContent = blocked
-      ? runtimeI18nErrorMessage(status) || "Runtime i18n generator check failed."
-      : "";
+    els.runtimeWarningMessage.textContent = "";
   }
 }
 
@@ -385,7 +383,7 @@ function translationActionTitle(action, translationState, actionsBusy) {
     if (runtimeI18nHardBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
     return translationState.loaded ? "No strings need translation." : "Loading translation status.";
   }
-  if (translationState.translateNeeded) return "Translate missing or stale strings before publishing.";
+  if (translationState.translateNeeded) return "Publishing is allowed and will use English fallback for untranslated strings.";
   return translationState.publishReady ? "Use Publish Website to update runtime translations and static website content." : "No translated strings are ready for publishing.";
 }
 
@@ -413,8 +411,10 @@ function translationStatusMessage(status) {
   const displayCount = workCount || count;
   const subject = displayCount === 1 ? "string" : "strings";
   const verb = displayCount === 1 ? "needs" : "need";
-  const base = `${displayCount} ${subject} ${verb} translation before publishing.`;
-  if (workCount > 0) return base;
+  const base = `${displayCount} ${subject} ${verb} translation.`;
+  if (workCount > 0) {
+    return `${base} Publishing is allowed and will use English fallback for ${displayCount === 1 ? "this string" : "these strings"}.`;
+  }
   if (status.publishReadyCount > 0) {
     return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready. Use Publish Website to update runtime translations and static website content.`;
   }
@@ -1593,7 +1593,7 @@ async function pollJob(jobId, overlayStartedAt) {
       return;
     }
     if (latest.type === "apply" && translationStatus.translationIssueCount > 0) {
-      showError(`${translationStatusMessage(translationStatus)} Publish Website remains blocked.`);
+      showError(`${translationStatusMessage(translationStatus)} Publish Website can still run with English fallback.`);
       refreshTranslationStatusText();
       return;
     }

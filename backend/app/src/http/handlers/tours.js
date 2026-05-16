@@ -24,8 +24,7 @@ import {
 import { normalizeExperienceHighlightIds } from "../../domain/tour_metadata.js";
 import {
   applyMarketingTourTranslations,
-  loadPublishedMarketingTourTranslations,
-  syncMarketingTourTranslationsForPublish
+  loadPublishedMarketingTourTranslations
 } from "../../domain/marketing_tour_translations.js";
 import { createHash } from "node:crypto";
 import { rename } from "node:fs/promises";
@@ -94,10 +93,6 @@ export function createTourHandlers(deps) {
     rm
   } = deps;
 
-  const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
-    path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
-    path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
-  ]);
   const TOUR_REEL_VIDEO_FILENAME = "video.mp4";
   const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;
   const VIDEO_UPLOAD_BODY_MAX_BYTES = 150 * 1024 * 1024;
@@ -119,8 +114,6 @@ export function createTourHandlers(deps) {
     || path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
   const customOnePagerPreviewTokens = new Map();
   const publicOnePagerPdfInflight = new Map();
-  let publicHomepageAssetGenerationQueue = Promise.resolve();
-
   function nowMs() {
     return Date.now();
   }
@@ -801,36 +794,6 @@ export function createTourHandlers(deps) {
         copyMarketingTourServiceForImport(sourceItem, options)
       ))
     };
-  }
-
-  async function regeneratePublicHomepageAssets(reason, details = {}) {
-    const task = async () => {
-      const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
-      if (!generatorPath) {
-        throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
-      }
-      await execFile(process.execPath, [generatorPath], {
-        cwd: repoRoot
-      });
-    };
-
-    publicHomepageAssetGenerationQueue = publicHomepageAssetGenerationQueue.then(task, task);
-
-    try {
-      await publicHomepageAssetGenerationQueue;
-      return { ok: true };
-    } catch (error) {
-      const message = String(error?.stderr || error?.message || error || "Static homepage asset generation failed.");
-      console.error("[backend-public-homepage-assets] Generation failed.", {
-        reason,
-        ...details,
-        error: message
-      });
-      return {
-        ok: false,
-        error: message
-      };
-    }
   }
 
   function deferredPublicHomepageAssets(reason, details = {}) {
@@ -2056,11 +2019,9 @@ export function createTourHandlers(deps) {
     }
 
     const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
-    await syncMarketingTourTranslationsForPublish(tours, translationMemoryStore);
-    const homepageAssets = await regeneratePublicHomepageAssets("tours_publish", { tour_count: tours.length });
     sendJson(res, 200, {
-      published: homepageAssets?.ok !== false,
-      homepage_assets: homepageAssets
+      published: true,
+      homepage_assets: deferredPublicHomepageAssets("tours_publish", { tour_count: tours.length })
     });
   }
 
@@ -2079,11 +2040,9 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    await syncMarketingTourTranslationsForPublish(tours, translationMemoryStore);
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_publish", { tour_id: tour.id });
     sendJson(res, 200, {
       tour: await buildLocalizedTourEditorResponse(tour, lang),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_publish", { tour_id: tour.id })
     });
   }
 
@@ -2388,11 +2347,10 @@ export function createTourHandlers(deps) {
     }
 
     await rm(folderPath, { recursive: true, force: true });
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_delete", { tour_id: tourId });
     sendJson(res, 200, {
       deleted: true,
       tour_id: tourId,
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_delete", { tour_id: tourId })
     });
   }
 

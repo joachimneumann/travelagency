@@ -1182,7 +1182,7 @@ textarea:focus-visible {
 .team-card__photo-wrap {
   display: block;
   width: min(100%, 225px);
-  overflow: hidden;
+  overflow: visible;
   border-radius: 18px;
   background: transparent;
   box-shadow: none;
@@ -1194,9 +1194,10 @@ textarea:focus-visible {
 
 .team-card__photo {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  object-fit: cover;
-  object-position: center bottom;
+  height: auto;
+  aspect-ratio: auto;
+  object-fit: contain;
+  object-position: center;
   display: block;
   background: transparent;
   border-radius: 18px;

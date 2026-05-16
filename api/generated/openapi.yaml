@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-15T08:14:09Z
+# 2026-05-15T15:43:07Z
 
 ---
 openapi: 3.1.0
@@ -10719,40 +10719,6 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/TourVariantSourceDayList"
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/ErrorResponse"
-  "/api/v1/tour-variants/publish":
-    post:
-      operationId: tour_variants_publish
-      summary: Tour Variants Publish
-      tags:
-      - Tours
-      security:
-      - bearerAuth: []
-      parameters: []
-      responses:
-        '200':
-          description: Success
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TourVariantPublishResponse"
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                "$ref": "#/components/schemas/TourVariantPublishResponse"
         '401':
           description: Unauthorized
           content:

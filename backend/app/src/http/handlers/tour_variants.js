@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs";
-
 export function createTourVariantHandlers(deps) {
   const {
     normalizeText,
@@ -23,18 +21,10 @@ export function createTourVariantHandlers(deps) {
     normalizeTourLang,
     tourVariantHelpers,
     nowIso,
-    randomUUID,
-    repoRoot,
-    execFile,
-    path
+    randomUUID
   } = deps;
 
   const TOUR_VARIANT_STALE_UPDATE_MESSAGE = "This Tour Variant was updated by someone else. Reload before saving.";
-  const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
-    path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
-    path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
-  ]);
-  let publicHomepageAssetGenerationQueue = Promise.resolve();
 
   function requestLang(reqUrl) {
     return normalizeTourLang(new URL(reqUrl, "http://localhost").searchParams.get("lang"));
@@ -47,36 +37,6 @@ export function createTourVariantHandlers(deps) {
       reason,
       ...details
     };
-  }
-
-  async function regeneratePublicHomepageAssets(reason, details = {}) {
-    const task = async () => {
-      const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
-      if (!generatorPath) {
-        throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
-      }
-      await execFile(process.execPath, [generatorPath], {
-        cwd: repoRoot
-      });
-    };
-
-    publicHomepageAssetGenerationQueue = publicHomepageAssetGenerationQueue.then(task, task);
-
-    try {
-      await publicHomepageAssetGenerationQueue;
-      return { ok: true };
-    } catch (error) {
-      const message = String(error?.stderr || error?.message || error || "Static homepage asset generation failed.");
-      console.error("[backend-public-homepage-assets] Generation failed.", {
-        reason,
-        ...details,
-        error: message
-      });
-      return {
-        ok: false,
-        error: message
-      };
-    }
   }
 
   function assertExpectedTourVariantUpdatedAt(payload, currentTourVariant, res) {
@@ -411,11 +371,10 @@ export function createTourVariantHandlers(deps) {
       });
       return;
     }
-    const homepageAssets = await regeneratePublicHomepageAssets("tour_variant_publish");
     sendJson(res, 200, {
-      ok: homepageAssets.ok === true,
+      ok: true,
       invalid_tour_variants: [],
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("tour_variant_publish")
     });
   }
 

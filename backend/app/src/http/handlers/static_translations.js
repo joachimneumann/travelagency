@@ -140,23 +140,6 @@ export function createStaticTranslationHandlers({
     }
   }
 
-  async function handleStartStaticTranslationPublish(req, res) {
-    if (!canAccess(req)) {
-      rejectForbidden(res);
-      return;
-    }
-    if (writesEnabled === false) {
-      rejectWritesDisabled(res);
-      return;
-    }
-    try {
-      const job = await staticTranslationApplyJobs.startPublish();
-      sendJson(res, 202, { job });
-    } catch (error) {
-      sendError(sendJson, res, error);
-    }
-  }
-
   async function handleStartStaticTranslationRetranslate(req, res) {
     if (!canAccess(req)) {
       rejectForbidden(res);
@@ -195,7 +178,6 @@ export function createStaticTranslationHandlers({
     handlePatchStaticTranslationOverrides,
     handleDeleteStaticTranslationCache,
     handleStartStaticTranslationApply,
-    handleStartStaticTranslationPublish,
     handleStartStaticTranslationRetranslate,
     handleGetStaticTranslationApplyJob
   };

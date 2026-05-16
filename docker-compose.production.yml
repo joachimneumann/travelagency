@@ -12,11 +12,19 @@ services:
     volumes:
       - ./backend/app/data:/srv/backend/app/data
       - ./content:/srv/content
+      - ./frontend/data/i18n:/srv/frontend/data/i18n
+      - ./frontend/data/generated/homepage:/srv/frontend/data/generated/homepage
+      - ./assets/generated/homepage:/srv/assets/generated/homepage
+      - ./assets/generated/runtime:/srv/assets/generated/runtime
     env_file:
       - .env
     environment:
+      PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: /srv/frontend/data/generated/homepage
+      PUBLIC_HOMEPAGE_ASSETS_DIR: /srv/assets/generated/homepage
+      PUBLIC_SITE_RUNTIME_BRAND_ENV: production
       ONE_PAGER_FONT_DIR: /srv/content/fonts
       TRANSLATION_OVERRIDE_WRITES_ENABLED: "false"
+      TRANSLATION_SNAPSHOT_PUBLISH_ENABLED: "true"
     depends_on:
       postgres:
         condition: service_healthy

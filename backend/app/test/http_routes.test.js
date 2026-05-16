@@ -81,7 +81,7 @@ test("buildApiRoutes includes static translation management routes", () => {
   assert.equal(matches("PATCH", "/api/v1/static-translations/frontend/vi/overrides"), true);
   assert.equal(matches("DELETE", "/api/v1/static-translations/frontend/vi/cache/hero.title"), true);
   assert.equal(matches("POST", "/api/v1/static-translations/apply"), true);
-  assert.equal(matches("POST", "/api/v1/static-translations/publish"), true);
+  assert.equal(matches("POST", "/api/v1/static-translations/publish"), false);
   assert.equal(matches("GET", "/api/v1/static-translations/apply/job_123"), true);
 
   const firstApplyJobRoute = routes.find((route) => route.method === "GET" && route.pattern.test("/api/v1/static-translations/apply/job_123"));
@@ -176,7 +176,7 @@ test("buildApiRoutes includes the marketing tour one-pager PDF route", () => {
   );
 });
 
-test("buildApiRoutes includes the marketing tour publish route", () => {
+test("buildApiRoutes does not expose retired page-level publish routes", () => {
   const handlers = new Proxy({}, {
     get: () => () => {}
   });
@@ -184,6 +184,14 @@ test("buildApiRoutes includes the marketing tour publish route", () => {
   const routes = buildApiRoutes({ handlers });
   assert.equal(
     routes.some((route) => route.method === "POST" && route.pattern.test("/api/v1/tours/tour_alpha/publish")),
-    true
+    false
+  );
+  assert.equal(
+    routes.some((route) => route.method === "POST" && route.pattern.test("/api/v1/tours/publish")),
+    false
+  );
+  assert.equal(
+    routes.some((route) => route.method === "POST" && route.pattern.test("/api/v1/tour-variants/publish")),
+    false
   );
 });

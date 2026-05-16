@@ -58,7 +58,7 @@ test("public ATP staff team endpoint returns merged public profiles", async () =
   assert.equal(calls[0].headers["Cache-Control"], "no-store");
 });
 
-test("staff profile updates regenerate homepage assets with configured staff roots", async () => {
+test("staff profile updates mark homepage assets dirty without regenerating", async () => {
   const responses = [];
   const execCalls = [];
   const handlers = createAtpStaffHandlers({
@@ -97,9 +97,85 @@ test("staff profile updates regenerate homepage assets with configured staff roo
 
   assert.equal(responses.length, 1);
   assert.equal(responses[0].status, 200);
-  assert.equal(responses[0].body.homepage_assets.ok, true);
+  assert.deepEqual(responses[0].body.homepage_assets, {
+    ok: true,
+    dirty: true,
+    reason: "staff_profile_patch",
+    username: "vic"
+  });
+  assert.equal(execCalls.length, 0);
+});
+
+test("staff profile picture upload converts to 400px-wide WebP", async () => {
+  const responses = [];
+  const execCalls = [];
+  const writtenFiles = [];
+  const removedFiles = [];
+  const handlers = createAtpStaffHandlers({
+    getPrincipal: () => ({ username: "admin" }),
+    canViewAtpStaffProfiles: () => true,
+    canEditAtpStaffProfiles: () => true,
+    readBodyJson: async () => ({
+      filename: "Vic Portrait.png",
+      mime_type: "image/png",
+      data_base64: Buffer.from("image-bytes").toString("base64")
+    }),
+    sendJson: (_res, status, body, headers = {}) => {
+      responses.push({ status, body, headers });
+    },
+    listAtpStaffDirectoryEntries: async () => [],
+    listPublicAtpStaffProfiles: async () => [],
+    buildAtpStaffDirectoryEntryByUsername: async () => ({ username: "vic" }),
+    updateAtpStaffProfileByUsername: async () => null,
+    setAtpStaffPictureRefByUsername: async (username, pictureRef) => ({
+      username,
+      staff_profile: { picture_ref: pictureRef }
+    }),
+    resetAtpStaffPictureByUsername: async () => null,
+    repoRoot,
+    translateEntries: async () => ({}),
+    translateEntriesWithMeta: async () => ({ entries: {} }),
+    execFile: async (...args) => {
+      execCalls.push(args);
+    },
+    mkdir: async () => {},
+    writeFile: async (filePath, buffer) => {
+      writtenFiles.push({ filePath, buffer });
+    },
+    rm: async (filePath) => {
+      removedFiles.push(filePath);
+    },
+    TEMP_UPLOAD_DIR: "/tmp/uploads",
+    ATP_STAFF_ROOT: "/tmp/atp_staff",
+    ATP_STAFF_PROFILES_PATH: "/tmp/atp_staff/staff.json",
+    ATP_STAFF_PHOTOS_DIR: "/tmp/atp_staff/photos",
+    resolveAtpStaffPhotoDiskPath: () => null,
+    sendFileWithCache: async () => {},
+    randomUUID: () => "uuid"
+  });
+
+  await handlers.handleUploadAtpStaffPhoto({}, {}, ["vic"]);
+
+  assert.equal(responses.length, 1);
+  assert.equal(responses[0].status, 200);
+  assert.equal(responses[0].body.user.staff_profile.picture_ref, "/content/atp_staff/photos/vic.webp");
+  assert.deepEqual(responses[0].body.homepage_assets, {
+    ok: true,
+    dirty: true,
+    reason: "staff_photo_upload",
+    username: "vic"
+  });
+  assert.equal(writtenFiles.length, 1);
+  assert.equal(removedFiles.length, 1);
   assert.equal(execCalls.length, 1);
-  assert.equal(execCalls[0][2].env.PUBLIC_HOMEPAGE_STAFF_ROOT, "/tmp/atp_staff");
-  assert.equal(execCalls[0][2].env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH, "/tmp/atp_staff/staff.json");
-  assert.equal(execCalls[0][2].env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR, "/tmp/atp_staff/photos");
+  assert.equal(execCalls[0][0], "magick");
+  assert.deepEqual(execCalls[0][1].slice(1), [
+    "-auto-orient",
+    "-resize",
+    "400x",
+    "-strip",
+    "-quality",
+    "84",
+    "/tmp/atp_staff/photos/vic.webp"
+  ]);
 });

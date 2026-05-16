@@ -1098,6 +1098,160 @@ test("tour customizer uses happy confirmation only after customization and reset
   }
 });
 
+test("tour customizer optional days ignore Tour Variant records", async () => {
+  const previousDocument = global.document;
+  const previousHTMLElement = global.HTMLElement;
+  const previousHTMLButtonElement = global.HTMLButtonElement;
+  const previousWindow = global.window;
+  let modalElement = null;
+
+  class CapturingElement extends FakeElement {
+    constructor() {
+      super();
+      this._innerHTML = "";
+    }
+
+    set innerHTML(value) {
+      this._innerHTML = String(value ?? "");
+    }
+
+    get innerHTML() {
+      return this._innerHTML;
+    }
+
+    querySelector() {
+      return null;
+    }
+
+    remove() {}
+  }
+
+  global.HTMLElement = CapturingElement;
+  global.HTMLButtonElement = CapturingElement;
+  global.document = {
+    activeElement: null,
+    body: {
+      appendChild(element) {
+        modalElement = element;
+      }
+    },
+    createElement() {
+      modalElement = new CapturingElement();
+      return modalElement;
+    },
+    documentElement: {
+      classList: {
+        add() {},
+        remove() {}
+      }
+    }
+  };
+  global.window = undefined;
+
+  try {
+    const { createTourCustomizer } = await loadTourCustomizer();
+    const baseTrip = {
+      id: "tour_optional_filter_base",
+      title: "Base tour",
+      travel_plan: {
+        days: [
+          {
+            id: "day_hanoi",
+            title: "Base Hanoi day",
+            primary_location_id: "place_hanoi",
+            services: [
+              { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+            ]
+          }
+        ]
+      }
+    };
+    const marketingTrip = {
+      id: "tour_optional_filter_marketing",
+      title: "Marketing tour",
+      travel_plan: {
+        days: [
+          {
+            id: "day_hue",
+            title: "Marketing Hue day",
+            primary_location_id: "place_hue",
+            services: [
+              { title: "Citadel", image: { storage_path: "/assets/img/hue.webp" } }
+            ]
+          }
+        ]
+      }
+    };
+    const variantTrip = {
+      id: "tour_optional_filter_variant",
+      record_type: "tour_variant",
+      base_marketing_tour_id: baseTrip.id,
+      title: "Variant tour",
+      travel_plan: {
+        days: [
+          {
+            id: "day_variant_hue",
+            title: "Variant-only Hue day",
+            primary_location_id: "place_hue",
+            services: [
+              { title: "Variant Citadel", image: { storage_path: "/assets/img/variant-hue.webp" } }
+            ]
+          }
+        ]
+      }
+    };
+    const storedVariantTrip = {
+      id: "tour_optional_filter_stored_variant",
+      base_marketing_tour_id: baseTrip.id,
+      title: "Stored Variant tour",
+      travel_plan: {
+        days: [
+          {
+            id: "day_stored_variant_hue",
+            title: "Stored Variant-only Hue day",
+            primary_location_id: "place_hue",
+            services: [
+              { title: "Stored Variant Citadel", image: { storage_path: "/assets/img/stored-variant-hue.webp" } }
+            ]
+          }
+        ]
+      }
+    };
+    const customizer = createTourCustomizer({
+      state: {},
+      frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+      )),
+      currentFrontendLang: () => "en",
+      normalizeFrontendTourLang: (lang) => lang || "en",
+      escapeHTML,
+      escapeAttr,
+      travelPlanDays: (item) => item?.travel_plan?.days || [],
+      destinationScopeCatalog: () => ({
+        places: [
+          { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 },
+          { id: "place_hue", label: "Hue", latitude: 16.4637, longitude: 107.5909 }
+        ]
+      }),
+      findTripById: (id) => [baseTrip, marketingTrip, variantTrip, storedVariantTrip].find((trip) => trip.id === id),
+      ensureTourDetailsLoaded: async () => {},
+      allTrips: () => [baseTrip, marketingTrip, variantTrip, storedVariantTrip],
+      renderVisibleTrips() {}
+    });
+
+    assert.equal(await customizer.open(baseTrip.id), true);
+    const markup = modalElement?.innerHTML || "";
+    assert.match(markup, /Marketing Hue day/);
+    assert.doesNotMatch(markup, /Variant-only Hue day/);
+    assert.doesNotMatch(markup, /Stored Variant-only Hue day/);
+  } finally {
+    global.document = previousDocument;
+    global.HTMLElement = previousHTMLElement;
+    global.HTMLButtonElement = previousHTMLButtonElement;
+    global.window = previousWindow;
+  }
+});
+
 test("tour customizer only previews day cards with a title, geocoded location, and service image", async () => {
   global.window = undefined;
 

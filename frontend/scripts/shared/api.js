@@ -81,6 +81,23 @@ export function translationProviderMetaFromResponse(response) {
   };
 }
 
+function publicSiteDirtyFromPayload(payload) {
+  if (!payload || typeof payload !== "object") return false;
+  return payload?.homepage_assets?.dirty === true
+    || payload?.public_site_publish?.dirty === true
+    || payload?.public_site?.dirty === true;
+}
+
+function notifyPublicSiteDirtyFromPayload(payload) {
+  if (typeof window === "undefined" || !publicSiteDirtyFromPayload(payload)) return;
+  window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
+    detail: {
+      dirty: true,
+      source_dirty: true
+    }
+  }));
+}
+
 export async function fetchApiJson(path, options = {}) {
   const {
     apiBase = "",
@@ -141,6 +158,7 @@ export async function fetchApiJson(path, options = {}) {
           translationProvider: translationProviderMetaFromResponse(response)
         }
       : null;
+    notifyPublicSiteDirtyFromPayload(payload);
     if (typeof onSuccess === "function") onSuccess(payload, response);
     return includeResponseMeta ? { payload, responseMeta } : payload;
   } catch (error) {

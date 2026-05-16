@@ -1287,23 +1287,6 @@ export function tourVariantSourceDaysRequest({ baseURL = '', params = {}, query 
   };
 }
 
-export function tourVariantsPublishPath(params = {}) {
-  return buildPath("/api/v1/tour-variants/publish", params);
-}
-
-export function tourVariantsPublishRequest({ baseURL = '', params = {}, query = {}, body, headers = {} } = {}) {
-  const path = tourVariantsPublishPath(params);
-  const url = buildURL(baseURL, path, query);
-  return {
-    key: "tour_variants_publish",
-    method: "POST",
-    authenticated: true,
-    url,
-    headers,
-    body
-  };
-}
-
 export function tourVariantDetailPath(params = {}) {
   return buildPath("/api/v1/tour-variants/{tour_variant_id}", params);
 }

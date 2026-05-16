@@ -49,6 +49,24 @@
     </script>
     <link rel="stylesheet" href="assets/css/styles.css" />
     <style>
+      :root {
+        --tour-variant-backend-menu-height: var(--backend-menu-height, 74px);
+        --tour-variant-customizer-height: var(
+          --backend-available-height,
+          calc(100vh - var(--tour-variant-backend-menu-height))
+        );
+        --tour-variant-left-padding: clamp(0.75rem, 1.4vw, 1.25rem);
+      }
+
+      @supports (height: 100dvh) {
+        :root {
+          --tour-variant-customizer-height: var(
+            --backend-available-height,
+            calc(100dvh - var(--tour-variant-backend-menu-height))
+          );
+        }
+      }
+
       .tour-variant-editor {
         display: grid;
         gap: 0.75rem;
@@ -59,9 +77,15 @@
         padding: 1.25rem 0 2rem;
       }
 
+      .tour-variant-page-section > .container {
+        width: 100%;
+        max-width: none;
+        padding-left: var(--tour-variant-left-padding);
+      }
+
       .tour-variant-toolbar {
         position: sticky;
-        top: 74px;
+        top: var(--tour-variant-backend-menu-height);
         z-index: 40;
         display: flex;
         flex-wrap: wrap;
@@ -189,22 +213,44 @@
       }
 
       .tour-variant-customizer-mount .tour-customize-embedded .tour-customize__workspace {
-        grid-template-rows: minmax(255px, 1fr) auto;
-        max-height: min(58vh, 570px);
+        display: grid;
+        grid-template-rows: minmax(0, 1fr) auto;
+        height: 100%;
+        max-height: none;
+        overflow: hidden;
       }
 
       .tour-variant-customizer-mount .tour-customize-map {
-        min-height: 255px;
+        align-self: stretch;
+        height: 100%;
+        max-height: 100%;
+        min-height: 0;
+      }
+
+      .tour-variant-customizer-mount .tour-customize-embedded {
+        height: 100%;
+        border-right: 0;
+        border-left: 0;
+        border-radius: 0;
       }
 
       .tour-variant-customizer-mount .tour-customize-options {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+        overflow: hidden;
         padding: 0.6rem;
       }
 
       .tour-variant-customizer-mount .tour-customize-options__list {
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        align-content: start;
         grid-template-columns: repeat(auto-fill, 108px);
         gap: 0.45rem;
         margin-top: 0.55rem;
+        padding-right: 0.2rem;
       }
 
       .tour-variant-customizer-mount .tour-customize-option,
@@ -214,7 +260,10 @@
       }
 
       .tour-variant-customizer-mount .tour-customize-timeline {
-        padding: 0.65rem 0.75rem 0.75rem;
+        align-self: end;
+        min-height: 0;
+        overflow: hidden;
+        padding: 0.65rem 0.75rem 1.45rem;
       }
 
       .tour-variant-customizer-mount .tour-customize-timeline__header {
@@ -223,6 +272,8 @@
 
       .tour-variant-customizer-mount .tour-customize-timeline__list {
         min-height: 9.5rem;
+        max-height: 10.85rem;
+        padding-bottom: 1.1rem;
       }
 
       .tour-variant-customizer-heading {
@@ -343,16 +394,6 @@
         min-height: 4.6rem;
       }
 
-      .tour-variant-source-tools {
-        display: flex;
-        align-items: end;
-        gap: 0.65rem;
-      }
-
-      .tour-variant-source-tools .field {
-        min-width: min(20rem, 100%);
-      }
-
       .tour-variant-editor__feedback {
         display: grid;
         gap: 0.3rem;
@@ -360,23 +401,20 @@
         min-height: 1.5rem;
       }
 
-      .tour-variant-meta,
       .tour-variant-status {
         color: var(--muted);
         font-size: 0.86rem;
       }
 
-      .tour-variant-create-base {
-        margin-bottom: 0.8rem;
-      }
-
-      .tour-variant-source-tools--search {
-        margin-bottom: 0.95rem;
-      }
-
       .tour-variant-customizer-mount {
-        min-height: 23rem;
+        position: relative;
+        width: calc(100vw - var(--tour-variant-left-padding));
+        height: var(--tour-variant-customizer-height);
+        min-height: 0;
+        margin-right: calc(50% - 50vw);
+        margin-left: calc(50% - 50vw + var(--tour-variant-left-padding));
         overflow: hidden;
+        background: #f7f9f7;
       }
 
       .tour-variant-issues {
@@ -444,15 +482,24 @@
         }
       }
 
-      @media (max-width: 620px) {
-        .tour-variant-toolbar {
-          top: 68px;
+      @media (max-width: 760px) {
+        .tour-variant-customizer-mount .tour-customize-embedded .tour-customize__workspace {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: minmax(7rem, 0.4fr) minmax(0, 1fr) auto;
         }
 
-        .tour-variant-source-tools {
-          display: grid;
-          grid-template-columns: 1fr;
-          align-items: stretch;
+        .tour-variant-customizer-mount .tour-customize-map {
+          min-height: 7rem;
+        }
+      }
+
+      @media (max-width: 620px) {
+        :root {
+          --tour-variant-backend-menu-height: var(--backend-menu-height, 68px);
+        }
+
+        .tour-variant-toolbar {
+          top: var(--tour-variant-backend-menu-height);
         }
       }
     </style>
@@ -498,23 +545,7 @@
 
             <div class="tour-variant-editor__feedback">
               <div id="tourVariantStatus" class="tour-variant-status" role="status" aria-live="polite"></div>
-              <div id="tourVariantMeta" class="tour-variant-meta"></div>
               <div id="tourVariantIssues" class="tour-variant-issues" role="status" aria-live="polite"></div>
-            </div>
-
-            <div id="tourVariantCreateBaseField" class="tour-variant-source-tools tour-variant-create-base" hidden>
-              <div class="field">
-                <label for="tourVariantBaseTour" data-i18n-id="backend.tour_variant.base_marketing_tour">Base marketing tour</label>
-                <select id="tourVariantBaseTour"></select>
-              </div>
-            </div>
-
-            <div class="tour-variant-source-tools tour-variant-source-tools--search">
-              <div class="field">
-                <label for="tourVariantSourceSearch" data-i18n-id="backend.tour_variant.source_day_search">Search optional days</label>
-                <input id="tourVariantSourceSearch" type="search" autocomplete="off" />
-              </div>
-              <button class="btn btn-ghost" id="tourVariantSourceSearchBtn" type="button" data-i18n-id="backend.tour_variant.search">Search</button>
             </div>
 
             <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>

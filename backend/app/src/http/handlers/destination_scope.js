@@ -1,5 +1,3 @@
-import { existsSync } from "node:fs";
-import path from "node:path";
 import {
   buildDestinationScopeCatalogResponse,
   createDestinationCatalogDestinationRecord,
@@ -26,62 +24,16 @@ export function createDestinationScopeHandlers(deps) {
     canEditTours,
     normalizeText,
     nowIso,
-    randomUUID,
-    repoRoot,
-    execFile,
-    toursDir,
-    tourDestinationsPath
+    randomUUID
   } = deps;
 
-  const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
-    path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
-    path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
-  ]);
-  let publicHomepageAssetGenerationQueue = Promise.resolve();
-
-  function buildPublicHomepageAssetGeneratorEnv() {
-    const env = { ...process.env };
-    const normalizedToursDir = normalizeText(toursDir);
-    if (normalizedToursDir) {
-      env.PUBLIC_HOMEPAGE_TOURS_ROOT = normalizedToursDir;
-    }
-    const normalizedTourDestinationsPath = normalizeText(tourDestinationsPath);
-    if (normalizedTourDestinationsPath) {
-      env.TOUR_DESTINATIONS_PATH = normalizedTourDestinationsPath;
-      env.PUBLIC_HOMEPAGE_DESTINATION_CATALOG_PATH = normalizedTourDestinationsPath;
-    }
-    return env;
-  }
-
-  async function regeneratePublicHomepageAssets(reason, details = {}) {
-    const task = async () => {
-      const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
-      if (!generatorPath) {
-        throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
-      }
-      await execFile(process.execPath, [generatorPath], {
-        cwd: repoRoot,
-        env: buildPublicHomepageAssetGeneratorEnv()
-      });
+  function deferredPublicHomepageAssets(reason, details = {}) {
+    return {
+      ok: true,
+      dirty: true,
+      reason,
+      ...details
     };
-
-    publicHomepageAssetGenerationQueue = publicHomepageAssetGenerationQueue.then(task, task);
-
-    try {
-      await publicHomepageAssetGenerationQueue;
-      return { ok: true };
-    } catch (error) {
-      const message = String(error?.stderr || error?.message || error || "Static homepage asset generation failed.");
-      console.error("[backend-public-homepage-assets] Generation failed.", {
-        reason,
-        ...details,
-        error: message
-      });
-      return {
-        ok: false,
-        error: message
-      };
-    }
   }
 
   async function ensureCatalogI18n(store) {
@@ -204,10 +156,6 @@ export function createDestinationScopeHandlers(deps) {
     Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
-    const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_region_create", {
-      region_id: result.region.id,
-      destination: result.region.destination
-    });
     sendJson(res, 201, {
       region: catalog.regions.find((region) => region.id === result.region.id) || result.region,
       catalog,
@@ -215,7 +163,10 @@ export function createDestinationScopeHandlers(deps) {
         ok: !i18nResult.errors.length,
         errors: i18nResult.errors
       },
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("destination_scope_region_create", {
+        region_id: result.region.id,
+        destination: result.region.destination
+      })
     });
   }
 
@@ -250,9 +201,6 @@ export function createDestinationScopeHandlers(deps) {
     Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
-    const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_destination_create", {
-      destination: result.destination.code
-    });
     sendJson(res, 201, {
       destination: catalog.destinations.find((destination) => destination.code === result.destination.code) || result.destination,
       catalog,
@@ -260,7 +208,9 @@ export function createDestinationScopeHandlers(deps) {
         ok: !i18nResult.errors.length,
         errors: i18nResult.errors
       },
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("destination_scope_destination_create", {
+        destination: result.destination.code
+      })
     });
   }
 
@@ -295,10 +245,6 @@ export function createDestinationScopeHandlers(deps) {
     Object.assign(store, i18nResult.store);
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
-    const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_place_create", {
-      place_id: result.place.id,
-      region_id: result.place.region_id
-    });
     sendJson(res, 201, {
       place: catalog.places.find((place) => place.id === result.place.id) || result.place,
       catalog,
@@ -306,7 +252,10 @@ export function createDestinationScopeHandlers(deps) {
         ok: !i18nResult.errors.length,
         errors: i18nResult.errors
       },
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("destination_scope_place_create", {
+        place_id: result.place.id,
+        region_id: result.place.region_id
+      })
     });
   }
 
@@ -328,10 +277,13 @@ export function createDestinationScopeHandlers(deps) {
     store.destination_places = result.store.destination_places;
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
-    const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_destination_delete", {
-      destination: normalizeText(destination).toUpperCase()
+    sendJson(res, 200, {
+      deleted: true,
+      catalog,
+      homepage_assets: deferredPublicHomepageAssets("destination_scope_destination_delete", {
+        destination: normalizeText(destination).toUpperCase()
+      })
     });
-    sendJson(res, 200, { deleted: true, catalog, homepage_assets: homepageAssets });
   }
 
   async function handleDeleteDestinationRegion(req, res, [regionId]) {
@@ -351,11 +303,14 @@ export function createDestinationScopeHandlers(deps) {
     store.destination_places = result.store.destination_places;
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
-    const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_region_delete", {
-      region_id: result.region.id,
-      destination: result.region.destination
+    sendJson(res, 200, {
+      deleted: true,
+      catalog,
+      homepage_assets: deferredPublicHomepageAssets("destination_scope_region_delete", {
+        region_id: result.region.id,
+        destination: result.region.destination
+      })
     });
-    sendJson(res, 200, { deleted: true, catalog, homepage_assets: homepageAssets });
   }
 
   async function handleDeleteDestinationPlace(req, res, [placeId]) {
@@ -374,11 +329,14 @@ export function createDestinationScopeHandlers(deps) {
     store.destination_places = result.store.destination_places;
     await persistStore(store);
     const catalog = buildDestinationScopeCatalogResponse(store, { lang: requestLang(req) });
-    const homepageAssets = await regeneratePublicHomepageAssets("destination_scope_place_delete", {
-      place_id: result.place.id,
-      region_id: result.place.region_id
+    sendJson(res, 200, {
+      deleted: true,
+      catalog,
+      homepage_assets: deferredPublicHomepageAssets("destination_scope_place_delete", {
+        place_id: result.place.id,
+        region_id: result.place.region_id
+      })
     });
-    sendJson(res, 200, { deleted: true, catalog, homepage_assets: homepageAssets });
   }
 
   return {

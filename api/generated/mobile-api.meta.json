@@ -3,7 +3,7 @@
   "generatorVersion": "0.1.0",
   "modulePath": "travelagency.local/model",
   "defaultCurrency": "USD",
-  "generatedAt": "2026-05-15T08:14:09Z",
+  "generatedAt": "2026-05-15T15:43:07Z",
   "languages": [
     "en",
     "ar",
@@ -1448,14 +1448,6 @@
           "typeName": "int"
         }
       ]
-    },
-    {
-      "key": "tour_variants_publish",
-      "path": "/api/v1/tour-variants/publish",
-      "method": "POST",
-      "tag": "Tours",
-      "authenticated": true,
-      "responseType": "TourVariantPublishResponse"
     },
     {
       "key": "tour_variant_create",

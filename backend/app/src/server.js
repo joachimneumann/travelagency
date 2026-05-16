@@ -42,7 +42,8 @@ import {
   TRANSLATION_CLIENT,
   TRANSLATION_RUNTIME_INFO,
   TRANSLATION_ENABLED,
-  TRANSLATION_OVERRIDE_WRITES_ENABLED
+  TRANSLATION_OVERRIDE_WRITES_ENABLED,
+  TRANSLATION_SNAPSHOT_PUBLISH_ENABLED
 } from "./config/runtime.js";
 import { createAuth } from "./auth.js";
 import { createSystemHandlers } from "./http/handlers/system.js";
@@ -204,7 +205,8 @@ const services = createBackendServices({
     pricingAdjustmentTypes: PRICING_ADJUSTMENT_TYPES,
     translationClient: TRANSLATION_CLIENT,
     translationEnabled: TRANSLATION_ENABLED,
-    translationOverrideWritesEnabled: TRANSLATION_OVERRIDE_WRITES_ENABLED
+    translationOverrideWritesEnabled: TRANSLATION_OVERRIDE_WRITES_ENABLED,
+    translationSnapshotPublishEnabled: TRANSLATION_SNAPSHOT_PUBLISH_ENABLED
   },
   collections: {
     repoRoot: RUNTIME_PATHS.repoRoot,

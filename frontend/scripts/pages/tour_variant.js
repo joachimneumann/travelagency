@@ -1,7 +1,6 @@
 import {
   createApiFetcher,
   escapeHtml,
-  formatDateTime,
   normalizeText
 } from "../shared/api.js";
 import { destinationScopeCatalogRequest } from "../../Generated/API/generated_APIRequestFactory.js";
@@ -33,7 +32,6 @@ const els = {
   heading: document.getElementById("tourVariantHeading"),
   reloadBtn: document.getElementById("tourVariantReloadBtn"),
   saveBtn: document.getElementById("tourVariantSaveBtn"),
-  createBaseField: document.getElementById("tourVariantCreateBaseField"),
   baseTour: document.getElementById("tourVariantBaseTour"),
   title: document.getElementById("tourVariantTitle"),
   shortDescription: document.getElementById("tourVariantShortDescription"),
@@ -42,7 +40,6 @@ const els = {
   seasonEnd: document.getElementById("tourVariantSeasonEnd"),
   published: document.getElementById("tourVariantPublished"),
   styles: document.getElementById("tourVariantStyles"),
-  meta: document.getElementById("tourVariantMeta"),
   issues: document.getElementById("tourVariantIssues"),
   status: document.getElementById("tourVariantStatus"),
   arrivalMode: document.getElementById("tourVariantArrivalMode"),
@@ -53,9 +50,7 @@ const els = {
   departureTitle: document.getElementById("tourVariantDepartureTitle"),
   departureAirportCode: document.getElementById("tourVariantDepartureAirportCode"),
   departureDetails: document.getElementById("tourVariantDepartureDetails"),
-  customizer: document.getElementById("tourVariantCustomizer"),
-  sourceSearch: document.getElementById("tourVariantSourceSearch"),
-  sourceSearchBtn: document.getElementById("tourVariantSourceSearchBtn")
+  customizer: document.getElementById("tourVariantCustomizer")
 };
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
@@ -81,11 +76,12 @@ const state = {
     base_tours: []
   },
   destinationScopeCatalog: normalizeDestinationScopeCatalog({}),
-  allSourceDays: [],
-  sourceSearch: ""
+  allSourceDays: []
 };
 
 let backendLoginRedirectScheduled = false;
+let cleanPayloadSignature = "";
+let isSavingTourVariant = false;
 
 const fetchApi = createApiFetcher({
   apiBase,
@@ -325,16 +321,6 @@ function renderBaseTourOptions(selectedValue = "") {
   ].join("");
 }
 
-function renderMeta() {
-  if (!els.meta) return;
-  const variant = state.variant || {};
-  const updated = formatDateTime(variant.updated_at || variant.created_at);
-  els.meta.innerHTML = [
-    variant.id ? `<div>${escapeHtml(tourVariantT("id_line", "ID: {id}", { id: variant.id }))}</div>` : "",
-    `<div>${escapeHtml(tourVariantT("updated_line", "Updated: {updated}", { updated }))}</div>`
-  ].filter(Boolean).join("");
-}
-
 function renderIssues() {
   if (!els.issues) return;
   const issues = Array.isArray(state.variant?.publication?.issues) ? state.variant.publication.issues : [];
@@ -362,16 +348,9 @@ function renderForm() {
   renderStyleChoices(Array.isArray(variant.style_codes) && variant.style_codes.length ? variant.style_codes : variant.styles);
   renderBoundary("arrival");
   renderBoundary("departure");
-  renderMeta();
   renderIssues();
-  if (els.createBaseField instanceof HTMLElement) els.createBaseField.hidden = !state.isCreateMode;
   renderBaseTourOptions(normalizeText(qs.get("base_marketing_tour_id")) || variant.base_marketing_tour_id || "");
-  if (els.saveBtn instanceof HTMLButtonElement) {
-    els.saveBtn.disabled = !state.permissions.canEditTourVariants;
-    els.saveBtn.textContent = state.isCreateMode
-      ? tourVariantT("create", "Create")
-      : tourVariantT("save", "Save");
-  }
+  markCurrentPayloadClean();
   renderCustomizer();
 }
 
@@ -508,19 +487,19 @@ function applyCustomizerTimeline(items) {
     .filter((day) => day.source_tour_id && day.source_day_id);
   renumberDays();
   renderCustomizer();
+  handleDraftChanged();
 }
 
 function renderCustomizer() {
   void tourVariantCustomizer.setTripState({
     baseTrip: state.isCreateMode ? null : customizerBaseTrip(),
     selectedDayRefs: state.isCreateMode ? [] : timelineRefsForCustomizer(),
-    moduleQuery: state.sourceSearch,
     disabled: state.isCreateMode || !state.permissions.canEditTourVariants,
     emptyOptionsLabel: state.isCreateMode
-      ? tourVariantT("choose_base_marketing_tour_first", "Choose a base marketing tour and create the Tour Variant first.")
+      ? tourVariantT("create_from_list_first", "Create the Tour Variant from the Tour Variants page first.")
       : tourVariantT("no_optional_days", "No optional days are available for this route yet."),
     emptyTimelineLabel: state.isCreateMode
-      ? tourVariantT("choose_base_marketing_tour_first", "Choose a base marketing tour and create the Tour Variant first.")
+      ? tourVariantT("create_from_list_first", "Create the Tour Variant from the Tour Variants page first.")
       : tourVariantT("empty_timeline", "Add at least one day to keep customizing."),
     tourId: normalizeText(state.variant?.id) || "tour_variant_workspace",
     tourTitle: normalizeText(state.variant?.title) || tourVariantT("timeline", "Tour Variant timeline")
@@ -621,6 +600,59 @@ function buildPayload() {
   };
 }
 
+function stableStringify(value) {
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+  if (value && typeof value === "object") {
+    return `{${Object.keys(value)
+      .sort()
+      .map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function comparablePayload() {
+  const payload = buildPayload();
+  const { expected_updated_at: _expectedUpdatedAt, ...rest } = payload;
+  return rest;
+}
+
+function currentPayloadSignature() {
+  return stableStringify(comparablePayload());
+}
+
+function hasUnsavedTourVariantChanges() {
+  if (!state.variant) return false;
+  if (state.isCreateMode) {
+    return Boolean(normalizeText(els.baseTour?.value || state.variant.base_marketing_tour_id));
+  }
+  return currentPayloadSignature() !== cleanPayloadSignature;
+}
+
+function updateSaveButtonState() {
+  if (!(els.saveBtn instanceof HTMLButtonElement)) return;
+  els.saveBtn.textContent = state.isCreateMode
+    ? tourVariantT("create", "Create")
+    : tourVariantT("save", "Save");
+  const canSave = state.permissions.canEditTourVariants
+    && !backendLoginRedirectScheduled
+    && !isSavingTourVariant
+    && hasUnsavedTourVariantChanges();
+  els.saveBtn.disabled = !canSave;
+}
+
+function markCurrentPayloadClean() {
+  cleanPayloadSignature = state.isCreateMode ? "" : currentPayloadSignature();
+  updateSaveButtonState();
+}
+
+function handleDraftChanged() {
+  if (!isSavingTourVariant) setStatus("");
+  updateSaveButtonState();
+}
+
 async function createFromBase() {
   const baseMarketingTourId = normalizeText(els.baseTour?.value || state.variant?.base_marketing_tour_id);
   if (!baseMarketingTourId) {
@@ -641,23 +673,42 @@ async function createFromBase() {
 }
 
 async function saveTourVariant() {
+  if (isSavingTourVariant || !hasUnsavedTourVariantChanges()) {
+    updateSaveButtonState();
+    return;
+  }
   clearError();
+  isSavingTourVariant = true;
+  updateSaveButtonState();
   if (state.isCreateMode) {
-    await createFromBase();
+    try {
+      await createFromBase();
+    } finally {
+      isSavingTourVariant = false;
+      updateSaveButtonState();
+    }
     return;
   }
   setStatus(tourVariantT("saving", "Saving..."));
-  const payload = await fetchApi(withBackendApiLang(`/api/v1/tour-variants/${encodeURIComponent(state.id)}`), {
-    method: "PATCH",
-    body: buildPayload()
-  });
-  if (!payload?.tour_variant) return;
-  state.variant = payload.tour_variant;
-  renderForm();
-  window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
-    detail: { dirty: true }
-  }));
-  setStatus(tourVariantT("saved", "Saved."));
+  try {
+    const payload = await fetchApi(withBackendApiLang(`/api/v1/tour-variants/${encodeURIComponent(state.id)}`), {
+      method: "PATCH",
+      body: buildPayload()
+    });
+    if (!payload?.tour_variant) {
+      setStatus("");
+      return;
+    }
+    state.variant = payload.tour_variant;
+    renderForm();
+    window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
+      detail: { dirty: true }
+    }));
+    setStatus(tourVariantT("saved", "Saved."));
+  } finally {
+    isSavingTourVariant = false;
+    updateSaveButtonState();
+  }
 }
 
 function handleBackendLanguageChanged() {
@@ -665,6 +716,7 @@ function handleBackendLanguageChanged() {
   renderHeader();
   renderBaseTourOptions(normalizeText(qs.get("base_marketing_tour_id")) || state.variant?.base_marketing_tour_id || "");
   renderCustomizer();
+  updateSaveButtonState();
 }
 
 function bindControls() {
@@ -674,15 +726,28 @@ function bindControls() {
   els.reloadBtn?.addEventListener("click", () => {
     void loadTourVariant();
   });
-  els.sourceSearchBtn?.addEventListener("click", () => {
-    state.sourceSearch = normalizeText(els.sourceSearch?.value);
-    renderCustomizer();
+  [
+    els.baseTour,
+    els.title,
+    els.shortDescription,
+    els.priority,
+    els.seasonStart,
+    els.seasonEnd,
+    els.published,
+    els.arrivalMode,
+    els.arrivalTitle,
+    els.arrivalAirportCode,
+    els.arrivalDetails,
+    els.departureMode,
+    els.departureTitle,
+    els.departureAirportCode,
+    els.departureDetails
+  ].forEach((element) => {
+    if (!(element instanceof HTMLElement)) return;
+    element.addEventListener("input", handleDraftChanged);
+    element.addEventListener("change", handleDraftChanged);
   });
-  els.sourceSearch?.addEventListener("keydown", (event) => {
-    if (event.key !== "Enter") return;
-    state.sourceSearch = normalizeText(els.sourceSearch.value);
-    renderCustomizer();
-  });
+  els.styles?.addEventListener("change", handleDraftChanged);
   window.addEventListener("backend-i18n-changed", handleBackendLanguageChanged);
 }
 

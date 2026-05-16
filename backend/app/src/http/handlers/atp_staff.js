@@ -1,5 +1,4 @@
 import path from "node:path";
-import { existsSync } from "node:fs";
 import { stat } from "node:fs/promises";
 import { validateTranslationEntriesRequest } from "../../../Generated/API/generated_APIModels.js";
 import { normalizeText } from "../../lib/text.js";
@@ -87,7 +86,6 @@ export function createAtpStaffHandlers(deps) {
     updateAtpStaffProfileByUsername,
     setAtpStaffPictureRefByUsername,
     resetAtpStaffPictureByUsername,
-    repoRoot,
     translateEntries,
     translateEntriesWithMeta,
     execFile,
@@ -103,57 +101,13 @@ export function createAtpStaffHandlers(deps) {
     randomUUID
   } = deps;
 
-  const PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES = Object.freeze([
-    path.join(repoRoot, "scripts", "assets", "generate_public_homepage_assets.mjs"),
-    path.join(repoRoot, "scripts", "generate_public_homepage_assets.mjs")
-  ]);
-  let publicHomepageAssetGenerationQueue = Promise.resolve();
-
-  function buildPublicHomepageAssetGeneratorEnv() {
-    const env = { ...process.env };
-    const staffRoot = normalizeText(ATP_STAFF_ROOT)
-      || (normalizeText(ATP_STAFF_PROFILES_PATH) ? path.dirname(ATP_STAFF_PROFILES_PATH) : "")
-      || (normalizeText(ATP_STAFF_PHOTOS_DIR) ? path.dirname(ATP_STAFF_PHOTOS_DIR) : "");
-    const staffProfilesPath = normalizeText(ATP_STAFF_PROFILES_PATH)
-      || (staffRoot ? path.join(staffRoot, "staff.json") : "");
-    const staffPhotosDir = normalizeText(ATP_STAFF_PHOTOS_DIR)
-      || (staffRoot ? path.join(staffRoot, "photos") : "");
-
-    if (staffRoot) env.PUBLIC_HOMEPAGE_STAFF_ROOT = staffRoot;
-    if (staffProfilesPath) env.PUBLIC_HOMEPAGE_STAFF_PROFILES_PATH = staffProfilesPath;
-    if (staffPhotosDir) env.PUBLIC_HOMEPAGE_STAFF_PHOTOS_DIR = staffPhotosDir;
-    return env;
-  }
-
-  async function regeneratePublicHomepageAssets(reason, details = {}) {
-    const task = async () => {
-      const generatorPath = PUBLIC_HOMEPAGE_ASSET_GENERATOR_CANDIDATES.find((candidate) => existsSync(candidate));
-      if (!generatorPath) {
-        throw new Error("Could not find generate_public_homepage_assets.mjs in expected script locations.");
-      }
-      await execFile(process.execPath, [generatorPath], {
-        cwd: repoRoot,
-        env: buildPublicHomepageAssetGeneratorEnv()
-      });
+  function deferredPublicHomepageAssets(reason, details = {}) {
+    return {
+      ok: true,
+      dirty: true,
+      reason,
+      ...details
     };
-
-    publicHomepageAssetGenerationQueue = publicHomepageAssetGenerationQueue.then(task, task);
-
-    try {
-      await publicHomepageAssetGenerationQueue;
-      return { ok: true };
-    } catch (error) {
-      const message = String(error?.stderr || error?.message || error || "Static homepage asset generation failed.");
-      console.error("[backend-public-homepage-assets] Generation failed.", {
-        reason,
-        ...details,
-        error: message
-      });
-      return {
-        ok: false,
-        error: message
-      };
-    }
   }
 
   async function handleListAtpStaffDirectoryEntries(req, res) {
@@ -306,10 +260,9 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
 
-    const homepageAssets = await regeneratePublicHomepageAssets("staff_profile_patch", { username });
     sendJson(res, 200, {
       ...buildUserResponse(updated),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("staff_profile_patch", { username })
     });
   }
 
@@ -406,7 +359,7 @@ export function createAtpStaffHandlers(deps) {
       inputPath,
       "-auto-orient",
       "-resize",
-      "1000x1000>",
+      "400x",
       "-strip",
       "-quality",
       "84",
@@ -475,10 +428,9 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
 
-    const homepageAssets = await regeneratePublicHomepageAssets("staff_photo_upload", { username });
     sendJson(res, 200, {
       ...buildUserResponse(updated),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("staff_photo_upload", { username })
     });
   }
 
@@ -508,10 +460,9 @@ export function createAtpStaffHandlers(deps) {
       return;
     }
 
-    const homepageAssets = await regeneratePublicHomepageAssets("staff_photo_delete", { username });
     sendJson(res, 200, {
       ...buildUserResponse(updated),
-      homepage_assets: homepageAssets
+      homepage_assets: deferredPublicHomepageAssets("staff_photo_delete", { username })
     });
   }
 

@@ -5816,30 +5816,19 @@ test("admin can upload and delete ATP staff profile pictures without creating fa
   const uploadedPhotoStat = await stat(uploadedPhotoPath);
   assert.ok(uploadedPhotoStat.size > 0);
 
-  const homepageGenerationErrors = [];
-  const originalConsoleError = console.error;
-  console.error = (...args) => {
-    if (args[0] === "[backend-public-homepage-assets] Generation failed.") {
-      homepageGenerationErrors.push(args);
-      return;
-    }
-    originalConsoleError(...args);
-  };
-  let deleteResult;
-  try {
-    deleteResult = await requestJson(
-      endpointPath("keycloak_user_staff_profile_picture_delete").replace("{username}", "joachim"),
-      apiHeaders("atp_admin", "admin", "kc-admin"),
-      { method: "DELETE" }
-    );
-  } finally {
-    console.error = originalConsoleError;
-  }
+  const deleteResult = await requestJson(
+    endpointPath("keycloak_user_staff_profile_picture_delete").replace("{username}", "joachim"),
+    apiHeaders("atp_admin", "admin", "kc-admin"),
+    { method: "DELETE" }
+  );
   assert.equal(deleteResult.status, 200);
   assert.equal(String(deleteResult.body.user.staff_profile.picture_ref || ""), "");
-  assert.equal(deleteResult.body.homepage_assets.ok, false);
-  assert.match(deleteResult.body.homepage_assets.error, /Public staff profile "joachim" is missing a usable picture file/);
-  assert.equal(homepageGenerationErrors.length, 1);
+  assert.deepEqual(deleteResult.body.homepage_assets, {
+    ok: true,
+    dirty: true,
+    reason: "staff_photo_delete",
+    username: "joachim"
+  });
 });
 
 test("assigned staff only sees their own bookings while admin sees all", async () => {

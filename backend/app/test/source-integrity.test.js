@@ -3526,7 +3526,8 @@ test("tour page reads month options from the generated catalogs layer", async ()
   const travelPlanCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
-  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, navSource, travelPlanCoreSource, toursHandlerSource, routesSource] = await Promise.all([
+  const publicSitePublishPath = path.resolve(__dirname, "..", "src", "domain", "public_site_publish.js");
+  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, navSource, travelPlanCoreSource, toursHandlerSource, routesSource, publicSitePublishSource] = await Promise.all([
     readFile(tourPageModulePath, "utf8"),
     readFile(tourTravelPlanAdapterPath, "utf8"),
     readFile(tourPageHtmlPath, "utf8"),
@@ -3535,7 +3536,8 @@ test("tour page reads month options from the generated catalogs layer", async ()
     readFile(navPath, "utf8"),
     readFile(travelPlanCorePath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
-    readFile(routesPath, "utf8")
+    readFile(routesPath, "utf8"),
+    readFile(publicSitePublishPath, "utf8")
   ]);
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
@@ -3653,10 +3655,10 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /\\\/api\\\/v1\\\/public-site\\\/publish-status[\s\S]*handlerKey:\s*"handleGetPublicSitePublishStatus"[\s\S]*\\\/api\\\/v1\\\/public-site\\\/publish[\s\S]*handlerKey:\s*"handleStartPublicSitePublish"/,
     "Routes should expose the central public-site publish status and start endpoints"
   );
-  assert.match(
+  assert.doesNotMatch(
     routesSource,
-    /\\\/api\\\/v1\\\/tours\\\/publish[\s\S]*handlerKey:\s*"handlePublishTours"/,
-    "Routes should expose a global marketing-tours publish endpoint"
+    /\\\/api\\\/v1\\\/tours\\\/publish|\\\/api\\\/v1\\\/tours\\\/\(\[\^\/\]\+\)\\\/publish|\\\/api\\\/v1\\\/tour-variants\\\/publish/,
+    "Routes should not expose retired page-level publish endpoints"
   );
   assert.doesNotMatch(
     tourSource,
@@ -3678,10 +3680,15 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /handle(CreateTour|PatchTour|PatchTourTravelPlan)[\s\S]{0,2600}await syncTourManualTranslationsToMemory\((tour|updated)\)/,
     "Normal marketing-tour saves should not sync manual translations to memory"
   );
-  assert.match(
+  assert.doesNotMatch(
     toursHandlerSource,
-    /syncMarketingTourTranslationsForPublish[\s\S]*async function handlePublishTours[\s\S]*syncMarketingTourTranslationsForPublish\(tours,\s*translationMemoryStore\)[\s\S]*regeneratePublicHomepageAssets\("tours_publish"/,
-    "Publishing should sync marketing-tour manual translations once before generating public homepage assets"
+    /syncMarketingTourTranslationsForPublish|regeneratePublicHomepageAssets\("tours_publish"/,
+    "Marketing-tour page publish routes should not directly sync translations or regenerate static assets"
+  );
+  assert.match(
+    publicSitePublishSource,
+    /syncMarketingTourTranslationsForPublish[\s\S]*commandPhase\("runtime_brand_logo"[\s\S]*commandPhase\("runtime_i18n"[\s\S]*commandPhase\("homepage_assets"[\s\S]*callbackPhase\("write_manifest"/,
+    "Central public-site publish should sync translations, prepare the runtime logo, generate runtime i18n and homepage assets, then write the manifest"
   );
   assert.doesNotMatch(
     tourHtml,
@@ -4237,8 +4244,18 @@ test("settings page staff table shows combined Keycloak roles and status pills",
   );
   assert.match(
     source,
-    /async function handleStaffPhotoSelected\(event\) \{[\s\S]*state\.editor\.pendingPhoto = \{[\s\S]*dataBase64:[\s\S]*renderEditor\(\);/,
+    /async function handleStaffPhotoSelected\(event\) \{[\s\S]*photoDraft = await convertStaffPhotoFileToWebp\(file, user\.username\);[\s\S]*state\.editor\.pendingPhoto = photoDraft;[\s\S]*renderEditor\(\);/,
     "Selecting an ATP staff picture should stage a local photo draft and rerender the preview instead of uploading immediately"
+  );
+  assert.match(
+    source,
+    /const STAFF_PHOTO_TARGET_WIDTH = 400;[\s\S]*async function convertStaffPhotoFileToWebp\(file, username\) \{[\s\S]*canvas\.width = outputWidth;[\s\S]*canvasToBlob\(canvas, "image\/webp", STAFF_PHOTO_WEBP_QUALITY\)/,
+    "Settings page should resize ATP staff picture uploads to 400px-wide WebP before staging the draft"
+  );
+  assert.match(
+    source,
+    /async function handleStaffPhotoSelected\(event\) \{[\s\S]*photoDraft = await convertStaffPhotoFileToWebp\(file, user\.username\);[\s\S]*state\.editor\.pendingPhoto = photoDraft;/,
+    "Selecting an ATP staff picture should stage the converted WebP draft instead of the original file payload"
   );
   assert.match(
     source,
@@ -4831,8 +4848,8 @@ test("translations page exposes one translate action and leaves website generati
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{displayCount\} \$\{subject\} \$\{verb\} translation before publishing\.`[\s\S]*Use Publish Website to update runtime translations and static website content\./,
-    "The status text above Translate should point clean unpublished translations to central Publish"
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{displayCount\} \$\{subject\} \$\{verb\} translation\.`[\s\S]*Publishing is allowed and will use English fallback[\s\S]*Use Publish Website to update runtime translations and static website content\./,
+    "The status text above Translate should warn about fallback while pointing publishable changes to central Publish"
   );
   assert.match(
     translationsSource,
@@ -4976,8 +4993,8 @@ test("translations page exposes one translate action and leaves website generati
   );
   assert.match(
     translationsSource,
-    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Publish Website remains blocked[\s\S]*latest\.type === "apply" && translationStatus\.unavailableCount > 0[\s\S]*Publish Website remains blocked/,
-    "After Translate finishes, the page should report only blockers that keep central Publish unavailable"
+    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Publish Website can still run with English fallback[\s\S]*latest\.type === "apply" && translationStatus\.unavailableCount > 0[\s\S]*Publish Website remains blocked/,
+    "After Translate finishes, unfinished strings should warn about fallback while unavailable sections still block central Publish"
   );
   assert.doesNotMatch(
     translationsSource,
@@ -6763,6 +6780,11 @@ test("staging backend bakes dependencies into the image and mounts only the writ
   );
   assert.match(
     backendComposeBlock,
+    /- \.\/frontend\/data\/i18n:\/srv\/frontend\/data\/i18n[\s\S]*- \.\/assets\/generated\/runtime:\/srv\/assets\/generated\/runtime/,
+    "Staging backend should mount generated runtime i18n and brand-logo output roots"
+  );
+  assert.match(
+    backendComposeBlock,
     /- \.\/matrix-pages:\/srv\/matrix-pages/,
     "Staging backend should mount the generated matrix page output root Caddy serves through staging symlinks"
   );
@@ -6770,6 +6792,11 @@ test("staging backend bakes dependencies into the image and mounts only the writ
     backendComposeBlock,
     /PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: \/srv\/frontend\/data\/generated\/homepage[\s\S]*PUBLIC_HOMEPAGE_ASSETS_DIR: \/srv\/assets\/generated\/homepage/,
     "Staging backend should point homepage generation at the same generated roots Caddy serves"
+  );
+  assert.match(
+    backendComposeBlock,
+    /PUBLIC_SITE_RUNTIME_BRAND_ENV: staging/,
+    "Staging backend should prepare the staging runtime brand logo when Publish Website runs"
   );
   assert.match(
     backendComposeBlock,
@@ -6828,6 +6855,16 @@ test("staging can publish translations while production keeps runtime translatio
     productionBackendBlock,
     /TRANSLATION_OVERRIDE_WRITES_ENABLED: "false"/,
     "Production must keep runtime translation writes disabled"
+  );
+  assert.match(
+    productionBackendBlock,
+    /- \.\/content:\/srv\/content[\s\S]*- \.\/frontend\/data\/i18n:\/srv\/frontend\/data\/i18n[\s\S]*- \.\/frontend\/data\/generated\/homepage:\/srv\/frontend\/data\/generated\/homepage[\s\S]*- \.\/assets\/generated\/homepage:\/srv\/assets\/generated\/homepage[\s\S]*- \.\/assets\/generated\/runtime:\/srv\/assets\/generated\/runtime/,
+    "Production backend should mount content plus generated output roots used by Publish Website"
+  );
+  assert.match(
+    productionBackendBlock,
+    /PUBLIC_HOMEPAGE_FRONTEND_DATA_DIR: \/srv\/frontend\/data\/generated\/homepage[\s\S]*PUBLIC_HOMEPAGE_ASSETS_DIR: \/srv\/assets\/generated\/homepage[\s\S]*PUBLIC_SITE_RUNTIME_BRAND_ENV: production/,
+    "Production backend should generate public assets and runtime brand output into mounted roots"
   );
   assert.match(
     productionBackendBlock,

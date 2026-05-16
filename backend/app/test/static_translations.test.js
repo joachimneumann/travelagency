@@ -329,7 +329,7 @@ test("static translation service updates translated strings that contain protect
   }
 });
 
-test("static translation publish blocks stale and missing required rows", async () => {
+test("static translation publish uses English fallback for stale or missing required rows", async () => {
   const repoRoot = await createFixture();
   try {
     const service = createStaticTranslationService({
@@ -337,12 +337,70 @@ test("static translation publish blocks stale and missing required rows", async 
       translationsSnapshotDir: path.join(repoRoot, "content", "translations")
     });
 
+    const manifest = await service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+    assert.equal(manifest.fallback_count, 1);
+    assert.equal(manifest.warnings[0].code, "english_fallback");
+
+    const snapshot = await readTranslationSection(repoRoot, "customers/frontend-static.vi.json");
+    const title = snapshot.items.find((item) => item.key === "hero.title");
+    assert.equal(title.target_text, "New private holidays");
+    assert.equal(title.machine_text, "");
+    assert.equal(title.origin, "english_fallback");
+    assert.equal(title.review_state, "needs_translation");
+    assert.equal(title.fallback, true);
+    assert.equal(title.fallback_reason, "stale_translation");
+
+    const state = await service.getLanguageState("frontend", "vi");
+    const titleState = state.rows.find((row) => row.key === "hero.title");
+    assert.equal(titleState.origin, "english_fallback");
+    assert.equal(titleState.review_state, "needs_translation");
+    assert.equal(titleState.publish_state, "published");
+    assert.equal(state.counts.dirty, 1);
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation snapshot publish can run when manual translation writes are disabled", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const service = createStaticTranslationService({
+      repoRoot,
+      translationsSnapshotDir: path.join(repoRoot, "content", "translations"),
+      writesEnabled: false,
+      snapshotPublishEnabled: true
+    });
+
+    const manifest = await service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+    assert.equal(manifest.fallback_count, 1);
+
+    await assert.rejects(
+      () => service.applyMissingTranslations({ domains: ["frontend"], target_langs: ["vi"] }),
+      (error) => {
+        assert.equal(error.status, 403);
+        assert.equal(error.code, "STATIC_TRANSLATION_WRITES_DISABLED");
+        return true;
+      }
+    );
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation snapshot publish can be disabled separately", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const service = createStaticTranslationService({
+      repoRoot,
+      translationsSnapshotDir: path.join(repoRoot, "content", "translations"),
+      snapshotPublishEnabled: false
+    });
+
     await assert.rejects(
       () => service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] }),
       (error) => {
-        assert.equal(error.status, 409);
-        assert.equal(error.code, "STATIC_TRANSLATION_PUBLISH_BLOCKED");
-        assert.ok(error.details.some((issue) => issue.key === "hero.title" && issue.issue === "stale_translation"));
+        assert.equal(error.status, 403);
+        assert.equal(error.code, "STATIC_TRANSLATION_SNAPSHOT_PUBLISH_DISABLED");
         return true;
       }
     );

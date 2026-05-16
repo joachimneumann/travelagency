@@ -181,7 +181,8 @@ export function createStaticTranslationService({
   mkdirFn = mkdir,
   writeFileFn = writeFile,
   renameFn = rename,
-  writesEnabled = true
+  writesEnabled = true,
+  snapshotPublishEnabled = writesEnabled
 } = {}) {
   if (!repoRoot) {
     throw new Error("createStaticTranslationService requires repoRoot.");
@@ -218,6 +219,7 @@ export function createStaticTranslationService({
       target_languages: config.targetLanguages,
       context: config.context,
       writes_enabled: writesEnabled !== false,
+      snapshot_publish_enabled: snapshotPublishEnabled !== false,
       manual_overrides_writable: false
     };
   }
@@ -228,6 +230,16 @@ export function createStaticTranslationService({
         403,
         "STATIC_TRANSLATION_WRITES_DISABLED",
         "Manual translation override editing is disabled in this environment."
+      );
+    }
+  }
+
+  function assertSnapshotPublishEnabled() {
+    if (snapshotPublishEnabled === false) {
+      throw apiError(
+        403,
+        "STATIC_TRANSLATION_SNAPSHOT_PUBLISH_DISABLED",
+        "Publishing runtime translation snapshots is disabled in this environment."
       );
     }
   }
@@ -377,6 +389,7 @@ export function createStaticTranslationService({
   }
 
   function deriveReviewState(row, origin, freshnessState) {
+    if (origin === "english_fallback") return "needs_translation";
     if (freshnessState === "missing") return "needs_translation";
     if (freshnessState === "stale" || freshnessState === "legacy") return "needs_update";
     if (origin === "manual") return "protected";
@@ -1666,12 +1679,16 @@ export function createStaticTranslationService({
   }
 
   function snapshotItem(config, language, row, publishedAt = "") {
-    const targetText = rowTargetText(row);
-    const manualOverride = normalizeText(row.override);
-    const machineText = normalizeText(row.cached);
-    const origin = manualOverride ? "manual" : (normalizeText(row.origin) || (machineText ? "machine" : ""));
+    const fallbackReason = normalizeText(row.publish_fallback_reason || row.fallback_reason);
+    const usesEnglishFallback = Boolean(fallbackReason);
+    const targetText = usesEnglishFallback ? normalizeText(row.source) : rowTargetText(row);
+    const manualOverride = usesEnglishFallback ? "" : normalizeText(row.override);
+    const machineText = usesEnglishFallback ? "" : normalizeText(row.cached);
+    const origin = usesEnglishFallback ? "english_fallback" : (manualOverride ? "manual" : (normalizeText(row.origin) || (machineText ? "machine" : "")));
     const freshnessState = targetText ? "current" : "missing";
-    const reviewState = deriveReviewState({ ...row, override: manualOverride, cached: machineText }, origin, freshnessState);
+    const reviewState = usesEnglishFallback
+      ? "needs_translation"
+      : deriveReviewState({ ...row, override: manualOverride, cached: machineText }, origin, freshnessState);
     return {
       source_ref: normalizeText(row.source_ref) || sourceRef(config, row.key),
       key: row.key,
@@ -1694,12 +1711,66 @@ export function createStaticTranslationService({
       review_state: reviewState,
       generated_at: normalizeText(publishedAt),
       updated_at: normalizeText(row.updated_at),
-      cache_meta: row.cache_meta || {}
+      cache_meta: row.cache_meta || {},
+      ...(usesEnglishFallback ? {
+        fallback: true,
+        fallback_reason: fallbackReason
+      } : {})
+    };
+  }
+
+  function rowForPublishSnapshot(row) {
+    const issue = publishIssue(row);
+    if (!issue) return { row, issue: "" };
+    return {
+      issue,
+      row: {
+        ...row,
+        publish_fallback_reason: issue
+      }
+    };
+  }
+
+  async function getPublishReadiness(options = {}) {
+    const issues = [];
+    let itemCount = 0;
+    for (const config of normalizePublishDomains(options)) {
+      const languages = publishLanguagesForConfig(config, options);
+      for (const language of languages) {
+        const state = await loadState(config.id, language.code);
+        const rows = state.rows.filter((row) => row.required && row.publish_state !== "not_publishable");
+        itemCount += rows.length;
+        for (const row of rows) {
+          const issue = publishIssue(row);
+          if (!issue) continue;
+          issues.push({
+            domain: config.id,
+            target_lang: language.code,
+            key: row.key,
+            source_ref: row.source_ref,
+            issue
+          });
+        }
+      }
+    }
+    return {
+      ready: true,
+      item_count: itemCount,
+      fallback_count: issues.length,
+      issue_count: issues.length,
+      issues: issues.slice(0, 200),
+      warnings: issues.length
+        ? [{
+            code: "english_fallback",
+            count: issues.length,
+            message: `${issues.length} translation item${issues.length === 1 ? "" : "s"} will use English fallback.`
+          }]
+        : []
     };
   }
 
   async function publishTranslations(options = {}) {
-    assertWritesEnabled();
+    assertSnapshotPublishEnabled();
     const timestamp = nowIso();
     const sections = [];
     const allItems = [];
@@ -1710,19 +1781,20 @@ export function createStaticTranslationService({
       for (const language of languages) {
         const state = await loadState(config.id, language.code);
         const rows = state.rows.filter((row) => row.required && row.publish_state !== "not_publishable");
-        for (const row of rows) {
-          const issue = publishIssue(row);
-          if (issue) {
+        const publishRows = rows.map((row) => {
+          const result = rowForPublishSnapshot(row);
+          if (result.issue) {
             issues.push({
               domain: config.id,
               target_lang: language.code,
               key: row.key,
               source_ref: row.source_ref,
-              issue
+              issue: result.issue
             });
           }
-        }
-        const items = rows.map((row) => snapshotItem(config, language, row, timestamp));
+          return result.row;
+        });
+        const items = publishRows.map((row) => snapshotItem(config, language, row, timestamp));
         allItems.push(...items);
         sections.push({
           config,
@@ -1736,37 +1808,40 @@ export function createStaticTranslationService({
           target_lang: language.code,
           item_count: items.length,
           file: snapshotRelativeFile(config, language.code),
-          rows,
+          rows: publishRows,
           items
         });
       }
-    }
-
-    if (issues.length) {
-      const error = apiError(
-        409,
-        "STATIC_TRANSLATION_PUBLISH_BLOCKED",
-        `Runtime generation blocked by ${issues.length} translation issue${issues.length === 1 ? "" : "s"}.`
-      );
-      error.details = issues.slice(0, 200);
-      throw error;
     }
 
     let manifest = null;
     for (const section of sections) {
       manifest = await writeTranslationStoreSection(section.config, section.language, section.rows);
     }
-    return manifest || {
-      schema: TRANSLATION_SNAPSHOT_SCHEMA,
-      schema_version: 1,
-      generated_at: timestamp,
-      source_set_hash: sourceSetHashForItems(allItems),
-      staff_languages: Array.from(new Set(sections.filter((section) => section.section === "staff").map((section) => section.target_lang))).sort(),
-      customer_languages: Array.from(new Set(sections.filter((section) => section.section === "customers").map((section) => section.target_lang))).sort(),
-      items_count: allItems.length,
-      total_items: allItems.length,
-      sections: sections.map(({ config, language, rows, items, ...section }) => section)
+    const fallbackSummary = {
+      fallback_count: issues.length,
+      warnings: issues.length
+        ? [{
+            code: "english_fallback",
+            count: issues.length,
+            message: `${issues.length} translation item${issues.length === 1 ? "" : "s"} used English fallback.`
+          }]
+        : []
     };
+    return manifest
+      ? { ...manifest, ...fallbackSummary }
+      : {
+          schema: TRANSLATION_SNAPSHOT_SCHEMA,
+          schema_version: 1,
+          generated_at: timestamp,
+          source_set_hash: sourceSetHashForItems(allItems),
+          staff_languages: Array.from(new Set(sections.filter((section) => section.section === "staff").map((section) => section.target_lang))).sort(),
+          customer_languages: Array.from(new Set(sections.filter((section) => section.section === "customers").map((section) => section.target_lang))).sort(),
+          items_count: allItems.length,
+          total_items: allItems.length,
+          sections: sections.map(({ config, language, rows, items, ...section }) => section),
+          ...fallbackSummary
+        };
   }
 
   return {
@@ -1778,6 +1853,7 @@ export function createStaticTranslationService({
       return domainSummary(config);
     },
     getLanguageState: loadState,
+    getPublishReadiness,
     async getStatusSummary(options = {}) {
       const domains = normalizeStatusDomains(options);
       const publishedIndex = await readPublishedIndex();

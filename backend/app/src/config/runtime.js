@@ -170,6 +170,9 @@ export const TRANSLATION_ENABLED = Boolean(OPENAI_API_KEY) || GOOGLE_TRANSLATE_F
 export const TRANSLATION_OVERRIDE_WRITES_ENABLED = String(
   process.env.TRANSLATION_OVERRIDE_WRITES_ENABLED || "true"
 ).trim().toLowerCase() !== "false";
+export const TRANSLATION_SNAPSHOT_PUBLISH_ENABLED = String(
+  process.env.TRANSLATION_SNAPSHOT_PUBLISH_ENABLED || "true"
+).trim().toLowerCase() !== "false";
 export const TRANSLATION_RUNTIME_INFO = Object.freeze({
   provider: DEFAULT_TRANSLATION_PROVIDER_KIND,
   display: DEFAULT_TRANSLATION_PROVIDER_DISPLAY

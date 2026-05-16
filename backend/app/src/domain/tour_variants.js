@@ -515,11 +515,18 @@ export function createTourVariantHelpers({
     };
   }
 
+  function isMarketingTourSource(tour) {
+    const recordType = normalizeText(tour?.record_type).toLowerCase();
+    if (recordType === "tour_variant") return false;
+    return !normalizeText(tour?.base_marketing_tour_id);
+  }
+
   function buildSourceDayOptions(tours, { lang = "en", query = "", limit = 500, offset = 0 } = {}) {
     const normalizedQuery = normalizeText(query).toLowerCase();
     const rows = [];
     const storedTours = (Array.isArray(tours) ? tours : [])
       .map((tour) => normalizeTourForStorage(tour))
+      .filter(isMarketingTourSource)
       .filter((tour) => tour.published_on_webpage !== false);
     for (const tour of storedTours) {
       const tourReadModel = normalizeTourForRead(tour, { lang });

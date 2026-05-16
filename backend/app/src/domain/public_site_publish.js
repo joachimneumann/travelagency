@@ -14,7 +14,7 @@ export const PUBLIC_SITE_TRANSLATION_DOMAINS = Object.freeze([
 
 const MANIFEST_SCHEMA = "public-site-publish/v1";
 const MAX_LOG_LINES = 400;
-const CONTENT_FINGERPRINT_SCHEMA_VERSION = 1;
+const CONTENT_FINGERPRINT_SCHEMA_VERSION = 2;
 const CONTENT_SOURCE_EXCLUDED_DIR_NAMES = new Set([".cache"]);
 const CONTENT_SOURCE_EXCLUDED_FILE_NAMES = new Set([".DS_Store", ".gitkeep", "README.md"]);
 const CONTENT_SOURCE_EXCLUDED_SUFFIXES = [".audit.log", ".tmp"];
@@ -32,6 +32,10 @@ function apiError(status, code, message) {
 
 function sha256(value) {
   return createHash("sha256").update(String(value ?? ""), "utf8").digest("hex");
+}
+
+function sha256Bytes(value) {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 function normalizedRelativePath(rootDir, filePath) {
@@ -197,22 +201,42 @@ function translationBlockers(status = {}) {
       message: `${normalized.unavailable_count} translation section${normalized.unavailable_count === 1 ? "" : "s"} could not be checked.`
     });
   }
-  if (normalized.issue_count > 0) {
-    blockers.push({
-      code: "translations_need_work",
-      message: `${normalized.issue_count} translation item${normalized.issue_count === 1 ? "" : "s"} need translation or update before publishing.`
-    });
-  }
-  const runtimeSnapshotCanBeRefreshed = normalized.unpublished_count > 0
-    && normalized.issue_count === 0
-    && normalized.unavailable_count === 0;
-  if (normalized.runtime_i18n?.blocked && !runtimeSnapshotCanBeRefreshed) {
-    blockers.push({
-      code: "runtime_i18n_blocked",
-      message: normalizeText(normalized.runtime_i18n.error || normalized.runtime_i18n.output) || "Runtime translation generation is blocked."
-    });
-  }
   return blockers;
+}
+
+function normalizePublishReadiness(readiness = null) {
+  if (!readiness || typeof readiness !== "object") {
+    return {
+      fallback_count: 0,
+      warnings: [],
+      issues: []
+    };
+  }
+  const fallbackCount = Number(readiness.fallback_count || readiness.issue_count || 0);
+  return {
+    fallback_count: Math.max(0, fallbackCount),
+    warnings: Array.isArray(readiness.warnings) ? readiness.warnings : [],
+    issues: Array.isArray(readiness.issues) ? readiness.issues : []
+  };
+}
+
+function translationWarnings(status = {}, readiness = null) {
+  const normalized = normalizeTranslationStatus(status);
+  const publishReadiness = normalizePublishReadiness(readiness);
+  const warnings = [...publishReadiness.warnings];
+  const fallbackCount = publishReadiness.fallback_count || normalized.issue_count;
+  if (fallbackCount > 0 && !warnings.some((entry) => normalizeText(entry?.code) === "english_fallback")) {
+    warnings.push({
+      code: "english_fallback",
+      count: fallbackCount,
+      message: `${fallbackCount} translation item${fallbackCount === 1 ? "" : "s"} will use English fallback.`
+    });
+  }
+  return {
+    fallback_count: fallbackCount,
+    warnings,
+    issues: publishReadiness.issues
+  };
 }
 
 function runCommandWithSpawn({ spawnCommand, repoRoot, env }) {
@@ -278,6 +302,16 @@ export function createPublicSitePublishService({
   const executePhase = typeof runCommand === "function"
     ? runCommand
     : runCommandWithSpawn({ spawnCommand, repoRoot, env });
+
+  function runtimeBrandEnvironment() {
+    const raw = normalizeText(
+      env.PUBLIC_SITE_RUNTIME_BRAND_ENV
+      || env.RUNTIME_BRAND_ENV
+      || (env.STAGING_ACCESS_ENABLED === "true" ? "staging" : "")
+      || (env.NODE_ENV === "development" ? "local" : "")
+    ).toLowerCase();
+    return ["local", "staging", "production"].includes(raw) ? raw : "production";
+  }
   const jobs = new Map();
   let runningJobId = "";
 
@@ -300,10 +334,17 @@ export function createPublicSitePublishService({
         if (error?.code === "ENOENT") continue;
         throw error;
       }
+      let bytes;
+      try {
+        bytes = await readFileFn(file.absolute_path);
+      } catch (error) {
+        if (error?.code === "ENOENT") continue;
+        throw error;
+      }
       entries.push({
         path: file.path,
         size: Number(stats.size || 0),
-        mtime_ms: Number(stats.mtimeMs || 0)
+        hash: sha256Bytes(bytes)
       });
     }
     return {
@@ -430,22 +471,38 @@ export function createPublicSitePublishService({
     });
   }
 
+  async function getWebsiteTranslationReadiness() {
+    if (typeof staticTranslationService.getPublishReadiness !== "function") return null;
+    try {
+      return await staticTranslationService.getPublishReadiness({
+        domains: PUBLIC_SITE_TRANSLATION_DOMAINS
+      });
+    } catch {
+      return null;
+    }
+  }
+
   async function getStatus() {
-    const [manifest, sourceState, rawTranslationStatus] = await Promise.all([
+    const [manifest, sourceState, rawTranslationStatus, rawPublishReadiness] = await Promise.all([
       readPublishManifest(),
       computeSourceState(),
-      getWebsiteTranslationStatus()
+      getWebsiteTranslationStatus(),
+      getWebsiteTranslationReadiness()
     ]);
     const translations = normalizeTranslationStatus(rawTranslationStatus);
     const blockers = translationBlockers(rawTranslationStatus);
+    const translationWarningState = translationWarnings(rawTranslationStatus, rawPublishReadiness);
     const hasPublishedHash = Boolean(normalizeText(manifest?.source_hash));
     const sourceDirty = !hasPublishedHash || normalizeText(manifest.source_hash) !== sourceState.source_hash;
     const runningJob = runningJobId ? jobs.get(runningJobId) : null;
     return {
-      dirty: Boolean(sourceDirty || translations.dirty),
+      dirty: Boolean(sourceDirty),
       source_dirty: sourceDirty,
       blocked: blockers.length > 0,
       block_reasons: blockers,
+      warnings: translationWarningState.warnings,
+      translation_fallback_count: translationWarningState.fallback_count,
+      translation_fallback_issues: translationWarningState.issues,
       source_hash: sourceState.source_hash,
       published_source_hash: normalizeText(manifest?.source_hash),
       last_published_at: normalizeText(manifest?.published_at),
@@ -539,7 +596,10 @@ export function createPublicSitePublishService({
             appendLog(job, `Synced manual translations for ${tours.length} marketing tour${tours.length === 1 ? "" : "s"} and ${tourVariants.length} Tour Variant${tourVariants.length === 1 ? "" : "s"}.`);
           }),
           callbackPhase("validate_translations", "Validate public website translations", async (_phase, job) => {
-            const status = await getWebsiteTranslationStatus();
+            const [status, readiness] = await Promise.all([
+              getWebsiteTranslationStatus(),
+              getWebsiteTranslationReadiness()
+            ]);
             const blockers = translationBlockers(status);
             if (blockers.length) {
               const error = apiError(
@@ -551,19 +611,37 @@ export function createPublicSitePublishService({
               throw error;
             }
             const translations = normalizeTranslationStatus(status);
+            const warningState = translationWarnings(status, readiness);
             appendLog(job, `Validated public website translations. ${translations.unpublished_count} translated item${translations.unpublished_count === 1 ? "" : "s"} ready for runtime generation.`);
+            if (warningState.fallback_count > 0) {
+              appendLog(job, `${warningState.fallback_count} translation item${warningState.fallback_count === 1 ? "" : "s"} will use English fallback.`);
+            }
           }),
           callbackPhase("publish_translations", "Publish translation snapshots", async (_phase, job) => {
             const manifest = await staticTranslationService.publishTranslations({
               domains: PUBLIC_SITE_TRANSLATION_DOMAINS
             });
             appendLog(job, `Published ${manifest?.total_items || 0} translation item${manifest?.total_items === 1 ? "" : "s"}.`);
+            if (Number(manifest?.fallback_count || 0) > 0) {
+              appendLog(job, `${manifest.fallback_count} translation item${manifest.fallback_count === 1 ? "" : "s"} used English fallback.`);
+            }
+            job.publish_source_state = await computeSourceState();
+            job.source_hash = job.publish_source_state.source_hash;
           }),
+          commandPhase("runtime_brand_logo", "Prepare runtime brand logo", "bash", ["scripts/assets/prepare_runtime_brand_logo.sh", runtimeBrandEnvironment()]),
           commandPhase("runtime_i18n", "Generate runtime i18n", process.execPath, ["scripts/i18n/build_runtime_i18n.mjs", "--strict"]),
           commandPhase("homepage_assets", "Regenerate public homepage assets", process.execPath, ["scripts/assets/generate_public_homepage_assets.mjs"]),
           callbackPhase("write_manifest", "Record public-site publish manifest", async (_phase, job) => {
-            const sourceState = await computeSourceState();
-            const manifest = await writeSuccessManifest(job, sourceState);
+            const expectedSourceState = job.publish_source_state || await computeSourceState();
+            const currentSourceState = await computeSourceState();
+            if (normalizeText(expectedSourceState.source_hash) !== normalizeText(currentSourceState.source_hash)) {
+              throw apiError(
+                409,
+                "PUBLIC_SITE_CONTENT_CHANGED_DURING_PUBLISH",
+                "Content changed while the public site was being published. Run Publish Website again."
+              );
+            }
+            const manifest = await writeSuccessManifest(job, expectedSourceState);
             job.source_hash = manifest.source_hash;
             appendLog(job, `Recorded public-site publish manifest. source_hash=${manifest.source_hash}`);
           })

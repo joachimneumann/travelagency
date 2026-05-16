@@ -70,45 +70,15 @@ test("static translation apply job translates central content without regenerati
   assert.match(finished.log.join("\n"), /Translated 7 translation items in content\/translations/);
 });
 
-test("static translation publish job writes snapshot before runtime and homepage generation", async () => {
-  const seen = [];
+test("static translation apply jobs leave public-site publish to the central publish service", () => {
   const service = createStaticTranslationApplyJobs({
     repoRoot: "/tmp/repo",
-    nowIso: () => "2026-04-28T00:00:00.000Z",
-    idFactory: () => "job-publish",
-    getStatusSummary: async () => ({
-      languages: [
-        {
-          domain: "marketing-tour-memory",
-          target_lang: "vi",
-          missing_count: 1,
-          stale_count: 0,
-          legacy_count: 0
-        }
-      ]
-    }),
-    runCommand: async (phase) => {
-      seen.push([phase.command, ...phase.args].join(" "));
-    },
     applyTranslations: async () => {
-      throw new Error("publish should not translate missing strings");
-    },
-    publishTranslations: async () => {
-      seen.push("publish snapshot");
-      return { total_items: 3, source_set_hash: "abc123" };
+      throw new Error("not used");
     }
   });
 
-  const started = await service.startPublish();
-  assert.equal(started.type, "publish");
-  const finished = await waitForJob(service, "job-publish", "succeeded");
-
-  assert.equal(finished.status, "succeeded");
-  assert.equal(seen.length, 3);
-  assert.equal(seen[0], "publish snapshot");
-  assert.match(seen[1], /build_runtime_i18n\.mjs --strict$/);
-  assert.match(seen[2], /generate_public_homepage_assets\.mjs$/);
-  assert.match(finished.log.join("\n"), /Validated 3 content\/translations items/);
+  assert.equal(service.startPublish, undefined);
 });
 
 test("static translation apply job rejects concurrent jobs", async () => {

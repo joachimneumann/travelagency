@@ -76,7 +76,7 @@ test("Tour Variant creation from a base marketing tour keeps the seeded timeline
   assert.equal(stored.boundary_logistics.departure.mode, "none");
 });
 
-test("Tour Variant source-day options exclude unpublished marketing tours", () => {
+test("Tour Variant source-day options include only published marketing tours", () => {
   const tours = [
     {
       id: "tour_public",
@@ -121,6 +121,73 @@ test("Tour Variant source-day options exclude unpublished marketing tours", () =
             id: "day_hidden",
             title: "Hidden day",
             services: []
+          }
+        ]
+      }
+    },
+    {
+      id: "tour_variant_public",
+      record_type: "tour_variant",
+      title: "Published Tour Variant",
+      styles: ["culture"],
+      published_on_webpage: true,
+      base_marketing_tour_id: "tour_public",
+      travel_plan: {
+        tour_card_image_ids: ["variant_image_1", "variant_image_2"],
+        days: [
+          {
+            id: "day_variant",
+            title: "Variant day",
+            primary_location_id: "hanoi",
+            services: [
+              {
+                image: {
+                  id: "variant_image_1",
+                  storage_path: "/public/v1/tour-images/tour_variant_public/one.webp",
+                  include_in_travel_tour_card: true
+                }
+              },
+              {
+                image: {
+                  id: "variant_image_2",
+                  storage_path: "/public/v1/tour-images/tour_variant_public/two.webp",
+                  include_in_travel_tour_card: true
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      id: "stored_variant_public",
+      title: "Stored Tour Variant",
+      styles: ["culture"],
+      published_on_webpage: true,
+      base_marketing_tour_id: "tour_public",
+      travel_plan: {
+        tour_card_image_ids: ["stored_variant_image_1", "stored_variant_image_2"],
+        days: [
+          {
+            id: "day_stored_variant",
+            title: "Stored variant day",
+            primary_location_id: "hanoi",
+            services: [
+              {
+                image: {
+                  id: "stored_variant_image_1",
+                  storage_path: "/public/v1/tour-images/stored_variant_public/one.webp",
+                  include_in_travel_tour_card: true
+                }
+              },
+              {
+                image: {
+                  id: "stored_variant_image_2",
+                  storage_path: "/public/v1/tour-images/stored_variant_public/two.webp",
+                  include_in_travel_tour_card: true
+                }
+              }
+            ]
           }
         ]
       }
