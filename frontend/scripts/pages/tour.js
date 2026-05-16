@@ -18,6 +18,7 @@ import { createSnapshotDirtyTracker } from "../shared/edit_state.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { applyBackendUserLabel, setBackendPageLoadingOverlay } from "../shared/backend_page.js";
+import { initializeEnglishTextGuard } from "../shared/english_text_guard.js";
 import { createTourTravelPlanAdapter } from "./tour_travel_plan_adapter.js";
 import { normalizeDestinationScopeCatalog } from "../shared/destination_scope_editor.js";
 import {
@@ -87,6 +88,20 @@ function omitDerivedTravelPlanDestinations(plan) {
   if (!plan || typeof plan !== "object" || Array.isArray(plan)) return plan;
   const { destinations: _derivedDestinations, destination_scope: _destinationScope, ...next } = plan;
   return next;
+}
+
+function stripLocalizedStorageFields(value) {
+  if (Array.isArray(value)) return value.map((item) => stripLocalizedStorageFields(item));
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !key.endsWith("_i18n") && key !== "translation_meta")
+      .map(([key, item]) => [key, stripLocalizedStorageFields(item)])
+  );
+}
+
+function marketingTourTravelPlanStoragePayload(plan) {
+  return stripLocalizedStorageFields(omitDerivedTravelPlanDestinations(plan));
 }
 
 const GENERATED_ROLE_LOOKUP = Object.freeze(
@@ -1667,6 +1682,7 @@ async function init() {
 
 async function initTourPage() {
   await waitForBackendI18n();
+  initializeEnglishTextGuard();
   window.addEventListener("beforeunload", (event) => {
     if (state.allowPageUnload || !updateTourDirtyState()) return;
     event.preventDefault();
@@ -2137,19 +2153,19 @@ async function submitForm(event) {
   const removedStoredReelVideo = !pendingReelVideo && !storedReelVideo && hasStoredReelVideoOnServer;
   state.localizedContent.title_i18n = title_i18n;
   state.localizedContent.short_description_i18n = short_description_i18n;
-  const resolvedTitle = resolveLocalizedTextMapValue(title_i18n, ["vi", "en", currentTourEditingLang()]);
+  const resolvedTitle = resolveLocalizedTextMapValue(title_i18n, ["en", currentTourEditingLang()]);
+  const resolvedShortDescription = resolveLocalizedTextMapValue(short_description_i18n, ["en", currentTourEditingLang()]);
 
   const payload = {
     title: resolvedTitle,
-    title_i18n,
     styles: selectedStyles,
     priority: toNumberOrNull(getInput("tour_priority")),
     seasonality_start_month: getInput("tour_seasonality_start_month"),
     seasonality_end_month: getInput("tour_seasonality_end_month"),
     published_on_webpage: publishOnWebpage,
     seo_slug: getInput("tour_seo_slug"),
-    short_description_i18n,
-    travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload)
+    short_description: resolvedShortDescription,
+    travel_plan: marketingTourTravelPlanStoragePayload(travelPlanPayload)
   };
   const expectedUpdatedAt = normalizeText(state.tour?.updated_at || state.booking?.updated_at);
   if (!state.is_create_mode && expectedUpdatedAt) {

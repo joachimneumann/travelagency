@@ -209,15 +209,11 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
     delete next.budget_lower_USD;
 
     next.title = normalizeText(next.title);
-    const title_i18n = normalizeTranslationMap(next.title_i18n);
-    if (Object.keys(title_i18n).length) next.title_i18n = title_i18n;
-    else delete next.title_i18n;
+    delete next.title_i18n;
     next.short_description = normalizeText(
       hasLocalizedContent(next.short_description) ? next.short_description : legacyShortDescription
     );
-    const short_description_i18n = normalizeTranslationMap(next.short_description_i18n);
-    if (Object.keys(short_description_i18n).length) next.short_description_i18n = short_description_i18n;
-    else delete next.short_description_i18n;
+    delete next.short_description_i18n;
     next.styles = tourStyleCodes(next);
     delete next.pictures;
     delete next.image;

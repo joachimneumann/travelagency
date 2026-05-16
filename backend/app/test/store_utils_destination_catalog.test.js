@@ -156,3 +156,92 @@ test("store utils persist deleted destination regions and places to destination 
   assert.equal(reloadedStore.destination_places.some((place) => place.id === "place_hanoi"), true);
   assert.equal(reloadedStore.destination_regions.some((region) => region.id === "region_north"), true);
 });
+
+test("store utils strip embedded tour localized fields on content tour read and write", async () => {
+  const rootDir = await mkdtemp(path.join(os.tmpdir(), "travelagency-tour-storage-i18n-"));
+  const dataDir = path.join(rootDir, "data");
+  const contentToursDir = path.join(rootDir, "content", "tours");
+  const tourDestinationsPath = path.join(contentToursDir, "destinations.json");
+  const dataPath = path.join(dataDir, "store.json");
+  const tourDir = path.join(contentToursDir, "tour_1");
+  const tourJsonPath = path.join(tourDir, "tour.json");
+
+  await mkdir(dataDir, { recursive: true });
+  await mkdir(tourDir, { recursive: true });
+  await writeFile(dataPath, `${JSON.stringify({
+    bookings: [],
+    activities: [],
+    payment_documents: [],
+    chat_channel_accounts: [],
+    chat_conversations: [],
+    chat_events: []
+  }, null, 2)}\n`, "utf8");
+  await writeFile(tourJsonPath, `${JSON.stringify({
+    id: "tour_1",
+    title: "English title",
+    title_i18n: {
+      vi: "Tieu de tieng Viet"
+    },
+    travel_plan: {
+      days: [
+        {
+          id: "day_1",
+          title: "Arrival",
+          title_i18n: {
+            vi: "Den noi"
+          },
+          services: [
+            {
+              id: "service_1",
+              title: "Dinner",
+              details_i18n: {
+                vi: "Bua toi"
+              }
+            }
+          ]
+        }
+      ],
+      translation_meta: {
+        vi: {
+          source_lang: "en"
+        }
+      }
+    }
+  }, null, 2)}\n`, "utf8");
+
+  const storeUtils = createTestStoreUtils({
+    dataPath,
+    toursDir: contentToursDir,
+    tourDestinationsPath,
+    dataDir
+  });
+
+  const [tour] = await storeUtils.readTours();
+  assert.equal(tour.title, "English title");
+  assert.equal("title_i18n" in tour, false);
+  assert.equal("translation_meta" in tour.travel_plan, false);
+  assert.equal("title_i18n" in tour.travel_plan.days[0], false);
+  assert.equal("details_i18n" in tour.travel_plan.days[0].services[0], false);
+
+  await storeUtils.persistTour({
+    ...tour,
+    short_description_i18n: {
+      vi: "Mo ta"
+    },
+    travel_plan: {
+      ...tour.travel_plan,
+      days: [
+        {
+          ...tour.travel_plan.days[0],
+          notes_i18n: {
+            vi: "Ghi chu"
+          }
+        }
+      ]
+    }
+  });
+
+  const persisted = await readJson(tourJsonPath);
+  assert.equal("short_description_i18n" in persisted, false);
+  assert.equal("notes_i18n" in persisted.travel_plan.days[0], false);
+});

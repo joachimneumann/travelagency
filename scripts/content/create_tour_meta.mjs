@@ -127,9 +127,7 @@ async function readJson(filePath) {
 function getEnglishTitle(tourJson, tourId) {
   const candidates = [
     tourJson?.title,
-    tourJson?.title_i18n?.en,
-    tourJson?.name,
-    tourJson?.name_i18n?.en
+    tourJson?.name
   ];
   const title = candidates.find((value) => typeof value === "string" && value.trim());
   return title?.trim() || tourId;
@@ -200,7 +198,7 @@ function normalizeDayNumber(day, index) {
 }
 
 function getDayTitle(day, dayNumber) {
-  return normalizeText(day?.title_i18n?.en) || normalizeText(day?.title) || `Day ${dayNumber}`;
+  return normalizeText(day?.title) || `Day ${dayNumber}`;
 }
 
 function getSelectedDayHighlight(day, highlightCatalog) {

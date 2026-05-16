@@ -27,6 +27,18 @@ function cloneJson(value, fallback = null) {
   }
 }
 
+function stripLocalizedStorageFields(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => stripLocalizedStorageFields(item));
+  }
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !key.endsWith("_i18n") && key !== "translation_meta")
+      .map(([key, item]) => [key, stripLocalizedStorageFields(item)])
+  );
+}
+
 function normalizeOptionalText(value) {
   const normalized = normalizeText(value);
   return normalized || null;
@@ -221,7 +233,7 @@ function normalizeTravelPlanLocalizedField(mapValue, plainValue, options = {}) {
   const flatLang = normalizeBookingContentLang(options?.flatLang || sourceLang);
   const contentLang = normalizeBookingContentLang(options?.contentLang || sourceLang);
   const flatMode = options?.flatMode === "localized" ? "localized" : "source";
-  return normalizeStoredLocalizedTextField(mapValue, plainValue, {
+  return normalizeStoredLocalizedTextField(options?.ignoreLocalizedFields === true ? {} : mapValue, plainValue, {
     sourceLang,
     flatLang,
     fallbackLang: contentLang,
@@ -651,9 +663,12 @@ export function createTravelPlanHelpers() {
   }
 
   function normalizeTravelPlan(rawTravelPlan, options = {}) {
-    const source = rawTravelPlan && typeof rawTravelPlan === "object" && !Array.isArray(rawTravelPlan)
+    const rawSource = rawTravelPlan && typeof rawTravelPlan === "object" && !Array.isArray(rawTravelPlan)
       ? rawTravelPlan
       : {};
+    const source = options?.ignoreLocalizedFields === true
+      ? stripLocalizedStorageFields(rawSource)
+      : rawSource;
     const flatMode = options?.flatMode === "localized" ? "localized" : "source";
     const destination_scope = normalizeTravelPlanDestinationScope(source);
     const destinations = destinationScopeDestinations(destination_scope);
@@ -687,9 +702,12 @@ export function createTravelPlanHelpers() {
   }
 
   function normalizeMarketingTourTravelPlan(rawTravelPlan, options = {}) {
-    const normalized = normalizeTravelPlan(rawTravelPlan, options);
+    const normalized = normalizeTravelPlan(rawTravelPlan, {
+      ...options,
+      ignoreLocalizedFields: true
+    });
     const { destination_scope: _destinationScope, destinations: _destinations, ...withoutTourLevelLocations } = normalized;
-    return withoutTourLevelLocations;
+    return stripLocalizedStorageFields(withoutTourLevelLocations);
   }
 
   function normalizeBookingTravelPlan(rawTravelPlan, offer = null, options = {}) {

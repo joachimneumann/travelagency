@@ -503,6 +503,18 @@ export function createStoreUtils({
     return path.join(tourFolderPath(tourId), "tour.json");
   }
 
+  function stripContentTourLocalizedFields(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => stripContentTourLocalizedFields(item));
+    }
+    if (!value || typeof value !== "object") return value;
+    return Object.fromEntries(
+      Object.entries(value)
+        .filter(([key]) => !key.endsWith("_i18n") && key !== "translation_meta")
+        .map(([key, item]) => [key, stripContentTourLocalizedFields(item)])
+    );
+  }
+
   function tourVariantFolderPath(tourVariantId) {
     return path.join(resolvedTourVariantsDir, tourVariantId);
   }
@@ -521,7 +533,7 @@ export function createStoreUtils({
         const raw = await readFile(tourPath, "utf8");
         const parsed = JSON.parse(raw);
         if (parsed && typeof parsed === "object" && normalizeText(parsed.id)) {
-          items.push(parsed);
+          items.push(stripContentTourLocalizedFields(parsed));
         }
       } catch {
         // Ignore unreadable tour folders.
@@ -535,7 +547,7 @@ export function createStoreUtils({
       const id = normalizeText(tour?.id);
       if (!id) throw new Error("Tour id is required");
       await mkdir(tourFolderPath(id), { recursive: true });
-      await writeFile(tourJsonPath(id), `${JSON.stringify(tour, null, 2)}\n`, "utf8");
+      await writeFile(tourJsonPath(id), `${JSON.stringify(stripContentTourLocalizedFields(tour), null, 2)}\n`, "utf8");
     });
     await writeQueueRef.current;
   }

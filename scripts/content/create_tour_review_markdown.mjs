@@ -255,7 +255,7 @@ function collectTravelTourCardImages(tour) {
           id: normalizeText(image.id),
           image,
           storagePath,
-          serviceTitle: englishField(service?.title_i18n, service?.title)
+          serviceTitle: textOrMissing(service?.title)
         });
       }
     }
@@ -286,7 +286,7 @@ function collectServiceImages(tour) {
   for (const day of travelPlanDays(tour)) {
     const dayNumber = normalizeText(day?.day_number);
     for (const service of Array.isArray(day?.services) ? day.services : []) {
-      const serviceTitle = englishField(service?.title_i18n, service?.title);
+      const serviceTitle = textOrMissing(service?.title);
       for (const image of collectImageCandidates(service)) {
         if (!image || typeof image !== "object" || Array.isArray(image)) continue;
         if (image.is_customer_visible === false) continue;
@@ -370,10 +370,10 @@ function renderTextReviewMarkdown(tour, { styleLabelMap, experienceHighlightMap 
 
   days.forEach((day, dayIndex) => {
     const dayNumber = normalizeText(day?.day_number) || String(dayIndex + 1);
-    const dayTitle = englishField(day?.title_i18n, day?.title);
+    const dayTitle = textOrMissing(day?.title);
     const dayDetails = textOrMissing(
-      optionalEnglishField(day?.details_i18n, day?.details)
-      || optionalEnglishField(day?.notes_i18n, day?.notes)
+      normalizeText(day?.details)
+      || normalizeText(day?.notes)
     );
     const services = Array.isArray(day?.services) ? day.services : [];
 
@@ -394,8 +394,8 @@ function renderTextReviewMarkdown(tour, { styleLabelMap, experienceHighlightMap 
     }
 
     services.forEach((service, serviceIndex) => {
-      const serviceTitle = englishField(service?.title_i18n, service?.title);
-      const serviceDetail = englishField(service?.details_i18n, service?.details);
+      const serviceTitle = textOrMissing(service?.title);
+      const serviceDetail = textOrMissing(service?.details);
       lines.push(`##### Service ${serviceIndex + 1}`);
       lines.push("");
       lines.push(`**Service Title:** ${serviceTitle}`);

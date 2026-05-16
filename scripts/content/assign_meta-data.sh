@@ -261,17 +261,13 @@ function dayTextFields(day) {
   };
 
   push("day.title", 100, day?.title);
-  push("day.title_i18n", 90, day?.title_i18n);
   push("day.description", 80, day?.description);
   push("day.notes", 80, day?.notes);
-  push("day.notes_i18n", 65, day?.notes_i18n);
 
   for (const [index, service] of (Array.isArray(day?.services) ? day.services : []).entries()) {
     push(`service[${index}].title`, 75, service?.title);
-    push(`service[${index}].title_i18n`, 65, service?.title_i18n);
     push(`service[${index}].description`, 55, service?.description);
     push(`service[${index}].details`, 55, service?.details);
-    push(`service[${index}].details_i18n`, 45, service?.details_i18n);
   }
 
   return fields;
@@ -374,7 +370,7 @@ function unmatchedCandidates(day, catalogIndex, matches, selectedMatch = null) {
   const matchedNames = new Set(matches.flatMap((match) => [normalizeText(match.name), normalizeText(match.alias)]));
   const selectedField = displayText(selectedMatch?.field);
   const selectedFromDayField = selectedField.startsWith("day.");
-  const selectedFromDayTitle = selectedField === "day.title" || selectedField === "day.title_i18n";
+  const selectedFromDayTitle = selectedField === "day.title";
   return extractCandidateNames(day)
     .filter((candidate) => {
       if (selectedField && displayText(candidate.field) === selectedField) return false;

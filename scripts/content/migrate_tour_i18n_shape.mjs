@@ -11,9 +11,9 @@ const defaultToursDir = path.join(repoRoot, "content", "tours");
 function usage() {
   console.log(`Usage: node scripts/content/migrate_tour_i18n_shape.mjs [--dry-run] [TOURS_DIR]
 
-Migrates tour JSON files to the strict source-plus-translation shape:
+Migrates tour JSON files to the strict source-only shape:
   field: English source string
-  field_i18n: non-English translations only
+  field_i18n: removed; translations live in content/translations
 
 Default TOURS_DIR: content/tours`);
 }
@@ -44,19 +44,6 @@ function localizedMap(value) {
   );
 }
 
-function mergeTranslationMaps(base, overlay, conflicts, pathLabel) {
-  const next = { ...localizedMap(base) };
-  for (const [lang, text] of Object.entries(localizedMap(overlay))) {
-    if (lang === "en") continue;
-    if (next[lang] && next[lang] !== text) {
-      conflicts.push(`${pathLabel}.${lang}: conflicting translation values`);
-      continue;
-    }
-    next[lang] = text;
-  }
-  return next;
-}
-
 function assignOptionalPlain(holder, field, value, previousValue) {
   const normalized = normalizeText(value);
   if (normalized) {
@@ -75,44 +62,23 @@ function assignOptionalPlain(holder, field, value, previousValue) {
 function migrateLocalizedPair(holder, plainField, i18nField, pathLabel, conflicts) {
   if (!isRecord(holder)) return false;
   const previousPlain = holder[plainField];
-  const previousI18n = holder[i18nField];
   const hadPlain = Object.prototype.hasOwnProperty.call(holder, plainField);
   const hadI18n = Object.prototype.hasOwnProperty.call(holder, i18nField);
   let changed = false;
   let plainText = normalizeText(previousPlain);
-  let translations = localizedMap(previousI18n);
 
   if (isRecord(previousPlain)) {
     const oldMap = localizedMap(previousPlain);
-    const oldEnglish = normalizeText(oldMap.en);
-    if (oldEnglish && plainText && oldEnglish !== plainText) {
-      conflicts.push(`${pathLabel}: conflicting English source values`);
-    }
-    plainText = oldEnglish || plainText;
-    translations = mergeTranslationMaps(translations, oldMap, conflicts, `${pathLabel}.${i18nField}`);
+    plainText = normalizeText(oldMap.en) || normalizeText(Object.values(oldMap).find((entry) => normalizeText(entry)));
     changed = true;
   }
-
-  const i18nEnglish = normalizeText(translations.en);
-  if (i18nEnglish) {
-    if (!plainText) {
-      plainText = i18nEnglish;
-    } else if (plainText !== i18nEnglish) {
-      conflicts.push(`${pathLabel}: ${plainField} conflicts with ${i18nField}.en`);
-    }
-    delete translations.en;
-    changed = true;
-  }
-
-  translations = Object.fromEntries(Object.entries(translations).filter(([lang]) => lang !== "en"));
 
   if (changed || hadPlain) {
     assignOptionalPlain(holder, plainField, plainText, previousPlain);
   }
-  if (Object.keys(translations).length) {
-    holder[i18nField] = translations;
-  } else if (hadI18n) {
-    holder[i18nField] = {};
+  if (hadI18n) {
+    delete holder[i18nField];
+    changed = true;
   }
   return changed;
 }
@@ -154,6 +120,9 @@ function migrateTour(tour, filePath) {
   migrateLocalizedPair(next, "title", "title_i18n", `${filePath}.title`, conflicts);
   migrateLocalizedPair(next, "short_description", "short_description_i18n", `${filePath}.short_description`, conflicts);
   migrateTravelPlan(next.travel_plan, conflicts);
+  if (isRecord(next.travel_plan) && Object.prototype.hasOwnProperty.call(next.travel_plan, "translation_meta")) {
+    delete next.travel_plan.translation_meta;
+  }
   return {
     tour: next,
     conflicts,

@@ -24,6 +24,7 @@ import {
 import { createBookingStyleDirtyBarController } from "../shared/booking_style_dirty_bar.js";
 import { createBookingPageLanguageController } from "./booking_page_language.js";
 import { createBookingPageDataController } from "./booking_page_data.js";
+import { initializeEnglishTextGuard } from "../shared/english_text_guard.js";
 import { resolveBackendSectionHref } from "../shared/nav.js";
 import { createBookingWhatsAppController } from "../booking/whatsapp.js";
 import { initializeBookingSections, renderBookingSectionHeader } from "../booking/sections.js";
@@ -737,6 +738,7 @@ async function init() {
 
 async function initBookingPage() {
   await waitForBackendI18n();
+  initializeEnglishTextGuard();
   renderBookingPdfPersonalizationPanels(els);
   Object.assign(els, resolveBookingPdfPersonalizationElements(document));
   window.addEventListener("backend-nav-mounted", refreshBackendNavRefs);

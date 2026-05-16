@@ -1068,7 +1068,7 @@ test("booking translation collapsible exposes incomplete state while marketing-t
   );
   assert.match(
     staticTranslationsSource,
-    /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(service\?\.details_i18n,\s*service\?\.details\)[\s\S]*localizedSource\(image\?\.caption_i18n,\s*image\?\.caption\)[\s\S]*localizedSource\(image\?\.alt_text_i18n,\s*image\?\.alt_text\)/,
+    /collectMarketingTourMemorySourcesFromPlan[\s\S]*addSourceText\(targetSet,\s*service\?\.details\)[\s\S]*addSourceText\(targetSet,\s*image\?\.caption\)[\s\S]*addSourceText\(targetSet,\s*image\?\.alt_text\)/,
     "Central marketing-tour memory should include travel-plan service details and image text"
   );
   assert.match(
@@ -3396,12 +3396,12 @@ test("travel-plan service image text stays wired across model, API, backend, tra
   );
   assert.match(
     tourMemorySource,
-    /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(service\?\.image_subtitle_i18n,\s*service\?\.image_subtitle\)/,
+    /collectMarketingTourMemorySourcesFromPlan[\s\S]*addSourceText\(targetSet,\s*service\?\.image_subtitle\)/,
     "The central marketing-tour translation memory should include service image subtitles"
   );
   assert.match(
     tourMemorySource,
-    /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(image\?\.caption_i18n,\s*image\?\.caption\)[\s\S]*localizedSource\(image\?\.alt_text_i18n,\s*image\?\.alt_text\)/,
+    /collectMarketingTourMemorySourcesFromPlan[\s\S]*addSourceText\(targetSet,\s*image\?\.caption\)[\s\S]*addSourceText\(targetSet,\s*image\?\.alt_text\)/,
     "The central marketing-tour translation memory should include service image caption and alt text"
   );
 });
@@ -3896,8 +3896,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     homepageGeneratorSource,
-    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages, \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\([\s\S]*normalizeLegacyTourLocalizedPairs\(tour\),[\s\S]*publishedTranslations[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
-    "Homepage generation should strip embedded marketing-tour translations through the shared translator before applying published snapshots and manual overrides"
+    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages, \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, normalizedLang, publishedTranslations\);[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
+    "Homepage generation should apply published marketing-tour snapshots and manual overrides to source-only tours"
   );
   assert.match(
     tourMatrixPublishSource,
@@ -4135,7 +4135,7 @@ test("tour page edits English website content while marketing-tour translations 
   );
   assert.match(
     staticTranslationsSource,
-    /function collectMarketingTourMemorySources\(tours\)[\s\S]*localizedSource\(tour\?\.title_i18n,\s*tour\?\.title \|\| tour\?\.id\)[\s\S]*localizedSource\(tour\?\.short_description_i18n,\s*tour\?\.short_description\)/,
+    /function collectMarketingTourMemorySources\(tours\)[\s\S]*addSourceText\(sources,\s*tour\?\.title \|\| tour\?\.id\)[\s\S]*addSourceText\(sources,\s*tour\?\.short_description\)/,
     "The central marketing-tour translation memory should collect website title and description"
   );
   assert.doesNotMatch(
@@ -4145,8 +4145,8 @@ test("tour page edits English website content while marketing-tour translations 
   );
   assert.match(
     tourSource,
-    /function readLocalizedFields\(field,[\s\S]*normalizeLocalizedTextMap\(state\.localizedContent\?\.\[field\]/,
-    "Saving should preserve translated website fields managed outside the visible English source inputs"
+    /const resolvedTitle = resolveLocalizedTextMapValue\(title_i18n, \["en", currentTourEditingLang\(\)\]\);[\s\S]*const resolvedShortDescription = resolveLocalizedTextMapValue\(short_description_i18n, \["en", currentTourEditingLang\(\)\]\);[\s\S]*const payload = \{[\s\S]*title: resolvedTitle,[\s\S]*short_description: resolvedShortDescription,[\s\S]*travel_plan: marketingTourTravelPlanStoragePayload\(travelPlanPayload\)/,
+    "Saving should send source-only website fields and a source-only travel-plan payload"
   );
 });
 
@@ -6548,12 +6548,12 @@ test("marketing tour editor hides day and service copy actions while keeping tou
   assert.match(tourAdapterSource, /TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT = 500[\s\S]*tourTravelPlanServiceSearchRequest[\s\S]*limit: TRAVEL_PLAN_SERVICE_LIBRARY_SEARCH_LIMIT/, "Marketing tour editor should request enough reusable services to avoid truncating the copy-existing-service list");
   assert.match(tourAdapterSource, /tourTravelPlanDayImportRequest/, "Marketing tour editor should import days through tour endpoints");
   assert.match(tourAdapterSource, /tourTravelPlanServiceImportRequest/, "Marketing tour editor should import services through tour endpoints");
-  assert.match(tourAdapterSource, /target_travel_plan:\s*omitDerivedTravelPlanDestinations\(targetTravelPlan\)/, "Marketing tour editor should send dirty draft travel plans with import mutations");
+  assert.match(tourAdapterSource, /target_travel_plan:\s*marketingTourTravelPlanStoragePayload\(targetTravelPlan\)/, "Marketing tour editor should send source-only dirty draft travel plans with import mutations");
   assert.match(tourAdapterSource, /travelPlanLibrarySource:\s*"marketing_tour"/, "Marketing tour editor should mark the library source as marketing tours");
   assert.match(tourAdapterSource, /dayImport:\s*false/, "Marketing tour editor should hide day import");
   assert.match(tourAdapterSource, /serviceImport:\s*false/, "Marketing tour editor should hide service import");
   assert.match(tourAdapterSource, /serviceDetails:\s*true/, "Marketing tour editor should expose service details");
-  assert.match(staticTranslationsSource, /collectMarketingTourMemorySourcesFromPlan[\s\S]*localizedSource\(service\?\.details_i18n,\s*service\?\.details\)/, "Marketing tour translation memory should include service details");
+  assert.match(staticTranslationsSource, /collectMarketingTourMemorySourcesFromPlan[\s\S]*addSourceText\(targetSet,\s*service\?\.details\)/, "Marketing tour translation memory should include service details");
   assert.match(travelPlanLibrarySource, /buildTravelPlanDaySearchRequest/, "Shared library should accept entity-specific day search builders");
   assert.match(travelPlanLibrarySource, /buildTravelPlanServiceImportRequest/, "Shared library should accept entity-specific service import builders");
   assert.match(travelPlanLibrarySource, /cloneTravelPlanDayForLocalImport[\s\S]*cloneTravelPlanServiceForLocalImport[\s\S]*applyLocalTravelPlanDraft/, "Shared library should accept local draft clone hooks for fast reusable-content inserts");
@@ -6569,10 +6569,10 @@ test("marketing tour editor hides day and service copy actions while keeping tou
   assert.match(routesSource, /\/api\/v1\/tours\/travel-plan-services\/search/, "Routes should expose marketing tour service search");
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/import/, "Routes should expose marketing tour day import");
   assert.match(routesSource, /\/api\/v1\/tours\/\{tour_id\}\/travel-plan\/days\/\{day_id\}\/services\/import/, "Routes should expose marketing tour service import");
-  assert.match(tourAdapterSource, /include_translations:\s*true[\s\S]*include_translations:\s*true/, "Marketing tour imports should copy translated day and service branches");
-  assert.match(tourHandlersSource, /copyMarketingTourServiceForImport[\s\S]*details:\s*preferredEnglishImportText\(sourceItem\?\.details_i18n,\s*sourceItem\?\.details\)[\s\S]*details_i18n:\s*includeTranslations/, "Marketing tour imports should preserve English service details as source text");
+  assert.doesNotMatch(tourAdapterSource, /include_translations/, "Marketing tour imports should not request embedded translated day or service branches");
+  assert.match(tourHandlersSource, /copyMarketingTourServiceForImport[\s\S]*details:\s*normalizeText\(sourceItem\?\.details\)[\s\S]*image_subtitle:\s*normalizeText\(sourceItem\?\.image_subtitle\)/, "Marketing tour imports should copy source service details only");
   assert.match(tourHandlersSource, /handleSearchTourTravelPlanServices[\s\S]*const limit = clamp\(safeInt\(requestUrl\.searchParams\.get\("limit"\)\) \|\| 500, 1, 500\)/, "Marketing tour service search should default to the full reusable-service library window instead of the old 20-item cap");
-  assert.match(tourHandlersSource, /copyMarketingTourDayForImport\(sourceDay,[\s\S]*includeTranslations:\s*payload\.include_translations !== false[\s\S]*copyMarketingTourServiceForImport\(sourceService,[\s\S]*includeTranslations:\s*payload\.include_translations !== false/, "Marketing tour import endpoints should copy translated branches by default");
+  assert.doesNotMatch(tourHandlersSource, /includeTranslations|include_translations/, "Marketing tour import endpoints should not copy embedded translation branches");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a day from another marketing tour/, "Day imports should reject the current marketing tour as a source");
   assert.match(tourHandlersSource, /sourceTourId === tourId[\s\S]*Choose a service from another marketing tour/, "Service imports should reject the current marketing tour as a source");
 });

@@ -1,5 +1,6 @@
 import { logBrowserConsoleError } from "./api.js";
 import { fetchAuthMe, wireAuthLogoutLink } from "./auth.js";
+import { initializeEnglishTextGuard } from "./english_text_guard.js";
 import { resolveBackendSectionHref } from "./nav.js";
 
 function normalizeText(value) {
@@ -223,6 +224,7 @@ export async function initializeBackendPageChrome({
   refreshNav = refreshBackendNavElements
 } = {}) {
   await waitForBackendI18n();
+  initializeEnglishTextGuard();
   const apiBase = getBackendApiBase();
   const apiOrigin = getBackendApiOrigin();
   const navElements = await waitForBackendNavElements(refreshNav);

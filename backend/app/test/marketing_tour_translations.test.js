@@ -101,10 +101,12 @@ test("marketing tour translation overlay applies manual overrides over content t
   const original = createSampleTour();
   const localized = applyMarketingTourTranslations(original, "fr", published.get("fr"));
 
-  assert.equal(localized.title_i18n.fr, "Manual French tour title");
+  assert.equal(localized.title, "Manual French tour title");
+  assert.equal(localized.title_i18n, undefined);
   assert.equal(localized.short_description_i18n, undefined);
   assert.equal(localized.travel_plan.days[0].title_i18n, undefined);
-  assert.equal(localized.travel_plan.days[0].services[0].title_i18n.fr, "Published French service title");
+  assert.equal(localized.travel_plan.days[0].services[0].title, "Published French service title");
+  assert.equal(localized.travel_plan.days[0].services[0].title_i18n, undefined);
   assert.equal(original.title_i18n.fr, "Embedded French tour title");
 });
 

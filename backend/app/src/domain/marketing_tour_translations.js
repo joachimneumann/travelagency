@@ -131,9 +131,8 @@ function applyTranslationToLocalizedPair(holder, plainField, i18nField, lang, tr
   if (!sourceText) return false;
   const targetText = translationForSource(translations, sourceText);
   if (!targetText) return false;
-  holder[i18nField] = {
-    [normalizedLang]: targetText
-  };
+  holder[plainField] = targetText;
+  removeOwnField(holder, i18nField);
   return true;
 }
 

@@ -59,9 +59,9 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
 
   await writeJson(path.join(toursRoot, "tour_alpha", "tour.json"), {
     id: "tour_alpha",
-    title: { en: "Alpha tour", de: "Alpha Reise" },
+    title: "Alpha tour",
     seo_slug: "alpha-custom-route",
-    short_description: { en: "Alpha description", de: "Alpha Beschreibung" },
+    short_description: "Alpha description",
     styles: ["budget"],
     image: "/public/v1/tour-images/tour_alpha/alpha.png",
     travel_plan: {
@@ -75,44 +75,34 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
           day_number: 1,
           primary_location_id: "place_hoi_an",
           title: "Arrival day",
-          title_i18n: { de: "Ankunftstag" },
           services: [
             {
               title: "Airport pick-up",
-              title_i18n: { de: "Flughafenabholung" },
               details: "Private transfer to the hotel.",
-              details_i18n: { de: "Privater Transfer zum Hotel." },
               image: {
                 id: "travel_plan_service_image_pickup",
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/pickup.png",
                 alt_text: "Driver at arrivals",
-                alt_text_i18n: { en: "Driver at arrivals", de: "Fahrer bei der Ankunft" },
                 include_in_travel_tour_card: true
               }
             },
             {
               title: "Featured viewpoint",
-              title_i18n: { de: "Aussichtspunkt" },
               details: "The selected card image should be first.",
-              details_i18n: { de: "Das ausgewählte Kartenbild sollte zuerst erscheinen." },
               image: {
                 id: "travel_plan_service_image_featured",
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/featured.png",
                 alt_text: "Featured viewpoint",
-                alt_text_i18n: { en: "Featured viewpoint", de: "Aussichtspunkt" },
                 include_in_travel_tour_card: true
               }
             },
             {
               title: "Legacy included image",
-              title_i18n: { de: "Altes ausgewähltes Bild" },
               details: "The ordered selection should be authoritative.",
-              details_i18n: { de: "Die sortierte Auswahl sollte maßgeblich sein." },
               image: {
                 id: "travel_plan_service_image_legacy",
                 storage_path: "/public/v1/tour-images/tour_alpha/travel-plan-services/legacy.png",
                 alt_text: "Legacy viewpoint",
-                alt_text_i18n: { en: "Legacy viewpoint", de: "Alter Aussichtspunkt" },
                 include_in_travel_tour_card: true
               }
             }
@@ -422,10 +412,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     "Hoạt động phù hợp gia đình",
     "Ẩm thực đặc sắc"
   ]);
-  assert.equal(publicTourDetailsVi.travel_plan.days[0].title_i18n.vi, "Ngay den");
-  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].title_i18n.vi, "Don san bay");
-  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].details_i18n.vi, "Xe rieng ve khach san.");
-  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].image.alt_text_i18n.vi, "Tai xe tai sanh den");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].title, "Ngay den");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].title, "Don san bay");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].details, "Xe rieng ve khach san.");
+  assert.equal(publicTourDetailsVi.travel_plan.days[0].services[0].image.alt_text, "Tai xe tai sanh den");
+  assert.equal("title_i18n" in publicTourDetailsVi.travel_plan.days[0], false);
   assert.match(
     publicTourDetailsDe.travel_plan.days[0].services[0].image.storage_path,
     /^\/assets\/generated\/homepage\/tours\/tour_alpha\/travel-plan-services\/pickup\.(png|webp)\?v=/

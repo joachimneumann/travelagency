@@ -27,7 +27,7 @@ The upper booking information block is collapsible. In its compact state it shou
 
 The booking ID, copy action, and last-updated text stay visible. The booking hero photo is removed entirely from the model, API, frontend code, and UI.
 
-Destinations are removed from the booking model, API, frontend code, and UI. The booking destination summary is derived from the travel-plan days instead of being edited as a separate booking field.
+Destinations are removed from the booking model, API, frontend code, and UI. The travel plan also no longer stores or edits `travel_plan.destination_scope`. All booking locations and destination summaries are derived from the primary location selected on each day.
 
 The previously proposed client/trip/date/pax/agent strip and the top-right import or route buttons are not part of this concept.
 
@@ -49,7 +49,7 @@ The itinerary selector under the map contains arrival at the top, then the trip 
 
 When staff select arrival, a day, or departure, the large center editor switches to that item only. This keeps the main editing surface focused and avoids mixing multiple days in one editing form.
 
-Experience highlights are derived from the days. They are not edited as a separate booking-level field.
+Experience highlights remain editable per booking day. Editing an experience highlight in `booking.html` does not change the corresponding marketing-tour day.
 
 ## Day Editing
 
@@ -88,7 +88,9 @@ The document area groups the one-pager PDF and travel plan PDF. The new document
 
 ## Financial Aspects
 
-A new collapsible "Financial aspects" section contains the current commercial workspace: offer detail level, offer pricing, quotation summary, payment plan, payment request PDFs, payment confirmation PDFs, and payment/receipt status. It should be collapsed by default or easy to collapse so the travel-plan editor remains the primary workspace.
+A new collapsible "Financial aspects" section contains the current commercial workspace: offer detail level, offer pricing, quotation summary, payment plan, payment request PDFs, payment confirmation PDFs, and payment/receipt status. It appears below the travel-plan builder.
+
+When staff expand "Financial aspects", the travel-plan builder automatically collapses so the commercial workflow does not compete with the itinerary editor for vertical space.
 
 The financial section should preserve current permission checks, dirty-state rules, document generation requirements, and payment flow behavior.
 
@@ -96,7 +98,9 @@ The financial section should preserve current permission checks, dirty-state rul
 
 The booking hero photo is removed from persistent booking data, upload/update APIs, frontend state, and UI controls.
 
-Destinations are removed from persistent booking data, update APIs, frontend state, and UI controls. Any destination label shown in the booking page is derived from travel-plan day locations.
+Booking-level destinations are removed from persistent booking data, update APIs, frontend state, and UI controls.
+
+`travel_plan.destination_scope` is removed from persistent travel-plan data, update APIs, frontend state, and UI controls. Any destination or location summary shown in the booking page is derived from the primary location of each travel-plan day.
 
 Booking-local travel-plan services remain embedded in the booking travel plan. Editing a service in one booking must not mutate a shared service catalog or another booking.
 

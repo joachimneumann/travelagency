@@ -29,6 +29,20 @@ function omitDerivedTravelPlanDestinations(plan) {
   return next;
 }
 
+function stripLocalizedStorageFields(value) {
+  if (Array.isArray(value)) return value.map((item) => stripLocalizedStorageFields(item));
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([key]) => !key.endsWith("_i18n") && key !== "translation_meta")
+      .map(([key, item]) => [key, stripLocalizedStorageFields(item)])
+  );
+}
+
+function marketingTourTravelPlanStoragePayload(plan) {
+  return stripLocalizedStorageFields(omitDerivedTravelPlanDestinations(plan));
+}
+
 function currentBackendLang() {
   return typeof window.backendI18n?.getLang === "function" ? window.backendI18n.getLang() : "";
 }
@@ -84,24 +98,6 @@ function cloneJson(value) {
   return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 }
 
-function normalizeLocalizedMap(value) {
-  const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-  return Object.fromEntries(
-    Object.entries(source)
-      .map(([lang, text]) => [normalizeText(lang), normalizeText(text)])
-      .filter(([lang, text]) => lang && text)
-  );
-}
-
-function preferredEnglishImportText(mapValue, plainValue) {
-  const source = normalizeLocalizedMap(mapValue);
-  const englishText = normalizeText(source.en);
-  if (englishText) return englishText;
-  const normalizedPlainText = normalizeText(plainValue);
-  if (normalizedPlainText) return normalizedPlainText;
-  return "";
-}
-
 function cloneTourMarketingServiceForLocalImport({ searchResult }) {
   const sourceService = searchResult?.source_service && typeof searchResult.source_service === "object" && !Array.isArray(searchResult.source_service)
     ? searchResult.source_service
@@ -109,16 +105,12 @@ function cloneTourMarketingServiceForLocalImport({ searchResult }) {
   if (!sourceService) return null;
   return cloneJson({
     timing_kind: sourceService.timing_kind,
-    time_label: preferredEnglishImportText(sourceService.time_label_i18n, sourceService.time_label) || null,
-    time_label_i18n: normalizeLocalizedMap(sourceService.time_label_i18n),
+    time_label: normalizeText(sourceService.time_label) || null,
     time_point: sourceService.time_point,
     kind: sourceService.kind,
-    title: preferredEnglishImportText(sourceService.title_i18n, sourceService.title),
-    title_i18n: normalizeLocalizedMap(sourceService.title_i18n),
-    details: preferredEnglishImportText(sourceService.details_i18n, sourceService.details) || null,
-    details_i18n: normalizeLocalizedMap(sourceService.details_i18n),
-    image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
-    image_subtitle_i18n: normalizeLocalizedMap(sourceService.image_subtitle_i18n),
+    title: normalizeText(sourceService.title),
+    details: normalizeText(sourceService.details) || null,
+    image_subtitle: normalizeText(sourceService.image_subtitle) || null,
     start_time: sourceService.start_time,
     end_time: sourceService.end_time,
     id: undefined,
@@ -139,13 +131,11 @@ function cloneTourMarketingDayForLocalImport({ searchResult, targetDayIndex = 0 
   return cloneJson({
     date: sourceDay.date,
     date_string: sourceDay.date_string,
-    title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
-    title_i18n: normalizeLocalizedMap(sourceDay.title_i18n),
+    title: normalizeText(sourceDay.title),
     primary_location_id: normalizeText(sourceDay.primary_location_id),
     secondary_location_id: normalizeText(sourceDay.secondary_location_id),
     experience_highlight_ids: normalizeUniqueTextList(sourceDay.experience_highlight_ids).slice(0, 1),
-    notes: preferredEnglishImportText(sourceDay.notes_i18n, sourceDay.notes) || null,
-    notes_i18n: normalizeLocalizedMap(sourceDay.notes_i18n),
+    notes: normalizeText(sourceDay.notes) || null,
     id: undefined,
     day_number: Math.max(1, Number(targetDayIndex) + 1),
     services: (Array.isArray(sourceDay.services) ? sourceDay.services : []).map((service) => (
@@ -244,7 +234,7 @@ export function createTourTravelPlanAdapter({
       params: { tour_id: state.booking.id },
       query: backendLangQuery(),
       body: {
-        travel_plan: omitDerivedTravelPlanDestinations(travelPlan),
+        travel_plan: marketingTourTravelPlanStoragePayload(travelPlan),
         ...expectedTourUpdatedAtPayload(state),
         actor: state.user
       }
@@ -266,7 +256,7 @@ export function createTourTravelPlanAdapter({
       params: { tour_id: normalizeText(requestState.booking?.id || requestState.id) },
       query: backendLangQuery(),
       body: {
-        travel_plan: omitDerivedTravelPlanDestinations(travelPlanPayload),
+        travel_plan: marketingTourTravelPlanStoragePayload(travelPlanPayload),
         ...expectedTourUpdatedAtPayload(requestState),
         actor: requestState.user
       }
@@ -337,11 +327,10 @@ export function createTourTravelPlanAdapter({
       body: {
         source_tour_id: sourceTourId,
         source_day_id: sourceDayId,
-        ...(targetTravelPlan ? { target_travel_plan: omitDerivedTravelPlanDestinations(targetTravelPlan) } : {}),
+        ...(targetTravelPlan ? { target_travel_plan: marketingTourTravelPlanStoragePayload(targetTravelPlan) } : {}),
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
-        include_translations: true,
         ...expectedTourUpdatedAtPayload(requestState),
         actor: requestState.user
       }
@@ -359,11 +348,10 @@ export function createTourTravelPlanAdapter({
       body: {
         source_tour_id: sourceTourId,
         source_service_id: sourceServiceId,
-        ...(targetTravelPlan ? { target_travel_plan: omitDerivedTravelPlanDestinations(targetTravelPlan) } : {}),
+        ...(targetTravelPlan ? { target_travel_plan: marketingTourTravelPlanStoragePayload(targetTravelPlan) } : {}),
         include_images: true,
         include_customer_visible_images_only: false,
         include_notes: true,
-        include_translations: true,
         ...expectedTourUpdatedAtPayload(requestState),
         actor: requestState.user
       }

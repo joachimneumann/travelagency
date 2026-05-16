@@ -745,16 +745,6 @@ export function createStaticTranslationService({
     return normalizeText(metaEntry?.origin) || "machine";
   }
 
-  function localizedSource(value, fallback = "") {
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      return normalizeText(value.en) || normalizeText(fallback);
-    }
-    if (fallback && typeof fallback === "object" && !Array.isArray(fallback)) {
-      return normalizeText(fallback.en) || normalizeText(value);
-    }
-    return normalizeText(fallback || value);
-  }
-
   function addSourceText(targetSet, value) {
     const normalized = normalizeText(value);
     if (normalized) targetSet.add(normalized);
@@ -766,28 +756,28 @@ export function createStaticTranslationService({
       : {};
     for (const service of [boundaryLogistics.arrival, boundaryLogistics.departure]) {
       if (!service || typeof service !== "object" || Array.isArray(service)) continue;
-      addSourceText(targetSet, localizedSource(service?.time_label_i18n, service?.time_label));
-      addSourceText(targetSet, localizedSource(service?.title_i18n, service?.title));
-      addSourceText(targetSet, localizedSource(service?.details_i18n, service?.details));
-      addSourceText(targetSet, localizedSource(service?.image_subtitle_i18n, service?.image_subtitle));
+      addSourceText(targetSet, service?.time_label);
+      addSourceText(targetSet, service?.title);
+      addSourceText(targetSet, service?.details);
+      addSourceText(targetSet, service?.image_subtitle);
     }
     const days = Array.isArray(travelPlan?.days) ? travelPlan.days : [];
     for (const day of days) {
-      addSourceText(targetSet, localizedSource(day?.title_i18n, day?.title));
-      addSourceText(targetSet, localizedSource(day?.notes_i18n, day?.notes));
+      addSourceText(targetSet, day?.title);
+      addSourceText(targetSet, day?.notes);
       const services = Array.isArray(day?.services) ? day.services : [];
       for (const service of services) {
-        addSourceText(targetSet, localizedSource(service?.time_label_i18n, service?.time_label));
-        addSourceText(targetSet, localizedSource(service?.title_i18n, service?.title));
-        addSourceText(targetSet, localizedSource(service?.details_i18n, service?.details));
-        addSourceText(targetSet, localizedSource(service?.image_subtitle_i18n, service?.image_subtitle));
+        addSourceText(targetSet, service?.time_label);
+        addSourceText(targetSet, service?.title);
+        addSourceText(targetSet, service?.details);
+        addSourceText(targetSet, service?.image_subtitle);
         const images = [
           service?.image,
           ...(Array.isArray(service?.images) ? service.images : [])
         ].filter((image) => image && typeof image === "object" && !Array.isArray(image));
         for (const image of images) {
-          addSourceText(targetSet, localizedSource(image?.caption_i18n, image?.caption));
-          addSourceText(targetSet, localizedSource(image?.alt_text_i18n, image?.alt_text));
+          addSourceText(targetSet, image?.caption);
+          addSourceText(targetSet, image?.alt_text);
         }
       }
     }
@@ -796,8 +786,8 @@ export function createStaticTranslationService({
   function collectMarketingTourMemorySources(tours) {
     const sources = new Set();
     for (const tour of Array.isArray(tours) ? tours : []) {
-      addSourceText(sources, localizedSource(tour?.title_i18n, tour?.title || tour?.id));
-      addSourceText(sources, localizedSource(tour?.short_description_i18n, tour?.short_description));
+      addSourceText(sources, tour?.title || tour?.id);
+      addSourceText(sources, tour?.short_description);
       collectMarketingTourMemorySourcesFromPlan(sources, tour?.travel_plan);
     }
     return Array.from(sources).sort((left, right) => left.localeCompare(right, "en", { sensitivity: "base" }));

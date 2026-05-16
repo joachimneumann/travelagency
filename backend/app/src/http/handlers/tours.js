@@ -218,7 +218,7 @@ export function createTourHandlers(deps) {
   }
 
   async function buildLocalizedTourEditorResponse(tour, lang) {
-    return buildTourEditorResponse(await localizeMarketingTourForRead(tour, lang), lang);
+    return buildTourEditorResponse(tour, lang);
   }
 
   function cleanupCustomOnePagerPreviewTokens() {
@@ -272,36 +272,9 @@ export function createTourHandlers(deps) {
     }, { multiline });
   }
 
-  function splitLocalizedPairInput(value, fallbackPlain = "") {
+  function sourceTextFromLocalizedPayload(value, fallbackPlain = "") {
     const source = localizedTextMap(value);
-    return {
-      text: normalizeText(source.en) || normalizeText(fallbackPlain),
-      i18n: localizedTranslationMap(source)
-    };
-  }
-
-  function updateLocalizedPairForLang(holder, plainField, i18nField, inputValue, lang = "en") {
-    if (!holder || typeof holder !== "object" || Array.isArray(holder)) return;
-    const normalizedLang = normalizeTourLang(lang);
-    const normalizedText = normalizeText(inputValue);
-    if (normalizedLang === "en") {
-      holder[plainField] = normalizedText;
-      holder[i18nField] = localizedTranslationMap(holder[i18nField]);
-      return;
-    }
-    const nextMap = localizedTranslationMap(holder[i18nField]);
-    if (normalizedText) nextMap[normalizedLang] = normalizedText;
-    else delete nextMap[normalizedLang];
-    holder[i18nField] = nextMap;
-  }
-
-  function preferredEnglishImportText(mapValue, plainValue) {
-    const source = mapValue && typeof mapValue === "object" && !Array.isArray(mapValue) ? mapValue : {};
-    const englishText = normalizeText(source.en);
-    if (englishText) return englishText;
-    const normalizedPlainText = normalizeText(plainValue);
-    if (normalizedPlainText) return normalizedPlainText;
-    return "";
+    return normalizeText(source.en) || normalizeText(fallbackPlain);
   }
 
   function buildTourEditorResponse(tour, lang) {
@@ -369,7 +342,6 @@ export function createTourHandlers(deps) {
   function collectTourTitleCandidates(tour) {
     const candidates = new Map();
     addDuplicateTitleCandidate(candidates, tour?.title);
-    addDuplicateTitleCandidate(candidates, tour?.title_i18n);
     return candidates;
   }
 
@@ -408,18 +380,18 @@ export function createTourHandlers(deps) {
 
     if (isCreate || payload.id !== undefined) next.id = normalizeText(payload.id) || next.id;
     if (payload.title_i18n !== undefined) {
-      const pair = splitLocalizedPairInput(payload.title_i18n, current.title);
-      next.title = pair.text;
-      next.title_i18n = pair.i18n;
+      next.title = sourceTextFromLocalizedPayload(payload.title_i18n, current.title);
+      delete next.title_i18n;
     } else if (isCreate || payload.title !== undefined) {
-      updateLocalizedPairForLang(next, "title", "title_i18n", payload.title, lang);
+      next.title = normalizeText(payload.title);
+      delete next.title_i18n;
     }
     if (payload.short_description_i18n !== undefined) {
-      const pair = splitLocalizedPairInput(payload.short_description_i18n, current.short_description);
-      next.short_description = pair.text;
-      next.short_description_i18n = pair.i18n;
+      next.short_description = sourceTextFromLocalizedPayload(payload.short_description_i18n, current.short_description);
+      delete next.short_description_i18n;
     } else if (payload.short_description !== undefined) {
-      updateLocalizedPairForLang(next, "short_description", "short_description_i18n", payload.short_description, lang);
+      next.short_description = normalizeText(payload.short_description);
+      delete next.short_description_i18n;
     }
     if (isCreate || payload.styles !== undefined) next.styles = normalizeStyleCodes(payload.styles);
     if (payload.video !== undefined) next.video = payload.video;
@@ -744,7 +716,6 @@ export function createTourHandlers(deps) {
   }
 
   function copyMarketingTourServiceForImport(sourceItem, options = {}) {
-    const includeTranslations = options.includeTranslations !== false;
     const includeImages = options.includeImages !== false;
     const includeCustomerVisibleImagesOnly = options.includeCustomerVisibleImagesOnly === true;
     const importedAt = normalizeText(options.importedAt) || nowIso();
@@ -761,16 +732,12 @@ export function createTourHandlers(deps) {
     return {
       id: `travel_plan_service_${randomUUID()}`,
       timing_kind: normalizeText(sourceItem?.timing_kind) || "label",
-      time_label: preferredEnglishImportText(sourceItem?.time_label_i18n, sourceItem?.time_label),
-      time_label_i18n: includeTranslations && sourceItem?.time_label_i18n ? { ...sourceItem.time_label_i18n } : undefined,
+      time_label: normalizeText(sourceItem?.time_label),
       time_point: normalizeText(sourceItem?.time_point),
       kind: normalizeText(sourceItem?.kind) || "other",
-      title: preferredEnglishImportText(sourceItem?.title_i18n, sourceItem?.title),
-      title_i18n: includeTranslations && sourceItem?.title_i18n ? { ...sourceItem.title_i18n } : undefined,
-      details: preferredEnglishImportText(sourceItem?.details_i18n, sourceItem?.details),
-      details_i18n: includeTranslations && sourceItem?.details_i18n ? { ...sourceItem.details_i18n } : undefined,
-      image_subtitle: preferredEnglishImportText(sourceItem?.image_subtitle_i18n, sourceItem?.image_subtitle),
-      image_subtitle_i18n: includeTranslations && sourceItem?.image_subtitle_i18n ? { ...sourceItem.image_subtitle_i18n } : undefined,
+      title: normalizeText(sourceItem?.title),
+      details: normalizeText(sourceItem?.details),
+      image_subtitle: normalizeText(sourceItem?.image_subtitle),
       start_time: normalizeText(sourceItem?.start_time),
       end_time: normalizeText(sourceItem?.end_time),
       image
@@ -778,18 +745,15 @@ export function createTourHandlers(deps) {
   }
 
   function copyMarketingTourDayForImport(sourceDay, options = {}) {
-    const includeTranslations = options.includeTranslations !== false;
     const includeNotes = options.includeNotes !== false;
     return {
       id: `travel_plan_day_${randomUUID()}`,
       day_number: 1,
-      title: preferredEnglishImportText(sourceDay?.title_i18n, sourceDay?.title),
-      title_i18n: includeTranslations && sourceDay?.title_i18n ? { ...sourceDay.title_i18n } : undefined,
+      title: normalizeText(sourceDay?.title),
       primary_location_id: normalizeText(sourceDay?.primary_location_id) || null,
       secondary_location_id: normalizeText(sourceDay?.secondary_location_id) || null,
       experience_highlight_ids: normalizeExperienceHighlightIds(sourceDay?.experience_highlight_ids, { limit: 1 }),
-      notes: includeNotes ? preferredEnglishImportText(sourceDay?.notes_i18n, sourceDay?.notes) : null,
-      notes_i18n: includeNotes && includeTranslations && sourceDay?.notes_i18n ? { ...sourceDay.notes_i18n } : undefined,
+      notes: includeNotes ? normalizeText(sourceDay?.notes) : null,
       services: (Array.isArray(sourceDay?.services) ? sourceDay.services : []).map((sourceItem) => (
         copyMarketingTourServiceForImport(sourceItem, options)
       ))
@@ -1251,7 +1215,6 @@ export function createTourHandlers(deps) {
         ...readModel,
         ...(customizedTitle ? {
           title: customizedTitle,
-          title_i18n: {},
           customized_title_candidates: customizedTitleCandidates
         } : {}),
         travel_plan: {
@@ -1643,7 +1606,7 @@ export function createTourHandlers(deps) {
       return;
     }
     const lang = requestLang(req.url);
-    const tours = await localizeMarketingToursForRead((await readTours()).map((tour) => normalizeTourForStorage(tour)), lang);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
     const tour = tours.find((item) => item.id === tourId);
     if (!tour) {
       sendJson(res, 404, { error: "Tour not found" });
@@ -2103,7 +2066,6 @@ export function createTourHandlers(deps) {
       }
     );
     const importedDay = copyMarketingTourDayForImport(sourceDay, {
-      includeTranslations: payload.include_translations !== false,
       includeNotes: payload.include_notes !== false,
       includeImages: payload.include_images !== false,
       includeCustomerVisibleImagesOnly: payload.include_customer_visible_images_only === true,
@@ -2203,7 +2165,6 @@ export function createTourHandlers(deps) {
     }
 
     const importedService = copyMarketingTourServiceForImport(sourceService, {
-      includeTranslations: payload.include_translations !== false,
       includeImages: payload.include_images !== false,
       includeCustomerVisibleImagesOnly: payload.include_customer_visible_images_only === true,
       importedAt: nowIso()

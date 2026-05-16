@@ -146,21 +146,21 @@ write_text_review_txt() {
         | ($day.services // [])[]? as $service
         | service_images($service)[]
         | select(.include_in_travel_tour_card == true and .is_customer_visible != false)
-        | field($service.title_i18n; $service.title)]
+        | field($service.title; "")]
       | unique_ordered;
     def day_details($day):
-      (optional_text($day.details_i18n; $day.details)) as $details
-      | if $details != "" then $details else field($day.notes_i18n; $day.notes) end;
+      (($day.details // "") | clean) as $details
+      | if $details != "" then $details else field($day.notes; "") end;
     def service_block($service; $index):
-      "\($index + 1). \(field($service.title_i18n; $service.title))\n\n"
+      "\($index + 1). \(field($service.title; ""))\n\n"
       + "Detail\n"
-      + "\(field($service.details_i18n; $service.details))";
+      + "\(field($service.details; ""))";
     def day_block($entry):
       ($entry.value) as $day
       | (($day.services // []) | to_entries) as $services
       | "Day \(($day.day_number // ($entry.key + 1)) | tostring)\n\n"
       + "Day title\n"
-      + "\(field($day.title_i18n; $day.title))\n\n"
+      + "\(field($day.title; ""))\n\n"
       + "Day Details\n"
       + "\(day_details($day))\n\n"
       + (if ($services | length) == 0 then "missing" else ($services | map(service_block(.value; .key)) | join("\n\n")) end);
@@ -237,7 +237,7 @@ write_image_review_pdf() {
       | service_images($service)[]
       | (.storage_path // .url // .src // .path // "") as $path
       | select(($path | tostring | length) > 0)
-      | [($day.day_number // ""), field($service.title_i18n; $service.title), $path] | @tsv
+      | [($day.day_number // ""), field($service.title; ""), $path] | @tsv
     ' "${tour_json}"
   )
 

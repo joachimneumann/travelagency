@@ -4687,6 +4687,31 @@ textarea:focus-visible {
   padding: 1rem 1.1rem 1.15rem;
 }
 
+.english-text-guard-modal__panel {
+  width: min(520px, 95vw);
+}
+
+.english-text-guard-modal__body {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.english-text-guard-modal__body p {
+  margin: 0;
+}
+
+.english-text-guard-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.2rem;
+}
+
+input.english-text-guard--invalid,
+textarea.english-text-guard--invalid {
+  border-color: var(--line-error-strong);
+  box-shadow: 0 0 0 3px var(--error-surface-alpha);
+}
+
 .progress {
   display: flex;
   gap: 0.45rem;

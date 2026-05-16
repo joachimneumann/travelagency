@@ -55,7 +55,7 @@ test("travel plan PDF day heading falls back to the localized day label when tit
   );
 });
 
-test("marketing travel plan normalization preserves translation metadata", () => {
+test("marketing travel plan normalization strips localized fields and translation metadata", () => {
   const { normalizeMarketingTourTravelPlan } = createTravelPlanHelpers();
 
   const result = normalizeMarketingTourTravelPlan({
@@ -63,7 +63,33 @@ test("marketing travel plan normalization preserves translation metadata", () =>
       {
         id: "day_1",
         title: "Arrival",
-        services: []
+        title_i18n: {
+          vi: "Den noi"
+        },
+        services: [
+          {
+            id: "service_1",
+            title: "Welcome dinner",
+            title_i18n: {
+              vi: "Bua toi chao mung"
+            },
+            details: "Dinner in town",
+            details_i18n: {
+              vi: "Bua toi trong pho"
+            },
+            image: {
+              id: "image_1",
+              storage_path: "/public/v1/tour-images/tour_1/image.webp",
+              caption: "Dinner table",
+              caption_i18n: {
+                vi: "Ban an toi"
+              }
+            }
+          }
+        ],
+        notes_i18n: {
+          vi: "Ghi chu"
+        }
       }
     ],
     translation_meta: {
@@ -74,14 +100,21 @@ test("marketing travel plan normalization preserves translation metadata", () =>
         updated_at: "2026-04-25T10:00:00.000Z"
       }
     }
+  }, {
+    sourceLang: "en",
+    contentLang: "vi",
+    flatLang: "vi",
+    flatMode: "localized"
   });
 
-  assert.deepEqual(result.translation_meta, {
-    de: {
-      source_lang: "en",
-      source_hash: "hash_1",
-      origin: "machine",
-      updated_at: "2026-04-25T10:00:00.000Z"
-    }
-  });
+  assert.equal("translation_meta" in result, false);
+  assert.equal(result.days[0].title, "Arrival");
+  assert.equal("title_i18n" in result.days[0], false);
+  assert.equal("notes_i18n" in result.days[0], false);
+  assert.equal(result.days[0].services[0].title, "Welcome dinner");
+  assert.equal(result.days[0].services[0].details, "Dinner in town");
+  assert.equal("title_i18n" in result.days[0].services[0], false);
+  assert.equal("details_i18n" in result.days[0].services[0], false);
+  assert.equal(result.days[0].services[0].image.caption, "Dinner table");
+  assert.equal("caption_i18n" in result.days[0].services[0].image, false);
 });

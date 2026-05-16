@@ -85,7 +85,7 @@ function normalizeText(value) {
 }
 
 function localizedText(item, field) {
-  return normalizeText(item?.[`${field}_i18n`]?.en) || normalizeText(item?.[field]);
+  return normalizeText(item?.[field]);
 }
 
 function naturalCompare(left, right) {
@@ -229,7 +229,7 @@ function collectServiceImages(service, tourId, toursDir) {
 
 function serviceTiming(service) {
   return [
-    normalizeText(service?.time_label_i18n?.en) || normalizeText(service?.time_label),
+    normalizeText(service?.time_label),
     normalizeText(service?.start_time),
     normalizeText(service?.end_time) ? `- ${normalizeText(service.end_time)}` : ""
   ].filter(Boolean).join(" ");

@@ -140,7 +140,7 @@ test("tour helpers only publish tours with day locations and at least two web pa
   assert.equal(helpers.normalizeTourForRead(unpublished).published_on_webpage, false);
 });
 
-test("tour helpers resolve localized titles with vietnamese then english fallback", () => {
+test("tour helpers ignore embedded localized titles in marketing tour storage", () => {
   const viTour = helpers.normalizeTourForRead(
     {
       id: "tour_1",
@@ -155,7 +155,8 @@ test("tour helpers resolve localized titles with vietnamese then english fallbac
     { lang: "vi" }
   );
 
-  assert.equal(viTour.title, "Tieu de tieng Viet");
+  assert.equal(viTour.title, "English title");
+  assert.equal("title_i18n" in viTour, false);
 
   const fallbackTour = helpers.normalizeTourForRead(
     {

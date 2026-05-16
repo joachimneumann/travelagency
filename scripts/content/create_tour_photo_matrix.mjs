@@ -273,9 +273,7 @@ async function listImageFiles(dir, { includeImagesInCurrentDir = true } = {}) {
 function getEnglishTitle(tourJson, tourId) {
   const candidates = [
     tourJson?.title,
-    tourJson?.title_i18n?.en,
-    tourJson?.name,
-    tourJson?.name_i18n?.en
+    tourJson?.name
   ];
   const title = candidates.find((value) => typeof value === "string" && value.trim());
   return title?.trim() || tourId;
