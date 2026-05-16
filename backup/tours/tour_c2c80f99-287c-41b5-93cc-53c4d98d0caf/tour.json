@@ -37,15 +37,11 @@
         "id": "travel_plan_boundary_arrival_6e0ddc28-5905-4436-8847-a1b77dcb3466",
         "timing_kind": "label",
         "time_label": null,
-        "time_label_i18n": {},
         "time_point": null,
         "kind": "transport",
         "title": "Phu Quoc Airport welcome",
-        "title_i18n": {},
         "details": "Arrive on Phu Quoc and meet your driver for the first island visits after airport pickup.",
-        "details_i18n": {},
         "image_subtitle": null,
-        "image_subtitle_i18n": {},
         "start_time": null,
         "end_time": null,
         "image": null,
@@ -63,15 +59,11 @@
         "id": "travel_plan_boundary_departure_e085f412-84d8-42fa-9e3e-0a1800613744",
         "timing_kind": "label",
         "time_label": null,
-        "time_label_i18n": {},
         "time_point": null,
         "kind": "transport",
         "title": "Phu Quoc Airport farwell",
-        "title_i18n": {},
         "details": "We will drop you off at the airport in time",
-        "details_i18n": {},
         "image_subtitle": null,
-        "image_subtitle_i18n": {},
         "start_time": null,
         "end_time": null,
         "image": null,
@@ -91,7 +83,6 @@
         "id": "travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92",
         "day_number": 1,
         "title": "Temples, prison and beach",
-        "title_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -102,24 +93,18 @@
             "id": "travel_plan_service_82fc71fa-1066-4a3d-a8f3-004293542098",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Sao Beach",
-            "title_i18n": {},
             "details": "Relax at Sao Beach, known for soft pale sand and clear water on Phu Quoc's southern coast.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-01-sao-beach.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -135,24 +120,18 @@
             "id": "travel_plan_service_88dfa046-d5ef-428e-bbb2-fba8ec209d2e",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Ho Quoc Pagoda",
-            "title_i18n": {},
             "details": "Visit Ho Quoc Pagoda, a coastal Buddhist complex with sea views and a calm spiritual setting.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-01-ho-quoc-pagoda.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -168,24 +147,18 @@
             "id": "travel_plan_service_bc0f1957-3085-4204-a35e-6494362054ac",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Cay Dua Prison",
-            "title_i18n": {},
             "details": "Tour Cay Dua Prison, a sobering historical site that preserves Phu Quoc's wartime memory.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_56be8279-c524-4b62-a072-184337ddb334",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-01-cay-dua-prison.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -201,24 +174,18 @@
             "id": "travel_plan_service_fa7cc474-b4a9-45d1-b6eb-acdd149fd6f7",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Phu Quoc night market",
-            "title_i18n": {},
             "details": "Phu Quoc Night Market is a foodie’s paradise! Enjoy fresh seafood, local snacks like \"Chuoi Nuong,\" and unique souvenirs. It’s the perfect place to soak up the island's vibrant energy after sunset",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_a02160b5-4b65-4455-9e32-373f45aab986",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-01-phu-quoc-night-market.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -231,14 +198,12 @@
             }
           }
         ],
-        "notes": "Start Phu Quoc with spiritual landmarks, wartime memory, Sao Beach's pale sand and the island's night-market flavors.",
-        "notes_i18n": {}
+        "notes": "Start Phu Quoc with spiritual landmarks, wartime memory, Sao Beach's pale sand and the island's night-market flavors."
       },
       {
         "id": "travel_plan_day_0487563f-2b92-40c9-809f-1abf24d2efa9",
         "day_number": 2,
         "title": "VinWonders and Grand World",
-        "title_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -249,24 +214,18 @@
             "id": "travel_plan_service_04d68780-1dc1-4713-87fb-897905dc5444",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "VinWonders Phu Quoc",
-            "title_i18n": {},
             "details": "Explore VinWonders Phu Quoc, with themed areas, aquarium experiences, rides and the Once multimedia show.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_4037a8ce-2c5f-4522-b7b1-ccc913c82370",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-02-vinwonders-phu-quoc.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -282,24 +241,18 @@
             "id": "travel_plan_service_0ec25711-d369-4e8e-86f4-ec21e519e5f9",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Grand World Phu Quoc",
-            "title_i18n": {},
             "details": "Visit Grand World, the island's lively City That Never Sleeps with canals, architecture, shops and evening atmosphere.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_961feeff-81da-44e0-ae8e-0a5ffd6055c6",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-02-grand-world-phu-quoc.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -312,14 +265,12 @@
             }
           }
         ],
-        "notes": "Spend the day in northern Phu Quoc's entertainment zone, from VinWonders' themed worlds to Grand World's evening energy.",
-        "notes_i18n": {}
+        "notes": "Spend the day in northern Phu Quoc's entertainment zone, from VinWonders' themed worlds to Grand World's evening energy."
       },
       {
         "id": "travel_plan_day_b000233a-94e5-4cde-a478-ded96247b367",
         "day_number": 3,
         "title": "Islands and Sunset Town",
-        "title_i18n": {},
         "primary_location_id": "place_baf76224-bda3-44fd-bd0a-9c098626f9b3",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -330,24 +281,18 @@
             "id": "travel_plan_service_36d3ddec-7130-4b26-86c4-478385e33bdd",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Hon Thom cable car",
-            "title_i18n": {},
             "details": "Ride the Hon Thom cable car for sweeping sea views between Phu Quoc and the southern islands.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_18824d49-06de-4da9-aab9-a1998cc3637e",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-03-hon-thom-cable-car.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -363,24 +308,18 @@
             "id": "travel_plan_service_29e54407-3308-41b2-95f1-6ccb36faac6a",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Sunset Town",
-            "title_i18n": {},
             "details": "Sunset Town in Phu Quoc is a Mediterranean-inspired coastal town. It features the iconic Kiss Bridge, vibrant colorful buildings, and stunning ocean sunsets—a perfect romantic spot for every traveler",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_847ae6d4-5c63-4d17-b7a4-fd3b84a64b93",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-03-sunset-town.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -393,14 +332,12 @@
             }
           }
         ],
-        "notes": "Follow the sea south for island-hopping, coral-viewing and the Hon Thom cable car before Sunset Town closes the day in warm light.",
-        "notes_i18n": {}
+        "notes": "Follow the sea south for island-hopping, coral-viewing and the Hon Thom cable car before Sunset Town closes the day in warm light."
       },
       {
         "id": "travel_plan_day_18bacfad-0f7f-49d8-8295-8af767ec3a40",
         "day_number": 4,
         "title": "Crafts, Bun Quay",
-        "title_i18n": {},
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -411,24 +348,18 @@
             "id": "travel_plan_service_a07b41dc-ad8e-4682-9a02-5e4585d75b13",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Dinh Cau",
-            "title_i18n": {},
             "details": "Visit Dinh Cau, a small sea-facing shrine and one of Phu Quoc's best-known spiritual landmarks.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_fc32d48b-1255-4862-aec6-7d619e01f20c",
               "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-04-dinh-cau.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -441,108 +372,9 @@
             }
           }
         ],
-        "notes": "Close the island route with local temples, traditional craft stops, Bun Quay noodles.",
-        "notes_i18n": {}
+        "notes": "Close the island route with local temples, traditional craft stops, Bun Quay noodles."
       }
-    ],
-    "translation_meta": {
-      "ar": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:19:56.606Z"
-      },
-      "fr": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:19:58.825Z"
-      },
-      "zh": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:00.602Z"
-      },
-      "ja": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:02.538Z"
-      },
-      "ko": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:04.876Z"
-      },
-      "vi": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:07.043Z"
-      },
-      "ms": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:08.433Z"
-      },
-      "de": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:09.636Z"
-      },
-      "es": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:11.274Z"
-      },
-      "it": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:12.911Z"
-      },
-      "ru": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:14.205Z"
-      },
-      "nl": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:16.341Z"
-      },
-      "pl": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:17.883Z"
-      },
-      "da": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:20.127Z"
-      },
-      "sv": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:22.000Z"
-      },
-      "no": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_aa442176",
-        "origin": "machine",
-        "updated_at": "2026-04-28T09:20:23.321Z"
-      }
-    }
+    ]
   },
   "published_on_webpage": true
 }

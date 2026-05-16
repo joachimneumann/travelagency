@@ -31,11 +31,7 @@
         "id": "travel_plan_day_994e22ed-7f3f-49dd-9ccd-4da7da91f780",
         "day_number": 1,
         "title": "Bai Dinh and Trang An",
-        "title_i18n": {
-          "vi": "Bái Đính và Tràng An"
-        },
         "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_0e64de8f-8735-46c0-a3e6-02a9babb6eb4",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
@@ -44,30 +40,19 @@
             "id": "travel_plan_service_20760e57-c14a-4085-9c74-59381863f0ce",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Bai Dinh and Trang An",
-            "title_i18n": {
-              "vi": "Bái Đính và Tràng An"
-            },
             "details": "Explore two defining Ninh Binh landmarks: a major Buddhist pilgrimage site and a UNESCO water-and-karst landscape.",
-            "details_i18n": {
-              "vi": "Khám phá hai địa danh nổi bật của Ninh Bình: địa điểm hành hương Phật giáo lớn và cảnh quan sông nước và núi đá vôi được UNESCO công nhận."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_bdf22171-0e53-4ee7-9d35-307b28652f86",
               "storage_path": "/public/v1/tour-images/tour_38be9dcf-9d06-44f7-a404-613062e5054b/travel-plan-services/day-01-bai-dinh-and-trang-an.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -83,30 +68,19 @@
             "id": "travel_plan_service_4b1292f4-9f74-4702-80e1-3244e456faf4",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Bai Dinh Pagoda",
-            "title_i18n": {
-              "vi": "Chùa Bái Đính"
-            },
             "details": "Visit Bai Dinh Pagoda, a vast complex of halls, statues and courtyards set against Ninh Binh's limestone hills.",
-            "details_i18n": {
-              "vi": "Tham quan chùa Bái Đính, một quần thể hội trường, tượng và sân rộng lớn nằm trên những ngọn đồi đá vôi của Ninh Bình."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_ac49cd04-ba8b-4b86-aceb-696a05adb90b",
               "storage_path": "/public/v1/tour-images/tour_38be9dcf-9d06-44f7-a404-613062e5054b/travel-plan-services/day-01-bai-dinh-pagoda.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -122,30 +96,19 @@
             "id": "travel_plan_service_0e6abe1f-c382-4302-a467-f31bdb4e3597",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Trang An boat route",
-            "title_i18n": {
-              "vi": "Tuyến thuyền Tràng An"
-            },
             "details": "Drift through Trang An by boat, passing limestone cliffs, still water, cave passages and small spiritual sites.",
-            "details_i18n": {
-              "vi": "Đi thuyền qua Tràng An, vượt qua những vách đá vôi, mặt nước tĩnh lặng, những hang động và những địa điểm tâm linh nhỏ."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_01c8eaa6-8ea7-4bb0-84b3-728a2a41cc52",
               "storage_path": "/public/v1/tour-images/tour_38be9dcf-9d06-44f7-a404-613062e5054b/travel-plan-services/day-01-trang-an-boat-route.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -158,18 +121,8 @@
             }
           }
         ],
-        "notes": "A Ninh Binh day shaped by spiritual scale and natural calm, moving from Bai Dinh Pagoda's vast complex to Trang An's cave waterways.",
-        "notes_i18n": {
-          "vi": "Một ngày Ninh Bình được định hình bởi quy mô tâm linh và sự tĩnh lặng của thiên nhiên, di chuyển từ quần thể chùa Bái Đính rộng lớn đến đường thủy hang động Tràng An."
-        }
+        "notes": "A Ninh Binh day shaped by spiritual scale and natural calm, moving from Bai Dinh Pagoda's vast complex to Trang An's cave waterways."
       }
-    ],
-    "translation_meta": {}
-  },
-  "title_i18n": {
-    "vi": "Bái Đính và Tràng An"
-  },
-  "short_description_i18n": {
-    "vi": "Kết hợp quần thể Phật giáo lớn của Bái Đính với tuyến đường thuyền yên tĩnh của Tràng An xuyên qua những vách đá vôi, hang động và làn nước trong xanh."
+    ]
   }
 }

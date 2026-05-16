@@ -28,9 +28,7 @@
         "id": "travel_plan_day_63c3809d-f8bd-4bae-ba85-26f9eb64d4cc",
         "day_number": 1,
         "title": "Tuyet Tinh Coc and Trang An",
-        "title_i18n": {},
         "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_d17c6fad-2b99-497b-8bfd-8d2b00237a3d",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
@@ -39,26 +37,19 @@
             "id": "travel_plan_service_19368f67-d1d6-4987-8f0e-07316ac7d61d",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Tuyet Tinh Coc",
-            "title_i18n": {},
             "details": "Visit Tuyet Tinh Coc, a calm lake enclosed by limestone cliffs near Hoa Lu, with a small pagoda and cave atmosphere.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_01bd2736-cfa1-4756-a4ee-a39f4d3ca921",
               "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/day-01-tuyet-tinh-coc.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -74,26 +65,19 @@
             "id": "travel_plan_service_5f385375-1011-4fc3-b04e-8665f09e52f4",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Trang An boat journey",
-            "title_i18n": {},
             "details": "Travel by sampan through Trang An's emerald waterways, caves and temple scenery in the UNESCO landscape complex.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_47bac449-a2f3-4f14-8ac3-40222c316d54",
               "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/day-01-trang-an-boat-journey.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -109,26 +93,19 @@
             "id": "travel_plan_service_e7d8bf27-0a90-44e7-9bca-3a18b6f4a1b1",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Hang Mua viewpoint",
-            "title_i18n": {},
             "details": "Climb the stone steps at Hang Mua for sweeping views over rivers, rice fields and Ninh Binh's limestone towers.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e5f12274-1c41-41f4-b747-110547247c1b",
               "storage_path": "/public/v1/tour-images/tour_181b4316-7b70-410c-9f11-a084cfb11329/travel-plan-services/day-01-hang-mua-viewpoint.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -141,108 +118,9 @@
             }
           }
         ],
-        "notes": "Leave Hanoi for Ninh Binh and follow a route of quiet lakes, sampan waterways and a final climb to one of the region's best viewpoints.",
-        "notes_i18n": {}
+        "notes": "Leave Hanoi for Ninh Binh and follow a route of quiet lakes, sampan waterways and a final climb to one of the region's best viewpoints."
       }
-    ],
-    "translation_meta": {
-      "ar": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:25.255Z"
-      },
-      "fr": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:28.109Z"
-      },
-      "zh": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:30.852Z"
-      },
-      "ja": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:34.638Z"
-      },
-      "ko": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:37.404Z"
-      },
-      "vi": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:39.792Z"
-      },
-      "ms": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:43.545Z"
-      },
-      "de": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:46.928Z"
-      },
-      "es": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:48.771Z"
-      },
-      "it": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:51.432Z"
-      },
-      "ru": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:53.581Z"
-      },
-      "nl": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:56.743Z"
-      },
-      "pl": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:26:59.933Z"
-      },
-      "da": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:27:02.698Z"
-      },
-      "sv": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:27:06.485Z"
-      },
-      "no": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_eb9e7cdd",
-        "origin": "machine",
-        "updated_at": "2026-05-01T01:27:09.350Z"
-      }
-    }
+    ]
   },
   "published_on_webpage": false
 }

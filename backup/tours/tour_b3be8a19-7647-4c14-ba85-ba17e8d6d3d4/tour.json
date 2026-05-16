@@ -31,11 +31,7 @@
         "id": "travel_plan_day_3a3eb033-930f-403a-8cfb-d20cf1f380b5",
         "day_number": 1,
         "title": "Hue lagoon and royal sites",
-        "title_i18n": {
-          "vi": "Đầm Huế và các di tích cung đình"
-        },
         "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_e182e7a4-a6a6-4884-ab35-710cc4c254bc",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
@@ -44,30 +40,19 @@
             "id": "travel_plan_service_c3958108-8d2f-4e26-876a-7ca4a2ce69fa",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Lang Co Bay",
-            "title_i18n": {
-              "vi": "Vịnh Lăng Cô"
-            },
             "details": "Pause at Lang Co Bay, where pale sand, mountains and lagoon water mark the scenic approach to Hue.",
-            "details_i18n": {
-              "vi": "Dừng lại ở Vịnh Lăng Cô, nơi có cát trắng, núi và nước đầm phá tạo nên khung cảnh tuyệt đẹp cho Huế."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_7f1a217d-9356-4cf4-8158-4ae95ce014c9",
               "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/day-01-lang-co-bay.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -83,30 +68,19 @@
             "id": "travel_plan_service_b0f16854-af2b-468d-91cf-51940acff027",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Tam Giang Lagoon",
-            "title_i18n": {
-              "vi": "Phá Tam Giang"
-            },
             "details": "See Tam Giang Lagoon, a wide brackish-water landscape tied to fishing life and open skies near Hue.",
-            "details_i18n": {
-              "vi": "Ngắm phá Tam Giang, một vùng nước lợ rộng lớn gắn liền với đời sống đánh bắt cá và bầu trời rộng mở gần Huế."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_65209eff-9a9a-4039-8fbc-a20e895fae07",
               "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/day-01-tam-giang-lagoon.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -122,30 +96,19 @@
             "id": "travel_plan_service_00c6d1f3-9ffe-45a4-8a84-b121220f9c73",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Pearl village",
-            "title_i18n": {
-              "vi": "làng ngọc"
-            },
             "details": "Visit a pearl village stop connected to the coastal and lagoon culture of the Hue region.",
-            "details_i18n": {
-              "vi": "Tham quan điểm dừng chân làng ngọc gắn liền với văn hóa ven biển và đầm phá của vùng Huế."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_cdb3029c-b068-44af-85da-06fb55619fae",
               "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/day-01-pearl-village.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -161,30 +124,19 @@
             "id": "travel_plan_service_100b9921-5dd8-49f9-862f-bc41f5f31348",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Imperial Citadel",
-            "title_i18n": {
-              "vi": "Hoàng Thành"
-            },
             "details": "Explore Hue's Imperial Citadel, the walled heart of Vietnam's Nguyen Dynasty with palaces, gates and royal courtyards.",
-            "details_i18n": {
-              "vi": "Khám phá Hoàng thành Huế, trung tâm có tường bao quanh của triều Nguyễn của Việt Nam với các cung điện, cổng và sân hoàng gia."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_70e29ccd-8173-4476-a048-719c4979259f",
               "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/day-01-imperial-citadel.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -200,30 +152,19 @@
             "id": "travel_plan_service_f95e7ee1-39e7-414b-8d39-b0ae9fcc9e72",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Khai Dinh Mausoleum",
-            "title_i18n": {
-              "vi": "Lăng Khải Định"
-            },
             "details": "Visit Khai Dinh Mausoleum, where hillside setting, stonework and ornate details reflect a distinctive royal style.",
-            "details_i18n": {
-              "vi": "Thăm Lăng Khải Định, nơi khung cảnh sườn đồi, đồ đá và các chi tiết trang trí công phu phản ánh phong cách hoàng gia đặc biệt."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_5f7c79e9-a6ca-48b6-ae67-d8ec7e0042e8",
               "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/day-01-khai-dinh-mausoleum.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -239,30 +180,19 @@
             "id": "travel_plan_service_690fa366-1d20-4a94-9af4-472d4bec41dd",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Thien Mu Pagoda",
-            "title_i18n": {
-              "vi": "Chùa Thiên Mụ"
-            },
             "details": "End at Thien Mu Pagoda, Hue's graceful riverside tower and one of the city's most enduring symbols.",
-            "details_i18n": {
-              "vi": "Kết thúc tại chùa Thiên Mụ, tòa tháp ven sông duyên dáng của Huế và là một trong những biểu tượng lâu dài nhất của thành phố."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_71692e7f-2bb8-4245-8923-78e6e5c3cb4a",
               "storage_path": "/public/v1/tour-images/tour_b3be8a19-7647-4c14-ba85-ba17e8d6d3d4/travel-plan-services/day-01-thien-mu-pagoda.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -275,116 +205,9 @@
             }
           }
         ],
-        "notes": "Travel into Hue's imperial landscape by way of coastal and lagoon scenery, then visit the citadel, royal tomb architecture and riverside pagoda.",
-        "notes_i18n": {
-          "vi": "Du lịch vào phong cảnh hoàng gia của Huế bằng phong cảnh ven biển và đầm phá, sau đó tham quan thành cổ, kiến ​​trúc lăng mộ hoàng gia và chùa ven sông."
-        }
+        "notes": "Travel into Hue's imperial landscape by way of coastal and lagoon scenery, then visit the citadel, royal tomb architecture and riverside pagoda."
       }
-    ],
-    "translation_meta": {
-      "ar": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:12.959Z"
-      },
-      "fr": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:13.389Z"
-      },
-      "zh": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:13.805Z"
-      },
-      "ja": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:14.217Z"
-      },
-      "ko": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:14.649Z"
-      },
-      "vi": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:15.100Z"
-      },
-      "ms": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:15.533Z"
-      },
-      "de": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:15.963Z"
-      },
-      "es": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:16.387Z"
-      },
-      "it": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:16.792Z"
-      },
-      "ru": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:17.227Z"
-      },
-      "nl": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:17.673Z"
-      },
-      "pl": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:18.089Z"
-      },
-      "da": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:18.509Z"
-      },
-      "sv": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:18.950Z"
-      },
-      "no": {
-        "source_lang": "en",
-        "source_hash": "fnv1a_5159398f",
-        "origin": "machine",
-        "updated_at": "2026-04-28T03:43:19.359Z"
-      }
-    }
+    ]
   },
-  "published_on_webpage": false,
-  "title_i18n": {
-    "vi": "Ngày hoàng đế Huế"
-  },
-  "short_description_i18n": {
-    "vi": "Một ngày Huế được tạo hình bởi vịnh Lăng Cô, phá Tam Giang, tường thành, lăng Khải Định và tòa tháp tĩnh lặng của chùa Thiên Mụ."
-  }
+  "published_on_webpage": false
 }

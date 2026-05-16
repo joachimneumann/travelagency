@@ -36,19 +36,11 @@
         "id": "travel_plan_boundary_arrival_b7eb47b1-befe-47a9-a2ee-b2dc226ebeea",
         "timing_kind": "label",
         "time_label": null,
-        "time_label_i18n": {},
         "time_point": null,
         "kind": "transport",
         "title": "Airport Pickup",
-        "title_i18n": {
-          "vi": "Đón tại sân bay"
-        },
         "details": "Our driver will wait for you at the Hanoi Airport",
-        "details_i18n": {
-          "vi": "Tài xế của chúng tôi sẽ đợi bạn tại sân bay Hà Nội"
-        },
         "image_subtitle": null,
-        "image_subtitle_i18n": {},
         "start_time": null,
         "end_time": null,
         "image": null,
@@ -66,19 +58,11 @@
         "id": "travel_plan_boundary_departure_40e44b09-42f1-4a91-a92c-50edc7de91af",
         "timing_kind": "label",
         "time_label": null,
-        "time_label_i18n": {},
         "time_point": null,
         "kind": "transport",
         "title": "Airport Drop off",
-        "title_i18n": {
-          "vi": "Trả khách tại sân bay"
-        },
         "details": "When we return from the north, we will drop you off at the Hanoi Airport",
-        "details_i18n": {
-          "vi": "Khi chúng tôi trở về từ miền Bắc, chúng tôi sẽ đón bạn tại sân bay Hà Nội"
-        },
         "image_subtitle": null,
-        "image_subtitle_i18n": {},
         "start_time": null,
         "end_time": null,
         "image": null,
@@ -98,9 +82,6 @@
         "id": "travel_plan_day_dfaf33b6-83a8-476b-8b55-549dc26a7710",
         "day_number": 1,
         "title": "Ha Noi – Ha Giang – Quan Ba – Yen Minh",
-        "title_i18n": {
-          "vi": "Hà Nội – Hà Giang – Quản Bạ – Yên Minh"
-        },
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -111,28 +92,18 @@
             "id": "travel_plan_service_e6230aa7-60b2-4562-8949-575e07da6b3c",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Ha Giang",
-            "title_i18n": {
-              "vi": "Hà Giang"
-            },
             "details": "Ha Giang City, the gateway to Vietnam’s northern highlands, blends serene river landscapes with vibrant local life. It’s the perfect starting point for the legendary loop and mountain adventures.",
-            "details_i18n": {
-              "vi": "Thành phố Hà Giang, cửa ngõ vào vùng cao nguyên phía Bắc của Việt Nam, hòa quyện cảnh quan sông nước thanh bình với cuộc sống sôi động của địa phương. Đây là điểm khởi đầu hoàn hảo cho cuộc phiêu lưu trên núi và đường vòng huyền thoại."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_e231b9ba-3f6e-413e-8166-6c72c3fa0a7a",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-01-ha-giang.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -148,28 +119,18 @@
             "id": "travel_plan_service_248995a7-f618-4451-a669-ca4b8e8e4f20",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Quan Ba",
-            "title_i18n": {
-              "vi": "Quản Bạ"
-            },
             "details": "Explore Quan Ba, the \"Da Lat of the North.\" Famous for the iconic Twin Mountains and Heaven’s Gate, it offers cool mountain air and stunning panoramic views of Ha Giang’s majestic landscapes",
-            "details_i18n": {
-              "vi": "Khám phá Quản Bạ, “Đà Lạt của miền Bắc”. Nổi tiếng với Núi Đôi và Cổng Trời mang tính biểu tượng, nơi đây mang đến không khí núi non mát mẻ và tầm nhìn toàn cảnh tuyệt đẹp ra cảnh quan hùng vĩ của Hà Giang"
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_da06b77f-93c8-4284-87d4-3526263e44dd",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-01-quan-ba.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -185,28 +146,18 @@
             "id": "travel_plan_service_48944dde-932f-4929-9c07-8f786450a2dd",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Yen Minh",
-            "title_i18n": {
-              "vi": "Yên Minh"
-            },
             "details": "Yen Minh: A peaceful retreat in Ha Giang featuring lush pine forests, the winding Tham Ma Pass, and misty valleys. It’s the perfect spot to experience serene nature and authentic ethnic culture",
-            "details_i18n": {
-              "vi": "Yên Minh: Nơi nghỉ dưỡng yên bình ở Hà Giang với rừng thông tươi tốt, đèo Thẩm Mã uốn lượn và thung lũng mù sương. Đây là nơi hoàn hảo để trải nghiệm thiên nhiên thanh bình và văn hóa dân tộc đích thực"
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_d5cc289c-ee88-43ca-aca5-a2734ef32af5",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-01-yen-minh.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -219,18 +170,12 @@
             }
           }
         ],
-        "notes": "Discover Northern Vietnam: Journey from Hanoi to the scenic heights of Ha Giang, Quan Ba’s Twin Mountains, and the pine forests of Yen Minh. A breathtaking adventure awaits",
-        "notes_i18n": {
-          "vi": "Khám phá miền Bắc Việt Nam: Hành trình từ Hà Nội đến những danh lam thắng cảnh của Hà Giang, Núi Đôi Quản Bạ và rừng thông Yên Minh. Một cuộc phiêu lưu ngoạn mục đang chờ đợi"
-        }
+        "notes": "Discover Northern Vietnam: Journey from Hanoi to the scenic heights of Ha Giang, Quan Ba’s Twin Mountains, and the pine forests of Yen Minh. A breathtaking adventure awaits"
       },
       {
         "id": "travel_plan_day_46f846a5-9975-4c90-8d05-cdacd410ab87",
         "day_number": 2,
         "title": "Yen Minh - Dong Van - Lung Cu - Mapileng Pass",
-        "title_i18n": {
-          "vi": "Yên Minh - Đồng Văn - Lũng Cú - Đèo Mapileng"
-        },
         "primary_location_id": null,
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -241,28 +186,18 @@
             "id": "travel_plan_service_2d00ec2f-3122-4aaa-a2ae-29f15b849af4",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Dong Van",
-            "title_i18n": {
-              "vi": "Đồng Văn"
-            },
             "details": "Explore Dong Van, the heart of the UNESCO Karst Plateau. Discover the historic Old Quarter, vibrant ethnic markets, and ancient limestone peaks that define Vietnam's northernmost frontier",
-            "details_i18n": {
-              "vi": "Khám phá Đồng Văn, trung tâm của Cao nguyên Karst được UNESCO công nhận. Khám phá Khu Phố Cổ lịch sử, những khu chợ dân tộc sôi động và những đỉnh núi đá vôi cổ xưa tạo nên biên giới cực bắc của Việt Nam"
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_c0d9cf68-ece1-4a6b-89fa-9d0f0f832bab",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-02-dong-van.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -278,28 +213,18 @@
             "id": "travel_plan_service_51aa233f-c6fe-47e2-9b20-52c3a8f379cf",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Ma Pi Leng Pass",
-            "title_i18n": {
-              "vi": "Đèo Mã Pí Lèng"
-            },
             "details": "Ma Pi Leng, one of Vietnam’s \"four great passes,\" offers jaw-dropping views of deep canyons and the emerald Nho Que River. It’s a must-see masterpiece of nature and a dream for every adventurer",
-            "details_i18n": {
-              "vi": "Mã Pì Lèng, một trong \"tứ đại đèo\" của Việt Nam, mang đến tầm nhìn ngoạn mục ra hẻm núi sâu và dòng sông Nho Quế màu ngọc lục bảo. Đó là một kiệt tác không thể bỏ qua của thiên nhiên và là giấc mơ của mọi nhà thám hiểm"
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_f3c877f7-7acc-4efc-8bbc-3ff5dfe20fc7",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-02-ma-pi-leng-pass.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -315,28 +240,18 @@
             "id": "travel_plan_service_f5eca721-9d06-4d59-bf7c-7d391bf68d51",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Lung Cu Flag Pole",
-            "title_i18n": {
-              "vi": "Cột cờ Lũng Cú"
-            },
             "details": "Visit the Lung Cu Flag Pole, Vietnam’s northernmost point. Stand atop Dragon Mountain to witness panoramic views of the frontier and the sacred giant flag symbolizing national pride and unity.",
-            "details_i18n": {
-              "vi": "Thăm Cột Cờ Lũng Cú, điểm cực Bắc của Việt Nam. Đứng trên đỉnh Núi Rồng để ngắm nhìn toàn cảnh biên giới và lá cờ khổng lồ linh thiêng tượng trưng cho niềm tự hào và đoàn kết dân tộc."
-            },
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_d3ee0fdf-ac10-4131-9d84-2b15e709b444",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-02-lung-cu-flag-pole.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -349,18 +264,12 @@
             }
           }
         ],
-        "notes": "Experience the heart of Ha Giang: From Yen Minh’s pines to Dong Van’s Karst Plateau, the Lung Cu flag tower, and the epic Ma Pi Leng Pass. A journey through Vietnam’s most majestic landscapes",
-        "notes_i18n": {
-          "vi": "Trải nghiệm trái tim Hà Giang: Từ rừng thông Yên Minh đến Cao nguyên đá Đồng Văn, cột cờ Lũng Cú và đèo Mã Pì Lèng hùng vĩ. Hành trình qua những thắng cảnh hùng vĩ nhất Việt Nam"
-        }
+        "notes": "Experience the heart of Ha Giang: From Yen Minh’s pines to Dong Van’s Karst Plateau, the Lung Cu flag tower, and the epic Ma Pi Leng Pass. A journey through Vietnam’s most majestic landscapes"
       },
       {
         "id": "travel_plan_day_130b4863-9904-468f-a103-2265dc0a02d7",
         "day_number": 3,
         "title": "Dong Van - Ha Giang - Ha Noi",
-        "title_i18n": {
-          "vi": "Đồng Văn - Hà Giang - Hà Nội"
-        },
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -371,26 +280,18 @@
             "id": "travel_plan_service_356a44f0-8159-4598-824c-0ac3a10319c5",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Dong Van, and onward to vibrant Hanoi",
-            "title_i18n": {
-              "vi": "Đồng Văn và tiến về Hà Nội sôi động"
-            },
             "details": null,
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_43a6cac0-3df9-4e02-8405-06c7863edbda",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-03-farewell-dong-van-onward-to-vibrant-hanoi.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -406,24 +307,18 @@
             "id": "travel_plan_service_ed8868da-c065-4f45-a3ae-4ef79cbaaa99",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "",
-            "title_i18n": {},
             "details": null,
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": {
               "id": "travel_plan_service_image_2fd86907-885e-4cef-8ccb-b755d7c186c5",
               "storage_path": "/public/v1/tour-images/tour_932143b3-7e73-4139-84e6-b6283c8a1a28/travel-plan-services/day-03-travel-plan-service-ed8868da-c065-4f45-a3ae-4ef79cbaaa99.webp",
               "caption": null,
-              "caption_i18n": {},
               "alt_text": null,
-              "alt_text_i18n": {},
               "sort_order": 0,
               "is_primary": true,
               "is_customer_visible": true,
@@ -436,10 +331,8 @@
             }
           }
         ],
-        "notes": null,
-        "notes_i18n": {}
+        "notes": null
       }
-    ],
-    "translation_meta": {}
+    ]
   }
 }

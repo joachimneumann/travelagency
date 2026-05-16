@@ -23,7 +23,6 @@
         "id": "travel_plan_day_1d712640-cda9-42ff-8656-eaf6fa505e5c",
         "day_number": 1,
         "title": "Hoa Lu, Trang An and Hang Mua",
-        "title_i18n": {},
         "primary_location_id": "place_d17c6fad-2b99-497b-8bfd-8d2b00237a3d",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
@@ -32,24 +31,18 @@
             "id": "travel_plan_service_931c9bc4-3ebc-4684-9fa9-510a36485046",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Ninh Binh scenic day",
-            "title_i18n": {},
             "details": "Explore Hoa Lu, Trang An and Hang Mua, three classic stops combining history, caves, rivers and karst views.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": null
           }
         ],
-        "notes": "A compact Ninh Binh route through ancient capital history, UNESCO boat scenery and the viewpoint climb at Hang Mua.",
-        "notes_i18n": {}
+        "notes": "A compact Ninh Binh route through ancient capital history, UNESCO boat scenery and the viewpoint climb at Hang Mua."
       }
-    ],
-    "translation_meta": {}
+    ]
   }
 }

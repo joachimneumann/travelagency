@@ -23,9 +23,7 @@
         "id": "travel_plan_day_f8d8e76e-d360-4705-adf2-0f1a2036f254",
         "day_number": 1,
         "title": "Southern Vietnam route",
-        "title_i18n": {},
         "overnight_location": null,
-        "overnight_location_i18n": {},
         "primary_location_id": "place_5da10678-f8e2-4f2b-97f7-7b2a41017036",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
@@ -34,26 +32,19 @@
             "id": "travel_plan_service_ddeee4fe-539f-46e1-b036-eeaa174b8d87",
             "timing_kind": "label",
             "time_label": null,
-            "time_label_i18n": {},
             "time_point": null,
             "kind": "other",
             "title": "Route overview",
-            "title_i18n": {},
             "details": "Follow the stated journey from Ho Chi Minh City through the Mekong, Mui Ne and Da Lat, ending by the sea in Nha Trang.",
-            "details_i18n": {},
             "image_subtitle": null,
-            "image_subtitle_i18n": {},
             "location": null,
-            "location_i18n": {},
             "start_time": null,
             "end_time": null,
             "image": null
           }
         ],
-        "notes": "This route links Saigon history, Cu Chi, Mekong river life, Mui Ne's coast, Da Lat's cool highlands and a final Nha Trang departure.",
-        "notes_i18n": {}
+        "notes": "This route links Saigon history, Cu Chi, Mekong river life, Mui Ne's coast, Da Lat's cool highlands and a final Nha Trang departure."
       }
-    ],
-    "translation_meta": {}
+    ]
   }
 }
