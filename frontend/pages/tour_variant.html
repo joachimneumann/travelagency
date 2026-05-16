@@ -55,7 +55,7 @@
           --backend-available-height,
           calc(100vh - var(--tour-variant-backend-menu-height))
         );
-        --tour-variant-left-padding: clamp(0.75rem, 1.4vw, 1.25rem);
+        --tour-variant-container-padding: 15px;
       }
 
       @supports (height: 100dvh) {
@@ -73,14 +73,10 @@
         overflow: visible;
       }
 
-      .tour-variant-page-section {
-        padding: 1.25rem 0 2rem;
-      }
-
-      .tour-variant-page-section > .container {
+      .tour-variant-page-container {
         width: 100%;
         max-width: none;
-        padding-left: var(--tour-variant-left-padding);
+        padding: var(--tour-variant-container-padding);
       }
 
       .tour-variant-toolbar {
@@ -408,11 +404,10 @@
 
       .tour-variant-customizer-mount {
         position: relative;
-        width: calc(100vw - var(--tour-variant-left-padding));
+        width: 100%;
         height: var(--tour-variant-customizer-height);
         min-height: 0;
-        margin-right: calc(50% - 50vw);
-        margin-left: calc(50% - 50vw + var(--tour-variant-left-padding));
+        margin: 0;
         overflow: hidden;
         background: #f7f9f7;
       }
@@ -522,8 +517,7 @@
     </header>
 
     <main id="main-content">
-      <section class="section tour-variant-page-section">
-        <div class="container">
+      <div class="container tour-variant-page-container">
           <div id="backendError" class="backend-message" role="alert" aria-live="assertive"></div>
 
           <section class="backend-section tour-variant-editor">
@@ -632,8 +626,7 @@
               </div>
             </details>
           </section>
-        </div>
-      </section>
+      </div>
     </main>
 
     <script src="shared/generated/language_catalog.global.js"></script>
