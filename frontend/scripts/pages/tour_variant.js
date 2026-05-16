@@ -18,7 +18,7 @@ import {
   withBackendApiLang
 } from "../shared/backend_page.js";
 import { MONTH_CODE_CATALOG } from "../shared/generated_catalogs.js";
-import { buildTourVariantEditHref } from "../shared/links.js";
+import { buildTourEditHref, buildTourVariantEditHref } from "../shared/links.js";
 
 const apiBase = getBackendApiBase();
 const apiOrigin = getBackendApiOrigin();
@@ -50,6 +50,10 @@ const els = {
   departureTitle: document.getElementById("tourVariantDepartureTitle"),
   departureAirportCode: document.getElementById("tourVariantDepartureAirportCode"),
   departureDetails: document.getElementById("tourVariantDepartureDetails"),
+  mapPreview: document.getElementById("tourVariantMapPreview"),
+  daySummary: document.getElementById("tourVariantDaySummary"),
+  customizerOverlay: document.getElementById("tourVariantCustomizerOverlay"),
+  customizerClose: document.getElementById("tourVariantCustomizerClose"),
   customizer: document.getElementById("tourVariantCustomizer")
 };
 
@@ -82,6 +86,7 @@ const state = {
 let backendLoginRedirectScheduled = false;
 let cleanPayloadSignature = "";
 let isSavingTourVariant = false;
+let isCustomizerOverlayOpen = false;
 
 const fetchApi = createApiFetcher({
   apiBase,
@@ -100,19 +105,24 @@ const fetchApi = createApiFetcher({
 const customizerLabels = {};
 updateCustomizerLabels();
 
-const tourVariantCustomizer = createTourCustomizerWorkspace({
-  root: els.customizer,
-  escapeHTML: escapeHtml,
-  escapeAttr: escapeHtml,
-  currentFrontendLang: currentLang,
-  labels: customizerLabels,
-  destinationScopeCatalog: () => state.destinationScopeCatalog,
-  travelPlanDays: customizerTravelPlanDays,
-  allTrips: customizerTrips,
-  findTripById: findCustomizerTripById,
-  ensureTourDetailsLoaded: async (tourId) => findCustomizerTripById(tourId),
-  onTimelineChange: applyCustomizerTimeline
-});
+function createTourVariantCustomizerWorkspace(root, onTimelineChange = null) {
+  return createTourCustomizerWorkspace({
+    root,
+    escapeHTML: escapeHtml,
+    escapeAttr: escapeHtml,
+    currentFrontendLang: currentLang,
+    labels: customizerLabels,
+    destinationScopeCatalog: () => state.destinationScopeCatalog,
+    travelPlanDays: customizerTravelPlanDays,
+    allTrips: customizerTrips,
+    findTripById: findCustomizerTripById,
+    ensureTourDetailsLoaded: async (tourId) => findCustomizerTripById(tourId),
+    onTimelineChange
+  });
+}
+
+const tourVariantMapPreview = createTourVariantCustomizerWorkspace(els.mapPreview);
+const tourVariantCustomizer = createTourVariantCustomizerWorkspace(els.customizer, applyCustomizerTimeline);
 
 function tourVariantT(key, fallback, vars) {
   return backendT(`backend.tour_variant.${key}`, fallback, vars);
@@ -132,6 +142,105 @@ function updateCustomizerLabels() {
     moveHere: tourVariantT("move_here", "move here"),
     dropHere: tourVariantT("drop_here", "drop here")
   });
+  refreshCustomizerChromeLabels();
+}
+
+function refreshCustomizerChromeLabels() {
+  const routeCustomizerLabel = tourVariantT("route_customizer", "Route customizer");
+  refreshMapPreviewStage();
+  if (els.customizerOverlay instanceof HTMLElement) {
+    els.customizerOverlay.setAttribute("aria-label", routeCustomizerLabel);
+  }
+  if (els.customizerClose instanceof HTMLButtonElement) {
+    els.customizerClose.textContent = backendT("common.close", "Close");
+  }
+}
+
+function setCustomizerOverlayOpen(open) {
+  const nextOpen = Boolean(open);
+  if (!(els.customizerOverlay instanceof HTMLElement)) return;
+  isCustomizerOverlayOpen = nextOpen;
+  els.customizerOverlay.hidden = !nextOpen;
+  document.body.classList.toggle("tour-variant-customizer-open", nextOpen);
+  refreshMapPreviewStage();
+  if (nextOpen) {
+    renderCustomizer();
+    window.setTimeout(() => {
+      if (isCustomizerOverlayOpen) els.customizerClose?.focus?.();
+    }, 0);
+  } else {
+    mapPreviewStage()?.focus?.();
+  }
+}
+
+function openCustomizerOverlay() {
+  setCustomizerOverlayOpen(true);
+}
+
+function closeCustomizerOverlay() {
+  setCustomizerOverlayOpen(false);
+}
+
+function handleMapPreviewKeydown(event) {
+  if (event.key !== "Enter" && event.key !== " ") return;
+  if (!isMapPreviewStageTarget(event.target)) return;
+  event.preventDefault();
+  openCustomizerOverlay();
+}
+
+function handleMapPreviewClick(event) {
+  if (!isMapPreviewStageTarget(event.target)) return;
+  event.preventDefault();
+  openCustomizerOverlay();
+}
+
+function mapPreviewStage() {
+  return els.mapPreview?.querySelector?.(".tour-customize-map__stage") || null;
+}
+
+function isMapPreviewStageTarget(target) {
+  if (!(target instanceof Element)) return false;
+  const stage = target.closest(".tour-customize-map__stage");
+  return stage instanceof HTMLElement && els.mapPreview?.contains(stage);
+}
+
+function refreshMapPreviewStage() {
+  const stage = mapPreviewStage();
+  if (!(stage instanceof HTMLElement)) return;
+  const openLabel = tourVariantT("open_route_customizer", "Open route customizer");
+  stage.setAttribute("role", "button");
+  stage.setAttribute("tabindex", "0");
+  stage.setAttribute("aria-controls", "tourVariantCustomizerOverlay");
+  stage.setAttribute("aria-expanded", isCustomizerOverlayOpen ? "true" : "false");
+  stage.setAttribute("aria-label", openLabel);
+  stage.setAttribute("title", openLabel);
+  stage.querySelectorAll("button, [tabindex]").forEach((element) => {
+    if (!(element instanceof HTMLElement) || element === stage) return;
+    element.setAttribute("tabindex", "-1");
+    element.setAttribute("aria-hidden", "true");
+  });
+}
+
+function handleCustomizerOverlayKeydown(event) {
+  if (event.key !== "Escape" || !isCustomizerOverlayOpen) return;
+  event.preventDefault();
+  closeCustomizerOverlay();
+}
+
+function customizerTripState({ forceDisabled = false } = {}) {
+  return {
+    baseTrip: state.isCreateMode ? null : customizerBaseTrip(),
+    selectedDayRefs: state.isCreateMode ? [] : timelineRefsForCustomizer(),
+    disabled: forceDisabled || state.isCreateMode || !state.permissions.canEditTourVariants,
+    emptyOptionsLabel: state.isCreateMode
+      ? tourVariantT("create_from_list_first", "Create the Tour Variant from the Tour Variants page first.")
+      : tourVariantT("no_optional_days", "No optional days are available for this route yet."),
+    emptyTimelineLabel: state.isCreateMode
+      ? tourVariantT("create_from_list_first", "Create the Tour Variant from the Tour Variants page first.")
+      : tourVariantT("empty_timeline", "Add at least one day to keep customizing."),
+    tourId: normalizeText(state.variant?.id) || "tour_variant_workspace",
+    tourTitle: normalizeText(els.title?.value) || normalizeText(state.variant?.title) || tourVariantT("timeline", "Tour Variant timeline")
+  };
 }
 
 function refreshBackendNavElements() {
@@ -383,6 +492,55 @@ function findSourceDayByKey(key) {
   return state.allSourceDays.find((sourceDay) => sourceDayKey(sourceDay) === normalizedKey) || null;
 }
 
+function sourceMarketingTourHref(sourceTourId) {
+  const normalizedSourceTourId = normalizeText(sourceTourId);
+  if (!normalizedSourceTourId) return "";
+  return `${buildTourEditHref(normalizedSourceTourId)}#travel_plan_panel`;
+}
+
+function sourceMarketingTourDayLabel(sourceDay) {
+  const sourceDayNumber = Number(sourceDay?.day_number || sourceDay?.source_day?.day_number);
+  if (Number.isFinite(sourceDayNumber) && sourceDayNumber > 0) {
+    return tourVariantT("day", "Day {day}", { day: String(sourceDayNumber) });
+  }
+  return normalizeText(sourceDay?.source_day_id);
+}
+
+function renderDaySummary() {
+  if (!(els.daySummary instanceof HTMLElement)) return;
+  const days = timelineDays();
+  if (!days.length) {
+    els.daySummary.innerHTML = `<p class="micro">${escapeHtml(tourVariantT("empty_timeline", "Add at least one day to keep customizing."))}</p>`;
+    return;
+  }
+  els.daySummary.innerHTML = `
+    <ol class="tour-variant-day-summary__list">
+      ${days.map((day, index) => {
+        const sourceDay = findSourceDayByKey(dayRefKey(day));
+        const variantDayNumber = Number(day?.day_number) || index + 1;
+        const dayTitle = normalizeText(sourceDay?.title || day?.source_day_title)
+          || tourVariantT("untitled_day", "Untitled day");
+        const sourceTourId = normalizeText(sourceDay?.source_tour_id || day?.source_tour_id);
+        const sourceTourTitle = normalizeText(sourceDay?.source_tour_title || day?.source_tour_title || sourceTourId);
+        const sourceDayLabel = sourceMarketingTourDayLabel(sourceDay || day);
+        const sourceLabel = [sourceTourTitle, sourceDayLabel].filter(Boolean).join(" · ");
+        const href = sourceMarketingTourHref(sourceTourId);
+        return `
+          <li class="tour-variant-day-summary__item">
+            <span class="tour-variant-day-summary__number">${escapeHtml(tourVariantT("day", "Day {day}", { day: String(variantDayNumber) }))}</span>
+            <span class="tour-variant-day-summary__title">${escapeHtml(dayTitle)}</span>
+            <span class="tour-variant-day-summary__source">
+              ${href && sourceLabel
+                ? `<a href="${escapeHtml(href)}">${escapeHtml(sourceLabel)}</a>`
+                : escapeHtml(sourceLabel || sourceTourId || day?.source_day_id || "")}
+            </span>
+          </li>
+        `;
+      }).join("")}
+    </ol>
+  `;
+}
+
 function sourceRowsForCustomizer() {
   return Array.isArray(state.allSourceDays) ? state.allSourceDays : [];
 }
@@ -491,19 +649,17 @@ function applyCustomizerTimeline(items) {
 }
 
 function renderCustomizer() {
-  void tourVariantCustomizer.setTripState({
-    baseTrip: state.isCreateMode ? null : customizerBaseTrip(),
-    selectedDayRefs: state.isCreateMode ? [] : timelineRefsForCustomizer(),
-    disabled: state.isCreateMode || !state.permissions.canEditTourVariants,
-    emptyOptionsLabel: state.isCreateMode
-      ? tourVariantT("create_from_list_first", "Create the Tour Variant from the Tour Variants page first.")
-      : tourVariantT("no_optional_days", "No optional days are available for this route yet."),
-    emptyTimelineLabel: state.isCreateMode
-      ? tourVariantT("create_from_list_first", "Create the Tour Variant from the Tour Variants page first.")
-      : tourVariantT("empty_timeline", "Add at least one day to keep customizing."),
-    tourId: normalizeText(state.variant?.id) || "tour_variant_workspace",
-    tourTitle: normalizeText(state.variant?.title) || tourVariantT("timeline", "Tour Variant timeline")
+  renderDaySummary();
+  const tripState = customizerTripState();
+  void tourVariantMapPreview.setTripState({
+    ...tripState,
+    disabled: true
+  }).then(() => {
+    refreshMapPreviewStage();
   }).catch((error) => {
+    console.error("[backend-tour-variant] Failed to render Tour Variant map preview.", error);
+  });
+  void tourVariantCustomizer.setTripState(tripState).catch((error) => {
     console.error("[backend-tour-variant] Failed to render Tour Variant customizer.", error);
   });
 }
@@ -726,6 +882,10 @@ function bindControls() {
   els.reloadBtn?.addEventListener("click", () => {
     void loadTourVariant();
   });
+  els.mapPreview?.addEventListener("click", handleMapPreviewClick);
+  els.mapPreview?.addEventListener("keydown", handleMapPreviewKeydown);
+  els.customizerClose?.addEventListener("click", closeCustomizerOverlay);
+  document.addEventListener("keydown", handleCustomizerOverlayKeydown);
   [
     els.baseTour,
     els.title,

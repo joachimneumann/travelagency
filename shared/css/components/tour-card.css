@@ -1206,7 +1206,7 @@ html.tour-customize-modal-open {
 
 .tour-customize__workspace {
   display: grid;
-  grid-template-columns: 270px minmax(0, 1fr);
+  grid-template-columns: 30% minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
   overflow: hidden;

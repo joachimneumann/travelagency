@@ -74,9 +74,11 @@
       }
 
       .tour-variant-page-container {
-        width: 100%;
-        max-width: none;
         padding: var(--tour-variant-container-padding);
+      }
+
+      body.tour-variant-customizer-open {
+        overflow: hidden;
       }
 
       .tour-variant-toolbar {
@@ -136,9 +138,14 @@
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        justify-self: center;
-        margin-top: 0.1rem;
+        justify-self: end;
+        margin-top: 0;
+        padding: 0.55rem 0.7rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
         font-weight: 600;
+        white-space: nowrap;
       }
 
       .tour-variant-grid {
@@ -402,10 +409,146 @@
         font-size: 0.86rem;
       }
 
+      .tour-variant-map-row {
+        display: grid;
+        grid-template-columns: max-content minmax(16rem, 34rem) max-content;
+        align-items: center;
+        justify-content: center;
+        gap: 0.85rem;
+      }
+
+      .tour-variant-map-preview-mount {
+        display: block;
+        width: 100px;
+        height: 200px;
+        min-height: 0;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: #f7f9f7;
+        box-shadow: 0 8px 18px var(--shadow-card-04);
+        cursor: pointer;
+      }
+
+      .tour-variant-map-preview-mount:hover,
+      .tour-variant-map-preview-mount:focus-within {
+        border-color: var(--accent);
+        outline: 2px solid color-mix(in srgb, var(--accent) 40%, transparent);
+        outline-offset: 2px;
+      }
+
+      .tour-variant-map-preview-mount .tour-customize-map__stage {
+        cursor: pointer;
+      }
+
+      .tour-variant-day-summary {
+        width: min(34rem, 46vw);
+        max-height: 200px;
+        overflow: auto;
+        padding: 0.2rem 0.15rem;
+      }
+
+      .tour-variant-day-summary__list {
+        display: grid;
+        gap: 0.45rem;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .tour-variant-day-summary__item {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        gap: 0.2rem 0.55rem;
+        align-items: start;
+        padding: 0.42rem 0.55rem;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .tour-variant-day-summary__number {
+        grid-row: 1 / 3;
+        color: var(--accent);
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .tour-variant-day-summary__title {
+        min-width: 0;
+        color: var(--text);
+        font-weight: 700;
+        line-height: 1.2;
+      }
+
+      .tour-variant-day-summary__source {
+        min-width: 0;
+        color: var(--muted);
+        font-size: 0.84rem;
+        line-height: 1.25;
+      }
+
+      .tour-variant-day-summary__source a {
+        color: var(--accent);
+        font-weight: 700;
+        text-decoration: none;
+      }
+
+      .tour-variant-day-summary__source a:hover,
+      .tour-variant-day-summary__source a:focus-visible {
+        text-decoration: underline;
+      }
+
+      .tour-variant-map-preview-mount .tour-customize-embedded {
+        height: 100%;
+        border: 0;
+        border-radius: 0;
+      }
+
+      .tour-variant-map-preview-mount .tour-customize-embedded .tour-customize__workspace {
+        display: block;
+        height: 100%;
+        max-height: none;
+      }
+
+      .tour-variant-map-preview-mount .tour-customize-map {
+        height: 100%;
+        max-height: none;
+      }
+
+      .tour-variant-map-preview-mount .tour-customize-map__controls,
+      .tour-variant-map-preview-mount .tour-customize-options,
+      .tour-variant-map-preview-mount .tour-customize-timeline {
+        display: none;
+      }
+
+      .tour-variant-customizer-overlay[hidden] {
+        display: none !important;
+      }
+
+      .tour-variant-customizer-overlay {
+        position: fixed;
+        top: var(--tour-variant-backend-menu-height);
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 45;
+        background: #f7f9f7;
+      }
+
+      .tour-variant-customizer-close {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        z-index: 70;
+        box-shadow: 0 8px 18px var(--shadow-card-08);
+      }
+
       .tour-variant-customizer-mount {
         position: relative;
         width: 100%;
-        height: var(--tour-variant-customizer-height);
+        height: 100%;
         min-height: 0;
         margin: 0;
         overflow: hidden;
@@ -478,6 +621,19 @@
       }
 
       @media (max-width: 760px) {
+        .tour-variant-map-row {
+          grid-template-columns: max-content;
+        }
+
+        .tour-variant-published-toggle {
+          justify-self: start;
+          white-space: normal;
+        }
+
+        .tour-variant-day-summary {
+          width: min(100%, 22rem);
+        }
+
         .tour-variant-customizer-mount .tour-customize-embedded .tour-customize__workspace {
           grid-template-columns: minmax(0, 1fr);
           grid-template-rows: minmax(7rem, 0.4fr) minmax(0, 1fr) auto;
@@ -526,10 +682,6 @@
                 <h1 class="visually-hidden" id="tourVariantHeading" data-i18n-id="backend.tour_variant.heading">Tour Variant</h1>
                 <label class="visually-hidden" for="tourVariantTitle" data-i18n-id="backend.tour_variant.title_label">Tour Variant title</label>
                 <input class="tour-variant-title-input" id="tourVariantTitle" type="text" placeholder="Tour Variant" data-i18n-placeholder-id="backend.tour_variant.heading" />
-                <label class="check-row tour-variant-published-toggle">
-                  <input id="tourVariantPublished" type="checkbox" />
-                  <span data-i18n-id="backend.tour_variant.published_on_webpage">Published on webpage</span>
-                </label>
               </div>
               <div class="tour-variant-toolbar__actions">
                 <button class="btn btn-ghost" id="tourVariantReloadBtn" type="button" data-i18n-id="backend.tour_variant.reload">Reload</button>
@@ -542,7 +694,27 @@
               <div id="tourVariantIssues" class="tour-variant-issues" role="status" aria-live="polite"></div>
             </div>
 
-            <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>
+            <div class="tour-variant-map-row">
+              <div id="tourVariantMapPreview" class="tour-variant-map-preview-mount"></div>
+              <div id="tourVariantDaySummary" class="tour-variant-day-summary" aria-label="Tour Variant days" data-i18n-aria-label-id="backend.tour_variant.day_summary"></div>
+              <label class="check-row tour-variant-published-toggle">
+                <input id="tourVariantPublished" type="checkbox" />
+                <span data-i18n-id="backend.tour_variant.published_on_webpage">Publish on web page</span>
+              </label>
+            </div>
+
+            <div
+              id="tourVariantCustomizerOverlay"
+              class="tour-variant-customizer-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Route customizer"
+              data-i18n-aria-label-id="backend.tour_variant.route_customizer"
+              hidden
+            >
+              <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>
+              <button class="btn btn-ghost tour-variant-customizer-close" id="tourVariantCustomizerClose" type="button" data-i18n-id="common.close">Close</button>
+            </div>
 
             <div class="tour-variant-grid">
               <section class="tour-variant-panel">
