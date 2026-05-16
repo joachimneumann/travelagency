@@ -14,7 +14,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-14T09:47:49.907Z",
-  "updated_at": "2026-05-14T05:17:31.373Z",
+  "updated_at": "2026-05-16T02:42:16.063Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -42,9 +42,13 @@
         "time_point": null,
         "kind": "transport",
         "title": "Hanoi arrival and Old Quarter",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hà Nội đến và khu phố cổ"
+        },
         "details": "Begin in the capital with airport pickup and a first look at Hanoi's Old Quarter, cathedral area and Opera House surroundings.",
-        "details_i18n": {},
+        "details_i18n": {
+          "vi": "Bắt đầu tại thủ đô với dịch vụ đón tại sân bay và cái nhìn đầu tiên về Khu Phố Cổ, khu vực nhà thờ và khu vực xung quanh Nhà Hát Lớn của Hà Nội."
+        },
         "image_subtitle": null,
         "image_subtitle_i18n": {},
         "start_time": null,
@@ -68,9 +72,13 @@
         "time_point": null,
         "kind": "transport",
         "title": "Airport Drop Off",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Trả khách tại sân bay"
+        },
         "details": "We will drive you to the hanoi Airport",
-        "details_i18n": {},
+        "details_i18n": {
+          "vi": "Chúng tôi sẽ đưa bạn đến sân bay Hà Nội"
+        },
         "image_subtitle": null,
         "image_subtitle_i18n": {},
         "start_time": null,
@@ -92,7 +100,9 @@
         "id": "travel_plan_day_edb37b47-cb51-46ec-9fb7-756c2e257f0a",
         "day_number": 1,
         "title": "Hanoi Old Quarter",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Phố cổ Hà Nội"
+        },
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -107,9 +117,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hanoi Old Quarter",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Phố cổ Hà Nội"
+            },
             "details": "Explore the 36 Streets, where old craft traditions, shopfronts and local life keep Hanoi's trading history alive.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá 36 Phố, nơi truyền thống thủ công lâu đời, mặt tiền cửa hàng và đời sống địa phương lưu giữ lịch sử thương mại của Hà Nội."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -140,9 +154,13 @@
             "time_point": null,
             "kind": "other",
             "title": "St. Joseph's Cathedral",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Nhà thờ Thánh Joseph"
+            },
             "details": "Visit St. Joseph's Cathedral, a French-era landmark set among cafes and narrow lanes near Hoan Kiem.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ghé thăm Nhà thờ Thánh Joseph, một địa danh thời Pháp nằm giữa các quán cà phê và những con đường hẹp gần Hoàn Kiếm."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -173,9 +191,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hanoi Opera House",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Nhà Hát Lớn Hà Nội"
+            },
             "details": "See the Hanoi Opera House, a grand colonial landmark at the edge of the French Quarter.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ngắm nhìn Nhà Hát Lớn Hà Nội, một địa danh thuộc địa lớn ở rìa Khu Phố Pháp."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -200,13 +222,17 @@
           }
         ],
         "notes": "We visit Hanoi's Old Quarter, cathedral area and Opera House surroundings.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Chúng tôi tham quan khu phố cổ Hà Nội, khu vực nhà thờ và khu vực xung quanh Nhà Hát Lớn."
+        }
       },
       {
         "id": "travel_plan_day_4f2d0ce8-ffda-4f9e-9fbf-534c234d6f5d",
         "day_number": 2,
         "title": "Hanoi to Cat Cat Village",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Hà Nội tới bản Cát Cát"
+        },
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -221,9 +247,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Sapa town",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Thị trấn Sa Pa"
+            },
             "details": "Arrive in Sapa, a highland town known for mist, terraces and views toward the Hoang Lien Son range.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đến Sapa, một thị trấn vùng cao nổi tiếng với sương mù, ruộng bậc thang và tầm nhìn hướng ra dãy Hoàng Liên Sơn."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -254,9 +284,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Cat Cat Village",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bản Cát Cát"
+            },
             "details": "Visit Cat Cat Village, where H'Mong culture, wooden houses, terraced fields and a small waterfall shape the valley walk.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan Làng Cát Cát, nơi có văn hóa H'Mông, những ngôi nhà gỗ, ruộng bậc thang và thác nước nhỏ tạo hình con đường đi bộ trong thung lũng."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -281,19 +315,56 @@
           }
         ],
         "notes": "Leave Hanoi for Sapa's cooler mountain air, then continue into Cat Cat Village for terraced scenery and H'Mong cultural atmosphere.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Rời Hà Nội để tận hưởng không khí miền núi mát mẻ của Sapa, sau đó tiếp tục đến Bản Cát Cát để ngắm cảnh ruộng bậc thang và không khí văn hóa H'Mông."
+        }
       },
       {
         "id": "travel_plan_day_2392b5de-e895-4d19-995b-9da35e9f4812",
         "day_number": 3,
         "title": "Fansipan and return Hanoi",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Fanxipan và trở về Hà Nội"
+        },
         "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [
           "art_architecture"
         ],
         "services": [
+          {
+            "id": "travel_plan_service_66c7930c-ee0f-4bca-b603-93eda8e75891",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Fansipan",
+            "title_i18n": {},
+            "details": null,
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_4dc8933b-1f83-40ff-a393-b6d6acaf9f8f",
+              "storage_path": "/public/v1/tour-images/tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136/travel-plan-services/day-03-travel-plan-service-66c7930c-ee0f-4bca-b603-93eda8e75891.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-16T02:41:58.768Z"
+            }
+          },
           {
             "id": "travel_plan_service_10353447-e3e4-450e-b0b2-9424e16b56d2",
             "timing_kind": "label",
@@ -302,9 +373,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Fansipan cable car",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "cáp treo Phanxipan"
+            },
             "details": "Ride toward Fansipan peak for high mountain views over Sapa, Muong Hoa Valley and the Hoang Lien Son range.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi xe về phía đỉnh Phanxipan để ngắm nhìn những ngọn núi cao trên Sapa, Thung lũng Mường Hoa và dãy Hoàng Liên Sơn."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -329,9 +404,17 @@
           }
         ],
         "notes": "Reach toward the Roof of Indochina by cable car, with mountain views and cloud scenery before returning to Hanoi.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Lên nóc nhà Đông Dương bằng cáp treo, ngắm cảnh núi non và mây trời trước khi trở về Hà Nội."
+        }
       }
     ],
     "translation_meta": {}
+  },
+  "title_i18n": {
+    "vi": "Đỉnh cao Hà Nội đến Sapa"
+  },
+  "short_description_i18n": {
+    "vi": "Bắt đầu từ những con phố cổ của Hà Nội, sau đó đi vào sương mù của Sapa, cuộc sống làng quê của người H'Mông và đi cáp treo lên đỉnh Phan-xi-păng."
   }
 }

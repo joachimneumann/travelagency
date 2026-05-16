@@ -11,7 +11,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-02T13:58:46.560Z",
-  "updated_at": "2026-05-14T06:14:07.197Z",
+  "updated_at": "2026-05-16T02:10:01.321Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_e7e4b9a7-7097-4f05-86d6-e40e02a2fb93",
@@ -32,9 +32,13 @@
         "time_point": null,
         "kind": "transport",
         "title": "Danang airport welcome",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Đón sân bay Đà Nẵng"
+        },
         "details": "Begin with airport pickup in Da Nang and a comfortable start to your Central Vietnam itinerary.",
-        "details_i18n": {},
+        "details_i18n": {
+          "vi": "Bắt đầu với việc đón tại sân bay Đà Nẵng và khởi đầu thoải mái cho hành trình miền Trung Việt Nam của bạn."
+        },
         "image_subtitle": null,
         "image_subtitle_i18n": {},
         "start_time": null,
@@ -58,9 +62,13 @@
         "time_point": null,
         "kind": "transport",
         "title": "Airport farewell",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Chia tay sân bay"
+        },
         "details": "Continue to the airport for your onward flight after the final Da Nang sightseeing stops.",
-        "details_i18n": {},
+        "details_i18n": {
+          "vi": "Tiếp tục đến sân bay cho chuyến bay tiếp theo của bạn sau khi điểm dừng tham quan Đà Nẵng cuối cùng."
+        },
         "image_subtitle": null,
         "image_subtitle_i18n": {},
         "start_time": null,
@@ -82,7 +90,9 @@
         "id": "travel_plan_day_e20eb658-8438-48cd-9c02-88b5ec401139",
         "day_number": 1,
         "title": "Marble Mountains and Hoi An",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Ngũ Hành Sơn và Hội An"
+        },
         "primary_location_id": "place_5c7c616b-f7c7-4650-a206-bfcf204d078e",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -97,9 +107,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Marble Mountains",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Ngũ Hành Sơn"
+            },
             "details": "Explore the five limestone hills of Ngu Hanh Son, known for cave temples, viewpoints and stone-carving heritage.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá năm ngọn đồi đá vôi của Ngũ Hành Sơn, nổi tiếng với những ngôi đền hang động, điểm ngắm cảnh và di sản chạm khắc đá."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -130,9 +144,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Hoi An Ancient Town",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Phố cổ Hội An"
+            },
             "details": "Discover Hoi An's preserved trading houses, yellow walls and lantern streets, a UNESCO old town with a gentle riverside mood.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Khám phá những ngôi nhà buôn bán được bảo tồn, những bức tường vàng và những con phố đèn lồng của Hội An, một khu phố cổ được UNESCO công nhận với không khí ven sông hiền hòa."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -157,13 +175,17 @@
           }
         ],
         "notes": "Start from Da Nang with a smooth arrival, then move from sacred marble caves to the soft evening atmosphere of Hoi An Ancient Town.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Bắt đầu từ Đà Nẵng một cách suôn sẻ, sau đó di chuyển từ những hang động cẩm thạch linh thiêng đến không gian buổi tối nhẹ nhàng của Phố cổ Hội An."
+        }
       },
       {
         "id": "travel_plan_day_c1349bca-3f7b-41ca-86ad-de352cba33c1",
         "day_number": 2,
         "title": "Ba Na Hills",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Bà Nà Hills"
+        },
         "primary_location_id": "place_ba_na_hills",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -178,9 +200,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Ba Na Hills",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bà Nà Hills"
+            },
             "details": "Ride up Mount Chua to Ba Na Hills for the Golden Bridge, mountain views and the European-style French Village above Da Nang.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Đi lên Núi Chúa đến Bà Nà Hills để ngắm Cầu Vàng, ngắm cảnh núi non và Làng Pháp theo phong cách Châu Âu phía trên Đà Nẵng."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -202,16 +228,55 @@
               "focal_point": null,
               "created_at": "2026-05-12T12:04:33.336Z"
             }
+          },
+          {
+            "id": "travel_plan_service_3ee99c65-176a-4004-88b6-eb9c8f3cc8e6",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_label_i18n": {},
+            "time_point": null,
+            "kind": "other",
+            "title": "Ba Na Hills",
+            "title_i18n": {
+              "vi": "Bà Nà Hills"
+            },
+            "details": "Ba Na Hills cable car in Da Nang holds 4 world records, offering a stunning ride through the clouds.",
+            "details_i18n": {},
+            "image_subtitle": null,
+            "image_subtitle_i18n": {},
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_61b6fdfc-0959-4b07-8209-c7fba0fa183c",
+              "storage_path": "/public/v1/tour-images/tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb/travel-plan-services/day-02-ba-na-hills-2.webp",
+              "caption": null,
+              "caption_i18n": {},
+              "alt_text": null,
+              "alt_text_i18n": {},
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-16T02:03:09.590Z"
+            }
           }
         ],
         "notes": "Spend a full day in Ba Na Hills, where cool mountain air, cable cars, the Golden Bridge and French-style streets contrast with the coast.",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Dành trọn một ngày ở Bà Nà Hills, nơi không khí miền núi mát mẻ, cáp treo, Cầu Vàng và những con đường kiểu Pháp tương phản với bờ biển."
+        }
       },
       {
         "id": "travel_plan_day_692b96ba-7a8a-416b-a35e-b8f8eb11d082",
         "day_number": 3,
         "title": "Son Tra",
-        "title_i18n": {},
+        "title_i18n": {
+          "vi": "Sơn Trà"
+        },
         "primary_location_id": "place_a27e01f9-2b41-4aa3-a1c8-b836c2237f27",
         "secondary_location_id": null,
         "experience_highlight_ids": [
@@ -226,9 +291,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Linh Ung Pagoda",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Chùa Linh Ứng"
+            },
             "details": "Visit Linh Ung Bai But Pagoda, where the Lady Buddha looks over Da Nang's bay from the slopes of Son Tra.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Tham quan chùa Linh Ứng Bãi Bụt, nơi tượng Phật Bà nhìn ra vịnh Đà Nẵng từ sườn núi Sơn Trà."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -259,9 +328,13 @@
             "time_point": null,
             "kind": "other",
             "title": "Son Tra Peninsula",
-            "title_i18n": {},
+            "title_i18n": {
+              "vi": "Bán đảo Sơn Trà"
+            },
             "details": "Take in Son Tra's forested coastline and city views, a scenic impression of Da Nang.",
-            "details_i18n": {},
+            "details_i18n": {
+              "vi": "Ngắm nhìn bờ biển có rừng và quang cảnh thành phố của Sơn Trà, một khung cảnh tuyệt đẹp của Đà Nẵng."
+            },
             "image_subtitle": null,
             "image_subtitle_i18n": {},
             "start_time": null,
@@ -286,10 +359,18 @@
           }
         ],
         "notes": "We will explore Da Nang's coastal landmarks on Son Tra Peninsula",
-        "notes_i18n": {}
+        "notes_i18n": {
+          "vi": "Chúng ta sẽ khám phá các địa danh ven biển Đà Nẵng trên bán đảo Sơn Trà"
+        }
       }
     ],
     "translation_meta": {}
   },
-  "published_on_webpage": true
+  "published_on_webpage": true,
+  "title_i18n": {
+    "vi": "Đà Nẵng trong ba ngày"
+  },
+  "short_description_i18n": {
+    "vi": "Một lối thoát nhỏ gọn miền Trung Việt Nam nối Ngũ Hành Sơn, Hội An, Bà Nà Hills và tầm nhìn ra biển Sơn Trà từ căn cứ Đà Nẵng."
+  }
 }
