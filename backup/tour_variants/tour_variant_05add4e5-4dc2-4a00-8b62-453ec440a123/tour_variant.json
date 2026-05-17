@@ -1,0 +1,94 @@
+{
+  "id": "tour_variant_05add4e5-4dc2-4a00-8b62-453ec440a123",
+  "title": "Our Journey from Hanoi to Sapa",
+  "short_description": "Our journey takes us from vibrant Hanoi to the misty mountains of Sapa, with a visit to Fansipan, the roof of Indochina.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 40,
+  "published_on_webpage": true,
+  "base_marketing_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "none",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": false,
+      "title": "HaNoi Airport",
+      "title_i18n": {},
+      "details": "We’ll welcome you on arrival at the international terminal of  HaNoi Airport",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "none",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": false,
+      "title": "HaNoi Airport",
+      "title_i18n": {},
+      "details": "We’ll arrange your transfer to HaNoi Airport for your departure.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652:travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e::timeline-mp94y5v4-1",
+      "day_number": 1,
+      "source_tour_id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
+      "source_day_id": "travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 2,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_4f2d0ce8-ffda-4f9e-9fbf-534c234d6f5d"
+    },
+    {
+      "id": "tour_eeac7fbd-0770-4275-9809-97619ac66084:travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d::timeline-mp950x9o-4",
+      "day_number": 3,
+      "source_tour_id": "tour_eeac7fbd-0770-4275-9809-97619ac66084",
+      "source_day_id": "travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d"
+    },
+    {
+      "id": "tour_eeac7fbd-0770-4275-9809-97619ac66084:travel_plan_day_3acebe40-fbfd-491e-a297-eeffe08087a4::timeline-mp9505r4-3",
+      "day_number": 4,
+      "source_tour_id": "tour_eeac7fbd-0770-4275-9809-97619ac66084",
+      "source_day_id": "travel_plan_day_3acebe40-fbfd-491e-a297-eeffe08087a4"
+    }
+  ],
+  "created_at": "2026-05-17T02:06:00.978Z",
+  "updated_at": "2026-05-17T02:19:19.202Z"
+}

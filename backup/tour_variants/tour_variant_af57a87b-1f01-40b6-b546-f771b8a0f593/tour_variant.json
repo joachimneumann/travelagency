@@ -1,0 +1,118 @@
+{
+  "id": "tour_variant_af57a87b-1f01-40b6-b546-f771b8a0f593",
+  "title": "8 Days from Hanoi to Sapa & Phu Quoc",
+  "short_description": "Our journey takes us from vibrant Hanoi to the misty mountains of Sapa, then south to the beaches of Phu Quoc",
+  "styles": [
+    "beach",
+    "family",
+    "gastronomic-experiences",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 80,
+  "published_on_webpage": true,
+  "base_marketing_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "first_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": true,
+      "title": "HaNoi Airport",
+      "title_i18n": {},
+      "details": "We’ll meet you as you arrive at HaNoi Airport’s international terminal.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "last_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": true,
+      "title": "PhuQuoc Airport",
+      "title_i18n": {},
+      "details": "Our guide will see you off at PhuQuoc Airport’s international departure terminal.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_variant_day_1",
+      "day_number": 1,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_edb37b47-cb51-46ec-9fb7-756c2e257f0a"
+    },
+    {
+      "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652:travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e::timeline-mp9783ym-1",
+      "day_number": 2,
+      "source_tour_id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
+      "source_day_id": "travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 3,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_4f2d0ce8-ffda-4f9e-9fbf-534c234d6f5d"
+    },
+    {
+      "id": "tour_eeac7fbd-0770-4275-9809-97619ac66084:travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d::timeline-mp978zu2-2",
+      "day_number": 4,
+      "source_tour_id": "tour_eeac7fbd-0770-4275-9809-97619ac66084",
+      "source_day_id": "travel_plan_day_f87d54f7-c56b-472a-8847-36b0833b398d"
+    },
+    {
+      "id": "tour_variant_day_3",
+      "day_number": 5,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_2392b5de-e895-4d19-995b-9da35e9f4812"
+    },
+    {
+      "id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf:travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92::timeline-mp9799qq-3",
+      "day_number": 6,
+      "source_tour_id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf",
+      "source_day_id": "travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92"
+    },
+    {
+      "id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf:travel_plan_day_0487563f-2b92-40c9-809f-1abf24d2efa9::timeline-mp979dhz-4",
+      "day_number": 7,
+      "source_tour_id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf",
+      "source_day_id": "travel_plan_day_0487563f-2b92-40c9-809f-1abf24d2efa9"
+    },
+    {
+      "id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf:travel_plan_day_18bacfad-0f7f-49d8-8295-8af767ec3a40::timeline-mp979iqp-5",
+      "day_number": 8,
+      "source_tour_id": "tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf",
+      "source_day_id": "travel_plan_day_18bacfad-0f7f-49d8-8295-8af767ec3a40"
+    }
+  ],
+  "created_at": "2026-05-17T03:10:56.944Z",
+  "updated_at": "2026-05-17T03:15:01.909Z"
+}

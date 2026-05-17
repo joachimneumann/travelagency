@@ -1,0 +1,101 @@
+{
+  "id": "tour_variant_1d8576d6-47cd-42bf-a556-d631223384d6",
+  "title": "A Journey from Hoi An to Hue",
+  "short_description": "Our journey begins in charming Hoi An, continues along the coast of Da Nang and Son Tra, and ends in historic Hue, Vietnam’s former imperial capital.",
+  "styles": [
+    "beach",
+    "budget",
+    "culture",
+    "gastronomic-experiences",
+    "luxury"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 50,
+  "published_on_webpage": true,
+  "base_marketing_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "first_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": true,
+      "title": "Danang Airport",
+      "title_i18n": {},
+      "details": "We will pick you up at the airport and drive you to your Hotel in Hoi An",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "last_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": true,
+      "title": "Danang Airport",
+      "title_i18n": {},
+      "details": "We will drive you from your hotel in Hue directly to the International terminal of the Danang airport",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_variant_day_1",
+      "day_number": 1,
+      "source_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+      "source_day_id": "travel_plan_day_e20eb658-8438-48cd-9c02-88b5ec401139"
+    },
+    {
+      "id": "tour_4b8aff72-92fc-4763-8224-804249583e99:travel_plan_day_cbc2f236-ca49-4302-a273-0c8ea9cc9a4a::timeline-mp949f7p-2",
+      "day_number": 2,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_cbc2f236-ca49-4302-a273-0c8ea9cc9a4a"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 3,
+      "source_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+      "source_day_id": "travel_plan_day_c1349bca-3f7b-41ca-86ad-de352cba33c1"
+    },
+    {
+      "id": "tour_variant_day_3",
+      "day_number": 4,
+      "source_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+      "source_day_id": "travel_plan_day_692b96ba-7a8a-416b-a35e-b8f8eb11d082"
+    },
+    {
+      "id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8:travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531::timeline-mp947ria-1",
+      "day_number": 5,
+      "source_tour_id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8",
+      "source_day_id": "travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531"
+    }
+  ],
+  "created_at": "2026-05-17T01:46:23.893Z",
+  "updated_at": "2026-05-17T02:20:22.575Z"
+}

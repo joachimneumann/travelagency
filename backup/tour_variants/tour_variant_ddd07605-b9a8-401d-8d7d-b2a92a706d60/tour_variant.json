@@ -1,0 +1,90 @@
+{
+  "id": "tour_variant_ddd07605-b9a8-401d-8d7d-b2a92a706d60",
+  "title": "Hanoi to Sapa heights",
+  "short_description": "Start in Hanoi's old streets, then head into Sapa's mist, H'Mong village life and the cable-car climb toward Fansipan.",
+  "styles": [
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 100,
+  "published_on_webpage": false,
+  "base_marketing_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "none",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": false,
+      "title": "",
+      "title_i18n": {},
+      "details": null,
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "none",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": false,
+      "title": "",
+      "title_i18n": {},
+      "details": null,
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_variant_day_1",
+      "day_number": 1,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_edb37b47-cb51-46ec-9fb7-756c2e257f0a"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 2,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_4f2d0ce8-ffda-4f9e-9fbf-534c234d6f5d"
+    },
+    {
+      "id": "tour_variant_day_3",
+      "day_number": 3,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_2392b5de-e895-4d19-995b-9da35e9f4812"
+    }
+  ],
+  "created_at": "2026-05-17T03:05:52.863Z",
+  "updated_at": "2026-05-17T03:05:52.863Z"
+}

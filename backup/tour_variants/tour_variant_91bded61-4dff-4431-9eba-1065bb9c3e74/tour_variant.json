@@ -1,0 +1,129 @@
+{
+  "id": "tour_variant_91bded61-4dff-4431-9eba-1065bb9c3e74",
+  "title": "Northern Vietnam: Hanoi, Sapa, Ha Giang & Ha Long Bay",
+  "short_description": "Our journey explores Northern Vietnam, from vibrant Hanoi to the mountains of Sapa and Ha Giang, ending among the limestone islands of Ha Long Bay",
+  "styles": [
+    "beach",
+    "culture",
+    "gastronomic-experiences"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 100,
+  "published_on_webpage": true,
+  "base_marketing_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "first_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": true,
+      "title": "HaNoi Airport",
+      "title_i18n": {},
+      "details": "We will pick you up at HaNoi  Airport’s international terminal.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "none",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": false,
+      "title": "HaNoi Airport",
+      "title_i18n": {},
+      "details": "We will take you to HaNoi Airport’s international terminal for departure.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_variant_day_1",
+      "day_number": 1,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_edb37b47-cb51-46ec-9fb7-756c2e257f0a"
+    },
+    {
+      "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652:travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e::timeline-mp9727rq-1",
+      "day_number": 2,
+      "source_tour_id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
+      "source_day_id": "travel_plan_day_923dfd89-6533-43fa-ada7-38e6767a7c6e"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 3,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_4f2d0ce8-ffda-4f9e-9fbf-534c234d6f5d"
+    },
+    {
+      "id": "tour_variant_day_3",
+      "day_number": 4,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_2392b5de-e895-4d19-995b-9da35e9f4812"
+    },
+    {
+      "id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28:travel_plan_day_dfaf33b6-83a8-476b-8b55-549dc26a7710::timeline-mp972he4-2",
+      "day_number": 5,
+      "source_tour_id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28",
+      "source_day_id": "travel_plan_day_dfaf33b6-83a8-476b-8b55-549dc26a7710"
+    },
+    {
+      "id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28:travel_plan_day_46f846a5-9975-4c90-8d05-cdacd410ab87::timeline-mp972viq-4",
+      "day_number": 6,
+      "source_tour_id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28",
+      "source_day_id": "travel_plan_day_46f846a5-9975-4c90-8d05-cdacd410ab87"
+    },
+    {
+      "id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28:travel_plan_day_130b4863-9904-468f-a103-2265dc0a02d7::timeline-mp972wyy-5",
+      "day_number": 7,
+      "source_tour_id": "tour_932143b3-7e73-4139-84e6-b6283c8a1a28",
+      "source_day_id": "travel_plan_day_130b4863-9904-468f-a103-2265dc0a02d7"
+    },
+    {
+      "id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652:travel_plan_day_aba484c1-bf58-44ac-a62c-17d04eabba24::timeline-mp9737sa-6",
+      "day_number": 8,
+      "source_tour_id": "tour_51d3c652-0e8d-4463-ad04-852c64b3a652",
+      "source_day_id": "travel_plan_day_aba484c1-bf58-44ac-a62c-17d04eabba24"
+    },
+    {
+      "id": "tour_4b8aff72-92fc-4763-8224-804249583e99:travel_plan_day_d9ca29f5-4299-4926-87a9-e19c96b3810f::timeline-mp973bli-7",
+      "day_number": 9,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_d9ca29f5-4299-4926-87a9-e19c96b3810f"
+    },
+    {
+      "id": "tour_4b8aff72-92fc-4763-8224-804249583e99:travel_plan_day_c42433fd-7f7e-485f-8ee4-2eb5d9f1781b::timeline-mp973etl-8",
+      "day_number": 10,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_c42433fd-7f7e-485f-8ee4-2eb5d9f1781b"
+    }
+  ],
+  "created_at": "2026-05-17T03:05:49.289Z",
+  "updated_at": "2026-05-17T03:10:24.927Z"
+}

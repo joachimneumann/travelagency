@@ -1,0 +1,125 @@
+{
+  "id": "tour_variant_d5cb373c-027a-4776-98c7-006de23acfbe",
+  "title": "9 Days from Hanoi to Da Nang & Da Lat",
+  "short_description": "Our journey begins in Hanoi, continues to the coast of Da Nang, and ends in the cool mountain landscapes of Da Lat.",
+  "styles": [
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 90,
+  "published_on_webpage": true,
+  "base_marketing_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "first_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": true,
+      "title": "HaNoi Airport",
+      "title_i18n": {},
+      "details": "We’ll meet you as you arrive at Hanoi Airport’s international terminal.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "after_last_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": true,
+      "title": "CamRanh Airport",
+      "title_i18n": {},
+      "details": "We’ll arrange your transfer to Camranh Airport for your departure.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "after_last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_variant_day_1",
+      "day_number": 1,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_edb37b47-cb51-46ec-9fb7-756c2e257f0a"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 2,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_4f2d0ce8-ffda-4f9e-9fbf-534c234d6f5d"
+    },
+    {
+      "id": "tour_variant_day_3",
+      "day_number": 3,
+      "source_tour_id": "tour_75618ce5-f5e4-41e9-a2ad-a8e1d50cc136",
+      "source_day_id": "travel_plan_day_2392b5de-e895-4d19-995b-9da35e9f4812"
+    },
+    {
+      "id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8:travel_plan_day_6dbca279-5dcc-40e9-9c44-a631225970b7::timeline-mp963cvx-2",
+      "day_number": 4,
+      "source_tour_id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8",
+      "source_day_id": "travel_plan_day_6dbca279-5dcc-40e9-9c44-a631225970b7"
+    },
+    {
+      "id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8:travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531::timeline-mp967ynf-8",
+      "day_number": 5,
+      "source_tour_id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8",
+      "source_day_id": "travel_plan_day_35ee634e-27d4-4fa1-8142-33b2c20f5531"
+    },
+    {
+      "id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8:travel_plan_day_4d9d797e-9a7d-445f-957c-df9c6abfb4ed::timeline-mp965bz4-4",
+      "day_number": 6,
+      "source_tour_id": "tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8",
+      "source_day_id": "travel_plan_day_4d9d797e-9a7d-445f-957c-df9c6abfb4ed"
+    },
+    {
+      "id": "tour_4b8aff72-92fc-4763-8224-804249583e99:travel_plan_day_d33ca792-6ac8-4d49-9fb4-308e4f95df73::timeline-mp9660d4-5",
+      "day_number": 7,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_d33ca792-6ac8-4d49-9fb4-308e4f95df73"
+    },
+    {
+      "id": "tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb:travel_plan_day_4203dcb7-1794-47c8-80a9-62e722fae097::timeline-mp966olx-6",
+      "day_number": 8,
+      "source_tour_id": "tour_40d7ef5b-eb63-4de2-8bb2-b1c51835a4fb",
+      "source_day_id": "travel_plan_day_4203dcb7-1794-47c8-80a9-62e722fae097"
+    },
+    {
+      "id": "tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd:travel_plan_day_c8e51a4d-b2a5-40b2-b4e8-ae0cd593fe73::timeline-mp967a7f-7",
+      "day_number": 9,
+      "source_tour_id": "tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd",
+      "source_day_id": "travel_plan_day_c8e51a4d-b2a5-40b2-b4e8-ae0cd593fe73"
+    }
+  ],
+  "created_at": "2026-05-17T02:32:24.755Z",
+  "updated_at": "2026-05-17T02:46:03.210Z"
+}

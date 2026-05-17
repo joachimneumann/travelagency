@@ -1,0 +1,134 @@
+{
+  "id": "tour_variant_b738b70d-848c-43be-a910-93abffdfa061",
+  "title": "One Trip, A Thousand Memories",
+  "short_description": "A focused Hanoi welcome through cathedral stone, Old Quarter trade streets, railway lanes and Hoan Kiem",
+  "styles": [
+    "grand-expeditions",
+    "beach",
+    "budget",
+    "culture",
+    "family",
+    "gastronomic-experiences",
+    "luxury",
+    "wellness"
+  ],
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 100,
+  "published_on_webpage": false,
+  "base_marketing_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "none",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": false,
+      "title": "",
+      "title_i18n": {},
+      "details": null,
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "none",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": false,
+      "title": "",
+      "title_i18n": {},
+      "details": null,
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_variant_day_1",
+      "day_number": 1,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_aa48919f-2139-4e51-a951-f7df3312a41c"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 2,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_d9ca29f5-4299-4926-87a9-e19c96b3810f"
+    },
+    {
+      "id": "tour_variant_day_3",
+      "day_number": 3,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_c42433fd-7f7e-485f-8ee4-2eb5d9f1781b"
+    },
+    {
+      "id": "tour_variant_day_4",
+      "day_number": 4,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_cbc2f236-ca49-4302-a273-0c8ea9cc9a4a"
+    },
+    {
+      "id": "tour_variant_day_5",
+      "day_number": 5,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_d33ca792-6ac8-4d49-9fb4-308e4f95df73"
+    },
+    {
+      "id": "tour_variant_day_6",
+      "day_number": 6,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_54a19c07-ea42-4129-a3ac-ee7a0c1dce17"
+    },
+    {
+      "id": "tour_variant_day_7",
+      "day_number": 7,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_9602cb0f-8b4c-44b4-8dbf-1b96291f7716"
+    },
+    {
+      "id": "tour_variant_day_8",
+      "day_number": 8,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_8376570b-676b-4858-ac53-12b1e457f91b"
+    },
+    {
+      "id": "tour_variant_day_9",
+      "day_number": 9,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_4c297ed0-ffd5-438f-8488-d0d207562ee6"
+    },
+    {
+      "id": "tour_variant_day_10",
+      "day_number": 10,
+      "source_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
+      "source_day_id": "travel_plan_day_5ed8ac84-df0e-4400-bac3-729a6d18ec04"
+    }
+  ],
+  "created_at": "2026-05-17T00:29:42.602Z",
+  "updated_at": "2026-05-17T00:29:42.602Z"
+}

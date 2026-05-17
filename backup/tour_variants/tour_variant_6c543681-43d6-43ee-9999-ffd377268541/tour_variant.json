@@ -1,0 +1,106 @@
+{
+  "id": "tour_variant_6c543681-43d6-43ee-9999-ffd377268541",
+  "title": "Da Nang, Mui Ne & Ho Chi Minh City",
+  "short_description": "Our journey takes us from Da Nang’s lively coast to the sandy landscapes of Mui Ne, ending in the vibrant streets and flavors of Ho Chi Minh City",
+  "styles": [
+    "beach",
+    "budget",
+    "culture",
+    "gastronomic-experiences"
+  ],
+  "seasonality_start_month": "",
+  "seasonality_end_month": "",
+  "priority": 60,
+  "published_on_webpage": true,
+  "base_marketing_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+  "boundary_logistics": {
+    "arrival": {
+      "id": "tour_variant_boundary_arrival",
+      "mode": "first_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "arrival",
+      "enabled": true,
+      "title": "Danang Airport",
+      "title_i18n": {},
+      "details": "Our guide will be waiting for you at DaNang Airport.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "first_day",
+        "position": "start"
+      }
+    },
+    "departure": {
+      "id": "tour_variant_boundary_departure",
+      "mode": "last_day",
+      "timing_kind": "label",
+      "time_label": null,
+      "time_label_i18n": {},
+      "time_point": null,
+      "start_time": null,
+      "end_time": null,
+      "kind": "transport",
+      "boundary_kind": "departure",
+      "enabled": true,
+      "title": "TanSonNhat Airport",
+      "title_i18n": {},
+      "details": "Our guide will accompany you to TanSonNhat Airport’s international terminal.",
+      "details_i18n": {},
+      "airport_code": null,
+      "from_label": null,
+      "to_label": null,
+      "presentation": {
+        "attach_to": "last_day",
+        "position": "end"
+      }
+    }
+  },
+  "days": [
+    {
+      "id": "tour_variant_day_1",
+      "day_number": 1,
+      "source_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+      "source_day_id": "travel_plan_day_e20eb658-8438-48cd-9c02-88b5ec401139"
+    },
+    {
+      "id": "tour_variant_day_2",
+      "day_number": 2,
+      "source_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+      "source_day_id": "travel_plan_day_c1349bca-3f7b-41ca-86ad-de352cba33c1"
+    },
+    {
+      "id": "tour_variant_day_3",
+      "day_number": 3,
+      "source_tour_id": "tour_17d0e941-b5f4-4685-8fd6-c71d3655aeeb",
+      "source_day_id": "travel_plan_day_692b96ba-7a8a-416b-a35e-b8f8eb11d082"
+    },
+    {
+      "id": "tour_67b333c8-0eb7-4cd2-a203-13a97c382b22:travel_plan_day_e21f4f02-b0a4-4d74-816d-b5e0b24db279::timeline-mp97ohdh-1",
+      "day_number": 4,
+      "source_tour_id": "tour_67b333c8-0eb7-4cd2-a203-13a97c382b22",
+      "source_day_id": "travel_plan_day_e21f4f02-b0a4-4d74-816d-b5e0b24db279"
+    },
+    {
+      "id": "tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd:travel_plan_day_f8558193-ef9a-4c59-a5c1-f10837dd2dad::timeline-mp97oq57-2",
+      "day_number": 5,
+      "source_tour_id": "tour_9760629b-9b7c-4330-a2e8-8a021b4d47cd",
+      "source_day_id": "travel_plan_day_f8558193-ef9a-4c59-a5c1-f10837dd2dad"
+    },
+    {
+      "id": "tour_67b333c8-0eb7-4cd2-a203-13a97c382b22:travel_plan_day_2109e908-bf4b-4ced-a677-93a4af8e1352::timeline-mp97p1vz-3",
+      "day_number": 6,
+      "source_tour_id": "tour_67b333c8-0eb7-4cd2-a203-13a97c382b22",
+      "source_day_id": "travel_plan_day_2109e908-bf4b-4ced-a677-93a4af8e1352"
+    }
+  ],
+  "created_at": "2026-05-17T03:23:41.248Z",
+  "updated_at": "2026-05-17T03:29:21.760Z"
+}
