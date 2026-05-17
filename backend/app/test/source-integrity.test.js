@@ -6767,21 +6767,21 @@ test("booking travel plan copies days and services from marketing tours only", a
 
 test("tour customizer floating drag elements stay inside the active customizer runtime root", async () => {
   const tourCustomizerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "tour_customize.js");
-  const tourCustomizerStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
+  const tourCardStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
   const bookingTravelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const tourVariantPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tour_variant.html");
   const bookingTravelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const tourVariantScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_variant.js");
   const [
     tourCustomizerSource,
-    tourCustomizerStyles,
+    tourCardStyles,
     bookingTravelPlanStyles,
     tourVariantPageSource,
     bookingTravelPlanEditorSource,
     tourVariantScriptSource
   ] = await Promise.all([
     readFile(tourCustomizerPath, "utf8"),
-    readFile(tourCustomizerStylesPath, "utf8"),
+    readFile(tourCardStylesPath, "utf8"),
     readFile(bookingTravelPlanStylesPath, "utf8"),
     readFile(tourVariantPagePath, "utf8"),
     readFile(bookingTravelPlanEditorPath, "utf8"),
@@ -6790,18 +6790,33 @@ test("tour customizer floating drag elements stay inside the active customizer r
 
   assert.match(
     tourCustomizerSource,
+    /const TOUR_CUSTOMIZER_COMPONENT_CSS = `[\s\S]*:host \{[\s\S]*all: initial;[\s\S]*\.tour-customize-root,[\s\S]*\.tour-customize-root :where\(button, input, select, textarea, article, section, div, span, p, h2, h3, h4, svg, img\) \{[\s\S]*box-sizing: border-box;/,
+    "The customizer should carry its own base CSS inside the Shadow DOM stylesheet"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /function createTourConfiguratorShadowMount\(container, \{ mode = "embedded" \} = \{\}\) \{[\s\S]*const shadow = host\.attachShadow\(\{ mode: "open" \}\);[\s\S]*style\.textContent = TOUR_CUSTOMIZER_COMPONENT_CSS;[\s\S]*shadow\.append\(style, root\);[\s\S]*container\.appendChild\(host\);/,
+    "Customizer workspaces should mount into an explicit ShadowRoot with an internal style tag"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /export function createTourConfiguratorComponent\(container, options = \{\}\) \{[\s\S]*return createTourCustomizerWorkspace\(\{[\s\S]*root: container[\s\S]*\}\);/,
+    "The customizer should expose a clear component mount API"
+  );
+  assert.match(
+    tourCustomizerSource,
     /function appendCustomizerFloatingElement\(element\) \{[\s\S]*const root = modal instanceof HTMLElement[\s\S]*root\.appendChild\(element\);[\s\S]*return true;/,
-    "Customizer drag ghosts and animation clones should be appended through the active customizer root, not directly to the host page"
+    "Customizer drag ghosts and animation clones should be appended through the active customizer root"
+  );
+  assert.doesNotMatch(
+    tourCustomizerSource,
+    /function appendCustomizerFloatingElement\(element\) \{[\s\S]*ownerDocument\?\.body|document\.body\.appendChild\((?:clone|ghost)\)/,
+    "Customizer drag ghosts and animation clones should not escape to the host document body"
   );
   assert.match(
     tourCustomizerSource,
     /function renderEmbeddedWorkspace\(\) \{[\s\S]*modal = embeddedWorkspaceRoot;[\s\S]*modal\.classList\.add\("tour-customize-runtime-root"\);[\s\S]*function destroy\(\) \{[\s\S]*root\.classList\.remove\("tour-customize-runtime-root"\);/,
-    "Embedded customizer mounts should mark the actual runtime root so floating cards inherit the shared component CSS scope"
-  );
-  assert.doesNotMatch(
-    tourCustomizerSource,
-    /document\.body\.appendChild\((?:clone|ghost)\)/,
-    "Customizer drag ghosts and animation clones should not escape to document.body"
+    "Embedded customizer mounts should mark and clean up the active runtime root so floating cards stay in the component CSS scope"
   );
   assert.match(
     tourCustomizerSource,
@@ -6829,19 +6844,19 @@ test("tour customizer floating drag elements stay inside the active customizer r
     "The active drag ghost should be made opaque before it is inserted into the customizer layer"
   );
   assert.match(
-    tourCustomizerStyles,
-    /\.tour-customize-drag-ghost \{[\s\S]*opacity: 1;[\s\S]*background: #fff;[\s\S]*\.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*background: #fff !important;[\s\S]*opacity: 1 !important;/,
-    "Shared customizer CSS should keep floating drag cards visually opaque across every host page"
+    tourCustomizerSource,
+    /const TOUR_CUSTOMIZER_COMPONENT_CSS = `[\s\S]*\.tour-customize-root \.tour-customize-drag-ghost \{[\s\S]*opacity: 1;[\s\S]*background: #fff;[\s\S]*\.tour-customize-root \.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*background: #fff !important;[\s\S]*opacity: 1 !important;/,
+    "Component CSS should keep floating drag cards visually opaque inside the Shadow DOM"
   );
   assert.match(
-    tourCustomizerStyles,
-    /\.tour-customize \{[\s\S]*--tour-customize-card-border-color: var\(--line-focus-strong, rgba\(104, 133, 145, 0\.95\)\);[\s\S]*\.tour-customize-runtime-root,[\s\S]*\.tour-customize-embedded \{[\s\S]*--tour-customize-card-border-color: var\(--line-focus-strong, rgba\(104, 133, 145, 0\.95\)\);[\s\S]*\.tour-customize-option \{[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);[\s\S]*\.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);/,
-    "Shared customizer CSS should define the card border on the customizer runtime scope and reuse it for normal and floating day cards"
+    tourCustomizerSource,
+    /const TOUR_CUSTOMIZER_COMPONENT_CSS = `[\s\S]*\.tour-customize-root\.tour-customize-runtime-root,[\s\S]*\.tour-customize-root \.tour-customize-embedded,[\s\S]*--tour-customize-card-border-color: var\(--line-focus-strong\);[\s\S]*\.tour-customize-root \.tour-customize-option \{[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);[\s\S]*\.tour-customize-root \.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);/,
+    "Component CSS should define the card border on the runtime scope and reuse it for normal and floating day cards"
   );
   assert.doesNotMatch(
-    tourCustomizerStyles,
-    /border: 2px solid var\(--line-focus-strong\)|border-color: var\(--line\);/,
-    "Customizer day-card borders should not depend directly on host page tokens or weak generic line colors"
+    tourCardStyles,
+    /\.tour-customize|tour-customize-drag-ghost/,
+    "Global tour card CSS should not contain customizer internals once the component owns its Shadow DOM styles"
   );
   assert.match(
     tourCustomizerSource,
@@ -6854,9 +6869,9 @@ test("tour customizer floating drag elements stay inside the active customizer r
     "Booking and Tour Variant pages should reuse the shared customizer modes for previews and full editors"
   );
   assert.match(
-    tourCustomizerStyles,
-    /\.tour-customize-embedded--full \{[\s\S]*height: 100%;[\s\S]*\.tour-customize-embedded--preview \{[\s\S]*\.tour-customize-embedded--preview \.tour-customize-map__controls,[\s\S]*\.tour-customize-embedded--preview \.tour-customize-options,[\s\S]*\.tour-customize-embedded--preview \.tour-customize-timeline \{[\s\S]*display: none;/,
-    "Preview/full customizer layout CSS should live in the shared customizer stylesheet"
+    tourCustomizerSource,
+    /const TOUR_CUSTOMIZER_COMPONENT_CSS = `[\s\S]*\.tour-customize-root \.tour-customize-embedded--full \{[\s\S]*height: 100%;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \{[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-map__controls,[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-options,[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-timeline \{[\s\S]*display: none;/,
+    "Preview/full customizer layout CSS should live in the component stylesheet"
   );
   assert.doesNotMatch(
     `${bookingTravelPlanStyles}\n${tourVariantPageSource}`,
@@ -6875,23 +6890,28 @@ test("booking customizer opens as a body-level layer above the dirty booking wor
 
   assert.match(
     travelPlanEditorSource,
-    /function removePortaledTravelPlanCustomizerElements\(\) \{[\s\S]*overlay\.parentElement === document\.body[\s\S]*element\.parentElement === document\.body/,
-    "Customizer cleanup should only remove overlay controls after they have been portaled to body, not the freshly rendered editor markup"
+    /function removePortaledTravelPlanCustomizerElements\(\) \{[\s\S]*overlay\.parentElement === document\.body[\s\S]*overlay\.remove\(\);/,
+    "Customizer cleanup should only remove the overlay after it has been portaled to body, not freshly rendered editor markup"
   );
   assert.match(
     travelPlanEditorSource,
-    /document\.body\.appendChild\(overlay\);[\s\S]*document\.body\.appendChild\(closeButton\);[\s\S]*document\.body\.classList\.add\("travel-plan-customizer-open"\)/,
-    "Opening the booking customizer should portal both the overlay and close button before activating the page-level layer"
+    /document\.body\.appendChild\(overlay\);[\s\S]*travelPlanCustomizerOverlayOpen = true;[\s\S]*overlay\.hidden = false;/,
+    "Opening the booking customizer should portal the overlay shell before activating the full-screen layer"
   );
   assert.match(
     travelPlanEditorSource,
-    /document\.addEventListener\("click", handleTravelPlanCustomizerDocumentClick\);[\s\S]*document\.addEventListener\("keydown", handleTravelPlanCustomizerDocumentKeydown\);/,
-    "The portaled close button should be handled by document-level events"
+    /overlay\.addEventListener\("click", handleTravelPlanCustomizerOverlayClick\);[\s\S]*overlay\.addEventListener\("keydown", handleTravelPlanCustomizerOverlayKeydown\);/,
+    "The portaled customizer should keep close and Escape handling scoped to the overlay element"
   );
   assert.match(
     travelPlanStyles,
-    /body\.travel-plan-customizer-open #main-content \{[\s\S]*visibility: hidden;[\s\S]*body\.travel-plan-customizer-open \.booking-dirty-bar-row,[\s\S]*\.booking-dirty-bar \{[\s\S]*visibility: hidden !important;/,
-    "Opening the customizer should hide booking content and the dirty bar underneath the body-level overlay"
+    /\.travel-plan-customizer-overlay \{[\s\S]*--travel-plan-customizer-layer: 10000;[\s\S]*position: fixed;[\s\S]*top: 0;[\s\S]*right: 0;[\s\S]*bottom: 0;[\s\S]*left: 0;[\s\S]*z-index: var\(--travel-plan-customizer-layer\);[\s\S]*background: #f7f9f7;/,
+    "Opening the customizer should cover the booking page with a body-level fixed overlay"
+  );
+  assert.doesNotMatch(
+    `${travelPlanEditorSource}\n${travelPlanStyles}`,
+    /travel-plan-customizer-open|document\.addEventListener\("click", handleTravelPlanCustomizerDocumentClick\)|document\.addEventListener\("keydown", handleTravelPlanCustomizerDocumentKeydown\)/,
+    "The booking customizer should not depend on global body classes or document-level close handlers"
   );
 });
 
