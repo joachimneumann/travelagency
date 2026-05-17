@@ -49,7 +49,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   });
   await writeFile(
     homepageHtmlPath,
-    '<!doctype html><html><head><title data-i18n-id="meta.home_title">Old title</title><meta name="description" content="Old description" data-i18n-content-id="meta.home_description"><meta property="og:title" content="Old title" data-i18n-content-id="meta.home_title"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","description":"Old schema","regionServed":["Vietnam","Thailand"]}</script></head><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script></body></html>\n'
+    '<!doctype html><html><head><title data-i18n-id="meta.home_title">Old title</title><meta name="description" content="Old description" data-i18n-content-id="meta.home_description"><meta property="og:title" content="Old title" data-i18n-content-id="meta.home_title"><script type="application/ld+json">{"@context":"https://schema.org","@type":"TravelAgency","description":"Old schema","regionServed":["Vietnam","Thailand"]}</script></head><body><h1 id="heroTitle" class="hero-title-only" data-i18n-id="hero.title">Old title</h1><script src="/frontend/data/generated/homepage/public-homepage-copy.global.js"></script><script defer src="/frontend/data/generated/homepage/public-homepage-main.bundle.js"></script></body></html>\n'
   );
 
   await writeJson(path.join(contentRoot, "country_reference_info.json"), {
@@ -461,6 +461,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.match(generatedHomepageHtml, /<title data-i18n-id="meta\.home_title">AsiaTravelPlan \| Private holidays in Vietnam<\/title>/);
   assert.match(generatedHomepageHtml, /content="Private holidays in Vietnam with clear pricing and local support\. Book a free discovery call\."/);
   assert.match(generatedHomepageHtml, />Private holidays in Vietnam<\/h1>/);
+  assert.match(
+    generatedHomepageHtml,
+    /<script defer src="\/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js\?v=[a-f0-9]{12}"><\/script>/,
+    "Generated homepage HTML should version the generated main bundle so it can be cached immutably"
+  );
   assert.match(generatedHomepageHtml, /"regionServed": \[\s*"Vietnam"\s*\]/);
   const generatedTravelAgencySchema = JSON.parse(generatedHomepageHtml.match(/<script type="application\/ld\+json">\s*([\s\S]*?)\s*<\/script>/)?.[1] || "{}");
   assert.equal(generatedTravelAgencySchema.telephone, "+84 354999192");

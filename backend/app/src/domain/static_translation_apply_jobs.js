@@ -355,7 +355,7 @@ function protectedTermsPhases({ protectTranslations } = {}) {
         `Updated ${summary?.translated_count || 0} protected-term translation item${summary?.translated_count === 1 ? "" : "s"}.`
       );
       if (Number(summary?.translated_count || 0) > 0) {
-        helpers.appendLog(job, "Use Publish Website to update runtime translations and static website content.");
+        helpers.appendLog(job, "Run the deployment script to update runtime translations and static website content.");
       }
     })
   ];

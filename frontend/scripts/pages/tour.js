@@ -1615,10 +1615,6 @@ function notifyBackendTranslationsStatus(detail = {}) {
   window.dispatchEvent(new CustomEvent("backend-translations-status-refresh", { detail }));
 }
 
-function notifyPublicSitePublishStatus(detail = {}) {
-  window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", { detail }));
-}
-
 function preferredTourHeaderLangs() {
   return [TOUR_SOURCE_LANG, "vi"];
 }
@@ -1730,7 +1726,6 @@ async function initTourPage() {
       state.is_create_mode = !state.id;
       if (result?.homepage_assets?.dirty === true) {
         state.publicHomepageAssetsDirty = true;
-        notifyPublicSitePublishStatus();
         window.setTimeout(() => {
           markTourSnapshotClean();
           updateTourDirtyState();
@@ -2245,7 +2240,6 @@ async function submitForm(event) {
     markTourSnapshotClean();
     updateTourDirtyState();
     notifyBackendTranslationsStatus();
-    notifyPublicSitePublishStatus({ dirty: true, source_dirty: true });
   } finally {
     setTourPageOverlay(false);
   }

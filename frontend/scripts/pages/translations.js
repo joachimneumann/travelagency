@@ -1,4 +1,4 @@
-import { createApiFetcher, escapeHtml, formatDateTime, logBrowserConsoleError, normalizeText, resolveApiUrl } from "../shared/api.js";
+import { createApiFetcher, escapeHtml, formatDateTime, logBrowserConsoleError, normalizeText } from "../shared/api.js";
 import {
   getBackendApiOrigin,
   initializeBackendPageChrome,
@@ -78,7 +78,6 @@ const state = {
   },
   translationWritesEnabled: true,
   translationStatus: null,
-  publicSiteStatus: null,
   customerTargetLang: "",
   isStatusRefreshing: false,
   isLoadingSections: false,
@@ -250,10 +249,6 @@ function numberCount(value) {
   return Math.max(0, Number(value) || 0);
 }
 
-function publicSitePublishReady() {
-  return Boolean(state.publicSiteStatus?.loaded && state.publicSiteStatus.dirty && !state.publicSiteStatus.blocked);
-}
-
 function pluralize(count, singular, plural = `${singular}s`) {
   return `${count} ${count === 1 ? singular : plural}`;
 }
@@ -313,29 +308,6 @@ function summarizeTranslationStatus(payload) {
   };
 }
 
-function summarizePublicSiteStatus(payload) {
-  if (!payload || typeof payload !== "object") return null;
-  return {
-    loaded: true,
-    dirty: Boolean(payload.dirty || payload.source_dirty),
-    blocked: Boolean(payload.blocked),
-    reason: normalizeText((Array.isArray(payload.block_reasons) ? payload.block_reasons[0]?.message : "") || "")
-  };
-}
-
-async function loadPublicSiteStatus() {
-  try {
-    const response = await fetch(resolveApiUrl(apiOrigin, "/api/v1/public-site/publish-status"), {
-      cache: "no-store",
-      credentials: "include"
-    });
-    if (!response.ok) return null;
-    return summarizePublicSiteStatus(await response.json().catch(() => null));
-  } catch {
-    return null;
-  }
-}
-
 function runtimeI18nBlocked(status = state.translationStatus) {
   return Boolean(status?.runtimeI18n?.blocked);
 }
@@ -378,13 +350,12 @@ function translationActionTitle(action, translationState, actionsBusy) {
   }
   if (action === "translate") {
     if (translationState.translateNeeded) return "Translate missing, stale, or protected-term strings across staff and customer content.";
-    if (translationState.publishReady) return "No strings need translation. Use Publish Website to update runtime translations and static website content.";
-    if (publicSitePublishReady()) return "No strings need translation. Use Publish Website to update runtime translations and static website content.";
+    if (translationState.publishReady) return "No strings need translation. Run the deployment script to update runtime translations and static website content.";
     if (runtimeI18nHardBlocked(translationState.status)) return "Runtime i18n generation is blocked. See the warning below.";
     return translationState.loaded ? "No strings need translation." : "Loading translation status.";
   }
   if (translationState.translateNeeded) return "Publishing is allowed and will use English fallback for untranslated strings.";
-  return translationState.publishReady ? "Use Publish Website to update runtime translations and static website content." : "No translated strings are ready for publishing.";
+  return translationState.publishReady ? "Run the deployment script to update runtime translations and static website content." : "No translated strings are ready for publishing.";
 }
 
 function configureTranslationActionButton(button, action, translationState, canRunTranslationAction, actionsBusy) {
@@ -416,13 +387,10 @@ function translationStatusMessage(status) {
     return `${base} Publishing is allowed and will use English fallback for ${displayCount === 1 ? "this string" : "these strings"}.`;
   }
   if (status.publishReadyCount > 0) {
-    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready. Use Publish Website to update runtime translations and static website content.`;
-  }
-  if (publicSitePublishReady()) {
-    return `${base} Website changes are ready. Use Publish Website to update runtime translations and static website content.`;
+    return `${base} ${pluralize(status.publishReadyCount, "translated string")} ready. Run the deployment script to update runtime translations and static website content.`;
   }
   if (runtimeI18nHardBlocked(status)) {
-    return `${base} Runtime i18n generation is blocked; Publish Website cannot finish yet.`;
+    return `${base} Runtime i18n generation is blocked; deployment cannot finish yet.`;
   }
   if (status.dirty) {
     return `${base} ${pluralize(status.dirtyCount, "translation item")} still need attention.`;
@@ -447,8 +415,7 @@ function notifyBackendTranslationsStatus(status = state.translationStatus) {
     ? {
         translationNeeded: numberCount(status.translationWorkCount) > 0,
         translation_work_count: numberCount(status.translationWorkCount),
-        refresh: false,
-        publicSiteRefresh: true
+        refresh: false
       }
     : {};
   window.dispatchEvent(new CustomEvent("backend-translations-status-refresh", { detail }));
@@ -458,11 +425,7 @@ async function loadTranslationStatus({ updateMessage = false } = {}) {
   state.isStatusRefreshing = true;
   updateActions();
   try {
-    const [payload, publicSiteStatus] = await Promise.all([
-      fetchApi("/api/v1/static-translations/status", { cache: "no-store" }),
-      loadPublicSiteStatus()
-    ]);
-    state.publicSiteStatus = publicSiteStatus;
+    const payload = await fetchApi("/api/v1/static-translations/status", { cache: "no-store" });
     if (!payload) {
       state.translationStatus = null;
       updateRuntimeWarning(null);
@@ -1583,23 +1546,13 @@ async function pollJob(jobId, overlayStartedAt) {
       refreshTranslationStatusText();
       return;
     }
-    if (latest.type === "publish") {
-      if (translationStatus.dirty) {
-        showError(`${translationStatusMessage(translationStatus)} The translation warning icon could not be cleared.`);
-        refreshTranslationStatusText();
-        return;
-      }
-      showError("");
-      refreshTranslationStatusText();
-      return;
-    }
     if (latest.type === "apply" && translationStatus.translationIssueCount > 0) {
-      showError(`${translationStatusMessage(translationStatus)} Publish Website can still run with English fallback.`);
+      showError(`${translationStatusMessage(translationStatus)} Deployment can still use English fallback.`);
       refreshTranslationStatusText();
       return;
     }
     if (latest.type === "apply" && translationStatus.unavailableCount > 0) {
-      showError(`${translationStatusMessage(translationStatus)} Publish Website remains blocked.`);
+      showError(`${translationStatusMessage(translationStatus)} Deployment remains blocked.`);
       refreshTranslationStatusText();
       return;
     }
@@ -1626,18 +1579,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
   }
   const translationState = currentTranslationActionState();
   const isTranslateJob = path.endsWith("/apply");
-  const isPublishJob = path.endsWith("/publish");
   if (isTranslateJob && !translationState.translateActionReady) {
-    refreshTranslationStatusText();
-    showError("");
-    return;
-  }
-  if (isPublishJob && translationState.translateNeeded) {
-    refreshTranslationStatusText();
-    showError("Translate missing or stale strings before publishing.");
-    return;
-  }
-  if (isPublishJob && !translationState.publishReady) {
     refreshTranslationStatusText();
     showError("");
     return;
@@ -1661,7 +1603,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
     state.isJobRunning = false;
     await hideOverlayAfterMinimum(overlayStartedAt);
     logTranslationJobConsoleError("Translation job could not be started.", {
-      type: isTranslateJob ? "apply" : (isPublishJob ? "publish" : "unknown"),
+      type: isTranslateJob ? "apply" : "unknown",
       status: "failed"
     }, {
       path,

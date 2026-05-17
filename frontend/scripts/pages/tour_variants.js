@@ -293,9 +293,6 @@ async function createTourVariant() {
     }
   });
   if (!payload?.tour_variant?.id) return;
-  window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
-    detail: { dirty: true }
-  }));
   window.location.href = buildTourVariantEditHref(payload.tour_variant.id);
 }
 
@@ -310,9 +307,6 @@ async function deleteTourVariant(id) {
     method: "DELETE"
   });
   if (!payload?.ok) return;
-  window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
-    detail: { dirty: true }
-  }));
   await loadTourVariants();
 }
 

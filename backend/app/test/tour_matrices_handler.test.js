@@ -45,7 +45,7 @@ test("tour matrix publish handler runs the staging matrix publish script from th
   assert.equal(response.calls[0].payload.ok, true);
   assert.equal(response.calls[0].payload.stdout, "published");
   assert.equal(execCalls[0][0], "bash");
-  assert.deepEqual(execCalls[0][1], ["/srv/asiatravelplan-staging/scripts/content/create_staging_tour_matrices.sh"]);
+  assert.deepEqual(execCalls[0][1], ["/srv/asiatravelplan-staging/scripts/content/publish_matrices/create_staging_tour_matrices.sh"]);
   assert.equal(execCalls[0][2].cwd, "/srv/asiatravelplan-staging");
   assert.equal(execCalls[0][2].env.TOUR_MATRIX_OUTPUT_DIR, "/srv/asiatravelplan-staging");
 });

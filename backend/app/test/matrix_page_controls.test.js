@@ -5,7 +5,7 @@ import {
   matrixPageControlScript,
   matrixPageControlStyles,
   renderMatrixHeaderActions
-} from "../../../scripts/content/matrix_page_controls.mjs";
+} from "../../../scripts/content/publish_matrices/matrix_page_controls.mjs";
 
 function snapshotGlobal(name) {
   return Object.prototype.hasOwnProperty.call(globalThis, name)

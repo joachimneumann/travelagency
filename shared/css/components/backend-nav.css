@@ -14,62 +14,10 @@
   align-self: center;
 }
 
-.backend-nav__publish-btn {
-  align-self: center;
-  min-height: 2.35rem;
-  min-width: 8.6rem;
-  padding: 0.48rem 0.78rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
-  font: inherit;
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.1;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease;
-}
-
-.backend-nav__publish-btn:hover,
-.backend-nav__publish-btn:focus-visible {
-  background: var(--accent-soft);
-  border-color: var(--line-accent);
-}
-
-.backend-nav__publish-btn:disabled {
-  cursor: default;
-  opacity: 0.72;
-}
-
-.backend-nav__publish-btn.is-dirty {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--surface);
-}
-
-.backend-nav__publish-btn.is-blocked {
-  border-color: var(--warning, #c77d00);
-  color: var(--warning-strong, #7a4a00);
-  background: var(--surface);
-}
-
-.backend-nav__publish-btn.is-error {
-  border-color: var(--danger, #b42318);
-  color: var(--danger, #b42318);
-}
-
-.backend-nav__publish-btn.is-hidden {
-  display: none;
-}
-
-body.backend-public-site-publish--busy,
 body.backend-page-loading--busy {
   cursor: wait;
 }
 
-.backend-public-site-publish-overlay,
 .backend-page-loading-overlay {
   position: fixed;
   inset: 0;
@@ -86,12 +34,10 @@ body.backend-page-loading--busy .booking-page-overlay.backend-page-loading-overl
   z-index: 350;
 }
 
-.backend-public-site-publish-overlay[hidden],
 .backend-page-loading-overlay[hidden] {
   display: none;
 }
 
-.backend-public-site-publish-overlay .booking-page-overlay__panel,
 .backend-page-loading-overlay .booking-page-overlay__panel {
   min-width: min(28rem, calc(100vw - 3rem));
   max-width: 32rem;
@@ -106,12 +52,6 @@ body.backend-page-loading--busy .booking-page-overlay.backend-page-loading-overl
   text-align: center;
 }
 
-.backend-public-site-publish-overlay .booking-page-overlay__panel {
-  width: min(46rem, calc(100vw - 3rem));
-  max-width: 46rem;
-}
-
-.backend-public-site-publish-overlay .booking-page-overlay__spinner,
 .backend-page-loading-overlay .booking-page-overlay__spinner {
   width: 2.2rem;
   height: 2.2rem;
@@ -121,36 +61,11 @@ body.backend-page-loading--busy .booking-page-overlay.backend-page-loading-overl
   animation: booking-inline-status-spin 0.8s linear infinite;
 }
 
-.backend-public-site-publish-overlay .booking-page-overlay__text,
 .backend-page-loading-overlay .booking-page-overlay__text {
   color: var(--text-strong);
   font-size: var(--font-size-body);
   font-weight: var(--font-weight-semibold);
   line-height: 1.5;
-}
-
-.backend-public-site-publish-progress {
-  color: var(--muted);
-  font-size: var(--font-size-body-sm);
-  font-weight: var(--font-weight-semibold);
-  line-height: 1.35;
-}
-
-.backend-public-site-publish-log {
-  width: 100%;
-  max-height: min(42vh, 22rem);
-  margin: 0;
-  padding: 0.8rem 0.9rem;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--surface-muted, #f7faf9);
-  color: var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  overflow: auto;
-  text-align: left;
-  white-space: pre-wrap;
 }
 
 .backend-nav__logout {

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 OUTPUT_DIR="${TOUR_MATRIX_OUTPUT_DIR:-$ROOT_DIR/matrix-pages}"
 
 ARGS=("$@")
@@ -12,7 +12,7 @@ for ((index = 0; index < ${#ARGS[@]}; index += 1)); do
   fi
 done
 
-TOUR_MATRIX_OUTPUT_DIR="$OUTPUT_DIR" "$SCRIPT_DIR/publish_tour_matrices.sh" "$@"
+TOUR_MATRIX_OUTPUT_DIR="$OUTPUT_DIR" "$SCRIPT_DIR/../publish_tour_matrices.sh" "$@"
 
 OUTPUT_DIR="$(cd "$ROOT_DIR" && cd "$OUTPUT_DIR" && pwd)"
 

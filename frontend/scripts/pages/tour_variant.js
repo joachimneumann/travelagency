@@ -1108,11 +1108,15 @@ function handleDraftChanged() {
   updateSaveButtonState();
 }
 
+function tourVariantSavingOverlayMessage() {
+  return backendT("tour.status.saving_overlay", "Saving changes. Please wait.");
+}
+
 async function createFromBase() {
   const baseMarketingTourId = normalizeText(els.baseTour?.value || state.variant?.base_marketing_tour_id);
   if (!baseMarketingTourId) {
     showError(tourVariantT("choose_base_marketing_tour", "Choose a base marketing tour."));
-    return;
+    return false;
   }
   const payload = await fetchApi(withBackendApiLang("/api/v1/tour-variants"), {
     method: "POST",
@@ -1120,11 +1124,9 @@ async function createFromBase() {
       base_marketing_tour_id: baseMarketingTourId
     }
   });
-  if (!payload?.tour_variant?.id) return;
-  window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
-    detail: { dirty: true }
-  }));
+  if (!payload?.tour_variant?.id) return false;
   window.location.href = buildTourVariantEditHref(payload.tour_variant.id);
+  return true;
 }
 
 async function saveTourVariant() {
@@ -1135,12 +1137,15 @@ async function saveTourVariant() {
   clearError();
   isSavingTourVariant = true;
   updateSaveButtonState();
+  setBackendPageLoadingOverlay(true, tourVariantSavingOverlayMessage());
   if (state.isCreateMode) {
+    let redirecting = false;
     try {
-      await createFromBase();
+      redirecting = await createFromBase();
     } finally {
       isSavingTourVariant = false;
       updateSaveButtonState();
+      if (!redirecting) setBackendPageLoadingOverlay(false);
     }
     return;
   }
@@ -1156,13 +1161,11 @@ async function saveTourVariant() {
     }
     state.variant = payload.tour_variant;
     renderForm();
-    window.dispatchEvent(new CustomEvent("backend-public-site-publish-refresh", {
-      detail: { dirty: true }
-    }));
     setStatus(tourVariantT("saved", "Saved."));
   } finally {
     isSavingTourVariant = false;
     updateSaveButtonState();
+    setBackendPageLoadingOverlay(false);
   }
 }
 

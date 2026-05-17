@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   copyCachedServiceImageDerivative,
   serviceImageDerivativeRelativePath
-} from "../lib/service_image_derivatives.mjs";
+} from "../../lib/service_image_derivatives.mjs";
 import {
   matrixMarketingTourHref,
   matrixPageControlScript,
@@ -15,7 +15,7 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..", "..");
+const repoRoot = path.resolve(__dirname, "..", "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultOutputPath = "/tmp/tour-photo-matrix/index.html";
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"]);
@@ -28,7 +28,7 @@ const missingPhotoWarningImage = `data:image/svg+xml,${encodeURIComponent(`<svg 
 </svg>`)}`;
 
 function printUsage() {
-  console.log(`Usage: scripts/content/create_tour_photo_matrix.mjs [options]
+  console.log(`Usage: scripts/content/publish_matrices/create_tour_photo_matrix.mjs [options]
 
 Creates a static HTML matrix of itinerary services found in content/tours/*/tour.json.
 Service images are copied into an img/ folder next to the HTML file and referenced with relative paths.

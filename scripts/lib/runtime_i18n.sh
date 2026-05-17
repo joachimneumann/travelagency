@@ -28,8 +28,8 @@ WARNING: RUNTIME TRANSLATIONS NEED ATTENTION ($environment)
 $warning_message
 
 Deployment continued with the existing generated runtime i18n files.
-Open the deployed backend translations page and run the translation
-action to publish/regenerate runtime translations for this environment.
+Run the translation action if source strings still need updates, then
+rerun the deployment script to regenerate runtime translations.
 
 Full validation/generation output: $command_log_path
 ======================================================================

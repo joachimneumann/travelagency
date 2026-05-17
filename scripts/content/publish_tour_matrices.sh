@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+MATRIX_SCRIPT_DIR="$SCRIPT_DIR/publish_matrices"
 
 OUTPUT_DIR="${TOUR_MATRIX_OUTPUT_DIR:-$ROOT_DIR}"
 TOURS_DIR="$ROOT_DIR/content/tours"
@@ -129,29 +130,29 @@ rm -f \
   "$OUTPUT_DIR/travel_plan_matrix.html"
 
 echo "Generating and publishing tour photo matrix..."
-"$SCRIPT_DIR/create_tour_photo_matrix.sh" \
+"$MATRIX_SCRIPT_DIR/create_tour_photo_matrix.sh" \
   --tours "$TOURS_DIR" \
   --output "$OUTPUT_DIR/photo_matrix.html"
 
 echo "Generating and publishing tour metadata matrix..."
-"$SCRIPT_DIR/create_tour_meta.sh" \
+"$MATRIX_SCRIPT_DIR/create_tour_meta.sh" \
   --tours "$TOURS_DIR" \
   --catalog "$CATALOG_PATH" \
   --highlight-manifest "$HIGHLIGHT_MANIFEST_PATH" \
   --output "$OUTPUT_DIR/meta_matrix.html"
 
 echo "Generating and publishing tour content matrix (English)..."
-node "$SCRIPT_DIR/create_tour_content_matrix.mjs" english \
+node "$MATRIX_SCRIPT_DIR/create_tour_content_matrix.mjs" english \
   --tours "$TOURS_DIR" \
   --output "$OUTPUT_DIR/content_matrix.html"
 
 echo "Generating and publishing tour content matrix (Vietnamese)..."
-node "$SCRIPT_DIR/create_tour_content_matrix.mjs" vietnamese \
+node "$MATRIX_SCRIPT_DIR/create_tour_content_matrix.mjs" vietnamese \
   --tours "$TOURS_DIR" \
   --output "$OUTPUT_DIR/content_matrix_vi.html"
 
 echo "Generating and publishing tour content matrix (Japanese)..."
-node "$SCRIPT_DIR/create_tour_content_matrix.mjs" japanese \
+node "$MATRIX_SCRIPT_DIR/create_tour_content_matrix.mjs" japanese \
   --tours "$TOURS_DIR" \
   --output "$OUTPUT_DIR/content_matrix_ja.html"
 
@@ -168,7 +169,7 @@ fi
 if [[ -n "$PDF_CACHE_DIR" ]]; then
   ONE_PAGER_ARGS+=(--pdf-cache-dir "$PDF_CACHE_DIR")
 fi
-node "$SCRIPT_DIR/create_all_one_pagers.mjs" "${ONE_PAGER_ARGS[@]}"
+node "$MATRIX_SCRIPT_DIR/create_all_one_pagers.mjs" "${ONE_PAGER_ARGS[@]}"
 
 echo "Published tour matrices:"
 echo "  $OUTPUT_DIR/photo_matrix.html"

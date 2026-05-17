@@ -70,7 +70,7 @@ test("static translation apply job translates central content without regenerati
   assert.match(finished.log.join("\n"), /Translated 7 translation items in content\/translations/);
 });
 
-test("static translation apply jobs leave public-site publish to the central publish service", () => {
+test("static translation apply jobs leave public-site deployment to command-line scripts", () => {
   const service = createStaticTranslationApplyJobs({
     repoRoot: "/tmp/repo",
     applyTranslations: async () => {
@@ -154,7 +154,7 @@ test("static translation apply job only translates affected central memory domai
   ]);
 });
 
-test("static translation apply job leaves publish work for central publish after translation issues clear", async () => {
+test("static translation apply job leaves runtime generation to deployment after translation issues clear", async () => {
   const seen = [];
   const applyOptions = [];
   let statusCalls = 0;
@@ -439,7 +439,7 @@ test("static translation advanced job clears marketing tour memory cache without
   assert.match(finished.log.join("\n"), /Use Translate to rebuild missing machine translations/);
 });
 
-test("static translation protected terms job points changed translations to Publish Website", async () => {
+test("static translation protected terms job points changed translations to deployment", async () => {
   const seen = [];
   const service = createStaticTranslationApplyJobs({
     repoRoot: "/tmp/repo",
@@ -458,7 +458,7 @@ test("static translation protected terms job points changed translations to Publ
   assert.equal(finished.status, "succeeded");
   assert.deepEqual(seen, ["protected terms"]);
   assert.match(finished.log.join("\n"), /Updated 12 protected-term translation items/);
-  assert.match(finished.log.join("\n"), /Use Publish Website to update runtime translations/);
+  assert.match(finished.log.join("\n"), /Run the deployment script to update runtime translations/);
 });
 
 test("static translation retranslate job validates frontend current language", () => {

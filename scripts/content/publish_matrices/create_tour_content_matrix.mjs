@@ -6,11 +6,11 @@ import {
   CUSTOMER_CONTENT_LANGUAGE_CODES,
   LANGUAGE_ALIAS_TO_CODE,
   languageByCode
-} from "../../shared/generated/language_catalog.js";
+} from "../../../shared/generated/language_catalog.js";
 import {
   copyCachedServiceImageDerivative,
   serviceImageDerivativeRelativePath
-} from "../lib/service_image_derivatives.mjs";
+} from "../../lib/service_image_derivatives.mjs";
 import {
   matrixMarketingTourHref,
   matrixPageControlScript,
@@ -20,7 +20,7 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..", "..");
+const repoRoot = path.resolve(__dirname, "..", "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultTourVariantsDir = path.join(repoRoot, "content", "tour_variants");
 const defaultTranslationsDir = path.join(repoRoot, "content", "translations");
@@ -28,7 +28,7 @@ const defaultOutputPath = "/tmp/tour-content-matrix/index.html";
 const imageExtensions = new Set([".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"]);
 
 function printUsage() {
-  console.log(`Usage: scripts/content/create_tour_content_matrix.mjs [language] [options]
+  console.log(`Usage: scripts/content/publish_matrices/create_tour_content_matrix.mjs [language] [options]
 
 Creates a static HTML matrix of tour itinerary content.
 Rows are tours plus published tour variants. Columns are identity/content and one column per itinerary day.

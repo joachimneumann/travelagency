@@ -11,14 +11,14 @@ import {
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..", "..");
+const repoRoot = path.resolve(__dirname, "..", "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultCatalogPath = path.join(defaultToursDir, "destinations.json");
 const defaultHighlightManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
 const defaultOutputPath = "/tmp/tour-meta/index.html";
 
 function printUsage() {
-  console.log(`Usage: scripts/content/create_tour_meta.mjs [options]
+  console.log(`Usage: scripts/content/publish_matrices/create_tour_meta.mjs [options]
 
 Creates a static HTML matrix of tour metadata.
 Rows are tours. Columns are tour name and one column per itinerary day with title, location, and highlight.

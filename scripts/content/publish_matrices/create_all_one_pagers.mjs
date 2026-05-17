@@ -5,36 +5,36 @@ import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs
 import path from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
-import { CUSTOMER_CONTENT_LANGUAGES } from "../../shared/generated/language_catalog.js";
+import { CUSTOMER_CONTENT_LANGUAGES } from "../../../shared/generated/language_catalog.js";
 import {
   CONTENT_ONE_PAGERS_DIR,
   COMPANY_PROFILE,
   FALLBACK_BOOKING_IMAGE_PATH,
   PUBLIC_TOUR_PDF_CACHE_DIR
-} from "../../backend/app/src/config/runtime.js";
-import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
-import { createTourVariantHelpers } from "../../backend/app/src/domain/tour_variants.js";
-import { createTravelPlanHelpers } from "../../backend/app/src/domain/travel_plan.js";
-import { selectTourExperienceHighlightIds } from "../../backend/app/src/domain/tour_metadata.js";
+} from "../../../backend/app/src/config/runtime.js";
+import { createTourHelpers } from "../../../backend/app/src/domain/tours_support.js";
+import { createTourVariantHelpers } from "../../../backend/app/src/domain/tour_variants.js";
+import { createTravelPlanHelpers } from "../../../backend/app/src/domain/travel_plan.js";
+import { selectTourExperienceHighlightIds } from "../../../backend/app/src/domain/tour_metadata.js";
 import {
   applyMarketingTourTranslations,
   loadPublishedMarketingTourTranslations
-} from "../../backend/app/src/domain/marketing_tour_translations.js";
-import { createMarketingTourOnePagerPdfWriter } from "../../backend/app/src/lib/marketing_tour_one_pager_pdf.js";
-import { createTravelPlanPdfWriter } from "../../backend/app/src/lib/travel_plan_pdf.js";
+} from "../../../backend/app/src/domain/marketing_tour_translations.js";
+import { createMarketingTourOnePagerPdfWriter } from "../../../backend/app/src/lib/marketing_tour_one_pager_pdf.js";
+import { createTravelPlanPdfWriter } from "../../../backend/app/src/lib/travel_plan_pdf.js";
 import {
   publicTourOnePagerPdfCacheDir,
   publicTourOnePagerPdfCacheKey,
   publicTourPdfCachePath,
   publicTourTravelPlanPdfCacheDir,
   publicTourTravelPlanPdfCacheKey
-} from "../../backend/app/src/lib/public_tour_pdf_cache.js";
-import { escapeHtml, normalizeText } from "../../backend/app/src/lib/text.js";
+} from "../../../backend/app/src/lib/public_tour_pdf_cache.js";
+import { escapeHtml, normalizeText } from "../../../backend/app/src/lib/text.js";
 
 const execFile = promisify(execFileCallback);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const repoRoot = path.resolve(__dirname, "..", "..");
+const repoRoot = path.resolve(__dirname, "..", "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultTourVariantsDir = path.join(repoRoot, "content", "tour_variants");
 const translationsSnapshotDir = path.join(repoRoot, "content", "translations");
@@ -58,12 +58,12 @@ const defaultPdfColumnLanguages = Object.freeze(
 );
 
 function printUsage() {
-  console.log(`Usage: node scripts/content/create_all_one_pagers.mjs [N_tours] [N_languages] [options]
+  console.log(`Usage: node scripts/content/publish_matrices/create_all_one_pagers.mjs [N_tours] [N_languages] [options]
 
 Examples:
-  node scripts/content/create_all_one_pagers.mjs
-  node scripts/content/create_all_one_pagers.mjs 5 3
-  node scripts/content/create_all_one_pagers.mjs --languages en,vi --limit 2
+  node scripts/content/publish_matrices/create_all_one_pagers.mjs
+  node scripts/content/publish_matrices/create_all_one_pagers.mjs 5 3
+  node scripts/content/publish_matrices/create_all_one_pagers.mjs --languages en,vi --limit 2
 
 Options:
   --tours DIR               Tours directory. Default: content/tours

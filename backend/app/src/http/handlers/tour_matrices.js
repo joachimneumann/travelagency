@@ -36,7 +36,7 @@ export function createTourMatrixHandlers({
 
   async function runPublishScript() {
     const root = path.resolve(repoRoot || process.cwd());
-    const scriptPath = path.join(root, "scripts", "content", "create_staging_tour_matrices.sh");
+    const scriptPath = path.join(root, "scripts", "content", "publish_matrices", "create_staging_tour_matrices.sh");
     const outputDir = String(process.env.TOUR_MATRIX_OUTPUT_DIR || root);
     return execFile("bash", [scriptPath], {
       cwd: root,

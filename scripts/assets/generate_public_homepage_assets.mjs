@@ -1267,18 +1267,23 @@ function replaceHomepageStructuredData(source, copy) {
   );
 }
 
-async function writeGeneratedHomepageHtml(templatePath, outputPath, copy) {
+async function writeGeneratedHomepageHtml(templatePath, outputPath, copy, { homepageBundleVersion = "" } = {}) {
   const source = await readFile(templatePath, "utf8");
   const metaTitle = normalizeText(copy?.metaTitleByLang?.en) || "AsiaTravelPlan | Custom Holidays";
   const metaDescription = normalizeText(copy?.metaDescriptionByLang?.en)
     || "Private tailor-made holidays with clear pricing and local support.";
   const heroTitle = normalizeText(copy?.heroTitleByLang?.en) || "Private Holidays in Southeast Asia";
+  const homepageBundleUrl = buildVersionedGeneratedDataUrl("public-homepage-main.bundle.js", homepageBundleVersion);
 
   let next = source
     .replace(/(<title\b[^>]*>)([\s\S]*?)(<\/title>)/, `$1${escapeHtmlText(metaTitle)}$3`)
     .replace(
       /(<h1\b(?=[^>]*\bid="heroTitle")[^>]*>)([\s\S]*?)(<\/h1>)/,
       `$1${escapeHtmlText(heroTitle)}$3`
+    )
+    .replace(
+      /\/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js(?:\?v=[^"']*)?/g,
+      homepageBundleUrl
     );
 
   next = replaceTagAttributeByMarker(next, "data-i18n-content-id", "meta.home_title", "content", metaTitle);
@@ -2430,15 +2435,17 @@ export async function generatePublicHomepageAssets({
     }
   };
   const homepageCopy = await writeHomepageCopyGlobalScript(resolvedHomepageCopyGlobalPath, homepageCopyValue);
-  const homepageHtml = await writeGeneratedHomepageHtml(homepageTemplatePath, resolvedHomepageIndexPath, homepageCopyValue);
+  const homepageInitialBundle = await writeHomepageInitialBundleScript(resolvedHomepageInitialBundlePath);
+  const homepageHtml = await writeGeneratedHomepageHtml(homepageTemplatePath, resolvedHomepageIndexPath, homepageCopyValue, {
+    homepageBundleVersion: homepageInitialBundle.version
+  });
   const seo = await writeSeoSurfaceAssets({
     outputRoot: path.join(frontendDataDir, path.basename(SEO_OUTPUT_DIR)),
     sitemapOutputPath: path.join(frontendDataDir, path.basename(SITEMAP_OUTPUT_PATH)),
     payload: tours.seoPayload,
     homepageCopy: homepageCopyValue
   });
-  await writeHomepageInitialBundleScript(resolvedHomepageInitialBundlePath);
-  return { tours, team, reels, homepageCopy, homepageHtml, seo };
+  return { tours, team, reels, homepageCopy, homepageInitialBundle, homepageHtml, seo };
 }
 
 async function runCli() {

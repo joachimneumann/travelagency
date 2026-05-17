@@ -701,7 +701,7 @@ export function createFrontendToursController(ctx) {
   }
 
   async function loadTourDestinations(lang) {
-    const response = await fetch(publicTourDestinationsDataUrl(lang), { cache: "no-store" });
+    const response = await fetch(publicTourDestinationsDataUrl(lang), { cache: "default" });
     if (!response.ok) {
       throw new Error(`Static tour destinations request failed with status ${response.status}.`);
     }
@@ -725,7 +725,7 @@ export function createFrontendToursController(ctx) {
       console.warn("Failed to load static tour destinations data.", error);
       return null;
     });
-    const response = await fetch(publicToursDataUrl(lang), { cache: "no-store" });
+    const response = await fetch(publicToursDataUrl(lang), { cache: "default" });
     if (!response.ok) {
       throw new Error(`Static tours request failed with status ${response.status}.`);
     }

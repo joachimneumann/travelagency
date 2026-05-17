@@ -3668,8 +3668,7 @@ test("tour page reads month options from the generated catalogs layer", async ()
   const travelPlanCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
   const toursHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
   const routesPath = path.resolve(__dirname, "..", "src", "http", "routes.js");
-  const publicSitePublishPath = path.resolve(__dirname, "..", "src", "domain", "public_site_publish.js");
-  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, navSource, travelPlanCoreSource, toursHandlerSource, routesSource, publicSitePublishSource] = await Promise.all([
+  const [tourSource, tourTravelPlanAdapterSource, tourHtml, toursListHtml, toursListSource, navSource, travelPlanCoreSource, toursHandlerSource, routesSource] = await Promise.all([
     readFile(tourPageModulePath, "utf8"),
     readFile(tourTravelPlanAdapterPath, "utf8"),
     readFile(tourPageHtmlPath, "utf8"),
@@ -3678,8 +3677,7 @@ test("tour page reads month options from the generated catalogs layer", async ()
     readFile(navPath, "utf8"),
     readFile(travelPlanCorePath, "utf8"),
     readFile(toursHandlerPath, "utf8"),
-    readFile(routesPath, "utf8"),
-    readFile(publicSitePublishPath, "utf8")
+    readFile(routesPath, "utf8")
   ]);
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
@@ -3762,40 +3760,20 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /toursPublishBtn|publishToursStaticContent|\/api\/v1\/tours\/publish/,
     "The marketing tours list should not call the retired publish control"
   );
-  assert.match(
+  assert.doesNotMatch(
     navSource,
-    /id="backendPublicSitePublishBtn"/,
-    "The backend nav should own the central public-site publish control"
+    /backendPublicSitePublishBtn|backendPublicSitePublishOverlay|\/api\/v1\/public-site\/publish/,
+    "The backend nav should not render or call the removed public-site publish control"
   );
-  assert.match(
-    navSource,
-    /\/api\/v1\/public-site\/publish-status/,
-    "The backend nav should read central public-site publish status"
-  );
-  assert.match(
-    navSource,
-    /\/api\/v1\/public-site\/publish`,\s*\{[\s\S]*method:\s*"POST"/,
-    "The backend nav should start central public-site publish jobs"
-  );
-  assert.match(
-    navSource,
-    /status\?\.dirty \|\| status\?\.source_dirty/,
-    "The backend nav should enable central publish from either dirty or source_dirty status"
-  );
-  assert.match(
+  assert.doesNotMatch(
     tourSource,
-    /notifyPublicSitePublishStatus\(\{ dirty: true, source_dirty: true \}\)/,
-    "Saving a marketing tour should immediately mark central publish dirty in the nav"
+    /backend-public-site-publish-refresh|notifyPublicSitePublishStatus/,
+    "Saving a marketing tour should not notify a removed backend publish menu"
   );
-  assert.match(
-    navSource,
-    /backendPublicSitePublishOverlay[\s\S]*setPublicSitePublishOverlay\(mount, true\)[\s\S]*pollPublicSitePublishJob/,
-    "The backend nav should show the modal wait overlay while central publish jobs run"
-  );
-  assert.match(
+  assert.doesNotMatch(
     routesSource,
-    /\\\/api\\\/v1\\\/public-site\\\/publish-status[\s\S]*handlerKey:\s*"handleGetPublicSitePublishStatus"[\s\S]*\\\/api\\\/v1\\\/public-site\\\/publish[\s\S]*handlerKey:\s*"handleStartPublicSitePublish"/,
-    "Routes should expose the central public-site publish status and start endpoints"
+    /public-site\\\/publish|public-site\/publish|handleGetPublicSitePublish|handleStartPublicSitePublish/,
+    "Routes should not expose removed public-site publish endpoints"
   );
   assert.doesNotMatch(
     routesSource,
@@ -3826,11 +3804,6 @@ test("tour page reads month options from the generated catalogs layer", async ()
     toursHandlerSource,
     /syncMarketingTourTranslationsForPublish|regeneratePublicHomepageAssets\("tours_publish"/,
     "Marketing-tour page publish routes should not directly sync translations or regenerate static assets"
-  );
-  assert.match(
-    publicSitePublishSource,
-    /syncMarketingTourTranslationsForPublish[\s\S]*commandPhase\("runtime_brand_logo"[\s\S]*commandPhase\("runtime_i18n"[\s\S]*commandPhase\("homepage_assets"[\s\S]*callbackPhase\("write_manifest"/,
-    "Central public-site publish should sync translations, prepare the runtime logo, generate runtime i18n and homepage assets, then write the manifest"
   );
   assert.doesNotMatch(
     tourHtml,
@@ -3901,7 +3874,7 @@ test("tour card images are selected from travel-plan service images", async () =
   const travelPlanModelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const homepageGeneratorPath = path.resolve(__dirname, "..", "..", "..", "scripts", "assets", "generate_public_homepage_assets.mjs");
   const tourMatrixPublishPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "publish_tour_matrices.sh");
-  const onePagerScriptPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "create_all_one_pagers.mjs");
+  const onePagerScriptPath = path.resolve(__dirname, "..", "..", "..", "scripts", "content", "publish_matrices", "create_all_one_pagers.mjs");
   const onePagerPdfPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_one_pager_pdf.js");
   const marketingTourPdfBackgroundPath = path.resolve(__dirname, "..", "src", "lib", "marketing_tour_pdf_background.js");
   const [toursSupportSource, toursHandlerSource, tourHtmlSource, tourPageSource, toursListSource, mainToursSource, travelPlanHelpersSource, travelPlanEditorSource, travelPlanModelSource, homepageGeneratorSource, tourMatrixPublishSource, onePagerScriptSource, onePagerPdfSource, marketingTourPdfBackgroundSource] = await Promise.all([
@@ -3997,6 +3970,11 @@ test("tour card images are selected from travel-plan service images", async () =
     "Public homepage generation should use the full travel-plan normalizer so ordered selected image ids are preserved"
   );
   assert.match(
+    homepageGeneratorSource,
+    /const homepageInitialBundle = await writeHomepageInitialBundleScript\(resolvedHomepageInitialBundlePath\);[\s\S]*writeGeneratedHomepageHtml\(homepageTemplatePath, resolvedHomepageIndexPath, homepageCopyValue, \{[\s\S]*homepageBundleVersion: homepageInitialBundle\.version[\s\S]*\}\)/,
+    "Public homepage generation should version the generated main bundle URL in the generated HTML"
+  );
+  assert.match(
     mainToursSource,
     /function selectedTravelTourCardPictures\(item\)[\s\S]*const selectedImageIds = Array\.from\(new Set\(\(Array\.isArray\(item\?\.travel_plan\?\.tour_card_image_ids\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.sort\(\(left, right\) => \{[\s\S]*selectedImageIds\.indexOf\(left\.id\)[\s\S]*return entries\.map\(\(entry\) => entry\.src\)/,
     "Runtime homepage tour cards should honor ordered travel-plan service image ids"
@@ -4038,7 +4016,7 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerScriptSource,
-    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*const translationPhraseOverridesPath = path\.join\(repoRoot, "config", "i18n", "translation_phrase_overrides\.json"\);[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, options\.languages, \{[\s\S]*phraseOverridesPath: translationPhraseOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    /from "\.\.\/\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*const translationPhraseOverridesPath = path\.join\(repoRoot, "config", "i18n", "translation_phrase_overrides\.json"\);[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, options\.languages, \{[\s\S]*phraseOverridesPath: translationPhraseOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
     "Batch one-pager PDFs should apply published marketing-tour snapshots and phrase overrides through the shared translator before localized PDF rendering"
   );
   assert.match(
@@ -4053,7 +4031,7 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     tourMatrixPublishSource,
-    /node "\$SCRIPT_DIR\/create_all_one_pagers\.mjs" "\$\{ONE_PAGER_ARGS\[@\]\}"/,
+    /node "\$MATRIX_SCRIPT_DIR\/create_all_one_pagers\.mjs" "\$\{ONE_PAGER_ARGS\[@\]\}"/,
     "Tour matrix publishing should generate the one-pager PDF matrix through the shared batch renderer"
   );
   assert.match(
@@ -4885,7 +4863,7 @@ test("backend translation nav uses the single translation icon", async () => {
   );
 });
 
-test("translations page exposes one translate action and leaves website generation to central publish", async () => {
+test("translations page exposes one translate action and leaves website generation to deployment", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const [translationsHtml, translationsSource, translationsStyles, staticTranslationsSource, staticTranslationApplyJobsSource, servicesSource] = await Promise.all([
     readFile(path.join(repoRoot, "frontend", "pages", "translations.html"), "utf8"),
@@ -4995,8 +4973,8 @@ test("translations page exposes one translate action and leaves website generati
   );
   assert.match(
     translationsSource,
-    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{displayCount\} \$\{subject\} \$\{verb\} translation\.`[\s\S]*Publishing is allowed and will use English fallback[\s\S]*Use Publish Website to update runtime translations and static website content\./,
-    "The status text above Translate should warn about fallback while pointing publishable changes to central Publish"
+    /function translationStatusMessage\(status\)[\s\S]*const base = `\$\{displayCount\} \$\{subject\} \$\{verb\} translation\.`[\s\S]*Publishing is allowed and will use English fallback[\s\S]*Run the deployment script to update runtime translations and static website content\./,
+    "The status text above Translate should warn about fallback while pointing publishable changes to deployment"
   );
   assert.match(
     translationsSource,
@@ -5106,7 +5084,7 @@ test("translations page exposes one translate action and leaves website generati
   assert.match(
     translationsSource,
     /const actionsBusy = state\.isSaving \|\| state\.isJobRunning \|\| state\.isStatusRefreshing;[\s\S]*configureTranslationActionButton\(els\.translateBtn, "translate", translationState, canRunTranslationAction, actionsBusy\)/,
-    "Translate should use the shared busy state while save, translate, publish, or status scripts run"
+    "Translate should use the shared busy state while save, translate, or status scripts run"
   );
   assert.match(
     translationsSource,
@@ -5128,10 +5106,10 @@ test("translations page exposes one translate action and leaves website generati
     /data-section-translate|data-section-publish|section\.els\.translateBtn|section\.els\.publishBtn/,
     "Translation sections should not expose their own Translate or Publish actions"
   );
-  assert.match(
+  assert.doesNotMatch(
     translationsSource,
     /\/api\/v1\/public-site\/publish-status/,
-    "The translations page should read central public-site publish status"
+    "The translations page should not read removed public-site publish status"
   );
   assert.doesNotMatch(
     translationsSource,
@@ -5140,13 +5118,13 @@ test("translations page exposes one translate action and leaves website generati
   );
   assert.match(
     translationsSource,
-    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Publish Website can still run with English fallback[\s\S]*latest\.type === "apply" && translationStatus\.unavailableCount > 0[\s\S]*Publish Website remains blocked/,
-    "After Translate finishes, unfinished strings should warn about fallback while unavailable sections still block central Publish"
+    /latest\.type === "apply" && translationStatus\.translationIssueCount > 0[\s\S]*Deployment can still use English fallback[\s\S]*latest\.type === "apply" && translationStatus\.unavailableCount > 0[\s\S]*Deployment remains blocked/,
+    "After Translate finishes, unfinished strings should warn about fallback while unavailable sections still block deployment"
   );
   assert.doesNotMatch(
     translationsSource,
     /latest\.type === "apply" && translationStatus\.dirty[\s\S]*warning icon could not be cleared|Runtime generation was skipped/,
-    "Dirty unpublished translations after Translate should be a normal central Publish state, not a runtime-generation error"
+    "Dirty unpublished translations after Translate should be a normal deployment state, not a runtime-generation error"
   );
 });
 
@@ -5267,7 +5245,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     );
     assert.match(
       source,
-      /frontend\/scripts\/pages\/[^"]+\.js\?v=20260517a/,
+      /frontend\/scripts\/pages\/[^"]+\.js\?v=202605(?:17|18)a/,
       "Backoffice entry pages should version their module entrypoint to avoid stale cached imports after deploys"
     );
   }
@@ -5550,18 +5528,28 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /import staging_html_no_cache_headers[\s\S]*import staging_static_cache_headers/,
-    "Staging should scope no-cache headers to HTML entry pages while enabling short-lived caching for static assets"
+    /import staging_html_cache_headers[\s\S]*import staging_static_cache_headers/,
+    "Staging should scope short-lived cache headers to HTML entry pages while enabling static asset caching"
   );
   assert.match(
     stagingCaddy,
-    /@staging_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/\*[\s\S]*header @staging_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@staging_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/site\.webmanifest[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
-    "Staging should revalidate app modules while caching static frontend data and assets"
+    /@staging_html path \/ \/index\.html[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Staging HTML should use short-lived browser caching instead of forcing reload revalidation"
   );
   assert.match(
     stagingCaddy,
-    /@production_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/\*[\s\S]*header @production_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@production_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/content\/one-pagers\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
-    "Production should revalidate app modules while caching static frontend data and assets"
+    /@staging_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/generated\/\* \/shared\/js\/\*[\s\S]*header @staging_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@staging_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/shared\/css\/\* \/site\.webmanifest[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
+    "Staging should revalidate app modules while caching shared CSS, static frontend data, and assets"
+  );
+  assert.match(
+    stagingCaddy,
+    /@production_html path \/ \/index\.html[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Production HTML should use short-lived browser caching instead of forcing reload revalidation"
+  );
+  assert.match(
+    stagingCaddy,
+    /@production_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/generated\/\* \/shared\/js\/\*[\s\S]*header @production_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@production_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/shared\/css\/\* \/content\/one-pagers\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
+    "Production should revalidate app modules while caching shared CSS, static frontend data, and assets"
   );
   assert.match(
     stagingCaddy,
@@ -5570,13 +5558,13 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@staging_generated_homepage_json path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@staging_generated_homepage_runtime \{[\s\S]*path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
-    "Staging should cache versioned generated homepage JSON long-term while keeping runtime generated homepage assets short-lived"
+    /@staging_generated_homepage_bundle path \/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@staging_generated_homepage_json path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@staging_generated_homepage_runtime \{[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*not path \/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Staging should cache versioned generated homepage JSON and the versioned main bundle long-term while keeping other runtime generated homepage assets short-lived"
   );
   assert.match(
     stagingCaddy,
-    /@production_generated_homepage_json path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@production_generated_homepage_runtime \{[\s\S]*path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
-    "Production should cache versioned generated homepage JSON long-term while keeping runtime generated homepage assets short-lived"
+    /@production_generated_homepage_bundle path \/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@production_generated_homepage_json path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*Cache-Control "public, max-age=31536000, immutable"[\s\S]*@production_generated_homepage_runtime \{[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*not path \/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js[\s\S]*Cache-Control "public, max-age=60, stale-while-revalidate=300"/,
+    "Production should cache versioned generated homepage JSON and the versioned main bundle long-term while keeping other runtime generated homepage assets short-lived"
   );
   assert.match(
     stagingCaddy,
@@ -5801,8 +5789,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainToursSource,
-    /function publicToursDataUrl\(lang\) \{[\s\S]*generatedTourAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(publicToursDataUrl\(lang\), \{ cache: "no-store" \}\)/,
-    "Homepage tour loading should use generated versioned per-language URLs and bypass browser cache"
+    /function publicToursDataUrl\(lang\) \{[\s\S]*generatedTourAssetUrlsByLang\(\)\?\.\[normalizedLang\][\s\S]*async function loadTrips\(\) \{[\s\S]*const lang = normalizeFrontendTourLang\(currentFrontendLang\(\)\);[\s\S]*fetch\(publicToursDataUrl\(lang\), \{ cache: "default" \}\)/,
+    "Homepage tour loading should use generated versioned per-language URLs and allow normal browser caching"
   );
   assert.match(
     mainToursSource,
@@ -7128,7 +7116,7 @@ test("staging backend bakes dependencies into the image and mounts only the writ
   assert.match(
     backendComposeBlock,
     /PUBLIC_SITE_RUNTIME_BRAND_ENV: staging/,
-    "Staging backend should prepare the staging runtime brand logo when Publish Website runs"
+    "Staging backend should expose the staging runtime brand environment for deployment scripts"
   );
   assert.match(
     backendComposeBlock,
@@ -7147,7 +7135,7 @@ test("staging backend bakes dependencies into the image and mounts only the writ
   );
   assert.doesNotMatch(
     updateStagingSource,
-    /scripts\/content\/create_staging_tour_matrices\.sh|publish_tour_matrices\.sh/,
+    /scripts\/content\/publish_matrices\/create_staging_tour_matrices\.sh|publish_tour_matrices\.sh/,
     "Staging deploy should not regenerate or publish tour matrices"
   );
   assert.match(
@@ -7167,7 +7155,7 @@ test("staging backend bakes dependencies into the image and mounts only the writ
   );
 });
 
-test("staging can publish translations while production keeps runtime translation writes disabled", async () => {
+test("staging can update translations while production keeps runtime translation writes disabled", async () => {
   const repoRoot = path.resolve(__dirname, "..", "..", "..");
   const stagingComposePath = path.join(repoRoot, "docker-compose.staging.yml");
   const productionComposePath = path.join(repoRoot, "docker-compose.production.yml");
@@ -7191,7 +7179,7 @@ test("staging can publish translations while production keeps runtime translatio
   assert.match(
     productionBackendBlock,
     /- \.\/content:\/srv\/content[\s\S]*- \.\/frontend\/data\/i18n:\/srv\/frontend\/data\/i18n[\s\S]*- \.\/frontend\/data\/generated\/homepage:\/srv\/frontend\/data\/generated\/homepage[\s\S]*- \.\/assets\/generated\/homepage:\/srv\/assets\/generated\/homepage[\s\S]*- \.\/assets\/generated\/runtime:\/srv\/assets\/generated\/runtime/,
-    "Production backend should mount content plus generated output roots used by Publish Website"
+    "Production backend should mount content plus generated output roots used by deployment"
   );
   assert.match(
     productionBackendBlock,

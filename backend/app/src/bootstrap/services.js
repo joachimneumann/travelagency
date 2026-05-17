@@ -16,7 +16,6 @@ import { createCountryReferenceStore } from "../lib/country_reference_store.js";
 import { createTranslationMemoryStore } from "../lib/translation_memory_store.js";
 import { createStaticTranslationApplyJobs } from "../domain/static_translation_apply_jobs.js";
 import { createStaticTranslationService } from "../domain/static_translations.js";
-import { createPublicSitePublishService } from "../domain/public_site_publish.js";
 
 export function createBackendServices({
   runtime,
@@ -178,18 +177,6 @@ export function createBackendServices({
     canPublishTourOnWebpage: tourHelpers.canPublishTourOnWebpage
   });
 
-  const publicSitePublishService = createPublicSitePublishService({
-    repoRoot,
-    manifestPath: path.join(runtime.paths?.contentRoot || path.join(repoRoot, "content"), "public-site-publish-manifest.json"),
-    translationsSnapshotDir: collections.translationsSnapshotDir,
-    readTours: storeUtils.readTours,
-    readTourVariants: storeUtils.readTourVariants,
-    normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
-    staticTranslationService,
-    translationMemoryStore,
-    nowIso: support.nowIso
-  });
-
   const writeGeneratedOfferPdf = createOfferPdfWriter({
     generatedOfferPdfPath: pricingHelpers.generatedOfferPdfPath,
     bookingImagesDir: collections.bookingImagesDir,
@@ -264,7 +251,6 @@ export function createBackendServices({
     translationMemoryStore,
     staticTranslationService,
     staticTranslationApplyJobs,
-    publicSitePublishService,
     travelPlanPdfArtifacts,
     tourHelpers,
     tourVariantHelpers,

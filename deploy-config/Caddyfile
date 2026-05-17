@@ -30,39 +30,43 @@
   }
 }
 
-(staging_html_no_cache_headers) {
+(staging_html_cache_headers) {
   @staging_html path / /index.html /404.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /tour_variant.html /tour_variants.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html /photo_matrix.html /meta_matrix.html /content_matrix.html /one_pager_matrix.html
   header @staging_html {
-    Cache-Control "no-cache, must-revalidate"
+    Cache-Control "public, max-age=60, stale-while-revalidate=300"
   }
 }
 
 (staging_static_cache_headers) {
-  @staging_app_modules path /frontend/scripts/* /frontend/Generated/* /shared/*
+  @staging_app_modules path /frontend/scripts/* /frontend/Generated/* /shared/generated/* /shared/js/*
   header @staging_app_modules Cache-Control "no-cache, must-revalidate"
 
   @staging_static {
-    path /assets/* /frontend/data/* /site.webmanifest
+    path /assets/* /frontend/data/* /shared/css/* /site.webmanifest
     not path /frontend/data/generated/homepage/*
   }
   header @staging_static Cache-Control "public, max-age=300, stale-while-revalidate=600"
 }
 
 (staging_generated_homepage_cache_headers) {
+  @staging_generated_homepage_bundle path /frontend/data/generated/homepage/public-homepage-main.bundle.js
+  header @staging_generated_homepage_bundle Cache-Control "public, max-age=31536000, immutable"
+
   @staging_generated_homepage_json path /frontend/data/generated/homepage/*.json
   header @staging_generated_homepage_json Cache-Control "public, max-age=31536000, immutable"
 
   @staging_generated_homepage_runtime {
     path /frontend/data/generated/homepage/*
     not path /frontend/data/generated/homepage/*.json
+    not path /frontend/data/generated/homepage/public-homepage-main.bundle.js
   }
   header @staging_generated_homepage_runtime Cache-Control "public, max-age=60, stale-while-revalidate=300"
 }
 
-(production_html_no_cache_headers) {
+(production_html_cache_headers) {
   @production_html path / /index.html /404.html /app-home.html /bookings.html /booking.html /persons.html /marketing_tour.html /marketing_tours.html /tour_variant.html /tour_variants.html /settings.html /translations.html /emergency.html /privacy.html /traveler-details.html
   header @production_html {
-    Cache-Control "no-cache, must-revalidate"
+    Cache-Control "public, max-age=60, stale-while-revalidate=300"
   }
 }
 
@@ -72,11 +76,11 @@
   }
   header @production_immutable_static Cache-Control "public, max-age=31536000, immutable"
 
-  @production_app_modules path /frontend/scripts/* /frontend/Generated/* /shared/*
+  @production_app_modules path /frontend/scripts/* /frontend/Generated/* /shared/generated/* /shared/js/*
   header @production_app_modules Cache-Control "no-cache, must-revalidate"
 
   @production_static {
-    path /assets/* /frontend/data/* /content/one-pagers/* /site.webmanifest /robots.txt /sitemap.xml
+    path /assets/* /frontend/data/* /shared/css/* /content/one-pagers/* /site.webmanifest /robots.txt /sitemap.xml
     not path /frontend/data/generated/homepage/*
     not path /assets/fonts/* /assets/generated/homepage/* /assets/generated/reels/*
   }
@@ -84,12 +88,16 @@
 }
 
 (production_generated_homepage_cache_headers) {
+  @production_generated_homepage_bundle path /frontend/data/generated/homepage/public-homepage-main.bundle.js
+  header @production_generated_homepage_bundle Cache-Control "public, max-age=31536000, immutable"
+
   @production_generated_homepage_json path /frontend/data/generated/homepage/*.json
   header @production_generated_homepage_json Cache-Control "public, max-age=31536000, immutable"
 
   @production_generated_homepage_runtime {
     path /frontend/data/generated/homepage/*
     not path /frontend/data/generated/homepage/*.json
+    not path /frontend/data/generated/homepage/public-homepage-main.bundle.js
   }
   header @production_generated_homepage_runtime Cache-Control "public, max-age=60, stale-while-revalidate=300"
 }
@@ -101,7 +109,7 @@
 
 asiatravelplan.com {
   import security_headers
-  import production_html_no_cache_headers
+  import production_html_cache_headers
   import production_static_cache_headers
   import production_generated_homepage_cache_headers
   import production_private_noindex_headers
@@ -218,7 +226,7 @@ www.asiatravelplan.com {
 staging.asiatravelplan.com {
   import security_headers
   import noindex_headers
-  import staging_html_no_cache_headers
+  import staging_html_cache_headers
   import staging_static_cache_headers
   import staging_generated_homepage_cache_headers
   encode zstd gzip
