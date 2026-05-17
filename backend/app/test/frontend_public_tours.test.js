@@ -70,6 +70,79 @@ class FakeElement {
   }
 }
 
+function installTourCustomizerShadowDocument({ querySelector = null } = {}) {
+  const previousDocument = global.document;
+  const previousHTMLElement = global.HTMLElement;
+  const previousHTMLButtonElement = global.HTMLButtonElement;
+  const previousWindow = global.window;
+  let runtimeRoot = null;
+
+  class CapturingElement extends FakeElement {
+    constructor(tagName = "div") {
+      super();
+      this.tagName = String(tagName || "div").toUpperCase();
+      this.className = "";
+      this.shadowRoot = null;
+      this._innerHTML = "";
+    }
+
+    set innerHTML(value) {
+      this._innerHTML = String(value ?? "");
+    }
+
+    get innerHTML() {
+      return this._innerHTML;
+    }
+
+    attachShadow() {
+      this.shadowRoot = new CapturingElement("#shadow-root");
+      return this.shadowRoot;
+    }
+
+    append(...children) {
+      super.append(...children);
+      for (const child of children) {
+        if (child instanceof CapturingElement && child.className === "tour-customize-root") {
+          runtimeRoot = child;
+        }
+      }
+    }
+
+    querySelector(selector) {
+      return typeof querySelector === "function" ? querySelector(selector, this, CapturingElement) : null;
+    }
+  }
+
+  const body = new CapturingElement("body");
+  global.HTMLElement = CapturingElement;
+  global.HTMLButtonElement = CapturingElement;
+  global.document = {
+    activeElement: null,
+    body,
+    createElement(tagName) {
+      return new CapturingElement(tagName);
+    },
+    documentElement: {
+      classList: {
+        add() {},
+        remove() {}
+      }
+    }
+  };
+
+  return {
+    get modalElement() {
+      return runtimeRoot;
+    },
+    restore() {
+      global.document = previousDocument;
+      global.HTMLElement = previousHTMLElement;
+      global.HTMLButtonElement = previousHTMLButtonElement;
+      global.window = previousWindow;
+    }
+  };
+}
+
 function escapeHTML(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -732,53 +805,7 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
 });
 
 test("tour customizer names the original itinerary with the tour title before customization", async () => {
-  const previousDocument = global.document;
-  const previousHTMLElement = global.HTMLElement;
-  const previousHTMLButtonElement = global.HTMLButtonElement;
-  const previousWindow = global.window;
-  let modalElement = null;
-
-  class CapturingElement extends FakeElement {
-    constructor() {
-      super();
-      this._innerHTML = "";
-    }
-
-    set innerHTML(value) {
-      this._innerHTML = String(value ?? "");
-    }
-
-    get innerHTML() {
-      return this._innerHTML;
-    }
-
-    querySelector() {
-      return null;
-    }
-
-    remove() {}
-  }
-
-  global.HTMLElement = CapturingElement;
-  global.HTMLButtonElement = CapturingElement;
-  global.document = {
-    activeElement: null,
-    body: {
-      appendChild(element) {
-        modalElement = element;
-      }
-    },
-    createElement() {
-      modalElement = new CapturingElement();
-      return modalElement;
-    },
-    documentElement: {
-      classList: {
-        add() {},
-        remove() {}
-      }
-    }
-  };
+  const modalDocument = installTourCustomizerShadowDocument();
   global.window = undefined;
 
   try {
@@ -823,15 +850,12 @@ test("tour customizer names the original itinerary with the tour title before cu
 
     await customizer.open(trip.id);
 
-    assert.match(modalElement?.innerHTML || "", /Your Itinerary: Original Tour Title/);
-    assert.match(modalElement?.innerHTML || "", />Close<\/button>/);
-    assert.doesNotMatch(modalElement?.innerHTML || "", /I am happy/);
-    assert.doesNotMatch(modalElement?.innerHTML || "", /&times;|>×<\/button>/);
+    assert.match(modalDocument.modalElement?.innerHTML || "", /Your Itinerary: Original Tour Title/);
+    assert.match(modalDocument.modalElement?.innerHTML || "", />Close<\/button>/);
+    assert.doesNotMatch(modalDocument.modalElement?.innerHTML || "", /I am happy/);
+    assert.doesNotMatch(modalDocument.modalElement?.innerHTML || "", /&times;|>×<\/button>/);
   } finally {
-    global.document = previousDocument;
-    global.HTMLElement = previousHTMLElement;
-    global.HTMLButtonElement = previousHTMLButtonElement;
-    global.window = previousWindow;
+    modalDocument.restore();
   }
 });
 
