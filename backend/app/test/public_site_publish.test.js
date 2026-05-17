@@ -120,6 +120,7 @@ test("public-site publish runs translations and homepage generation before writi
   const finished = await waitForJob(service, "public-job-1", "succeeded");
 
   assert.equal(finished.status, "succeeded");
+  assert.match(finished.log.join("\n"), /Finished: Publish translation snapshots in \d+(?:ms|(?:\.\d)?s|m \d{2}s|h \d{2}m \d{2}s)/);
   assert.deepEqual(seen, ["publish translations", "runtime_brand_logo", "runtime_i18n", "homepage_assets"]);
   assert.deepEqual(publishOptions, [{ domains: PUBLIC_SITE_TRANSLATION_DOMAINS }]);
   assert.equal(statusOptions.every((options) => JSON.stringify(options) === JSON.stringify({ domains: PUBLIC_SITE_TRANSLATION_DOMAINS })), true);

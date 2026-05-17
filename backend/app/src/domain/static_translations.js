@@ -745,8 +745,18 @@ export function createStaticTranslationService({
     return normalizeText(metaEntry?.origin) || "machine";
   }
 
+  function sourceTextForMemory(value) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const localized = normalizeText(value.en)
+        || Object.values(value).map((entry) => normalizeText(entry)).find(Boolean)
+        || "";
+      return localized;
+    }
+    return normalizeText(value);
+  }
+
   function addSourceText(targetSet, value) {
-    const normalized = normalizeText(value);
+    const normalized = sourceTextForMemory(value);
     if (normalized) targetSet.add(normalized);
   }
 

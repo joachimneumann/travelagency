@@ -65,6 +65,19 @@ function appendLog(job, line) {
   }
 }
 
+function formatDurationMs(durationMs) {
+  const ms = Math.max(0, Number(durationMs || 0));
+  if (ms < 1000) return `${Math.round(ms)}ms`;
+  const totalSeconds = Math.round(ms / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  if (!minutes) return `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0)}s`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (!hours) return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
+  return `${hours}h ${String(remainingMinutes).padStart(2, "0")}m ${String(seconds).padStart(2, "0")}s`;
+}
+
 function commandPhase(id, label, command, args) {
   return { id, label, command, args, status: "pending" };
 }
@@ -555,14 +568,26 @@ export function createPublicSitePublishService({
         for (const phase of job.phases) {
           job.phase = phase.id;
           phase.status = "running";
+          phase.started_at = nowIso();
+          const phaseStartedAtMs = Date.now();
           appendLog(job, `Starting: ${phase.label}`);
-          if (typeof phase.run === "function") {
-            await phase.run(phase, job);
-          } else {
-            await executePhase(phase, job);
+          try {
+            if (typeof phase.run === "function") {
+              await phase.run(phase, job);
+            } else {
+              await executePhase(phase, job);
+            }
+          } catch (error) {
+            phase.status = "failed";
+            phase.finished_at = nowIso();
+            phase.duration_ms = Math.max(0, Date.now() - phaseStartedAtMs);
+            appendLog(job, `Failed: ${phase.label} after ${formatDurationMs(phase.duration_ms)}`);
+            throw error;
           }
           phase.status = "succeeded";
-          appendLog(job, `Finished: ${phase.label}`);
+          phase.finished_at = nowIso();
+          phase.duration_ms = Math.max(0, Date.now() - phaseStartedAtMs);
+          appendLog(job, `Finished: ${phase.label} in ${formatDurationMs(phase.duration_ms)}`);
         }
         job.status = "succeeded";
         job.phase = "";

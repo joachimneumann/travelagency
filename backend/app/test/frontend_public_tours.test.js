@@ -108,6 +108,11 @@ function installTourCustomizerShadowDocument({ querySelector = null } = {}) {
       }
     }
 
+    appendChild(child) {
+      this.append(child);
+      return child;
+    }
+
     querySelector(selector) {
       return typeof querySelector === "function" ? querySelector(selector, this, CapturingElement) : null;
     }
@@ -860,53 +865,7 @@ test("tour customizer names the original itinerary with the tour title before cu
 });
 
 test("tour customizer modal chrome follows the frontend language", async () => {
-  const previousDocument = global.document;
-  const previousHTMLElement = global.HTMLElement;
-  const previousHTMLButtonElement = global.HTMLButtonElement;
-  const previousWindow = global.window;
-  let modalElement = null;
-
-  class CapturingElement extends FakeElement {
-    constructor() {
-      super();
-      this._innerHTML = "";
-    }
-
-    set innerHTML(value) {
-      this._innerHTML = String(value ?? "");
-    }
-
-    get innerHTML() {
-      return this._innerHTML;
-    }
-
-    querySelector() {
-      return null;
-    }
-
-    remove() {}
-  }
-
-  global.HTMLElement = CapturingElement;
-  global.HTMLButtonElement = CapturingElement;
-  global.document = {
-    activeElement: null,
-    body: {
-      appendChild(element) {
-        modalElement = element;
-      }
-    },
-    createElement() {
-      modalElement = new CapturingElement();
-      return modalElement;
-    },
-    documentElement: {
-      classList: {
-        add() {},
-        remove() {}
-      }
-    }
-  };
+  const modalDocument = installTourCustomizerShadowDocument();
   global.window = undefined;
 
   try {
@@ -952,7 +911,7 @@ test("tour customizer modal chrome follows the frontend language", async () => {
 
     await customizer.open(trip.id);
 
-    const markup = modalElement?.innerHTML || "";
+    const markup = modalDocument.modalElement?.innerHTML || "";
     assert.match(markup, /<h2 id="tour_customize_title">Original Tour Title<\/h2>/);
     assert.match(markup, /Tour zurücksetzen/);
     assert.match(markup, /Optionale Tage/);
@@ -961,73 +920,28 @@ test("tour customizer modal chrome follows the frontend language", async () => {
     assert.match(markup, />Schließen<\/button>/);
     assert.doesNotMatch(markup, /Customize this tour|Reset tour|Optional days|Your Itinerary|>Close<\/button>/);
   } finally {
-    global.document = previousDocument;
-    global.HTMLElement = previousHTMLElement;
-    global.HTMLButtonElement = previousHTMLButtonElement;
-    global.window = previousWindow;
+    modalDocument.restore();
   }
 });
 
 test("tour customizer uses happy confirmation only after customization and resets back to close", async () => {
-  const previousDocument = global.document;
-  const previousHTMLElement = global.HTMLElement;
-  const previousHTMLButtonElement = global.HTMLButtonElement;
-  const previousWindow = global.window;
-  let modalElement = null;
   let resetHandler = null;
   const storage = new Map();
-
-  class CapturingElement extends FakeElement {
-    constructor() {
-      super();
-      this._innerHTML = "";
-    }
-
-    set innerHTML(value) {
-      this._innerHTML = String(value ?? "");
-    }
-
-    get innerHTML() {
-      return this._innerHTML;
-    }
-
-    querySelector(selector) {
+  const modalDocument = installTourCustomizerShadowDocument({
+    querySelector(selector, _element, CapturingElement) {
       if (selector === "[data-customize-reset]") {
-        return {
-          addEventListener(_event, handler) {
-            resetHandler = handler;
-          }
+        const button = new CapturingElement("button");
+        button.addEventListener = (_event, handler) => {
+          resetHandler = handler;
         };
+        return button;
       }
       if (selector === "[data-customize-close]") {
-        return new CapturingElement();
+        return new CapturingElement("button");
       }
       return null;
-    }
-
-    remove() {}
-  }
-
-  global.HTMLElement = CapturingElement;
-  global.HTMLButtonElement = CapturingElement;
-  global.document = {
-    activeElement: null,
-    body: {
-      appendChild(element) {
-        modalElement = element;
-      }
     },
-    createElement() {
-      modalElement = new CapturingElement();
-      return modalElement;
-    },
-    documentElement: {
-      classList: {
-        add() {},
-        remove() {}
-      }
-    }
-  };
+  });
   global.window = {
     localStorage: {
       getItem(key) {
@@ -1106,70 +1020,21 @@ test("tour customizer uses happy confirmation only after customization and reset
 
     await customizer.open(trip.id);
 
-    assert.match(modalElement?.innerHTML || "", />Happy with this idea\? Our local travel team will refine it from here<\/button>/);
-    assert.doesNotMatch(modalElement?.innerHTML || "", /with this Tour/);
+    assert.match(modalDocument.modalElement?.innerHTML || "", />Happy with this idea\? Our local travel team will refine it from here<\/button>/);
+    assert.doesNotMatch(modalDocument.modalElement?.innerHTML || "", /with this Tour/);
 
     assert.equal(typeof resetHandler, "function");
     resetHandler();
 
-    assert.match(modalElement?.innerHTML || "", />Close<\/button>/);
-    assert.doesNotMatch(modalElement?.innerHTML || "", />Happy with this idea\? Our local travel team will refine it from here<\/button>/);
+    assert.match(modalDocument.modalElement?.innerHTML || "", />Close<\/button>/);
+    assert.doesNotMatch(modalDocument.modalElement?.innerHTML || "", />Happy with this idea\? Our local travel team will refine it from here<\/button>/);
   } finally {
-    global.document = previousDocument;
-    global.HTMLElement = previousHTMLElement;
-    global.HTMLButtonElement = previousHTMLButtonElement;
-    global.window = previousWindow;
+    modalDocument.restore();
   }
 });
 
 test("tour customizer optional days ignore Tour Variant records", async () => {
-  const previousDocument = global.document;
-  const previousHTMLElement = global.HTMLElement;
-  const previousHTMLButtonElement = global.HTMLButtonElement;
-  const previousWindow = global.window;
-  let modalElement = null;
-
-  class CapturingElement extends FakeElement {
-    constructor() {
-      super();
-      this._innerHTML = "";
-    }
-
-    set innerHTML(value) {
-      this._innerHTML = String(value ?? "");
-    }
-
-    get innerHTML() {
-      return this._innerHTML;
-    }
-
-    querySelector() {
-      return null;
-    }
-
-    remove() {}
-  }
-
-  global.HTMLElement = CapturingElement;
-  global.HTMLButtonElement = CapturingElement;
-  global.document = {
-    activeElement: null,
-    body: {
-      appendChild(element) {
-        modalElement = element;
-      }
-    },
-    createElement() {
-      modalElement = new CapturingElement();
-      return modalElement;
-    },
-    documentElement: {
-      classList: {
-        add() {},
-        remove() {}
-      }
-    }
-  };
+  const modalDocument = installTourCustomizerShadowDocument();
   global.window = undefined;
 
   try {
@@ -1264,15 +1129,12 @@ test("tour customizer optional days ignore Tour Variant records", async () => {
     });
 
     assert.equal(await customizer.open(baseTrip.id), true);
-    const markup = modalElement?.innerHTML || "";
+    const markup = modalDocument.modalElement?.innerHTML || "";
     assert.match(markup, /Marketing Hue day/);
     assert.doesNotMatch(markup, /Variant-only Hue day/);
     assert.doesNotMatch(markup, /Stored Variant-only Hue day/);
   } finally {
-    global.document = previousDocument;
-    global.HTMLElement = previousHTMLElement;
-    global.HTMLButtonElement = previousHTMLButtonElement;
-    global.window = previousWindow;
+    modalDocument.restore();
   }
 });
 
