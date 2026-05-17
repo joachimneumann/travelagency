@@ -13,7 +13,7 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-05-14T04:39:54.152Z",
+  "updated_at": "2026-05-16T14:06:35.573Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
@@ -26,8 +26,8 @@
       "travel_plan_service_image_847ae6d4-5c63-4d17-b7a4-fd3b84a64b93"
     ],
     "tour_card_primary_image_id": "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
+    "one_pager_hero_image_id": "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178",
     "one_pager_image_ids": [
-      "travel_plan_service_image_7e3c1276-0629-43d8-a0f0-52dc9b074178",
       "travel_plan_service_image_56be8279-c524-4b62-a072-184337ddb334",
       "travel_plan_service_image_4037a8ce-2c5f-4522-b7b1-ccc913c82370",
       "travel_plan_service_image_18824d49-06de-4da9-aab9-a1998cc3637e"
@@ -369,6 +369,33 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-04-28T02:42:50.419Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_0a67737f-b096-42d5-b29a-66e7d24d0d50",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_point": null,
+            "kind": "other",
+            "title": "Goodbye, Phu Quoc! I will miss your paradise beaches",
+            "details": null,
+            "image_subtitle": null,
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_26d7a7a4-e025-42d0-b751-6ac3642988ac",
+              "storage_path": "/public/v1/tour-images/tour_c2c80f99-287c-41b5-93cc-53c4d98d0caf/travel-plan-services/day-04-travel-plan-service-0a67737f-b096-42d5-b29a-66e7d24d0d50.webp",
+              "caption": null,
+              "alt_text": null,
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-16T14:04:35.709Z"
             }
           }
         ],

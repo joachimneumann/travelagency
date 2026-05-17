@@ -13,8 +13,8 @@
   "seasonality_end_month": "oct",
   "priority": 80,
   "created_at": "2026-04-15T03:58:02.218Z",
-  "updated_at": "2026-05-13T05:01:12.714Z",
-  "published_on_webpage": false,
+  "updated_at": "2026-05-17T00:28:49.159Z",
+  "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_eb2b36ec-8b1d-46e2-bc6b-94894a5eb7bf",
@@ -36,8 +36,7 @@
         "id": "travel_plan_day_f6bbf937-0570-48e7-ab0d-587111d62fcb",
         "day_number": 1,
         "title": "HA NOI – BA BE LAKE",
-        "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
         "services": [
@@ -50,7 +49,6 @@
             "title": "Gio Pass",
             "details": "Windy Pass offers breathtaking mountain views and refreshing breezes in Northern Vietnam, making it a must-visit spot for any traveler",
             "image_subtitle": null,
-            "location": null,
             "start_time": null,
             "end_time": null,
             "image": {
@@ -78,7 +76,6 @@
             "title": "Pac Ngoi Village",
             "details": "Pac Ngoi Village features traditional Tay stilt houses and stunning views of Ba Be Lake, offering a peaceful glimpse into local ethnic culture and nature",
             "image_subtitle": null,
-            "location": null,
             "start_time": null,
             "end_time": null,
             "image": {
@@ -104,8 +101,7 @@
         "id": "travel_plan_day_bb8ac20b-8e27-47f7-99a6-22f412b0b9e6",
         "day_number": 2,
         "title": "BA BE – HA NOI",
-        "overnight_location": null,
-        "primary_location_id": null,
+        "primary_location_id": "place_hanoi",
         "secondary_location_id": null,
         "experience_highlight_ids": [],
         "services": [
@@ -118,7 +114,6 @@
             "title": "Fairy Pond (Ao Tien)",
             "details": "Fairy Pond (Ao Tien) is a serene, emerald lake nestled amidst limestone mountains, steeped in local legends and offering a mystical escape into nature",
             "image_subtitle": null,
-            "location": null,
             "start_time": null,
             "end_time": null,
             "image": {
@@ -146,7 +141,6 @@
             "title": "An Ma Temple",
             "details": "An Ma Temple is a sacred site on an islet in Ba Be Lake, dedicated to loyal Mac Dynasty generals and offering a peaceful atmosphere for spiritual reflection",
             "image_subtitle": null,
-            "location": null,
             "start_time": null,
             "end_time": null,
             "image": {
@@ -174,7 +168,6 @@
             "title": "Ba Goa Islet (Widow Island)",
             "details": "Ba Goa Islet (Widow Island) is a charming rock formation in Ba Be Lake, tied to a local legend of a kind widow and offering a perfect spot for scenic photos",
             "image_subtitle": null,
-            "location": null,
             "start_time": null,
             "end_time": null,
             "image": {
