@@ -14,7 +14,7 @@
   "seasonality_end_month": "oct",
   "priority": 97,
   "created_at": "2026-04-06T02:54:41.519Z",
-  "updated_at": "2026-05-14T06:19:08.683Z",
+  "updated_at": "2026-05-17T10:16:45.796Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_c8ef8a06-65a9-472a-ac9c-044541acf90a",
@@ -185,6 +185,33 @@
         ],
         "services": [
           {
+            "id": "travel_plan_service_ae51d437-68ce-4883-b169-5d595c9474fe",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_point": null,
+            "kind": "other",
+            "title": "Cam Thanh Coconut Forest",
+            "details": "Glide through Cam Thanh's water coconut palms by basket boat, a playful look at rural life close to Hoi An.",
+            "image_subtitle": null,
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_d1c4cda1-3c0d-4f5f-a1b6-508ca0cac1b3",
+              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/day-02-cam-thanh-coconut-forest.webp",
+              "caption": null,
+              "alt_text": null,
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": false,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-04T03:10:18.252Z"
+            }
+          },
+          {
             "id": "travel_plan_service_b8367ba6-cfd1-4bb2-9b9d-6f54fac35eaa",
             "timing_kind": "label",
             "time_label": null,
@@ -290,33 +317,6 @@
               "source_attribution": null,
               "focal_point": null,
               "created_at": "2026-05-04T16:13:44.244Z"
-            }
-          },
-          {
-            "id": "travel_plan_service_ae51d437-68ce-4883-b169-5d595c9474fe",
-            "timing_kind": "label",
-            "time_label": null,
-            "time_point": null,
-            "kind": "other",
-            "title": "Cam Thanh Coconut Forest",
-            "details": "Glide through Cam Thanh's water coconut palms by basket boat, a playful look at rural life close to Hoi An.",
-            "image_subtitle": null,
-            "start_time": null,
-            "end_time": null,
-            "image": {
-              "id": "travel_plan_service_image_d1c4cda1-3c0d-4f5f-a1b6-508ca0cac1b3",
-              "storage_path": "/public/v1/tour-images/tour_16531bfc-a60f-4128-9abe-2eada1f2d7d8/travel-plan-services/day-02-cam-thanh-coconut-forest.webp",
-              "caption": null,
-              "alt_text": null,
-              "sort_order": 0,
-              "is_primary": true,
-              "is_customer_visible": true,
-              "include_in_travel_tour_card": false,
-              "width_px": null,
-              "height_px": null,
-              "source_attribution": null,
-              "focal_point": null,
-              "created_at": "2026-05-04T03:10:18.252Z"
             }
           }
         ],

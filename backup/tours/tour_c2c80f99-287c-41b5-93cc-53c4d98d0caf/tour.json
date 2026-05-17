@@ -13,7 +13,7 @@
   "seasonality_end_month": "feb",
   "priority": 100,
   "created_at": "2026-04-09T03:15:24.977Z",
-  "updated_at": "2026-05-16T14:06:35.573Z",
+  "updated_at": "2026-05-17T11:03:04.868Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_de94ec95-0a5f-4dbd-a546-deb4d5847e53",
@@ -82,7 +82,7 @@
       {
         "id": "travel_plan_day_cd73568b-8916-4faa-998f-c6285531de92",
         "day_number": 1,
-        "title": "Temples, prison and beach",
+        "title": "Temples, prison,  beach and Phu Quoc night market",
         "primary_location_id": "place_phu_quoc",
         "secondary_location_id": null,
         "experience_highlight_ids": [

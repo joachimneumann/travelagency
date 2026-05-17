@@ -14,7 +14,7 @@
   "seasonality_end_month": "sep",
   "priority": 100,
   "created_at": "2026-04-09T03:37:52.367Z",
-  "updated_at": "2026-05-14T14:55:13.989Z",
+  "updated_at": "2026-05-17T03:20:14.651Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_ee80bf4d-6417-44aa-a4c2-8a19819afba5",
@@ -38,7 +38,7 @@
         "time_label": null,
         "time_point": null,
         "kind": "transport",
-        "title": "Airport to Hotel arrival transfer",
+        "title": "Hanoi Airport",
         "details": "Arrive in Hanoi and transfer to your hotel, giving the day a calm start before sightseeing begins.",
         "image_subtitle": null,
         "start_time": null,
@@ -60,7 +60,7 @@
         "time_label": null,
         "time_point": null,
         "kind": "transport",
-        "title": "Hotel to Airport departure transfer",
+        "title": "Hanoi Airport",
         "details": "We will stop at some shopping opportunities and drive you to the airport",
         "image_subtitle": null,
         "start_time": null,

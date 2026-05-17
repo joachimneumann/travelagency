@@ -1,0 +1,154 @@
+{
+  "id": "tour_449bd225-da95-4cee-a7ef-5223b00a579a",
+  "title": "Nha Trang Beach & City Highlights",
+  "short_description": "Spend a full day discovering Nha Trang’s coastal charm, from a beachfront walk and island snorkeling to Long Son Pagoda and the colorful energy of Dam Market.",
+  "styles": [
+    "beach",
+    "budget",
+    "family"
+  ],
+  "travel_plan": {
+    "tour_card_image_ids": [
+      "travel_plan_service_image_35ea971d-c1b5-4553-bdc0-5a5c340b6e55",
+      "travel_plan_service_image_ce832f47-1b65-462d-b975-1cf5d0ac5dec",
+      "travel_plan_service_image_4061152a-be51-4560-808b-ed5725e58d17",
+      "travel_plan_service_image_07aebdfa-692b-420d-976c-1fc64b335cae"
+    ],
+    "tour_card_primary_image_id": "travel_plan_service_image_35ea971d-c1b5-4553-bdc0-5a5c340b6e55",
+    "one_pager_hero_image_id": "travel_plan_service_image_35ea971d-c1b5-4553-bdc0-5a5c340b6e55",
+    "one_pager_image_ids": [
+      "travel_plan_service_image_ce832f47-1b65-462d-b975-1cf5d0ac5dec",
+      "travel_plan_service_image_4061152a-be51-4560-808b-ed5725e58d17",
+      "travel_plan_service_image_07aebdfa-692b-420d-976c-1fc64b335cae"
+    ],
+    "days": [
+      {
+        "id": "travel_plan_day_8f90a523-2a04-4f67-839c-c04695a7d553",
+        "day_number": 1,
+        "title": "Nha Trang Coast, Culture & Local Life",
+        "primary_location_id": "place_5da10678-f8e2-4f2b-97f7-7b2a41017036",
+        "secondary_location_id": null,
+        "experience_highlight_ids": [
+          "delicious_cuisine"
+        ],
+        "services": [
+          {
+            "id": "travel_plan_service_a2536eea-7e80-4b2f-ac92-a41be681ee11",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_point": null,
+            "kind": "other",
+            "title": "Tran Phu Beach Walk",
+            "details": "Enjoy Nha Trang’s lively beachfront with a relaxed walk along the palm-lined promenade, time on the sand, sea views, cafes, seafood restaurants, and optional watersports.",
+            "image_subtitle": null,
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_35ea971d-c1b5-4553-bdc0-5a5c340b6e55",
+              "storage_path": "/public/v1/tour-images/tour_449bd225-da95-4cee-a7ef-5223b00a579a/travel-plan-services/day-01-tran-phu-beach-walk.webp",
+              "caption": null,
+              "alt_text": null,
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-17T05:00:45.123Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_5f57129c-5a02-4d47-811e-8aae7ac51ae2",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_point": null,
+            "kind": "other",
+            "title": "Hon Mun Snorkeling",
+            "details": "Cruise into Nha Trang Bay for a scenic island-hopping trip, with time to swim and snorkel around Hon Mun’s clear waters and marine life.",
+            "image_subtitle": null,
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_ce832f47-1b65-462d-b975-1cf5d0ac5dec",
+              "storage_path": "/public/v1/tour-images/tour_449bd225-da95-4cee-a7ef-5223b00a579a/travel-plan-services/day-01-hon-mun-snorkeling.webp",
+              "caption": null,
+              "alt_text": null,
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-17T05:01:14.864Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_ec58b7fb-58f7-4940-bc1e-b0af69f1d62b",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_point": null,
+            "kind": "other",
+            "title": "Long Son Pagoda",
+            "details": "Visit one of Nha Trang’s most peaceful spiritual landmarks, known for its ornate temple grounds, hilltop white Buddha statue, and wide views over the city.",
+            "image_subtitle": null,
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_4061152a-be51-4560-808b-ed5725e58d17",
+              "storage_path": "/public/v1/tour-images/tour_449bd225-da95-4cee-a7ef-5223b00a579a/travel-plan-services/day-01-long-son-pagoda.webp",
+              "caption": null,
+              "alt_text": null,
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-17T05:01:56.069Z"
+            }
+          },
+          {
+            "id": "travel_plan_service_c9d052c5-2e9e-436a-9138-72188f41a907",
+            "timing_kind": "label",
+            "time_label": null,
+            "time_point": null,
+            "kind": "other",
+            "title": "Dam Market Visit",
+            "details": "Explore Nha Trang’s bustling central market, where fresh produce, snacks, souvenirs, fabrics, and everyday local life come together in a colorful, energetic setting.",
+            "image_subtitle": null,
+            "start_time": null,
+            "end_time": null,
+            "image": {
+              "id": "travel_plan_service_image_07aebdfa-692b-420d-976c-1fc64b335cae",
+              "storage_path": "/public/v1/tour-images/tour_449bd225-da95-4cee-a7ef-5223b00a579a/travel-plan-services/day-01-dam-market-visit.webp",
+              "caption": null,
+              "alt_text": null,
+              "sort_order": 0,
+              "is_primary": true,
+              "is_customer_visible": true,
+              "include_in_travel_tour_card": true,
+              "width_px": null,
+              "height_px": null,
+              "source_attribution": null,
+              "focal_point": null,
+              "created_at": "2026-05-17T05:03:38.837Z"
+            }
+          }
+        ],
+        "notes": "Enjoy Nha Trang from beach to market, with a seaside walk along Tran Phu, snorkeling around Hon Mun, a visit to Long Son Pagoda, and time to explore the lively Dam Market."
+      }
+    ]
+  },
+  "seasonality_start_month": "jan",
+  "seasonality_end_month": "dec",
+  "priority": 40,
+  "published_on_webpage": true,
+  "created_at": "2026-05-17T05:00:34.706Z",
+  "updated_at": "2026-05-17T05:27:34.018Z"
+}

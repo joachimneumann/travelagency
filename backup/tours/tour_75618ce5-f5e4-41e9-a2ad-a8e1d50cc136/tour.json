@@ -14,7 +14,7 @@
   "seasonality_end_month": "dec",
   "priority": 100,
   "created_at": "2026-04-14T09:47:49.907Z",
-  "updated_at": "2026-05-16T02:42:16.063Z",
+  "updated_at": "2026-05-17T10:19:16.577Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -123,8 +123,8 @@
             "time_label": null,
             "time_point": null,
             "kind": "other",
-            "title": "St. Joseph's Cathedral",
-            "details": "Visit St. Joseph's Cathedral, a French-era landmark set among cafes and narrow lanes near Hoan Kiem.",
+            "title": "Hanoi Cathedral",
+            "details": "Hanoi Cathedral, a French-era landmark set among cafes and narrow lanes near Hoan Kiem.",
             "image_subtitle": null,
             "start_time": null,
             "end_time": null,

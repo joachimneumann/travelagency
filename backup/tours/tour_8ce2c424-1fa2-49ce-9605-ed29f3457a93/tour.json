@@ -13,7 +13,7 @@
   "seasonality_end_month": "oct",
   "priority": 80,
   "created_at": "2026-04-15T03:58:02.218Z",
-  "updated_at": "2026-05-17T00:28:49.159Z",
+  "updated_at": "2026-05-17T03:03:22.778Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -31,6 +31,52 @@
       "travel_plan_service_image_73295fb0-0c10-4392-b320-42f95a9024c2",
       "travel_plan_service_image_8a713d38-60f4-4547-98a6-6826dbdb4659"
     ],
+    "boundary_logistics": {
+      "arrival": {
+        "id": "travel_plan_boundary_arrival_cbf77025-d0bd-484f-b234-e1853283a142",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_point": null,
+        "kind": "transport",
+        "title": "HaNoi Ariport",
+        "details": "Our guide will meet you at X Airport’s international terminal.",
+        "image_subtitle": null,
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "arrival",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "first_day",
+          "position": "start"
+        }
+      },
+      "departure": {
+        "id": "travel_plan_boundary_departure_fca9a079-f0e5-472f-a496-fe0c635225d0",
+        "timing_kind": "label",
+        "time_label": null,
+        "time_point": null,
+        "kind": "transport",
+        "title": "HaNoi Ariport",
+        "details": "Our guide will accompany you to HaNoi Airport’s international terminal.",
+        "image_subtitle": null,
+        "start_time": null,
+        "end_time": null,
+        "image": null,
+        "boundary_kind": "departure",
+        "enabled": true,
+        "airport_code": null,
+        "from_label": null,
+        "to_label": null,
+        "presentation": {
+          "attach_to": "last_day",
+          "position": "end"
+        }
+      }
+    },
     "days": [
       {
         "id": "travel_plan_day_f6bbf937-0570-48e7-ab0d-587111d62fcb",

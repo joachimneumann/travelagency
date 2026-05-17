@@ -14,7 +14,7 @@
   "seasonality_end_month": "",
   "priority": 80,
   "created_at": "2026-04-14T10:39:04.534Z",
-  "updated_at": "2026-05-16T13:59:57.639Z",
+  "updated_at": "2026-05-17T03:04:52.990Z",
   "published_on_webpage": true,
   "travel_plan": {
     "tour_card_image_ids": [
@@ -83,7 +83,7 @@
         "day_number": 1,
         "title": "Ha Noi – Ha Giang – Quan Ba – Yen Minh",
         "primary_location_id": "place_hanoi",
-        "secondary_location_id": null,
+        "secondary_location_id": "place_e0c3265d-3e1a-4c22-b964-e237994bd97b",
         "experience_highlight_ids": [
           "nature_wildlife"
         ],
@@ -176,8 +176,8 @@
         "id": "travel_plan_day_46f846a5-9975-4c90-8d05-cdacd410ab87",
         "day_number": 2,
         "title": "Yen Minh - Dong Van - Lung Cu - Mapileng Pass",
-        "primary_location_id": null,
-        "secondary_location_id": null,
+        "primary_location_id": "place_e0c3265d-3e1a-4c22-b964-e237994bd97b",
+        "secondary_location_id": "place_e0c3265d-3e1a-4c22-b964-e237994bd97b",
         "experience_highlight_ids": [
           "scenic_landscapes"
         ],
@@ -270,8 +270,8 @@
         "id": "travel_plan_day_130b4863-9904-468f-a103-2265dc0a02d7",
         "day_number": 3,
         "title": "Dong Van - Ha Giang - Ha Noi",
-        "primary_location_id": "place_hanoi",
-        "secondary_location_id": null,
+        "primary_location_id": "place_e0c3265d-3e1a-4c22-b964-e237994bd97b",
+        "secondary_location_id": "place_hanoi",
         "experience_highlight_ids": [
           "scenic_landscapes"
         ],

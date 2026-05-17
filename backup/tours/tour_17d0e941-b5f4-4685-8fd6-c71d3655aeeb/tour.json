@@ -11,7 +11,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-02T13:58:46.560Z",
-  "updated_at": "2026-05-16T02:10:01.321Z",
+  "updated_at": "2026-05-17T10:14:34.642Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_e7e4b9a7-7097-4f05-86d6-e40e02a2fb93",
@@ -181,7 +181,7 @@
             "time_point": null,
             "kind": "other",
             "title": "Ba Na Hills",
-            "details": "Ba Na Hills cable car in Da Nang holds 4 world records, offering a stunning ride through the clouds.",
+            "details": "Offering spectacular panoramic views of lush forests and majestic waterfalls",
             "image_subtitle": null,
             "start_time": null,
             "end_time": null,
