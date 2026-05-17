@@ -6,10 +6,12 @@ import {
 import { createTourCustomizer } from "./tour_customize.js";
 
 const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
+const TOUR_IMAGE_PLACEHOLDER = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_PLAN_DAY_DETAILS_TRANSITION_MS = 300;
 const TOUR_RANDOM_BOOST_SESSION_KEY = "asiatravelplan_tour_random_boosts_v1";
 const TOUR_RANDOM_BOOST_MAX = 50;
+const PRIORITY_TOUR_CARD_IMAGE_COUNT = 1;
 const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
   VN: "vietnam",
   TH: "thailand",
@@ -80,6 +82,7 @@ export function createFrontendToursController(ctx) {
 
   let renderedTourGridColumnCount = 0;
   let tourGridResizeBound = false;
+  let tourLazyImageObserver = null;
   const tourCustomizer = createTourCustomizer({
     state,
     frontendT,
@@ -1231,12 +1234,16 @@ export function createFrontendToursController(ctx) {
     const galleryLabel = frontendT("tour.card.gallery_next", "Show next picture for {title}", {
       title: tripTitle
     });
-    const loading = index === 0 ? "eager" : "lazy";
-    const fetchpriority = "auto";
+    const isPriorityTourImage = index < PRIORITY_TOUR_CARD_IMAGE_COUNT;
+    const loading = isPriorityTourImage ? "eager" : "lazy";
+    const fetchpriority = isPriorityTourImage ? "auto" : "low";
     const gallery = Array.isArray(trip?.pictures) && trip.pictures.length ? trip.pictures : [DEFAULT_TOUR_IMAGE];
     const galleryCount = gallery.length;
     const activeGalleryIndex = savedTourCardGalleryIndex(tripId, galleryCount);
     const primaryPicture = normalizeText(gallery[activeGalleryIndex]) || primaryTourPicture(trip);
+    const lazyPrimaryImageAttrs = isPriorityTourImage
+      ? `src="${escapeAttr(primaryPicture)}"`
+      : `src="${TOUR_IMAGE_PLACEHOLDER}" data-tour-lazy-src="${escapeAttr(primaryPicture)}"`;
     const singleColumnGallery = galleryCount > 1 && isSingleColumnTourLayout();
     const galleryImageAlt = frontendT("tour.card.image_alt", "{title} in {destinations}", {
       title: tripTitle,
@@ -1270,11 +1277,14 @@ export function createFrontendToursController(ctx) {
                       data-tour-media-slide
                       data-tour-media-index="${escapeAttr(String(imageIndex))}"
                       data-tour-media-alt="${escapeAttr(galleryImageAlt)}"
-                      src="${escapeAttr(image || DEFAULT_TOUR_IMAGE)}"
+                      ${imageIndex === activeGalleryIndex && !isPriorityTourImage
+                        ? `src="${TOUR_IMAGE_PLACEHOLDER}" data-tour-lazy-src="${escapeAttr(image || DEFAULT_TOUR_IMAGE)}"`
+                        : `src="${escapeAttr(image || DEFAULT_TOUR_IMAGE)}"`}
                       alt="${imageIndex === activeGalleryIndex ? escapeAttr(galleryImageAlt) : ""}"
                       aria-hidden="${imageIndex === activeGalleryIndex ? "false" : "true"}"
                       loading="${imageIndex === activeGalleryIndex ? loading : "lazy"}"
-                      fetchpriority="${imageIndex === activeGalleryIndex ? fetchpriority : "auto"}"
+                      fetchpriority="${imageIndex === activeGalleryIndex ? fetchpriority : "low"}"
+                      decoding="async"
                       draggable="false"
                       width="1200"
                       height="800"
@@ -1286,10 +1296,11 @@ export function createFrontendToursController(ctx) {
                 <img
                   class="tour-card__media-layer is-active"
                   data-tour-media-layer="primary"
-                  src="${escapeAttr(primaryPicture)}"
+                  ${lazyPrimaryImageAttrs}
                   alt="${escapeAttr(galleryImageAlt)}"
                   loading="${loading}"
                   fetchpriority="${fetchpriority}"
+                  decoding="async"
                   draggable="false"
                   width="1200"
                   height="800"
@@ -1297,10 +1308,12 @@ export function createFrontendToursController(ctx) {
                 <img
                   class="tour-card__media-layer"
                   data-tour-media-layer="secondary"
-                  src="${escapeAttr(primaryPicture)}"
+                  src="${TOUR_IMAGE_PLACEHOLDER}"
                   alt=""
                   aria-hidden="true"
                   loading="lazy"
+                  fetchpriority="low"
+                  decoding="async"
                   draggable="false"
                   width="1200"
                   height="800"
@@ -2188,6 +2201,59 @@ export function createFrontendToursController(ctx) {
     });
   }
 
+  function hydrateTourLazyImage(image) {
+    if (!(image instanceof HTMLImageElement)) return;
+    const src = normalizeText(image.dataset.tourLazySrc);
+    if (!src) return;
+    image.decoding = "async";
+    image.src = src;
+    delete image.dataset.tourLazySrc;
+    image.removeAttribute("data-tour-lazy-src");
+  }
+
+  function scheduleTourLazyImageFallback(images) {
+    const lazyImages = Array.from(images || []).filter((image) => image instanceof HTMLImageElement);
+    if (!lazyImages.length || typeof window === "undefined") return;
+    const hydrate = () => {
+      lazyImages.forEach(hydrateTourLazyImage);
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      window.requestIdleCallback(hydrate, { timeout: 2500 });
+      return;
+    }
+    window.setTimeout(hydrate, 1500);
+  }
+
+  function observeTourLazyImages(root = els.tourGrid) {
+    if (!(root instanceof HTMLElement) || !root.querySelectorAll) return;
+    const images = Array.from(root.querySelectorAll("img[data-tour-lazy-src]"))
+      .filter((image) => image instanceof HTMLImageElement);
+    if (!images.length) return;
+
+    if (typeof IntersectionObserver !== "function") {
+      scheduleTourLazyImageFallback(images);
+      return;
+    }
+
+    if (!tourLazyImageObserver) {
+      tourLazyImageObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const image = entry.target;
+          tourLazyImageObserver?.unobserve(image);
+          hydrateTourLazyImage(image);
+        });
+      }, {
+        rootMargin: "240px 0px",
+        threshold: 0.01
+      });
+    }
+
+    images.forEach((image) => {
+      tourLazyImageObserver.observe(image);
+    });
+  }
+
   function renderTrips(trips, { showNoResults = false } = {}) {
     if (!els.tourGrid) return;
     bindTourGridResizeHandler();
@@ -2212,6 +2278,7 @@ export function createFrontendToursController(ctx) {
     }
 
     els.tourGrid.innerHTML = parts.join("");
+    observeTourLazyImages(els.tourGrid);
     bindTourCardOpenHandlers();
     fitTourCardDescriptions();
     if (typeof window !== "undefined") {
@@ -2223,6 +2290,7 @@ export function createFrontendToursController(ctx) {
 
   function bindTourCardOpenHandlers(root = els.tourGrid) {
     if (!(root instanceof HTMLElement)) return;
+    observeTourLazyImages(root);
 
     const imageCycleButtons = root.querySelectorAll("[data-tour-image-cycle]");
     imageCycleButtons.forEach((button) => {
@@ -2802,6 +2870,7 @@ export function createFrontendToursController(ctx) {
         aria-hidden="${imageIndex === activeIndex ? "false" : "true"}"
         loading="${imageIndex === activeIndex ? "eager" : "lazy"}"
         fetchpriority="auto"
+        decoding="async"
         draggable="false"
         width="1200"
         height="800"
@@ -2983,6 +3052,7 @@ export function createFrontendToursController(ctx) {
   async function cycleTourCardImage(button, { step = 1 } = {}) {
     if (!(button instanceof HTMLElement)) return;
     if (button.dataset.imageLoading === "1") return;
+    button.querySelectorAll?.("img[data-tour-lazy-src]")?.forEach(hydrateTourLazyImage);
 
     const tripId = normalizeText(button.getAttribute("data-trip-id"));
     const trip = state.filteredTrips.find((item) => normalizeText(item?.id) === tripId)
@@ -3548,7 +3618,8 @@ export function createFrontendToursController(ctx) {
     urls.forEach((url) => {
       const img = new Image();
       img.decoding = "async";
-      img.loading = "eager";
+      img.loading = "lazy";
+      img.fetchPriority = "low";
       img.src = url;
     });
   }

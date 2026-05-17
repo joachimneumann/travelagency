@@ -38,6 +38,11 @@
 }
 
 (staging_static_cache_headers) {
+  @staging_immutable_generated_homepage {
+    path /frontend/data/generated/homepage/public-homepage-main.bundle.js /frontend/data/generated/homepage/*.json
+  }
+  header @staging_immutable_generated_homepage Cache-Control "public, max-age=31536000, immutable"
+
   @staging_app_modules path /frontend/scripts/* /frontend/Generated/* /shared/generated/* /shared/js/*
   header @staging_app_modules Cache-Control "no-cache, must-revalidate"
 
@@ -72,7 +77,7 @@
 
 (production_static_cache_headers) {
   @production_immutable_static {
-    path /assets/fonts/* /assets/generated/homepage/* /assets/generated/reels/*
+    path /assets/fonts/* /assets/generated/homepage/* /assets/generated/reels/* /frontend/data/generated/homepage/public-homepage-main.bundle.js /frontend/data/generated/homepage/*.json
   }
   header @production_immutable_static Cache-Control "public, max-age=31536000, immutable"
 

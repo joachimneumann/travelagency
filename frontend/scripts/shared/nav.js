@@ -2,6 +2,7 @@ import { readCachedAuthMe, wireAuthLogoutLink } from "./auth.js";
 
 const TRANSLATIONS_ICON_READY = "assets/img/translation.png";
 const NAV_STATUS_REFRESH_DELAY_MS = 400;
+const NAV_DEPLOYMENT_STATUS_STAGGER_MS = 650;
 const NAV_STATUS_READY_FALLBACK_MS = 12_000;
 
 function buildIconMarkup(icon) {
@@ -60,6 +61,9 @@ function scheduleBackendStatusRefresh(mount, apiBase, options = {}) {
     if (!document.body?.contains(mount)) return;
     runWhenIdle(() => {
       void refreshTranslationsIconState(mount, apiBase, { force });
+      window.setTimeout(() => {
+        void refreshPublicSiteDeploymentState(mount, apiBase);
+      }, NAV_DEPLOYMENT_STATUS_STAGGER_MS);
     });
   }, Math.max(0, delayMs));
 }
@@ -127,6 +131,7 @@ function applyNavPermissions(mount, roles) {
   const canReadTourVariants = hasAnyRole(resolvedRoles, "atp_tour_editor");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin");
   const canReadTranslations = hasAnyRole(resolvedRoles, "atp_admin");
+  const canViewPublicSiteDeployment = hasAnyRole(resolvedRoles, "atp_admin", "atp_tour_editor");
   mount
     .querySelectorAll(".backend-section-nav__item[data-backend-section]")
     .forEach((button) => {
@@ -140,6 +145,11 @@ function applyNavPermissions(mount, roles) {
       button.hidden = !visible;
       button.classList.toggle("is-hidden", !visible);
     });
+  const deploymentLight = publicSiteDeploymentLight(mount);
+  if (deploymentLight instanceof HTMLElement) {
+    deploymentLight.hidden = !canViewPublicSiteDeployment;
+    deploymentLight.classList.toggle("is-hidden", !canViewPublicSiteDeployment);
+  }
 }
 
 function applyBackendAuthPayloadToNav(mount, apiBase, payload) {
@@ -185,6 +195,77 @@ function bindTranslationsStatusRefresh(mount) {
     void refreshTranslationsIconState(mount);
   };
   window.addEventListener("backend-translations-status-refresh", mount.__backendTranslationStatusHandler);
+}
+
+function publicSiteDeploymentLight(mount) {
+  return mount?.querySelector?.("#backendPublicSiteDeploymentLight") || null;
+}
+
+function publicSiteDeploymentTitle(status = null, error = "") {
+  const message = String(error || status?.error || "").trim();
+  if (message) return message;
+  if (status?.clean === true) return backendT("nav.public_site_deployment_clean", "Website content matches the latest deployment.");
+  if (status?.status === "missing_manifest") {
+    return backendT("nav.public_site_deployment_missing", "Website content has not been deployed yet.");
+  }
+  if (status?.dirty === true) {
+    return backendT("nav.public_site_deployment_dirty", "Website content changed since the latest deployment.");
+  }
+  return backendT("nav.public_site_deployment_unknown", "Website deployment status is unknown.");
+}
+
+function setPublicSiteDeploymentState(mount, status = null, options = {}) {
+  const light = publicSiteDeploymentLight(mount);
+  if (!(light instanceof HTMLElement) || light.hidden) return;
+  const errorMessage = String(options.error || "").trim();
+  const clean = status?.clean === true && !errorMessage;
+  const dirty = !clean && (status?.dirty === true || status?.loaded === true);
+  const checking = options.checking === true;
+  const error = Boolean(errorMessage || status?.status === "error");
+  light.classList.toggle("is-clean", clean);
+  light.classList.toggle("is-dirty", dirty);
+  light.classList.toggle("is-checking", checking);
+  light.classList.toggle("is-error", error);
+  light.title = publicSiteDeploymentTitle(status, errorMessage);
+  light.setAttribute("aria-label", light.title);
+}
+
+async function refreshPublicSiteDeploymentState(mount, apiBase) {
+  const light = publicSiteDeploymentLight(mount);
+  if (!(light instanceof HTMLElement) || light.hidden) return null;
+  setPublicSiteDeploymentState(mount, null, { checking: true });
+  try {
+    const base = String(apiBase || "").replace(/\/$/, "");
+    const response = await fetch(`${base}/api/v1/public-site/deployment-status`, {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+      cache: "no-store"
+    });
+    if (!response.ok) {
+      setPublicSiteDeploymentState(mount, null, {
+        error: backendT("nav.public_site_deployment_unknown", "Website deployment status is unknown.")
+      });
+      return null;
+    }
+    const payload = await response.json().catch(() => null);
+    setPublicSiteDeploymentState(mount, payload || null);
+    return payload;
+  } catch {
+    setPublicSiteDeploymentState(mount, null, {
+      error: backendT("nav.public_site_deployment_unknown", "Website deployment status is unknown.")
+    });
+    return null;
+  }
+}
+
+function bindPublicSiteDeploymentRefresh(mount, apiBase) {
+  if (typeof mount.__backendPublicSiteDeploymentRefreshHandler === "function") {
+    window.removeEventListener("backend-public-site-deployment-refresh", mount.__backendPublicSiteDeploymentRefreshHandler);
+  }
+  mount.__backendPublicSiteDeploymentRefreshHandler = () => {
+    void refreshPublicSiteDeploymentState(mount, apiBase);
+  };
+  window.addEventListener("backend-public-site-deployment-refresh", mount.__backendPublicSiteDeploymentRefreshHandler);
 }
 
 function resolveBackendViewportHeight() {
@@ -275,6 +356,7 @@ export function mountBackendNav(mount, options = {}) {
       </div>
 
       <div class="backend-nav__meta">
+        <span class="backend-nav__deployment-light is-checking" id="backendPublicSiteDeploymentLight" role="status" hidden title="${backendT("nav.public_site_deployment_unknown", "Website deployment status is unknown.")}" aria-label="${backendT("nav.public_site_deployment_unknown", "Website deployment status is unknown.")}"></span>
         <ul class="nav-list">
           <li class="backend-nav__website"><a href="${websiteHref}">${backendT("nav.website", "Website")}</a></li>
           <li id="backendLangMenuMount"></li>
@@ -295,6 +377,8 @@ export function mountBackendNav(mount, options = {}) {
   const cachedRoles = Array.isArray(cachedAuth?.user?.roles) ? cachedAuth.user.roles : [];
   applyNavPermissions(mount, cachedRoles);
   bindTranslationsStatusRefresh(mount);
+  bindPublicSiteDeploymentRefresh(mount, apiBase);
+  scheduleBackendStatusRefreshWhenReady(mount, apiBase);
   const cachedUserLabel = resolveUserLabel(cachedAuth?.user);
   const userLabelEl = mount.querySelector("#backendUserLabel");
   if (userLabelEl) {

@@ -513,6 +513,15 @@ function scheduleDeferredTask(task, { timeout = 1200, fallbackDelayMs = 250 } = 
   window.setTimeout(() => task(), fallbackDelayMs);
 }
 
+function scheduleAfterPageLoad(task) {
+  if (typeof task !== "function") return;
+  if (document.readyState === "complete") {
+    task();
+    return;
+  }
+  window.addEventListener("load", () => task(), { once: true });
+}
+
 function nextTourImagesToPrewarm() {
   const visibleCount = Math.max(0, Number(state.visibleToursCount) || 0);
   return (Array.isArray(state.filteredTrips) ? state.filteredTrips : []).slice(visibleCount, visibleCount + 6);
@@ -523,10 +532,12 @@ function triggerTourSectionImagePrewarm() {
   tourSectionPrewarmTriggered = true;
   const scheduledToken = ++tourImagePrewarmToken;
   const snapshot = nextTourImagesToPrewarm();
-  scheduleDeferredTask(() => {
-    if (scheduledToken !== tourImagePrewarmToken) return;
-    prewarmTourImages(snapshot);
-  }, { timeout: 1500, fallbackDelayMs: 300 });
+  scheduleAfterPageLoad(() => {
+    scheduleDeferredTask(() => {
+      if (scheduledToken !== tourImagePrewarmToken) return;
+      prewarmTourImages(snapshot);
+    }, { timeout: 1500, fallbackDelayMs: 300 });
+  });
 }
 
 function setupTourSectionImagePrewarm() {

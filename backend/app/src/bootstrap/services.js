@@ -16,6 +16,7 @@ import { createCountryReferenceStore } from "../lib/country_reference_store.js";
 import { createTranslationMemoryStore } from "../lib/translation_memory_store.js";
 import { createStaticTranslationApplyJobs } from "../domain/static_translation_apply_jobs.js";
 import { createStaticTranslationService } from "../domain/static_translations.js";
+import { createPublicSiteDeploymentStatusService } from "../domain/public_site_deployment_status.js";
 
 export function createBackendServices({
   runtime,
@@ -162,6 +163,12 @@ export function createBackendServices({
     nowIso: support.nowIso
   });
 
+  const publicSiteDeploymentStatusService = createPublicSiteDeploymentStatusService({
+    repoRoot,
+    contentRoot: runtime.paths?.contentRoot || path.join(repoRoot, "content"),
+    nowIso: support.nowIso
+  });
+
   const tourHelpers = createTourHelpers({
     toursDir: collections.toursDir,
     safeInt: support.safeInt,
@@ -251,6 +258,7 @@ export function createBackendServices({
     translationMemoryStore,
     staticTranslationService,
     staticTranslationApplyJobs,
+    publicSiteDeploymentStatusService,
     travelPlanPdfArtifacts,
     tourHelpers,
     tourVariantHelpers,

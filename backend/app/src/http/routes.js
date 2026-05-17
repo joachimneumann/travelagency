@@ -105,6 +105,7 @@ const OPERATIONAL_ROUTE_DEFINITIONS = Object.freeze([
   { method: "GET", pattern: /^\/api\/v1\/static-translations\/([^/]+)\/([^/]+)$/, handlerKey: "handleGetStaticTranslationLanguageState" },
   { method: "PATCH", pattern: /^\/api\/v1\/static-translations\/([^/]+)\/([^/]+)\/overrides$/, handlerKey: "handlePatchStaticTranslationOverrides" },
   { method: "DELETE", pattern: /^\/api\/v1\/static-translations\/([^/]+)\/([^/]+)\/cache\/([^/]+)$/, handlerKey: "handleDeleteStaticTranslationCache" },
+  { method: "GET", pattern: /^\/api\/v1\/public-site\/deployment-status$/, handlerKey: "handleGetPublicSiteDeploymentStatus" },
   { method: "POST", pattern: /^\/api\/v1\/tour-matrices\/publish$/, handlerKey: "handlePublishTourMatrices" },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)\/one-pager\.pdf$/, handlerKey: "handleGetTourOnePagerPdf" },
   { method: "GET", pattern: /^\/api\/v1\/tours\/([^/]+)\/travel-plan\.pdf$/, handlerKey: "handleGetTourTravelPlanPdf" },

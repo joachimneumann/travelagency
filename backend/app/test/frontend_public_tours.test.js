@@ -744,7 +744,7 @@ test("public tour random ordering persists through sessionStorage reloads", asyn
   }
 });
 
-test("secret tour customization stays disabled when inactive and on mobile viewports", async () => {
+test("tour customization stays available on mobile and localized detail views", async () => {
   const storage = new Map();
   global.HTMLElement = FakeElement;
   global.HTMLButtonElement = FakeElement;
@@ -875,31 +875,21 @@ test("secret tour customization stays disabled when inactive and on mobile viewp
     mobile.controller.renderVisibleTrips();
 
     assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /data-tour-customize/);
-    assert.doesNotMatch(mobile.els.tourGrid.innerHTML, /Customize this Trip/);
     const mobileDetails = await renderAndOpenDetails(mobile);
-    assert.doesNotMatch(mobileDetails, /data-tour-customize/);
-    assert.doesNotMatch(mobileDetails, /Customize this Trip/);
+    assert.match(mobileDetails, /data-tour-customize/);
+    assert.match(mobileDetails, /Customize this Trip/);
+    assert.match(mobileDetails, /tour-plan-pdf/);
+    assert.match(mobileDetails, /data-tour-overview-pdf/);
+    assert.match(mobileDetails, /data-tour-travel-plan-pdf/);
+    assert.match(mobileDetails, />Overview \(one-pager\)<\/button>/);
+    assert.match(mobileDetails, />Day-by-Day Travel Plan<\/button>/);
+    assert.match(mobileDetails, /class="tour-plan-itinerary"[^>]*data-tour-plan-itinerary/);
+    assert.doesNotMatch(mobileDetails, /tour-plan-actions/);
+    assert.doesNotMatch(mobileDetails, /data-tour-plan-itinerary-toggle/);
+    assert.doesNotMatch(mobileDetails, />\s*Itinerary\s*<\/button>/);
+    assert.equal((mobileDetails.match(/>Get a Quote<\/button>/g) || []).length, 1);
 
     global.window.matchMedia = () => ({ matches: false });
-    const inactiveDesktop = createController({
-      ...baseState(),
-      customizeFeatureEnabled: false
-    });
-    const inactiveDetails = await renderAndOpenDetails(inactiveDesktop);
-
-    assert.match(inactiveDetails, /tour-plan-pdf/);
-    assert.match(inactiveDetails, /data-tour-overview-pdf/);
-    assert.match(inactiveDetails, /data-tour-travel-plan-pdf/);
-    assert.match(inactiveDetails, />Overview \(one-pager\)<\/button>/);
-    assert.match(inactiveDetails, />Day-by-Day Travel Plan<\/button>/);
-    assert.match(inactiveDetails, /class="tour-plan-itinerary"[^>]*data-tour-plan-itinerary/);
-    assert.doesNotMatch(inactiveDetails, /tour-plan-actions/);
-    assert.doesNotMatch(inactiveDetails, /data-tour-plan-itinerary-toggle/);
-    assert.doesNotMatch(inactiveDetails, />\s*Itinerary\s*<\/button>/);
-    assert.equal((inactiveDetails.match(/>Get a Quote<\/button>/g) || []).length, 1);
-    assert.doesNotMatch(inactiveDetails, /data-tour-customize/);
-    assert.doesNotMatch(inactiveDetails, /Customize this Trip/);
-
     const desktop = createController(baseState());
     const desktopDetails = await renderAndOpenDetails(desktop);
 

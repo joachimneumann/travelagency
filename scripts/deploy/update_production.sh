@@ -155,7 +155,6 @@ fi
 
 prepare_runtime_brand_logo
 generate_runtime_i18n
-generate_public_homepage_assets
 
 mkdir -p backend/app/data backend/app/data/tmp content logs
 
@@ -171,5 +170,7 @@ if should_sync_atp_staff "${SERVICES[@]}"; then
   docker_compose -p "$PROJECT_NAME" --env-file "$ENV_FILE" -f "$COMPOSE_FILE" run --rm --no-deps backend \
     node scripts/sync_atp_staff_from_keycloak.js
 fi
+
+generate_public_homepage_assets
 
 print_deploy_runtime_i18n_warning

@@ -89,6 +89,26 @@ test("buildApiRoutes includes static translation management routes", () => {
   assert.equal(firstApplyJobRoute.handler, expectedHandler);
 });
 
+test("buildApiRoutes includes public-site deployment status route without publish routes", () => {
+  const handlerFns = new Map();
+  const handlers = new Proxy({}, {
+    get: (_target, prop) => {
+      if (!handlerFns.has(prop)) handlerFns.set(prop, () => {});
+      return handlerFns.get(prop);
+    }
+  });
+
+  const routes = buildApiRoutes({ handlers });
+  const matches = (method, path) => routes.some((route) => route.method === method && route.pattern.test(path));
+
+  assert.equal(matches("GET", "/api/v1/public-site/deployment-status"), true);
+  assert.equal(matches("GET", "/api/v1/public-site/publish-status"), false);
+  assert.equal(matches("POST", "/api/v1/public-site/publish"), false);
+
+  const statusRoute = routes.find((route) => route.method === "GET" && route.pattern.test("/api/v1/public-site/deployment-status"));
+  assert.equal(statusRoute.handler, handlerFns.get("handleGetPublicSiteDeploymentStatus"));
+});
+
 test("buildApiRoutes includes tour matrix publish route", () => {
   const handlerFns = new Map();
   const handlers = new Proxy({}, {

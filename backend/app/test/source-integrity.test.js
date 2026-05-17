@@ -3765,6 +3765,11 @@ test("tour page reads month options from the generated catalogs layer", async ()
     /backendPublicSitePublishBtn|backendPublicSitePublishOverlay|\/api\/v1\/public-site\/publish/,
     "The backend nav should not render or call the removed public-site publish control"
   );
+  assert.match(
+    navSource,
+    /backendPublicSiteDeploymentLight[\s\S]*\/api\/v1\/public-site\/deployment-status/,
+    "The backend nav should show a deployment status light backed by the read-only deployment status endpoint"
+  );
   assert.doesNotMatch(
     tourSource,
     /backend-public-site-publish-refresh|notifyPublicSitePublishStatus/,
@@ -3774,6 +3779,11 @@ test("tour page reads month options from the generated catalogs layer", async ()
     routesSource,
     /public-site\\\/publish|public-site\/publish|handleGetPublicSitePublish|handleStartPublicSitePublish/,
     "Routes should not expose removed public-site publish endpoints"
+  );
+  assert.match(
+    routesSource,
+    /public-site\\\/deployment-status[\s\S]*handleGetPublicSiteDeploymentStatus/,
+    "Routes should expose a read-only public-site deployment status endpoint for the backend menu light"
   );
   assert.doesNotMatch(
     routesSource,
@@ -5240,7 +5250,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   ]) {
     assert.match(
       source,
-      /frontend\/scripts\/shared\/nav\.js\?v=20260517a/,
+      /frontend\/scripts\/shared\/nav\.js\?v=20260518b/,
       "Backoffice entry pages should version the shared nav module to avoid stale cached imports after deploys"
     );
     assert.match(
@@ -5331,6 +5341,11 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     publicHomepageAssetsScript,
     /PUBLIC_HOMEPAGE_ASSET_GENERATOR_QUIET=1[\s\S]*>\s*"\$command_log_path" 2>&1[\s\S]*Generated static homepage assets\. Full generation output:/,
     "Homepage asset deploy helper should suppress generator stdout on successful deploys while preserving logs"
+  );
+  assert.match(
+    publicHomepageAssetsScript,
+    /write_public_site_deployment_manifest\(\)[\s\S]*write_public_site_deployment_manifest "\$root_dir"/,
+    "Homepage asset deploy helper should write the content metadata deployment manifest after static generation succeeds"
   );
   assert.match(
     runtimeI18nScript,
@@ -5555,6 +5570,16 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     stagingCaddy,
     /@production_immutable_static \{[\s\S]*path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*[\s\S]*header @production_immutable_static Cache-Control "public, max-age=31536000, immutable"/,
     "Production should use long immutable caching for versioned generated assets and fonts"
+  );
+  assert.match(
+    stagingCaddy,
+    /@staging_immutable_generated_homepage \{[\s\S]*path \/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*header @staging_immutable_generated_homepage Cache-Control "public, max-age=31536000, immutable"/,
+    "Staging static cache headers should explicitly keep the generated homepage bundle and JSON immutable"
+  );
+  assert.match(
+    stagingCaddy,
+    /@production_immutable_static \{[\s\S]*path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\* \/frontend\/data\/generated\/homepage\/public-homepage-main\.bundle\.js \/frontend\/data\/generated\/homepage\/\*\.json[\s\S]*header @production_immutable_static Cache-Control "public, max-age=31536000, immutable"/,
+    "Production static cache headers should explicitly keep the generated homepage bundle and JSON immutable"
   );
   assert.match(
     stagingCaddy,
@@ -5799,8 +5824,8 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainToursSource,
-    /const loading = index === 0 \? "eager" : "lazy";[\s\S]*const fetchpriority = "auto";/,
-    "Homepage tour cards should avoid marking multiple below-the-fold images as high priority"
+    /const isPriorityTourImage = index < PRIORITY_TOUR_CARD_IMAGE_COUNT;[\s\S]*const loading = isPriorityTourImage \? "eager" : "lazy";[\s\S]*const fetchpriority = isPriorityTourImage \? "auto" : "low";/,
+    "Homepage tour cards should keep below-the-fold images lazy and low priority"
   );
   assert.doesNotMatch(
     mainToursSource,
@@ -6537,8 +6562,8 @@ test("homepage hero title follows published destinations and keeps the destinati
   );
   assert.match(
     homepageSource,
-    /<link rel="preload" as="image" href="\/assets\/video\/rice%20field\.webp" fetchpriority="high" \/>[\s\S]*data-mobile-src="\/assets\/video\/rice%20field-mobile\.mp4"[\s\S]*data-desktop-src="\/assets\/video\/rice%20field\.mp4"[\s\S]*data-hero-play-button[\s\S]*const playButton = heroSection\?\.querySelector\("\[data-hero-play-button\]"\);[\s\S]*const isMobileHeroViewport = \(\) => \([\s\S]*window\.matchMedia\("\(max-width: 760px\)"\)\.matches[\s\S]*const chooseHeroVideoSource = \(\) => \{[\s\S]*const useMobile = isMobileHeroViewport\(\);[\s\S]*heroVideo\.src = heroVideoSource;[\s\S]*const requestPlayback = \(\{ force = false \} = \{\}\) => \{[\s\S]*\(!force && !shouldAutoplayVideo\(\)\)[\s\S]*const startManualPlayback = \(\) => \{[\s\S]*startPlayback\(\{ force: true \}\);[\s\S]*const handlePosterClick = \(event\) => \{[\s\S]*isInteractiveHeroTarget\(event\.target\)[\s\S]*playButton\?\.addEventListener\("click", handlePlayButtonClick\);[\s\S]*heroSection\?\.addEventListener\("click", handlePosterClick\);[\s\S]*document\.addEventListener\("DOMContentLoaded", startPlayback, \{ once: true \}\)/,
-    "Homepage should preload the hero poster, keep hero MP4s out of the initial request graph, attach a mobile-specific source on small screens, and let the poster/play button start video from a user gesture"
+    /<link rel="preload" as="image" href="\/assets\/video\/rice%20field\.webp" fetchpriority="high" \/>[\s\S]*data-mobile-src="\/assets\/video\/rice%20field-mobile\.mp4"[\s\S]*data-desktop-src="\/assets\/video\/rice%20field\.mp4"[\s\S]*data-hero-play-button[\s\S]*const playButton = heroSection\?\.querySelector\("\[data-hero-play-button\]"\);[\s\S]*const isMobileHeroViewport = \(\) => \([\s\S]*window\.matchMedia\("\(max-width: 760px\)"\)\.matches[\s\S]*const chooseHeroVideoSource = \(\) => \{[\s\S]*const useMobile = isMobileHeroViewport\(\);[\s\S]*heroVideo\.src = heroVideoSource;[\s\S]*const requestPlayback = \(\{ force = false \} = \{\}\) => \{[\s\S]*\(!force && !shouldAutoplayVideo\(\)\)[\s\S]*const startManualPlayback = \(\) => \{[\s\S]*startPlayback\(\{ force: true \}\);[\s\S]*const startHeroVideoAutoplayAfterPageLoad = \(\) => \{[\s\S]*window\.addEventListener\("load", start, \{ once: true \}\);[\s\S]*const handlePosterClick = \(event\) => \{[\s\S]*isInteractiveHeroTarget\(event\.target\)[\s\S]*playButton\?\.addEventListener\("click", handlePlayButtonClick\);[\s\S]*heroSection\?\.addEventListener\("click", handlePosterClick\);[\s\S]*startHeroVideoAutoplayAfterPageLoad\(\)/,
+    "Homepage should preload the hero poster, keep hero MP4s out of the initial request graph until page load, attach a mobile-specific source on small screens, and let the poster/play button start video from a user gesture"
   );
   assert.ok(
     mobileHeroVideo.size < desktopHeroVideo.size / 3,

@@ -18,6 +18,7 @@ import { createKeycloakUserHandlers } from "../http/handlers/keycloak_users.js";
 import { createStaticTranslationHandlers } from "../http/handlers/static_translations.js";
 import { createTourHandlers } from "../http/handlers/tours.js";
 import { createTourVariantHandlers } from "../http/handlers/tour_variants.js";
+import { createPublicSiteDeploymentStatusHandlers } from "../http/handlers/public_site_deployment_status.js";
 import { createTourMatrixHandlers } from "../http/handlers/tour_matrices.js";
 
 export function createApplicationRoutes({
@@ -56,6 +57,7 @@ export function createApplicationRoutes({
     translationMemoryStore,
     staticTranslationService,
     staticTranslationApplyJobs,
+    publicSiteDeploymentStatusService,
     travelPlanPdfArtifacts,
     tourHelpers,
     tourVariantHelpers,
@@ -461,6 +463,13 @@ export function createApplicationRoutes({
     nowIso: support.nowIso
   });
 
+  const publicSiteDeploymentStatusHandlers = createPublicSiteDeploymentStatusHandlers({
+    sendJson: httpHelpers.sendJson,
+    getPrincipal,
+    canReadPublicSiteDeploymentStatus: canEditTours,
+    publicSiteDeploymentStatusService
+  });
+
   return buildApiRoutes({
     authRoutes: auth.routes,
     handlers: {
@@ -479,6 +488,7 @@ export function createApplicationRoutes({
       ...countryReferenceHandlers,
       ...destinationScopeHandlers,
       ...staticTranslationHandlers,
+      ...publicSiteDeploymentStatusHandlers,
       ...tourMatrixHandlers,
       ...tourVariantHandlers,
       ...tourHandlers

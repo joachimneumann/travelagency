@@ -820,6 +820,7 @@
         let playbackRetryBound = false;
         let playbackAttemptPending = false;
         let playbackAttemptSerial = 0;
+        let autoplayStartScheduled = false;
 
         const markHeroMediaReady = () => {
           if (!(heroSection instanceof HTMLElement) || heroSection.dataset.heroMediaReady === "true") return;
@@ -946,6 +947,30 @@
           startPlayback({ force: true });
         };
 
+        const scheduleHeroVideoAutoplay = (callback) => {
+          if (typeof callback !== "function") return;
+          if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(() => callback(), { timeout: 1200 });
+            return;
+          }
+          window.setTimeout(() => callback(), 0);
+        };
+
+        const startHeroVideoAutoplayAfterPageLoad = () => {
+          if (autoplayStartScheduled || !shouldAutoplayVideo()) return;
+          autoplayStartScheduled = true;
+          const start = () => {
+            scheduleHeroVideoAutoplay(() => {
+              startPlayback();
+            });
+          };
+          if (document.readyState === "complete") {
+            start();
+            return;
+          }
+          window.addEventListener("load", start, { once: true });
+        };
+
         const isInteractiveHeroTarget = (target) => (
           target instanceof Element
           && Boolean(target.closest("a, button, input, select, textarea, label, [role='button']"))
@@ -963,12 +988,7 @@
         playButton?.addEventListener("click", handlePlayButtonClick);
         heroSection?.addEventListener("click", handlePosterClick);
         markHeroMediaReady();
-
-        if (document.readyState === "loading") {
-          document.addEventListener("DOMContentLoaded", startPlayback, { once: true });
-        } else {
-          startPlayback();
-        }
+        startHeroVideoAutoplayAfterPageLoad();
       })();
     </script>
 
