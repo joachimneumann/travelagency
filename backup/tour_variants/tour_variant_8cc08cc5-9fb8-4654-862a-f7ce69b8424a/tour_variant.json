@@ -15,7 +15,7 @@
   "seasonality_start_month": "jan",
   "seasonality_end_month": "dec",
   "priority": 100,
-  "published_on_webpage": false,
+  "published_on_webpage": true,
   "base_marketing_tour_id": "tour_4b8aff72-92fc-4763-8224-804249583e99",
   "boundary_logistics": {
     "arrival": {
@@ -130,5 +130,24 @@
     }
   ],
   "created_at": "2026-05-17T00:29:38.472Z",
-  "updated_at": "2026-05-17T00:29:38.472Z"
+  "updated_at": "2026-05-17T23:56:23.962Z",
+  "tour_card_image_ids": [
+    "travel_plan_service_image_d4e0c299-8fc3-45a7-bb41-3551499518a0",
+    "travel_plan_service_image_1179c78c-1aaa-4769-bbb4-03147361176e",
+    "travel_plan_service_image_83a02394-8461-4479-b12a-4f45b1a338c8",
+    "travel_plan_service_image_124be17a-4cfe-45b6-8bb1-ea9ad7b5f38f",
+    "travel_plan_service_image_4ef28a01-c27b-4101-97fe-5db9f7c9763f",
+    "travel_plan_service_image_9198fb28-f33d-4267-aec4-65ec92291de9",
+    "travel_plan_service_image_54c2582d-b5a9-4dda-8560-f2fda4469a6e",
+    "travel_plan_service_image_6f48eeee-6ee8-4320-868b-6c5b0715ffaa",
+    "travel_plan_service_image_5fccf51b-60a4-43e3-8825-495e15e9ed53",
+    "travel_plan_service_image_fde6db7a-6735-44bc-b3b8-1fdd1538a79b",
+    "travel_plan_service_image_576f7bf2-9818-410a-baf2-82dc510e3440",
+    "travel_plan_service_image_aecaab0a-cb92-4dc5-9136-1638211d9cfe",
+    "travel_plan_service_image_29ea77f2-8aa9-4647-9266-0dab843492af",
+    "travel_plan_service_image_e17130ec-e6e3-4782-912e-ecaf50b52520",
+    "travel_plan_service_image_17b080f3-af44-4023-8cad-9fb247eefe1b",
+    "travel_plan_service_image_4153d91e-aeac-4eef-a660-8b5b74bb54db",
+    "travel_plan_service_image_802762bc-e117-4622-ac9c-f9384c89af1c"
+  ]
 }
