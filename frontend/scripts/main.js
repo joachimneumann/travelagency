@@ -809,7 +809,7 @@ function setCustomizeFeatureEnabled(enabled) {
   }
   syncCustomizeFeatureState();
   if (!effectiveCustomizeFeatureEnabled()) {
-    document.querySelector(".tour-customize [data-customize-close]")?.click();
+    toursController.closeCustomizer?.();
   }
   renderVisibleTrips();
 }

@@ -162,7 +162,6 @@ function setCustomizerOverlayOpen(open) {
   if (!(els.customizerOverlay instanceof HTMLElement)) return;
   isCustomizerOverlayOpen = nextOpen;
   els.customizerOverlay.hidden = !nextOpen;
-  document.body.classList.toggle("tour-variant-customizer-open", nextOpen);
   refreshMapPreviewStage();
   if (nextOpen) {
     renderCustomizer();
@@ -196,13 +195,11 @@ function handleMapPreviewClick(event) {
 }
 
 function mapPreviewStage() {
-  return els.mapPreview?.querySelector?.(".tour-customize-map__stage") || null;
+  return els.mapPreview instanceof HTMLElement ? els.mapPreview : null;
 }
 
 function isMapPreviewStageTarget(target) {
-  if (!(target instanceof Element)) return false;
-  const stage = target.closest(".tour-customize-map__stage");
-  return stage instanceof HTMLElement && els.mapPreview?.contains(stage);
+  return target instanceof Element && Boolean(els.mapPreview?.contains(target));
 }
 
 function refreshMapPreviewStage() {
@@ -215,11 +212,6 @@ function refreshMapPreviewStage() {
   stage.setAttribute("aria-expanded", isCustomizerOverlayOpen ? "true" : "false");
   stage.setAttribute("aria-label", openLabel);
   stage.setAttribute("title", openLabel);
-  stage.querySelectorAll("button, [tabindex]").forEach((element) => {
-    if (!(element instanceof HTMLElement) || element === stage) return;
-    element.setAttribute("tabindex", "-1");
-    element.setAttribute("aria-hidden", "true");
-  });
 }
 
 function handleCustomizerOverlayKeydown(event) {
@@ -886,7 +878,7 @@ function bindControls() {
   els.mapPreview?.addEventListener("click", handleMapPreviewClick);
   els.mapPreview?.addEventListener("keydown", handleMapPreviewKeydown);
   els.customizerClose?.addEventListener("click", closeCustomizerOverlay);
-  document.addEventListener("keydown", handleCustomizerOverlayKeydown);
+  els.customizerOverlay?.addEventListener("keydown", handleCustomizerOverlayKeydown);
   [
     els.baseTour,
     els.title,

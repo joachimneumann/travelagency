@@ -152,7 +152,6 @@ export function createBookingTravelPlanModule(ctx) {
   let travelPlanCustomizerPreviewWorkspace = null;
   let travelPlanCustomizerOverlayWorkspace = null;
   let travelPlanCustomizerSourceRowsPromise = null;
-  let travelPlanCustomizerDocumentEventsBound = false;
   let travelPlanCustomizerOverlayOpen = false;
 
   const travelPlanCustomizerLabels = {
@@ -2756,8 +2755,8 @@ export function createBookingTravelPlanModule(ctx) {
           ${travelPlanCustomizerOverlayOpen ? "" : "hidden"}
         >
           <div class="travel-plan-customizer-overlay__mount" data-travel-plan-customizer-overlay></div>
+          <button class="btn btn-ghost travel-plan-customizer-overlay__close" type="button" data-travel-plan-close-customizer${travelPlanCustomizerOverlayOpen ? "" : " hidden"}>Close</button>
         </div>
-        <button class="btn btn-ghost travel-plan-customizer-overlay__close" type="button" data-travel-plan-close-customizer${travelPlanCustomizerOverlayOpen ? "" : " hidden"}>Close</button>
       </div>
     `;
   }
@@ -2809,7 +2808,6 @@ export function createBookingTravelPlanModule(ctx) {
     travelPlanCustomizerPreviewWorkspace = null;
     travelPlanCustomizerOverlayWorkspace = null;
     removePortaledTravelPlanCustomizerElements();
-    document.body.classList.remove("travel-plan-customizer-open");
     travelPlanCustomizerOverlayOpen = false;
   }
 
@@ -2818,11 +2816,6 @@ export function createBookingTravelPlanModule(ctx) {
     if (overlay instanceof HTMLElement && overlay.parentElement === document.body) {
       overlay.remove();
     }
-    document.querySelectorAll("[data-travel-plan-close-customizer]").forEach((element) => {
-      if (element instanceof HTMLElement && element.parentElement === document.body) {
-        element.remove();
-      }
-    });
   }
 
   function travelPlanCustomizerOverlayElement() {
@@ -2832,9 +2825,25 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function travelPlanCustomizerCloseButtonElement() {
-    const closeButton = document.querySelector("[data-travel-plan-close-customizer]")
+    const closeButton = travelPlanCustomizerOverlayElement()?.querySelector?.("[data-travel-plan-close-customizer]")
       || els.travel_plan_editor?.querySelector?.("[data-travel-plan-close-customizer]");
     return closeButton instanceof HTMLElement ? closeButton : null;
+  }
+
+  function handleTravelPlanCustomizerOverlayClick(event) {
+    if (!travelPlanCustomizerOverlayOpen) return;
+    const button = event.target instanceof Element
+      ? event.target.closest("[data-travel-plan-close-customizer]")
+      : null;
+    if (!button) return;
+    event.preventDefault();
+    closeTravelPlanCustomizerOverlay();
+  }
+
+  function handleTravelPlanCustomizerOverlayKeydown(event) {
+    if (event.key !== "Escape" || !travelPlanCustomizerOverlayOpen) return;
+    event.preventDefault();
+    closeTravelPlanCustomizerOverlay();
   }
 
   function refreshTravelPlanCustomizerPreviewTrigger() {
@@ -2897,13 +2906,14 @@ export function createBookingTravelPlanModule(ctx) {
     if (!(overlay instanceof HTMLElement)) return;
     const closeButton = els.travel_plan_editor.querySelector("[data-travel-plan-close-customizer]");
     document.body.appendChild(overlay);
-    if (closeButton instanceof HTMLElement) {
-      document.body.appendChild(closeButton);
-    }
     travelPlanCustomizerOverlayOpen = true;
     overlay.hidden = false;
     if (closeButton instanceof HTMLElement) closeButton.hidden = false;
-    document.body.classList.add("travel-plan-customizer-open");
+    if (overlay.dataset.travelPlanCustomizerOverlayBound !== "1") {
+      overlay.addEventListener("click", handleTravelPlanCustomizerOverlayClick);
+      overlay.addEventListener("keydown", handleTravelPlanCustomizerOverlayKeydown);
+      overlay.dataset.travelPlanCustomizerOverlayBound = "1";
+    }
     refreshTravelPlanCustomizerPreviewTrigger();
     refreshTravelPlanCustomizerWorkspaceState();
     window.setTimeout(() => {
@@ -2915,7 +2925,6 @@ export function createBookingTravelPlanModule(ctx) {
   function closeTravelPlanCustomizerOverlay({ rerender = true } = {}) {
     if (!travelPlanCustomizerOverlayOpen) return;
     travelPlanCustomizerOverlayOpen = false;
-    document.body.classList.remove("travel-plan-customizer-open");
     const overlay = travelPlanCustomizerOverlayElement();
     if (overlay instanceof HTMLElement) overlay.hidden = true;
     const closeButton = travelPlanCustomizerCloseButtonElement();
@@ -2926,22 +2935,6 @@ export function createBookingTravelPlanModule(ctx) {
     } else {
       removePortaledTravelPlanCustomizerElements();
     }
-  }
-
-  function handleTravelPlanCustomizerDocumentClick(event) {
-    if (!travelPlanCustomizerOverlayOpen) return;
-    const button = event.target instanceof Element
-      ? event.target.closest("[data-travel-plan-close-customizer]")
-      : null;
-    if (!button) return;
-    event.preventDefault();
-    closeTravelPlanCustomizerOverlay();
-  }
-
-  function handleTravelPlanCustomizerDocumentKeydown(event) {
-    if (event.key !== "Escape" || !travelPlanCustomizerOverlayOpen) return;
-    event.preventDefault();
-    closeTravelPlanCustomizerOverlay();
   }
 
   function renderTravelPlanSidebar(selection) {
@@ -4897,6 +4890,11 @@ export function createBookingTravelPlanModule(ctx) {
         }
       });
       els.travel_plan_editor.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && travelPlanCustomizerOverlayOpen) {
+          event.preventDefault();
+          closeTravelPlanCustomizerOverlay();
+          return;
+        }
         const customizerTrigger = event.target instanceof Element
           ? event.target.closest("[data-travel-plan-open-customizer]")
           : null;
@@ -4905,11 +4903,6 @@ export function createBookingTravelPlanModule(ctx) {
         openTravelPlanCustomizerOverlay();
       });
       els.travel_plan_editor.dataset.travelPlanBound = "true";
-      if (!travelPlanCustomizerDocumentEventsBound) {
-        document.addEventListener("click", handleTravelPlanCustomizerDocumentClick);
-        document.addEventListener("keydown", handleTravelPlanCustomizerDocumentKeydown);
-        travelPlanCustomizerDocumentEventsBound = true;
-      }
       window.setTimeout(() => {
         warnIfTravelPlanControlsMissing("post-load-watchdog");
       }, 1500);

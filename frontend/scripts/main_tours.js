@@ -1137,7 +1137,7 @@ export function createFrontendToursController(ctx) {
     window.addEventListener("resize", () => {
       const nextColumnCount = getTourGridColumnCount();
       if (!customizeFeatureEnabled()) {
-        document.querySelector(".tour-customize [data-customize-close]")?.click();
+        tourCustomizer.close();
       }
       if (nextColumnCount === renderedTourGridColumnCount) {
         syncTourCardImageSwipeSurfaces();
@@ -2329,7 +2329,7 @@ export function createFrontendToursController(ctx) {
                 }
               : null
           });
-          if (replaceDetailsModal && document.querySelector(".tour-customize")) {
+          if (replaceDetailsModal && tourCustomizer.isOpen()) {
             closeTourDetailsModal({ restoreFocus: false });
           }
         } catch (error) {
@@ -3502,6 +3502,7 @@ export function createFrontendToursController(ctx) {
     preferredCurrencyForFrontendLang,
     renderPriorityDebug,
     renderVisibleTrips,
+    closeCustomizer: () => tourCustomizer.close(),
     resolveLocalizedFrontendText,
     setFilterCheckboxes,
     setupFilterEvents,

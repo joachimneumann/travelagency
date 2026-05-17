@@ -518,6 +518,1114 @@ const TOUR_CUSTOMIZER_WORKSPACE_LABEL_KEYS = Object.freeze({
   "tour.customize.day_image": "dayImage"
 });
 
+const TOUR_CUSTOMIZER_COMPONENT_CSS = `
+:host {
+  all: initial;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  color-scheme: light;
+  contain: content;
+  --bg: #e2ecde;
+  --surface: #ffffff;
+  --surface-muted: #f3f5f6;
+  --text: #1c2b35;
+  --text-strong: #16313d;
+  --text-muted: #5c6c76;
+  --line: #deeaef;
+  --line-strong: #cfdbe3;
+  --line-focus-strong: rgba(104, 133, 145, 0.95);
+  --accent: #30796b;
+  --accent-dark: #246052;
+  --font-family-sans: "Source Sans 3", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-size-button: 1rem;
+  --font-weight-regular: 400;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --tour-customize-card-width: 116px;
+  --tour-customize-card-height: 154px;
+  --tour-customize-options-gap: 0.56rem;
+  --tour-customize-card-border-color: var(--line-focus-strong);
+  --tour-customize-line-color: var(--line);
+  --tour-customize-workspace-background: #f7f9f7;
+}
+
+:host([data-tour-configurator-mode="modal"]) {
+  position: fixed !important;
+  top: var(--tour-customize-modal-top, 0px) !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  z-index: 2300 !important;
+  width: auto !important;
+  height: auto !important;
+  contain: none;
+}
+
+.tour-customize-root,
+.tour-customize-root :where(button, input, select, textarea, article, section, div, span, p, h2, h3, h4, svg, img) {
+  box-sizing: border-box;
+}
+
+.tour-customize-root {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  color: var(--text);
+  font-family: var(--font-family-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.tour-customize-root :where(button, input, select, textarea) {
+  font: inherit;
+}
+
+.tour-customize-root :where(button, [role="button"], img, svg, [aria-hidden="true"], .tour-customize-drag-ghost, .is-dragging) {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.tour-customize-root :where(img) {
+  display: block;
+  max-width: 100%;
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+.tour-customize-root.tour-customize {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: auto;
+  min-height: 0;
+  overflow: hidden;
+  background: rgba(14, 28, 32, 0.48);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+
+.tour-customize-root.tour-customize-runtime-root,
+.tour-customize-root .tour-customize-embedded,
+.tour-customize-root.tour-customize {
+  --tour-customize-card-width: 116px;
+  --tour-customize-card-height: 154px;
+  --tour-customize-options-gap: 0.56rem;
+  --tour-customize-card-border-color: var(--line-focus-strong);
+  --tour-customize-line-color: var(--line);
+  --tour-customize-workspace-background: #f7f9f7;
+}
+
+.tour-customize-root .btn,
+.tour-customize-root .tour-customize__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.45rem;
+  padding: 0.62rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text-strong);
+  font-size: var(--font-size-button);
+  line-height: 1.1;
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tour-customize-root .btn:hover,
+.tour-customize-root .btn:focus-visible {
+  border-color: var(--accent);
+  outline: 2px solid rgba(48, 121, 107, 0.22);
+  outline-offset: 2px;
+}
+
+.tour-customize-root .btn-secondary {
+  border-color: var(--line);
+  background: #fff;
+}
+
+.tour-customize-root .tour-customize__dialog {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(16, 27, 43, 0.14);
+  border-radius: 0;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(16, 27, 43, 0.22);
+}
+
+.tour-customize-root .tour-customize__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.tour-customize-root .tour-customize__header h2,
+.tour-customize-root .tour-customize__workspace h3,
+.tour-customize-root .tour-customize-option h4,
+.tour-customize-root .tour-customize-timeline__item h4 {
+  margin: 0;
+  color: var(--text-strong);
+  letter-spacing: 0;
+}
+
+.tour-customize-root .tour-customize__header h2 {
+  font-size: clamp(1.3rem, 2vw, 1.9rem);
+  line-height: 1.05;
+}
+
+.tour-customize-root .tour-customize__header p,
+.tour-customize-root .tour-customize-option p,
+.tour-customize-root .tour-customize-timeline__item p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.tour-customize-root .tour-customize__header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.tour-customize-root .tour-customize__close {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.tour-customize-root .tour-customize__close:hover,
+.tour-customize-root .tour-customize__close:focus-visible {
+  border-color: var(--accent);
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+.tour-customize-root .tour-customize__workspace {
+  display: grid;
+  grid-template-columns: 30% minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--tour-customize-workspace-background);
+}
+
+.tour-customize-root .tour-customize-embedded {
+  overflow: hidden;
+  border: 1px solid var(--tour-customize-line-color);
+  border-radius: 8px;
+  background: var(--tour-customize-workspace-background);
+}
+
+.tour-customize-root .tour-customize-embedded .tour-customize__workspace {
+  max-height: min(72vh, 760px);
+}
+
+.tour-customize-root .tour-customize-embedded--full {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  border-radius: 0;
+}
+
+.tour-customize-root .tour-customize-embedded--full .tour-customize__workspace {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
+.tour-customize-root .tour-customize-embedded--preview {
+  width: 100%;
+  height: 100%;
+  min-height: var(--tour-customize-preview-min-height, 0);
+  border: 0;
+  border-radius: 0;
+}
+
+.tour-customize-root .tour-customize-embedded--preview .tour-customize__workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  min-height: var(--tour-customize-preview-min-height, 0);
+  max-height: none;
+}
+
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-map {
+  width: 100%;
+  height: 100%;
+  min-height: var(--tour-customize-preview-min-height, 0);
+  border: 0;
+}
+
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-map__controls,
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-options,
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-timeline {
+  display: none;
+}
+
+.tour-customize-root .tour-customize-embedded.is-disabled .tour-customize-option,
+.tour-customize-root .tour-customize-embedded.is-disabled .tour-customize-timeline__item {
+  cursor: default;
+  opacity: 0.68;
+}
+
+.tour-customize-root .tour-customize-map {
+  position: relative;
+  display: grid;
+  place-items: center;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: #e7f5f7;
+  container-type: size;
+  cursor: zoom-in;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.tour-customize-root .tour-customize-map__stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+  aspect-ratio: 1 / 2;
+}
+
+@supports (width: 1cqw) {
+  .tour-customize-root .tour-customize-map__stage {
+    width: min(100cqw, 50cqh);
+    height: min(100cqh, 200cqw);
+  }
+}
+
+.tour-customize-root .tour-customize-map__region {
+  position: absolute;
+  inset: 0;
+  background-color: #e7f5f7;
+  background-image: url("/assets/img/map.webp");
+  background-position: var(--tour-customize-map-zoom-x, 50%) var(--tour-customize-map-zoom-y, 50%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  transition: background-size 0.22s ease, background-position 0.22s ease;
+}
+
+.tour-customize-root .tour-customize-map.is-zoomed {
+  cursor: grab;
+}
+
+.tour-customize-root .tour-customize-map.is-zoomed.is-panning {
+  cursor: grabbing;
+}
+
+.tour-customize-root .tour-customize-map.is-zoomed .tour-customize-map__region {
+  background-size: 300% 300%;
+}
+
+.tour-customize-root .tour-customize-map.is-panning .tour-customize-map__region {
+  transition: none;
+}
+
+.tour-customize-root .tour-customize-map__controls {
+  position: absolute;
+  top: 0.65rem;
+  right: 0.65rem;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tour-customize-root .tour-customize-map__optimize,
+.tour-customize-root .tour-customize-map__zoom-out {
+  display: none;
+  place-items: center;
+  height: 2rem;
+  border: 1px solid rgba(25, 79, 147, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  color: #194f93;
+  box-shadow: 0 8px 18px rgba(16, 27, 43, 0.18);
+  cursor: pointer;
+}
+
+.tour-customize-root .tour-customize-map__optimize {
+  display: inline-grid;
+  min-width: 5.25rem;
+  padding: 0 0.82rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.tour-customize-root .tour-customize-map__optimize:hover,
+.tour-customize-root .tour-customize-map__optimize:focus-visible,
+.tour-customize-root .tour-customize-map__zoom-out:hover,
+.tour-customize-root .tour-customize-map__zoom-out:focus-visible {
+  border-color: rgba(25, 79, 147, 0.34);
+  background: #fff;
+}
+
+.tour-customize-root .tour-customize-map__zoom-out {
+  width: 2rem;
+  border-radius: 999px;
+}
+
+.tour-customize-root .tour-customize-map.is-zoomed .tour-customize-map__zoom-out {
+  display: grid;
+}
+
+.tour-customize-root .tour-customize-map__zoom-out span {
+  position: relative;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+}
+
+.tour-customize-root .tour-customize-map__zoom-out span::before,
+.tour-customize-root .tour-customize-map__zoom-out span::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+
+.tour-customize-root .tour-customize-map__zoom-out span::before {
+  left: 0.22rem;
+  right: 0.22rem;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+}
+
+.tour-customize-root .tour-customize-map__zoom-out span::after {
+  right: -0.38rem;
+  bottom: -0.28rem;
+  width: 0.48rem;
+  height: 2px;
+  transform: rotate(45deg);
+}
+
+.tour-customize-root .tour-customize-map__route {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.tour-customize-root .tour-customize-map__route path,
+.tour-customize-root .tour-customize-map__route polyline {
+  stroke: #194f93;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 5 5;
+}
+
+.tour-customize-root .tour-customize-map__marker {
+  position: absolute;
+  z-index: 2;
+  display: inline-grid;
+  place-items: center;
+  min-width: 2rem;
+  height: 2rem;
+  transform: translate(-50%, -50%);
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: #194f93;
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-bold);
+  box-shadow: 0 7px 16px rgba(16, 27, 43, 0.24);
+}
+
+.tour-customize-root .tour-customize-map__marker.is-drag-location {
+  z-index: 4;
+  min-width: 1.45rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  overflow: hidden;
+  background: #d71920;
+  color: transparent;
+  font-size: 0;
+  box-shadow: 0 0 0 0 rgba(215, 25, 32, 0.46), 0 9px 20px rgba(16, 27, 43, 0.28);
+  text-indent: -999px;
+  animation: tour-customize-map-drag-location 0.72s ease-in-out infinite;
+}
+
+@keyframes tour-customize-map-drag-location {
+  0%,
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.42;
+    transform: translate(-50%, -50%) scale(1.22);
+  }
+}
+
+.tour-customize-root .tour-customize-options {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 0;
+  padding: 1rem;
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+  overflow: hidden;
+}
+
+.tour-customize-root .tour-customize-options__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, var(--tour-customize-card-width));
+  gap: var(--tour-customize-options-gap);
+  align-content: start;
+  justify-content: start;
+  min-height: 0;
+  margin-top: 0.8rem;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding-right: 0.2rem;
+}
+
+.tour-customize-root .tour-customize-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.26rem;
+  width: var(--tour-customize-card-width);
+  max-width: none;
+  height: var(--tour-customize-card-height);
+  min-height: 0;
+  padding: 0.34rem 0.34rem 0.88rem;
+  border: 2px solid var(--tour-customize-card-border-color);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(17, 27, 33, 0.08);
+  text-align: center;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.tour-customize-root .tour-customize-option.is-dragging,
+.tour-customize-root .tour-customize-timeline__item.is-dragging {
+  opacity: 0.72;
+}
+
+.tour-customize-root .tour-customize-option.is-sticky-dragging,
+.tour-customize-root .tour-customize-timeline__item.is-sticky-dragging {
+  outline: 2px solid #2aa84a;
+  outline-offset: 2px;
+}
+
+.tour-customize-root .tour-customize-timeline__item.is-dragging {
+  position: relative;
+  z-index: 1300;
+}
+
+.tour-customize-root .tour-customize-timeline__item.is-reordering {
+  transition: transform 170ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.tour-customize-root .tour-customize-timeline__item.is-optimizing-reorder {
+  z-index: 6;
+  box-shadow: 0 14px 28px rgba(16, 27, 43, 0.24);
+  transition:
+    transform 520ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 520ms ease;
+}
+
+.tour-customize-root .tour-customize-timeline__item.is-move-placeholder,
+.tour-customize-root .tour-customize-timeline__item.is-move-placeholder.is-dragging,
+.tour-customize-root .tour-customize-timeline__item.is-delete-candidate,
+.tour-customize-root .tour-customize-timeline__item.is-delete-preview-terminal::after {
+  display: none;
+}
+
+.tour-customize-root .tour-customize-option--location-break {
+  grid-column-start: 1;
+}
+
+.tour-customize-root.tour-customize-pointer-dragging,
+.tour-customize-root.tour-customize-pointer-dragging :where(button, [role="button"], article, section, div, span) {
+  cursor: grabbing !important;
+}
+
+.tour-customize-root.tour-customize-pointer-dragging .tour-customize-timeline {
+  position: relative;
+  z-index: 30;
+}
+
+.tour-customize-root .tour-customize-drag-ghost {
+  position: fixed;
+  z-index: 2400;
+  margin: 0;
+  pointer-events: none;
+  opacity: 1;
+  visibility: visible;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(16, 27, 43, 0.26);
+  isolation: isolate;
+  transform: rotate(-1deg);
+}
+
+.tour-customize-root .tour-customize-drag-ghost.tour-customize-timeline__item,
+.tour-customize-root .tour-customize-drag-ghost.tour-customize-timeline__item.is-dragging {
+  z-index: 2400;
+  opacity: 1;
+  visibility: visible;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.tour-customize-drag-ghost--card,
+.tour-customize-root .tour-customize-drag-ghost.tour-customize-drag-ghost--card.is-dragging {
+  z-index: 2400;
+  border: 2px solid var(--tour-customize-card-border-color);
+  background: #fff !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.tour-customize-drag-ghost--card > * {
+  visibility: visible;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.tour-customize-drag-ghost--card .tour-customize-option__body {
+  background: #fff !important;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.tour-customize-drag-ghost--card .tour-customize-timeline__move-placeholder {
+  display: none;
+  visibility: hidden;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.is-delete-target {
+  box-shadow: 0 18px 42px rgba(158, 42, 43, 0.3);
+}
+
+.tour-customize-root .tour-customize-drag-ghost.is-delete-target::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 3;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(243, 244, 246, 0.94);
+  box-shadow: 0 8px 20px rgba(16, 27, 43, 0.18);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.is-delete-target::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 4;
+  width: 25px;
+  height: 25px;
+  background: #9e2a2b;
+  transform: translate(-50%, -50%);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%206h18'/%3E%3Cpath%20d='M8%206V4c0-1%201-2%202-2h4c1%200%202%201%202%202v2'/%3E%3Cpath%20d='M19%206l-1%2014c0%201-1%202-2%202H8c-1%200-2-1-2-2L5%206'/%3E%3Cpath%20d='M10%2011v6'/%3E%3Cpath%20d='M14%2011v6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M3%206h18'/%3E%3Cpath%20d='M8%206V4c0-1%201-2%202-2h4c1%200%202%201%202%202v2'/%3E%3Cpath%20d='M19%206l-1%2014c0%201-1%202-2%202H8c-1%200-2-1-2-2L5%206'/%3E%3Cpath%20d='M10%2011v6'/%3E%3Cpath%20d='M14%2011v6'/%3E%3C/svg%3E") center / contain no-repeat;
+  pointer-events: none;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.is-smoke-dissolving {
+  overflow: visible;
+  border-color: transparent;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.is-smoke-dissolving > :not(.tour-customize-smoke-puff) {
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.is-smoke-dissolving::before,
+.tour-customize-root .tour-customize-drag-ghost.is-smoke-dissolving::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 5;
+  width: 76px;
+  height: 52px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 32% 48%, rgba(255, 255, 255, 0.95) 0 24%, transparent 52%),
+    radial-gradient(circle at 56% 34%, rgba(217, 221, 226, 0.88) 0 28%, transparent 58%),
+    radial-gradient(circle at 70% 58%, rgba(181, 189, 198, 0.52) 0 24%, transparent 58%);
+  box-shadow: none;
+  filter: blur(1px);
+  opacity: 0;
+  pointer-events: none;
+  -webkit-mask: none;
+  mask: none;
+  animation: tour-customize-smoke-cloud 460ms ease-out both;
+}
+
+.tour-customize-root .tour-customize-drag-ghost.is-smoke-dissolving::after {
+  width: 96px;
+  height: 62px;
+  animation-delay: 55ms;
+}
+
+.tour-customize-root .tour-customize-smoke-puff {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 6;
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.96) 0 25%, transparent 58%),
+    radial-gradient(circle at 58% 60%, rgba(195, 203, 212, 0.74) 0 34%, transparent 68%);
+  filter: blur(0.8px);
+  opacity: 0;
+  pointer-events: none;
+  animation: tour-customize-smoke-puff 430ms ease-out both;
+}
+
+@keyframes tour-customize-smoke-cloud {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.42);
+  }
+
+  28% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -70%) scale(1.55);
+  }
+}
+
+@keyframes tour-customize-smoke-puff {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.32);
+  }
+
+  30% {
+    opacity: 0.86;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--smoke-x, 0px)), calc(-50% + var(--smoke-y, -20px))) scale(var(--smoke-scale, 1.3));
+  }
+}
+
+.tour-customize-root .tour-customize-option__image,
+.tour-customize-root .tour-customize-option__thumb {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  background: var(--surface-muted);
+}
+
+.tour-customize-root .tour-customize-option__image {
+  position: relative;
+  display: block;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  appearance: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+.tour-customize-root .tour-customize-option__image[data-customize-image-count="0"],
+.tour-customize-root .tour-customize-option__image[data-customize-image-count="1"] {
+  cursor: default;
+}
+
+.tour-customize-root .tour-customize-option__image:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.tour-customize-root .tour-customize-option__image img,
+.tour-customize-root .tour-customize-option__image-dissolve {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.tour-customize-root .tour-customize-option__image > img:not(.tour-customize-option__image-dissolve) {
+  transform: scale(1);
+  transform-origin: center bottom;
+  transition: transform 0.9s cubic-bezier(0.16, 0.88, 0.2, 1), filter 0.45s ease;
+  will-change: transform;
+}
+
+.tour-customize-root .tour-customize-option__image[data-customize-image-count]:not([data-customize-image-count="0"]):not([data-customize-image-count="1"]):hover > img:not(.tour-customize-option__image-dissolve) {
+  transform: scale(1.05);
+  filter: saturate(1.03);
+}
+
+.tour-customize-root .tour-customize-option__image-dissolve {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  animation: tour-customize-image-dissolve 170ms ease-out forwards;
+}
+
+.tour-customize-root .tour-customize-option__image.is-swapping-image img {
+  animation: tour-customize-image-reveal 170ms ease-out both;
+}
+
+@keyframes tour-customize-image-dissolve {
+  100% {
+    opacity: 0;
+    filter: blur(3px);
+  }
+}
+
+@keyframes tour-customize-image-reveal {
+  0% {
+    opacity: 0.72;
+    filter: saturate(0.94);
+  }
+
+  100% {
+    opacity: 1;
+    filter: saturate(1);
+  }
+}
+
+.tour-customize-root .tour-customize-option__thumb {
+  display: block;
+}
+
+.tour-customize-root .tour-customize-option__body {
+  min-width: 0;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.tour-customize-root .tour-customize-option h4 {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.78rem;
+  font-weight: var(--font-weight-regular);
+  line-height: 1.12;
+  text-align: center;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tour-customize-root .tour-customize-option p {
+  overflow: hidden;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tour-customize-root .tour-customize-option__location {
+  color: var(--accent);
+  font-weight: var(--font-weight-bold);
+}
+
+.tour-customize-root .tour-customize-option__body p:not(.tour-customize-option__location) {
+  display: none;
+}
+
+.tour-customize-root .tour-customize-option__drag-dots {
+  position: absolute;
+  left: 50%;
+  bottom: 0.28rem;
+  width: 28px;
+  height: 4px;
+  background:
+    linear-gradient(#000 0 0) 0 0 / 4px 4px no-repeat,
+    linear-gradient(#000 0 0) 8px 0 / 4px 4px no-repeat,
+    linear-gradient(#000 0 0) 16px 0 / 4px 4px no-repeat,
+    linear-gradient(#000 0 0) 24px 0 / 4px 4px no-repeat;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.tour-customize-root .tour-customize-timeline {
+  grid-column: 1 / -1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0.85rem 1rem 0.95rem;
+  background: #f4faf5;
+}
+
+.tour-customize-root .tour-customize-timeline--drop-active {
+  background: #eef8f0;
+}
+
+.tour-customize-root .tour-customize-timeline__day {
+  position: absolute;
+  z-index: 2;
+  top: -1.28rem;
+  left: 50%;
+  width: 100%;
+  max-width: 100%;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: var(--font-weight-bold);
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-transform: none;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.tour-customize-root .tour-customize-timeline__list {
+  --tour-customize-timeline-gap: 0.62rem;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--tour-customize-timeline-gap);
+  min-height: 10.4rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  position: relative;
+  padding-top: 1.25rem;
+  padding-bottom: 0.25rem;
+  scroll-snap-type: x proximity;
+}
+
+.tour-customize-root .tour-customize-timeline__item {
+  flex: 0 0 var(--tour-customize-card-width);
+  z-index: 1;
+  scroll-snap-align: start;
+}
+
+.tour-customize-root .tour-customize-timeline__item:not(:last-of-type)::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 100%;
+  width: var(--tour-customize-timeline-gap);
+  height: 4px;
+  background: var(--line-strong);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.tour-customize-root .tour-customize-timeline__move-placeholder {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  place-items: center;
+  align-content: center;
+  gap: 0.2rem;
+  color: #21843b;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  pointer-events: none;
+}
+
+.tour-customize-root .tour-customize-timeline__move-placeholder span {
+  display: inline-grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  background: #2aa84a;
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.tour-customize-root .tour-customize-timeline__move-placeholder strong,
+.tour-customize-root .tour-customize-timeline__drop-slot strong {
+  color: inherit;
+  font-size: 0.76rem;
+  letter-spacing: 0;
+}
+
+.tour-customize-root .tour-customize-timeline__item.is-move-placeholder .tour-customize-timeline__move-placeholder {
+  display: grid;
+  visibility: visible;
+}
+
+.tour-customize-root .tour-customize-timeline__drop-slot {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 var(--tour-customize-card-width);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.2rem;
+  width: var(--tour-customize-card-width);
+  height: var(--tour-customize-card-height);
+  min-height: 0;
+  padding: 0.3rem;
+  border: 1px dashed #2aa84a;
+  border-radius: 8px;
+  background: rgba(42, 168, 74, 0.07);
+  color: #21843b;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  scroll-snap-align: start;
+}
+
+.tour-customize-root .tour-customize-timeline__drop-slot span {
+  display: inline-grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border-radius: 999px;
+  background: #2aa84a;
+  color: #fff;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.tour-customize-root .tour-customize__empty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: 8px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 760px) {
+  .tour-customize-root.tour-customize {
+    align-items: start;
+  }
+
+  .tour-customize-root .tour-customize__dialog {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .tour-customize-root .tour-customize__header {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 0.85rem;
+  }
+
+  .tour-customize-root .tour-customize__header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .tour-customize-root .tour-customize__close {
+    flex: 1 1 13rem;
+    white-space: normal;
+  }
+
+  .tour-customize-root .tour-customize__workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(7rem, 0.4fr) minmax(0, 1fr) auto;
+  }
+
+  .tour-customize-root .tour-customize-embedded .tour-customize__workspace {
+    max-height: none;
+  }
+
+  .tour-customize-root .tour-customize-map {
+    min-height: 7rem;
+  }
+
+  .tour-customize-root .tour-customize-options {
+    max-height: none;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .tour-customize-root .tour-customize-option {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tour-customize-root .tour-customize-timeline__item,
+  .tour-customize-root .tour-customize-timeline__drop-slot {
+    flex-basis: var(--tour-customize-card-width);
+  }
+}
+`;
+
+function createTourConfiguratorShadowMount(container, { mode = "embedded" } = {}) {
+  if (typeof HTMLElement === "undefined" || !(container instanceof HTMLElement)) return null;
+  const ownerDocument = container.ownerDocument || document;
+  const host = ownerDocument.createElement("div");
+  host.setAttribute("data-tour-configurator-host", "");
+  host.setAttribute("data-tour-configurator-mode", mode === "modal" ? "modal" : "embedded");
+  host.style.display = "block";
+  host.style.width = "100%";
+  host.style.minWidth = "0";
+  host.style.minHeight = mode === "modal" ? "0" : "inherit";
+  if (mode === "modal") {
+    host.style.position = "fixed";
+    host.style.top = "var(--tour-customize-modal-top, 0px)";
+    host.style.right = "0";
+    host.style.bottom = "0";
+    host.style.left = "0";
+    host.style.zIndex = "2300";
+  } else {
+    host.style.height = "100%";
+  }
+  const shadow = host.attachShadow({ mode: "open" });
+  const style = ownerDocument.createElement("style");
+  style.textContent = TOUR_CUSTOMIZER_COMPONENT_CSS;
+  const root = ownerDocument.createElement("div");
+  root.className = "tour-customize-root";
+  shadow.append(style, root);
+  container.appendChild(host);
+  return {
+    host,
+    root,
+    shadow,
+    destroy() {
+      host.remove();
+    }
+  };
+}
+
 export function createTourCustomizerWorkspace({
   root,
   mode = "default",
@@ -555,6 +1663,13 @@ export function createTourCustomizerWorkspace({
   return runtime.mountWorkspace({ root, mode, onTimelineChange });
 }
 
+export function createTourConfiguratorComponent(container, options = {}) {
+  return createTourCustomizerWorkspace({
+    ...options,
+    root: container
+  });
+}
+
 export function createTourCustomizer({
   state,
   frontendT,
@@ -572,6 +1687,7 @@ export function createTourCustomizer({
   const customizations = new Map();
   const canUseStorage = storageAvailable();
   let modal = null;
+  let modalComponent = null;
   let draft = null;
   let lastFocusedElement = null;
   let activeDragPayload = null;
@@ -584,6 +1700,7 @@ export function createTourCustomizer({
   let lastStickyDragReleaseTargetKey = "";
   let forceTripRefreshOnClose = false;
   let embeddedWorkspaceRoot = null;
+  let embeddedWorkspaceComponent = null;
   let embeddedWorkspaceTourId = "tour_variant_workspace";
   let embeddedWorkspaceTourTitle = "";
   let embeddedWorkspaceModules = [];
@@ -595,6 +1712,7 @@ export function createTourCustomizer({
   let embeddedWorkspaceEmptyTimelineLabel = "";
   let embeddedWorkspaceOnTimelineChange = null;
   const cardTitleResetTimers = new WeakMap();
+  const activeTimeouts = new Set();
 
   function t(key, fallback, vars) {
     return typeof frontendT === "function" ? frontendT(key, fallback, vars) : fallback;
@@ -631,11 +1749,44 @@ export function createTourCustomizer({
   }
 
   function setCustomizerDocumentClass(className, enabled, ownerDocument = customizerOwnerDocument()) {
-    if (!className || !ownerDocument?.documentElement) return;
+    if (!className) return;
+    const target = modal instanceof HTMLElement
+      ? modal
+      : embeddedWorkspaceRoot instanceof HTMLElement
+        ? embeddedWorkspaceRoot
+        : null;
+    if (!(target instanceof HTMLElement)) return;
     if (enabled) {
-      ownerDocument.documentElement.classList.add(className);
+      target.classList.add(className);
     } else {
-      ownerDocument.documentElement.classList.remove(className);
+      target.classList.remove(className);
+    }
+  }
+
+  function scheduleTimeout(callback, delay = 0) {
+    const setSchedule = typeof window !== "undefined" && typeof window.setTimeout === "function"
+      ? window.setTimeout.bind(window)
+      : setTimeout;
+    const handle = setSchedule(() => {
+      activeTimeouts.delete(handle);
+      callback();
+    }, delay);
+    activeTimeouts.add(handle);
+    return handle;
+  }
+
+  function clearScheduledTimeout(handle) {
+    if (!handle) return;
+    const clearSchedule = typeof window !== "undefined" && typeof window.clearTimeout === "function"
+      ? window.clearTimeout.bind(window)
+      : clearTimeout;
+    clearSchedule(handle);
+    activeTimeouts.delete(handle);
+  }
+
+  function clearScheduledSideEffects() {
+    for (const handle of activeTimeouts) {
+      clearScheduledTimeout(handle);
     }
   }
 
@@ -1583,7 +2734,7 @@ export function createTourCustomizer({
       const timeline = root.querySelector("[data-customize-timeline]");
       if (!(timeline instanceof HTMLElement)) return false;
       timeline.querySelector(".tour-customize__empty")?.remove();
-      const template = document.createElement("template");
+      const template = (root.ownerDocument || customizerOwnerDocument() || document).createElement("template");
       template.innerHTML = renderTimelineItem(item, insertIndex).trim();
       const element = template.content.firstElementChild;
       if (!(element instanceof HTMLElement)) return false;
@@ -1681,6 +2832,16 @@ export function createTourCustomizer({
       </div>
     `;
     bindModalEvents();
+    syncEmbeddedWorkspaceInteractivity();
+  }
+
+  function syncEmbeddedWorkspaceInteractivity() {
+    if (!isEmbeddedWorkspace() || embeddedWorkspaceMode !== "preview" || !(modal instanceof HTMLElement)) return;
+    modal.querySelectorAll("button, [tabindex]").forEach((element) => {
+      if (!(element instanceof HTMLElement)) return;
+      element.setAttribute("tabindex", "-1");
+      element.setAttribute("aria-hidden", "true");
+    });
   }
 
   function refreshMapDom() {
@@ -1800,7 +2961,7 @@ export function createTourCustomizer({
       card.style.transform = "rotate(0deg)";
       card.style.opacity = "1";
     });
-    window.setTimeout(() => {
+    scheduleTimeout(() => {
       if (removeAfter) card.remove();
       onComplete?.();
     }, duration + 30);
@@ -1840,7 +3001,7 @@ export function createTourCustomizer({
       ["8px", "18px", "1.3", "80ms"],
       ["-22px", "14px", "1.15", "55ms"]
     ].forEach(([x, y, scale, delay], index) => {
-      const puff = document.createElement("span");
+      const puff = (card.ownerDocument || customizerOwnerDocument() || document).createElement("span");
       puff.className = "tour-customize-smoke-puff";
       puff.style.setProperty("--smoke-x", x);
       puff.style.setProperty("--smoke-y", y);
@@ -1850,7 +3011,7 @@ export function createTourCustomizer({
       puff.dataset.smokePuff = String(index + 1);
       card.appendChild(puff);
     });
-    window.setTimeout(() => {
+    scheduleTimeout(() => {
       card.remove();
       onComplete?.();
     }, duration + 40);
@@ -1932,7 +3093,14 @@ export function createTourCustomizer({
     const onClose = modalCloseCallback;
     const closedTourId = normalizeText(draft?.tourId);
     const shouldRefreshTrips = (persistDraft ? persistDraftCustomization() : false) || forceTripRefreshOnClose;
-    if (modal?.parentNode) modal.parentNode.removeChild(modal);
+    setCustomizerDocumentClass("tour-customize-pointer-dragging", false, ownerDocument);
+    setCustomizerDocumentClass("tour-customize-sticky-dragging", false, ownerDocument);
+    if (modalComponent) {
+      modalComponent.destroy();
+      modalComponent = null;
+    } else if (modal?.parentNode) {
+      modal.parentNode.removeChild(modal);
+    }
     modal = null;
     draft = null;
     modalCloseCallback = null;
@@ -1941,9 +3109,7 @@ export function createTourCustomizer({
     activeDropIndex = null;
     activePointerDrag = null;
     cleanupMapPan();
-    setCustomizerDocumentClass("tour-customize-modal-open", false, ownerDocument);
-    setCustomizerDocumentClass("tour-customize-pointer-dragging", false, ownerDocument);
-    setCustomizerDocumentClass("tour-customize-sticky-dragging", false, ownerDocument);
+    clearScheduledSideEffects();
     if (restoreFocus && lastFocusedElement instanceof HTMLElement) {
       lastFocusedElement.focus();
     }
@@ -2009,7 +3175,9 @@ export function createTourCustomizer({
   function renderDropSlot(timeline, insertIndex, variant = "day") {
     if (!draft || !(timeline instanceof HTMLElement)) return;
     const existing = timeline.querySelector(".tour-customize-timeline__drop-slot");
-    const slot = existing instanceof HTMLElement ? existing : document.createElement("div");
+    const slot = existing instanceof HTMLElement
+      ? existing
+      : (timeline.ownerDocument || customizerOwnerDocument() || document).createElement("div");
     const normalizedVariant = variant === "day" ? "day" : "move";
     let boundedIndex = Math.min(Math.max(0, insertIndex), draft.timelineDays.length);
     if (normalizedVariant === "move") {
@@ -2118,7 +3286,7 @@ export function createTourCustomizer({
       element.classList.add(className);
       element.style.removeProperty("transition");
       element.style.removeProperty("transform");
-      window.setTimeout(() => {
+      scheduleTimeout(() => {
         element.classList.remove(className);
       }, duration + 40);
     });
@@ -2300,9 +3468,6 @@ export function createTourCustomizer({
     }
     imageButton.classList.add("is-swapping-image");
     img.setAttribute("src", nextUrl);
-    const scheduleTimeout = typeof window !== "undefined" && typeof window.setTimeout === "function"
-      ? window.setTimeout.bind(window)
-      : setTimeout;
     scheduleTimeout(() => {
       overlay?.remove?.();
       imageButton.classList.remove("is-swapping-image");
@@ -2320,14 +3485,8 @@ export function createTourCustomizer({
     titleElement.textContent = compactText(imageTitle) || dayTitle;
     const existingTimer = cardTitleResetTimers.get(titleElement);
     if (existingTimer) {
-      const clearSchedule = typeof window !== "undefined" && typeof window.clearTimeout === "function"
-        ? window.clearTimeout.bind(window)
-        : clearTimeout;
-      clearSchedule(existingTimer);
+      clearScheduledTimeout(existingTimer);
     }
-    const scheduleTimeout = typeof window !== "undefined" && typeof window.setTimeout === "function"
-      ? window.setTimeout.bind(window)
-      : setTimeout;
     const timer = scheduleTimeout(() => {
       titleElement.textContent = normalizeText(titleElement.dataset.customizeDayTitle) || dayTitle;
       cardTitleResetTimers.delete(titleElement);
@@ -2365,7 +3524,7 @@ export function createTourCustomizer({
       existingMarker.classList.add("is-drag-location");
       return;
     }
-    const marker = document.createElement("span");
+    const marker = (modal?.ownerDocument || customizerOwnerDocument() || document).createElement("span");
     marker.className = "tour-customize-map__marker is-drag-location";
     marker.setAttribute("data-customize-drag-map-marker", "");
     marker.setAttribute("aria-hidden", "true");
@@ -3074,11 +4233,21 @@ export function createTourCustomizer({
     if (typeof HTMLElement === "undefined" || !(root instanceof HTMLElement)) {
       return {
         setState() {},
+        setTripState() {},
         destroy() {}
       };
     }
 
-    embeddedWorkspaceRoot = root;
+    embeddedWorkspaceComponent = createTourConfiguratorShadowMount(root, { mode: "embedded" });
+    if (!embeddedWorkspaceComponent?.root) {
+      return {
+        setState() {},
+        setTripState() {},
+        destroy() {}
+      };
+    }
+
+    embeddedWorkspaceRoot = embeddedWorkspaceComponent.root;
     embeddedWorkspaceMode = normalizeWorkspaceMode(mode);
     embeddedWorkspaceOnTimelineChange = onTimelineChange;
     embeddedWorkspaceEmptyOptionsLabel = t("tour.customize.no_optional_days", "No optional days are available for this route yet.");
@@ -3147,19 +4316,18 @@ export function createTourCustomizer({
     function destroy() {
       const ownerDocument = customizerOwnerDocument();
       if (activePointerDrag) cleanupPointerDrag({ animateCancel: false });
-      if (root instanceof HTMLElement) {
-        root.innerHTML = "";
-        root.classList.remove("tour-customize-runtime-root");
-      }
-      if (modal === root) {
+      setCustomizerDocumentClass("tour-customize-pointer-dragging", false, ownerDocument);
+      setCustomizerDocumentClass("tour-customize-sticky-dragging", false, ownerDocument);
+      if (modal === embeddedWorkspaceRoot) {
         modal = null;
         draft = null;
       }
       activeDragPayload = null;
       activeDropIndex = null;
       cleanupMapPan();
-      setCustomizerDocumentClass("tour-customize-pointer-dragging", false, ownerDocument);
-      setCustomizerDocumentClass("tour-customize-sticky-dragging", false, ownerDocument);
+      clearScheduledSideEffects();
+      embeddedWorkspaceComponent?.destroy?.();
+      embeddedWorkspaceComponent = null;
       embeddedWorkspaceRoot = null;
       embeddedWorkspaceTourId = "tour_variant_workspace";
       embeddedWorkspaceTourTitle = "";
@@ -3174,11 +4342,20 @@ export function createTourCustomizer({
     }
 
     setState({ modules, timelineItems, disabled, emptyOptionsLabel, emptyTimelineLabel });
-    return { setState, setTripState, destroy };
+    return {
+      setState,
+      setTripState,
+      destroy,
+      getRootElement: () => embeddedWorkspaceRoot,
+      getShadowRoot: () => embeddedWorkspaceComponent?.shadow || null
+    };
   }
 
   async function open(tourId, options = {}) {
     if (typeof document === "undefined") return false;
+    if (modalComponent || (modal instanceof HTMLElement && !isEmbeddedWorkspace())) {
+      closeModal({ restoreFocus: false, persistDraft: true });
+    }
     const normalizedTourId = normalizeText(tourId);
     let trip = typeof findTripById === "function" ? findTripById(normalizedTourId) : null;
     if (!trip) return false;
@@ -3198,14 +4375,28 @@ export function createTourCustomizer({
       timelineDays,
       mapZoom: { zoomed: false, x: 50, y: 50 }
     };
-    modal = document.createElement("div");
-    modal.className = "tour-customize";
-    document.body.appendChild(modal);
-    setCustomizerDocumentClass("tour-customize-modal-open", true);
+    const mountContainer = options?.container instanceof HTMLElement ? options.container : document.body;
+    modalComponent = createTourConfiguratorShadowMount(mountContainer, { mode: "modal" });
+    if (!modalComponent?.root) {
+      modalComponent = null;
+      return false;
+    }
+    modal = modalComponent.root;
+    modal.className = "tour-customize-root tour-customize";
     renderModal();
     const closeButton = modal.querySelector("[data-customize-close]");
     if (closeButton instanceof HTMLElement) closeButton.focus();
     return true;
+  }
+
+  function close(options = {}) {
+    if (!modal || isEmbeddedWorkspace()) return false;
+    closeModal(options);
+    return true;
+  }
+
+  function isOpen() {
+    return Boolean(modal && !isEmbeddedWorkspace());
   }
 
   async function createCustomizedOverviewPdfPreview(tourId, selectedDays, title = "") {
@@ -3309,6 +4500,8 @@ export function createTourCustomizer({
     customizationSummaryForTrip,
     routePreviewForTrip,
     open,
+    close,
+    isOpen,
     mountWorkspace,
     openCustomizedOverviewPdf,
     openCustomizedTravelPlanPdf,

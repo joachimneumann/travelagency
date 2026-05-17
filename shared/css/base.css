@@ -48,9 +48,7 @@ img {
   .backend-section-nav__item,
   .filter-select-trigger,
   .hero-destination-menu button,
-  .tour-customize-map__marker,
   .tour-plan__customize-map-marker,
-  .tour-customize-drag-ghost,
   .is-dragging,
   [class*="__icon"]
 ) {
