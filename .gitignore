@@ -40,6 +40,7 @@ tmp/
 
 # Staging-only generated matrix pages.
 /*matrix.html
+/content_matrix*.html
 /img
 /img/
 /matrix-pages/
