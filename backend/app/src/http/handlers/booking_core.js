@@ -14,6 +14,7 @@ export function createBookingCoreHandlers(deps) {
     readBodyJson,
     sendJson,
     readStore,
+    readRawStore = readStore,
     getPrincipal,
     canEditBooking,
     canChangeBookingAssignment,
@@ -370,7 +371,7 @@ export function createBookingCoreHandlers(deps) {
   }
 
   async function handleListActivities(req, res, [bookingId]) {
-    const store = await readStore();
+    const store = await readRawStore();
     const booking = store.bookings.find((item) => item.id === bookingId);
     if (!booking) {
       sendJson(res, 404, { error: "Booking not found" });

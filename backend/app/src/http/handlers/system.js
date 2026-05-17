@@ -18,7 +18,6 @@ export function createSystemHandlers({
       name: normalizeText(companyProfile.name),
       website: normalizeText(companyProfile.website),
       address: normalizeText(companyProfile.address),
-      whatsapp: normalizeText(companyProfile.whatsapp),
       email: normalizeText(companyProfile.email),
       licenseNumber: normalizeText(companyProfile.licenseNumber)
     };

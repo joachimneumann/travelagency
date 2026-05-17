@@ -11,7 +11,6 @@ const RTL_PDF_LANGS = new Set(["ar"]);
 
 const DICTIONARY = Object.freeze({
   "en": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "Email",
     "offer.subject": "Travel Offer",
     "offer.hero_subtitle": "Your personalized Asia Travel Plan offer",
@@ -69,7 +68,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Offer total",
     "offer.payment_terms.scheduled_total": "Scheduled total",
     "offer.payment_terms.notes": "Notes",
-    "offer.closing_body": "If this offer feels right for you, simply respond to us by email or WhatsApp and we will be happy to confirm next steps, refine details, and help you move toward booking.",
+    "offer.closing_body": "If this offer feels right for you, simply respond to us by email and we will be happy to confirm next steps, refine details, and help you move toward booking.",
     "offer.closing_body_deposit": "To confirm this offer, please pay the {label} of {amount}. Once we receive this payment, we will confirm your booking and guide you through the next steps.",
     "offer.closing_regards": "Warm regards,",
     "offer.closing_team": "Your Asia Travel Plan team.",
@@ -117,7 +116,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Please find attached your current Asia Travel Plan offer."
   }),
   "ar": Object.freeze({
-    "header.whatsapp": "واتساب",
     "header.email": "البريد الإلكتروني",
     "offer.subject": "عرض سفر",
     "offer.hero_subtitle": "عرض Asia Travel Plan المخصص لك",
@@ -219,7 +217,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "مرفق لك عرضك الحالي من Asia Travel Plan."
   }),
   "fr": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "E-mail",
     "offer.subject": "Offre de voyage",
     "offer.hero_subtitle": "Votre offre Asia Travel Plan personnalisée",
@@ -277,7 +274,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Total du devis",
     "offer.payment_terms.scheduled_total": "Total planifié",
     "offer.payment_terms.notes": "Notes",
-    "offer.closing_body": "Si cette offre vous convient, répondez-nous simplement par e-mail ou WhatsApp. Nous serons ravis de confirmer les prochaines étapes, d'ajuster les détails et de vous accompagner jusqu'à la réservation.",
+    "offer.closing_body": "Si cette offre vous convient, répondez-nous simplement par e-mail. Nous serons ravis de confirmer les prochaines étapes, d'ajuster les détails et de vous accompagner jusqu'à la réservation.",
     "offer.closing_body_deposit": "Pour confirmer cette offre, veuillez régler le {label} de {amount}. Dès réception de ce paiement, nous confirmerons votre réservation et vous guiderons pour la suite.",
     "offer.closing_regards": "Cordialement,",
     "offer.closing_team": "L'équipe Asia Travel Plan",
@@ -321,7 +318,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Veuillez trouver ci-joint votre offre Asia Travel Plan actuelle."
   }),
   "de": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "E-Mail",
     "offer.subject": "Reiseangebot",
     "offer.hero_subtitle": "Ihr individuelles Asien-Reiseplan-Angebot",
@@ -379,7 +375,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Angebotssumme",
     "offer.payment_terms.scheduled_total": "Geplanter Gesamtbetrag",
     "offer.payment_terms.notes": "Notizen",
-    "offer.closing_body": "Wenn sich dieses Angebot für Sie richtig anfühlt, antworten Sie uns einfach per E-Mail oder WhatsApp und wir bestätigen gerne die nächsten Schritte, verfeinern die Details und helfen Ihnen bei der Buchung.",
+    "offer.closing_body": "Wenn sich dieses Angebot für Sie richtig anfühlt, antworten Sie uns einfach per E-Mail und wir bestätigen gerne die nächsten Schritte, verfeinern die Details und helfen Ihnen bei der Buchung.",
     "offer.closing_body_deposit": "Um dieses Angebot zu bestätigen, zahlen Sie bitte die {label} in Höhe von {amount}. Sobald diese Zahlung bei uns eingegangen ist, bestätigen wir Ihre Buchung und begleiten Sie bei den nächsten Schritten.",
     "offer.closing_regards": "Herzliche Grüße,",
     "offer.closing_team": "Das Asia Travel Plan Team",
@@ -423,7 +419,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Im Anhang finden Sie Ihr aktuelles Asia Travel Plan Angebot."
   }),
   "es": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "Correo electrónico",
     "offer.subject": "Oferta de viaje",
     "offer.hero_subtitle": "Su oferta personalizada del Plan de Viaje a Asia",
@@ -481,7 +476,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Total de la oferta",
     "offer.payment_terms.scheduled_total": "Total programado",
     "offer.payment_terms.notes": "Notas",
-    "offer.closing_body": "Si esta oferta le parece adecuada, simplemente respóndanos por correo electrónico o WhatsApp y estaremos encantados de confirmar los próximos pasos, refinar los detalles y ayudarle a avanzar hacia la reserva.",
+    "offer.closing_body": "Si esta oferta le parece adecuada, simplemente respóndanos por correo electrónico y estaremos encantados de confirmar los próximos pasos, refinar los detalles y ayudarle a avanzar hacia la reserva.",
     "offer.closing_body_deposit": "Para confirmar esta oferta, pague el {label} de {amount}. En cuanto recibamos este pago, confirmaremos su reserva y le guiaremos en los siguientes pasos.",
     "offer.closing_regards": "Un cordial saludo,",
     "offer.closing_team": "El equipo del plan de viajes de Asia",
@@ -525,7 +520,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Adjuntamos su oferta actual de Asia Travel Plan."
   }),
   "it": Object.freeze({
-    "header.whatsapp": "Whatsapp",
     "header.email": "E-mail",
     "offer.subject": "Offerta di viaggio",
     "offer.hero_subtitle": "La tua offerta personalizzata per il piano di viaggio in Asia",
@@ -583,7 +577,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Totale offerta",
     "offer.payment_terms.scheduled_total": "Totale pianificato",
     "offer.payment_terms.notes": "Note",
-    "offer.closing_body": "Se questa offerta ti sembra adatta a te, rispondi semplicemente via e-mail o WhatsApp e saremo lieti di confermare i passaggi successivi, perfezionare i dettagli e aiutarti a procedere verso la prenotazione.",
+    "offer.closing_body": "Se questa offerta ti sembra adatta a te, rispondi semplicemente via e-mail e saremo lieti di confermare i passaggi successivi, perfezionare i dettagli e aiutarti a procedere verso la prenotazione.",
     "offer.closing_body_deposit": "Per confermare questa offerta, ti chiediamo di versare il {label} di {amount}. Non appena riceveremo questo pagamento, confermeremo la tua prenotazione e ti guideremo nei passaggi successivi.",
     "offer.closing_regards": "Cordiali saluti,",
     "offer.closing_team": "Il team del piano di viaggio in Asia",
@@ -627,7 +621,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "In allegato trovi la tua attuale offerta Asia Travel Plan."
   }),
   "ru": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "Электронная почта",
     "offer.subject": "Туристическое предложение",
     "offer.hero_subtitle": "Ваше индивидуальное предложение по плану путешествия по Азии",
@@ -685,7 +678,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Итого по предложению",
     "offer.payment_terms.scheduled_total": "Запланированная сумма",
     "offer.payment_terms.notes": "Примечания",
-    "offer.closing_body": "Если это предложение вам подходит, просто ответьте нам по электронной почте или в WhatsApp, и мы будем рады подтвердить дальнейшие действия, уточнить детали и помочь вам перейти к бронированию.",
+    "offer.closing_body": "Если это предложение вам подходит, просто ответьте нам по электронной почте, и мы будем рады подтвердить дальнейшие действия, уточнить детали и помочь вам перейти к бронированию.",
     "offer.closing_body_deposit": "Чтобы подтвердить это предложение, пожалуйста, оплатите {label} в размере {amount}. Как только мы получим этот платеж, мы подтвердим ваше бронирование и поможем с дальнейшими шагами.",
     "offer.closing_regards": "Теплые пожелания,",
     "offer.closing_team": "Команда планирования путешествий по Азии",
@@ -729,7 +722,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Во вложении находится ваше актуальное предложение Asia Travel Plan."
   }),
   "nl": Object.freeze({
-    "header.whatsapp": "WhatsAppen",
     "header.email": "E-mail",
     "offer.subject": "Reisaanbieding",
     "offer.hero_subtitle": "Uw gepersonaliseerde Azië-reisplanaanbieding",
@@ -787,7 +779,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Offertetotaal",
     "offer.payment_terms.scheduled_total": "Gepland totaal",
     "offer.payment_terms.notes": "Notities",
-    "offer.closing_body": "Als deze aanbieding goed voor u voelt, kunt u eenvoudigweg per e-mail of WhatsApp op ons reageren. Wij bevestigen dan graag de volgende stappen, verfijnen de details en helpen u graag verder met boeken.",
+    "offer.closing_body": "Als deze aanbieding goed voor u voelt, kunt u eenvoudigweg per e-mail op ons reageren. Wij bevestigen dan graag de volgende stappen, verfijnen de details en helpen u graag verder met boeken.",
     "offer.closing_body_deposit": "Om deze offerte te bevestigen, vragen wij u de {label} van {amount} te betalen. Zodra wij deze betaling hebben ontvangen, bevestigen wij uw boeking en begeleiden wij u bij de volgende stappen.",
     "offer.closing_regards": "Hartelijke groeten,",
     "offer.closing_team": "Het Azië Reisplanteam",
@@ -831,7 +823,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Bijgevoegd vindt u uw huidige Asia Travel Plan aanbod."
   }),
   "pl": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "E-mail",
     "offer.subject": "Oferta podróży",
     "offer.hero_subtitle": "Twoja spersonalizowana oferta w ramach planu podróży po Azji",
@@ -889,7 +880,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Łącznie oferta",
     "offer.payment_terms.scheduled_total": "Łącznie zaplanowane",
     "offer.payment_terms.notes": "Uwagi",
-    "offer.closing_body": "Jeśli ta oferta jest dla Ciebie odpowiednia, po prostu odpowiedz nam przez e-mail lub WhatsApp, a my z przyjemnością potwierdzimy kolejne kroki, dopracujemy szczegóły i pomożemy Ci przejść do rezerwacji.",
+    "offer.closing_body": "Jeśli ta oferta jest dla Ciebie odpowiednia, po prostu odpowiedz nam przez e-mail, a my z przyjemnością potwierdzimy kolejne kroki, dopracujemy szczegóły i pomożemy Ci przejść do rezerwacji.",
     "offer.closing_body_deposit": "Aby potwierdzić tę ofertę, prosimy o opłacenie {label} w kwocie {amount}. Gdy otrzymamy tę płatność, potwierdzimy Twoją rezerwację i przeprowadzimy Cię przez kolejne kroki.",
     "offer.closing_regards": "Pozdrawiam,",
     "offer.closing_team": "Zespół ds. planu podróży po Azji",
@@ -933,7 +924,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "W załączniku znajdziesz swoją aktualną ofertę Asia Travel Plan."
   }),
   "da": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "E-mail",
     "offer.subject": "Rejsetilbud",
     "offer.hero_subtitle": "Dit personlige tilbud om rejseplan til Asien",
@@ -991,7 +981,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Tilbudstotal",
     "offer.payment_terms.scheduled_total": "Planlagt total",
     "offer.payment_terms.notes": "Noter",
-    "offer.closing_body": "Hvis dette tilbud føles rigtigt for dig, skal du blot svare os via e-mail eller WhatsApp, og vi vil med glæde bekræfte de næste trin, forfine detaljerne og hjælpe dig med at komme i gang med booking.",
+    "offer.closing_body": "Hvis dette tilbud føles rigtigt for dig, skal du blot svare os via e-mail, og vi vil med glæde bekræfte de næste trin, forfine detaljerne og hjælpe dig med at komme i gang med booking.",
     "offer.closing_body_deposit": "For at bekræfte dette tilbud bedes du betale {label} på {amount}. Så snart vi har modtaget denne betaling, bekræfter vi din booking og guider dig gennem de næste trin.",
     "offer.closing_regards": "Kærlig hilsen,",
     "offer.closing_team": "Asia Travel Plan Team",
@@ -1035,7 +1025,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Vedhæftet finder du dit aktuelle Asia Travel Plan tilbud."
   }),
   "sv": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "E-post",
     "offer.subject": "Reseerbjudande",
     "offer.hero_subtitle": "Ditt personliga Asia Travel Plan-erbjudande",
@@ -1093,7 +1082,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Offerttotal",
     "offer.payment_terms.scheduled_total": "Planerat totalt",
     "offer.payment_terms.notes": "Anteckningar",
-    "offer.closing_body": "Om det här erbjudandet känns rätt för dig, svara oss helt enkelt via e-post eller WhatsApp så bekräftar vi gärna nästa steg, förfinar detaljerna och hjälper dig mot bokningen.",
+    "offer.closing_body": "Om det här erbjudandet känns rätt för dig, svara oss helt enkelt via e-post så bekräftar vi gärna nästa steg, förfinar detaljerna och hjälper dig mot bokningen.",
     "offer.closing_body_deposit": "För att bekräfta detta erbjudande ber vi dig att betala {label} på {amount}. Så snart vi har mottagit denna betalning bekräftar vi din bokning och hjälper dig vidare med nästa steg.",
     "offer.closing_regards": "Varma hälsningar,",
     "offer.closing_team": "Asia Travel Plan Team",
@@ -1137,7 +1126,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Bifogat finns ditt aktuella erbjudande från Asia Travel Plan."
   }),
   "no": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "E-post",
     "offer.subject": "Reisetilbud",
     "offer.hero_subtitle": "Ditt personlige tilbud om reiseplan for Asia",
@@ -1195,7 +1183,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Tilbudstotal",
     "offer.payment_terms.scheduled_total": "Planlagt total",
     "offer.payment_terms.notes": "Notater",
-    "offer.closing_body": "Hvis dette tilbudet føles riktig for deg, er det bare å svare oss via e-post eller WhatsApp, og vi vil gjerne bekrefte neste trinn, avgrense detaljene og hjelpe deg med å gå mot bestilling.",
+    "offer.closing_body": "Hvis dette tilbudet føles riktig for deg, er det bare å svare oss via e-post, og vi vil gjerne bekrefte neste trinn, avgrense detaljene og hjelpe deg med å gå mot bestilling.",
     "offer.closing_body_deposit": "For å bekrefte dette tilbudet ber vi deg betale {label} på {amount}. Så snart vi har mottatt denne betalingen, bekrefter vi bestillingen din og hjelper deg videre med neste steg.",
     "offer.closing_regards": "Med vennlig hilsen,",
     "offer.closing_team": "Asia Travel Plan Team",
@@ -1239,7 +1227,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Vedlagt finner du ditt gjeldende tilbud fra Asia Travel Plan."
   }),
   "zh": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "电子邮箱",
     "offer.subject": "旅行报价",
     "offer.hero_subtitle": "为您定制的 Asia Travel Plan 行程报价",
@@ -1297,7 +1284,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "报价总计",
     "offer.payment_terms.scheduled_total": "计划总计",
     "offer.payment_terms.notes": "备注",
-    "offer.closing_body": "如果您觉得这份报价合适，只需通过电子邮件或 WhatsApp 回复我们。我们将很乐意确认后续步骤、调整细节，并协助您推进预订。",
+    "offer.closing_body": "如果您觉得这份报价合适，只需通过电子邮件回复我们。我们将很乐意确认后续步骤、调整细节，并协助您推进预订。",
     "offer.closing_body_deposit": "如需确认此报价，请支付{label}，金额为 {amount}。我们一旦收到这笔付款，就会确认您的预订并协助您完成后续步骤。",
     "offer.closing_regards": "此致，",
     "offer.closing_team": "Asia Travel Plan 团队",
@@ -1341,7 +1328,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "随信附上您当前的 Asia Travel Plan 报价。"
   }),
   "ja": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "メール",
     "offer.subject": "旅行オファー",
     "offer.hero_subtitle": "お客様向けに作成した Asia Travel Plan のご提案",
@@ -1399,7 +1385,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "見積合計",
     "offer.payment_terms.scheduled_total": "支払予定合計",
     "offer.payment_terms.notes": "備考",
-    "offer.closing_body": "このオファーがお客様に合っていましたら、メールまたは WhatsApp でご返信ください。次のステップの確認、内容の調整、ご予約まで丁寧にお手伝いいたします。",
+    "offer.closing_body": "このオファーがお客様に合っていましたら、メールでご返信ください。次のステップの確認、内容の調整、ご予約まで丁寧にお手伝いいたします。",
     "offer.closing_body_deposit": "このオファーを確定するには、{label} として {amount} をお支払いください。このお支払いを確認でき次第、ご予約を確定し、次のステップをご案内いたします。",
     "offer.closing_regards": "どうぞよろしくお願いいたします。",
     "offer.closing_team": "Asia Travel Plan チーム",
@@ -1443,7 +1429,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "最新の Asia Travel Plan ご提案書を添付いたします。"
   }),
   "ko": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "이메일",
     "offer.subject": "여행 제안서",
     "offer.hero_subtitle": "고객님을 위해 준비한 Asia Travel Plan 맞춤 제안서",
@@ -1501,7 +1486,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "견적 총액",
     "offer.payment_terms.scheduled_total": "예정 총액",
     "offer.payment_terms.notes": "메모",
-    "offer.closing_body": "이 제안이 적절하다고 느껴지시면 이메일이나 WhatsApp으로 회신해 주세요. 다음 단계 확인, 세부 조정, 예약 진행까지 기꺼이 도와드리겠습니다.",
+    "offer.closing_body": "이 제안이 적절하다고 느껴지시면 이메일로 회신해 주세요. 다음 단계 확인, 세부 조정, 예약 진행까지 기꺼이 도와드리겠습니다.",
     "offer.closing_body_deposit": "이 제안을 확정하려면 {label}로 {amount}을 결제해 주세요. 이 결제가 확인되면 예약을 확정하고 다음 단계를 안내해 드리겠습니다.",
     "offer.closing_regards": "감사합니다.",
     "offer.closing_team": "Asia Travel Plan 팀",
@@ -1545,7 +1530,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "최신 Asia Travel Plan 제안서를 첨부해 드립니다."
   }),
   "vi": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "Email",
     "offer.subject": "Báo giá du lịch",
     "offer.hero_subtitle": "Báo giá Asia Travel Plan được cá nhân hóa cho bạn",
@@ -1603,7 +1587,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Tổng báo giá",
     "offer.payment_terms.scheduled_total": "Tổng theo lịch",
     "offer.payment_terms.notes": "Ghi chú",
-    "offer.closing_body": "Nếu bạn thấy báo giá này phù hợp, vui lòng phản hồi qua email hoặc WhatsApp. Chúng tôi sẽ hỗ trợ xác nhận các bước tiếp theo, điều chỉnh chi tiết và hỗ trợ bạn tiến tới đặt dịch vụ.",
+    "offer.closing_body": "Nếu bạn thấy báo giá này phù hợp, vui lòng phản hồi qua email. Chúng tôi sẽ hỗ trợ xác nhận các bước tiếp theo, điều chỉnh chi tiết và hỗ trợ bạn tiến tới đặt dịch vụ.",
     "offer.closing_body_deposit": "Để xác nhận báo giá này, vui lòng thanh toán khoản {label} là {amount}. Ngay khi chúng tôi nhận được khoản thanh toán này, chúng tôi sẽ xác nhận đặt dịch vụ và hướng dẫn các bước tiếp theo.",
     "offer.closing_regards": "Trân trọng,",
     "offer.closing_team": "Đội ngũ Asia Travel Plan",
@@ -1651,7 +1635,6 @@ const DICTIONARY = Object.freeze({
     "email.offer_intro_generic": "Dinh kem la bao gia Asia Travel Plan hien tai cua ban."
   }),
   "ms": Object.freeze({
-    "header.whatsapp": "WhatsApp",
     "header.email": "E-mel",
     "offer.subject": "Sebut harga perjalanan",
     "offer.hero_subtitle": "Sebut harga Asia Travel Plan yang diperibadikan untuk anda",
@@ -1709,7 +1692,7 @@ const DICTIONARY = Object.freeze({
     "offer.payment_terms.basis_total": "Jumlah sebut harga",
     "offer.payment_terms.scheduled_total": "Jumlah berjadual",
     "offer.payment_terms.notes": "Nota",
-    "offer.closing_body": "Jika sebut harga ini sesuai untuk anda, balas sahaja melalui e-mel atau WhatsApp dan kami dengan senang hati akan mengesahkan langkah seterusnya, memperincikan butiran, dan membantu anda meneruskan tempahan.",
+    "offer.closing_body": "Jika sebut harga ini sesuai untuk anda, balas sahaja melalui e-mel dan kami dengan senang hati akan mengesahkan langkah seterusnya, memperincikan butiran, dan membantu anda meneruskan tempahan.",
     "offer.closing_body_deposit": "Untuk mengesahkan sebut harga ini, sila bayar {label} sebanyak {amount}. Sebaik sahaja kami menerima bayaran ini, kami akan mengesahkan tempahan anda dan membimbing anda melalui langkah seterusnya.",
     "offer.closing_regards": "Salam hormat,",
     "offer.closing_team": "Pasukan Asia Travel Plan",

@@ -593,7 +593,7 @@ Các core booking features:
 - notes
 - activities timeline
 - booking image và person photos
-- read-only WhatsApp/Meta chat timeline gắn với booking
+- read-only phone/Meta chat timeline gắn với booking
 - Zoho Mail notification tới `booking@asiatravelplan.com` cho public website bookings
 - section-level optimistic concurrency revisions
 - traveler details portal support
@@ -606,7 +606,7 @@ Các file quan trọng:
 - `frontend/scripts/pages/booking.js`
 - `frontend/scripts/booking/persons.js`
 - `frontend/scripts/booking/core.js`
-- `frontend/scripts/booking/whatsapp.js`
+- `removed booking chat module`
 - `backend/app/src/http/handlers/booking_query.js`
 - `backend/app/src/http/handlers/booking_core.js`
 - `backend/app/src/http/handlers/booking_people.js`
@@ -780,24 +780,24 @@ Các file chính:
 - `backend/keycloak-theme/asiatravelplan/`
 - `scripts/keycloak/`
 
-### Meta / WhatsApp
+### removed messaging
 
-Backend có webhook support cho Meta và WhatsApp.
+Backend có webhook support cho Meta và phone.
 
 Các environment variables quan trọng:
 
 - `META_WEBHOOK_ENABLED`
 - `META_WEBHOOK_VERIFY_TOKEN`
 - `META_APP_SECRET`
-- `WHATSAPP_WEBHOOK_ENABLED`
-- `WHATSAPP_VERIFY_TOKEN`
-- `WHATSAPP_APP_SECRET`
+- `phone_WEBHOOK_ENABLED`
+- `phone_VERIFY_TOKEN`
+- `phone_APP_SECRET`
 
 Các file quan trọng:
 
-- `backend/app/src/integrations/meta_webhook.js`
+- `removed webhook integration`
 - `backend/app/src/http/handlers/booking_chat.js`
-- `frontend/scripts/booking/whatsapp.js`
+- `removed booking chat module`
 
 ### Gmail Drafts
 
@@ -861,7 +861,7 @@ Dữ liệu nhạy cảm bao gồm:
 - generated offer PDFs
 - Gmail draft credentials
 - Keycloak secrets
-- Meta/WhatsApp webhook secrets
+- removed messaging webhook secrets
 - Google service account credentials
 
 Quy tắc:

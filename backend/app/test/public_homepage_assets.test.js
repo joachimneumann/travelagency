@@ -470,7 +470,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     generatedTravelAgencySchema.address?.map((address) => address.name),
     ["Head office in Hội An", "Office in Hà Nội"]
   );
-  assert.equal(generatedTravelAgencySchema.contactPoint?.[0]?.url, "https://wa.me/84354999192");
+  assert.equal(generatedTravelAgencySchema.contactPoint?.[0]?.url, undefined);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/destinations\/vietnam/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/travel-styles\/budget/);
   assert.match(generatedSitemap, /https:\/\/asiatravelplan\.com\/tours\/alpha-custom-route/);

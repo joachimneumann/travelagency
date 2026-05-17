@@ -14,7 +14,7 @@ const PRIVATE_CACHE_HEADERS = Object.freeze({
 });
 
 const PUBLIC_TRAVELER_DOCUMENT_TYPES = new Set(["passport", "national_id"]);
-const PUBLIC_TRAVELER_CONSENT_TYPES = new Set(["privacy_policy", "marketing_email", "marketing_whatsapp", "profiling"]);
+const PUBLIC_TRAVELER_CONSENT_TYPES = new Set(["privacy_policy", "marketing_email", "profiling"]);
 const PUBLIC_TRAVELER_CONSENT_STATUSES = new Set(["granted", "withdrawn", "unknown"]);
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const IMAGE_UPLOAD_BODY_MAX_BYTES = 16 * 1024 * 1024;

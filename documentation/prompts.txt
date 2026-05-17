@@ -106,11 +106,11 @@ Flow
 	•	Primary CTA in hero opens a modal (or scrolls) to a booking form.
 	•	Form is multi-step (2–3 steps) with a progress indicator:
 	1.	Trip basics (destination, style, dates or month, number of travelers, budget range)
-	2.	Contact (name, email, WhatsApp/phone, preferred language)
+	2.	Contact (name, email, phone, preferred language)
 	3.	Notes (optional) + consent checkbox
 	•	Show microcopy that reduces friction (e.g., “Response within 24 hours”).
 	•	Add lightweight validation and clear error states.
-	•	On submit: show a success state with next steps (e.g., “We’ll contact you on WhatsApp/email.”)
+	•	On submit: show a success state with next steps (e.g., “We’ll contact you on phone/email.”)
 
 Technical handling
 	•	Since static site: implement submit options:
@@ -140,7 +140,7 @@ Add JSON-LD schema.org markup for:
 	•	name, url, logo, image, description
 	•	address (placeholder but structured)
 	•	areaServed (Vietnam + destinations)
-	•	contactPoint (WhatsApp/phone/email placeholders)
+	•	contactPoint (phone/email placeholders)
 	•	sameAs (social links placeholders)
 	•	openingHoursSpecification (optional)
 	•	Also include a minimal WebSite schema with SearchAction if feasible.

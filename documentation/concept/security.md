@@ -182,10 +182,10 @@ Suggested starting limits:
 ### 5. Webhook signature verification is optional if the secret is not configured
 
 Relevant code:
-- `backend/app/src/integrations/meta_webhook.js`
+- `removed webhook integration`
 
 Current behavior:
-- if no app secret is configured, `verifyMetaWebhookSignature(...)` returns `true`
+- if no app secret is configured, `removed webhook signature check(...)` returns `true`
 - webhook configuration only requires a verify token, not an app secret
 
 Impact:
@@ -295,10 +295,10 @@ Recommendation:
 ### 11. Public webhook status endpoint leaks operational details
 
 Relevant code:
-- `backend/app/src/integrations/meta_webhook.js`
+- `removed webhook integration`
 
 Current behavior:
-- `/integrations/meta/webhook/status` exposes whether secrets are configured and shows counters such as signature failures and ingest activity
+- `removed webhook status route` exposes whether secrets are configured and shows counters such as signature failures and ingest activity
 
 Impact:
 - useful reconnaissance for an attacker

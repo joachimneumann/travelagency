@@ -54,11 +54,11 @@ Recommended:
 - use a company-controlled email address for the Instagram account login where possible
 - keep the Facebook admin's email verified in Meta Accounts Center
 
-WhatsApp verification note:
-- do not create a WhatsApp Business account only to receive an Instagram verification message
-- if Instagram offers WhatsApp verification, the company number only needs to be active in WhatsApp for that message to arrive
-- create WhatsApp Business only if ATP intends to use that number as a real customer-facing WhatsApp business channel
-- remember that one phone number should be treated as one business messaging asset, so avoid switching it casually between personal WhatsApp, WhatsApp Business, and later platform integrations
+phone verification note:
+- do not create a phone Business account only to receive an Instagram verification message
+- if Instagram offers phone verification, the company number only needs to be active in phone for that message to arrive
+- create phone Business only if ATP intends to use that number as a real customer-facing phone business channel
+- remember that one phone number should be treated as one business messaging asset, so avoid switching it casually between personal phone, phone Business, and later platform integrations
 
 ### 3. Create the business Instagram account
 
@@ -446,7 +446,7 @@ Action:
 - confirm the company phone can receive normal SMS and short-code / automated SMS
 - check blocked numbers, spam filters, and filtered SMS folders on the phone
 - try email verification instead if Meta offers it
-- try WhatsApp verification if Meta offers it and the number has WhatsApp
+- try phone verification if Meta offers it and the number has phone
 - if the number keeps failing, use another company-controlled mobile number
 
 Do not switch to a staff member's private number unless it is a temporary emergency. If a private number must be used temporarily, replace it with a company-controlled number after the account is stable.

@@ -593,7 +593,7 @@ Core booking features:
 - notes
 - activities timeline
 - booking image and person photos
-- read-only WhatsApp/Meta chat timeline linked to the booking
+- read-only phone/Meta chat timeline linked to the booking
 - Zoho Mail notification to `booking@asiatravelplan.com` for public website bookings
 - section-level optimistic concurrency revisions
 - traveler details portal support
@@ -606,7 +606,7 @@ Important files:
 - `frontend/scripts/pages/booking.js`
 - `frontend/scripts/booking/persons.js`
 - `frontend/scripts/booking/core.js`
-- `frontend/scripts/booking/whatsapp.js`
+- `removed booking chat module`
 - `backend/app/src/http/handlers/booking_query.js`
 - `backend/app/src/http/handlers/booking_core.js`
 - `backend/app/src/http/handlers/booking_people.js`
@@ -780,24 +780,24 @@ Key files:
 - `backend/keycloak-theme/asiatravelplan/`
 - `scripts/keycloak/`
 
-### Meta / WhatsApp
+### removed messaging
 
-The backend has webhook support for Meta and WhatsApp.
+The backend has webhook support for Meta and phone.
 
 Important environment variables:
 
 - `META_WEBHOOK_ENABLED`
 - `META_WEBHOOK_VERIFY_TOKEN`
 - `META_APP_SECRET`
-- `WHATSAPP_WEBHOOK_ENABLED`
-- `WHATSAPP_VERIFY_TOKEN`
-- `WHATSAPP_APP_SECRET`
+- `phone_WEBHOOK_ENABLED`
+- `phone_VERIFY_TOKEN`
+- `phone_APP_SECRET`
 
 Important files:
 
-- `backend/app/src/integrations/meta_webhook.js`
+- `removed webhook integration`
 - `backend/app/src/http/handlers/booking_chat.js`
-- `frontend/scripts/booking/whatsapp.js`
+- `removed booking chat module`
 
 ### Gmail Drafts
 
@@ -861,7 +861,7 @@ Sensitive data includes:
 - generated offer PDFs
 - Gmail draft credentials
 - Keycloak secrets
-- Meta/WhatsApp webhook secrets
+- removed messaging webhook secrets
 - Google service account credentials
 
 Rules:

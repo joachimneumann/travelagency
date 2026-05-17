@@ -736,11 +736,10 @@ function drawTopHeader(doc, companyProfile, logoImage, fonts, lang) {
     .fontSize(10)
     .fillColor(PDF_COLORS.textMuted)
     .text(companyProfile.address, rightColumnX, y + 18, { width: 220, align: "right" })
-    .text(`${pdfT(lang, "header.whatsapp", "WhatsApp")}: ${companyProfile.whatsapp}`, rightColumnX, y + 50, { width: 220, align: "right" })
-    .text(`${pdfT(lang, "header.email", "Email")}: ${companyProfile.email}`, rightColumnX, y + 66, { width: 220, align: "right" })
-    .text(companyProfile.website, rightColumnX, y + 82, { width: 220, align: "right" });
+    .text(`${pdfT(lang, "header.email", "Email")}: ${companyProfile.email}`, rightColumnX, y + 50, { width: 220, align: "right" })
+    .text(companyProfile.website, rightColumnX, y + 66, { width: 220, align: "right" });
 
-  const nextY = y + 106;
+  const nextY = y + 90;
   drawDivider(doc, nextY);
   return nextY + 18;
 }
@@ -2088,7 +2087,7 @@ function buildClosingBody(generatedOffer, formatMoneyValue, lang) {
   return pdfT(
     lang,
     "offer.closing_body",
-    "If this offer feels right for you, simply respond to us by email or WhatsApp and we will be happy to confirm next steps, refine details, and help you move toward booking."
+    "If this offer feels right for you, simply respond to us by email and we will be happy to confirm next steps, refine details, and help you move toward booking."
   );
 }
 
@@ -2552,7 +2551,7 @@ export function createOfferPdfWriter({
         .fontSize(8.5)
         .fillColor(PDF_COLORS.textMuted)
         .text(
-          `${companyProfile.name} · ${companyProfile.website} · ${companyProfile.email} · ${companyProfile.whatsapp}`,
+          `${companyProfile.name} · ${companyProfile.website} · ${companyProfile.email}`,
           PAGE_MARGIN,
           doc.page.height - PAGE_MARGIN,
           { width: doc.page.width - PAGE_MARGIN * 2, align: "center" }

@@ -341,12 +341,6 @@ export function createStoreUtils({
     } else {
       parsed.destination_places ||= [];
     }
-    for (const legacyChatField of ["chat_channel_accounts", "chat_conversations", "chat_events"]) {
-      if (Object.prototype.hasOwnProperty.call(parsed, legacyChatField)) {
-        delete parsed[legacyChatField];
-        legacyStoreWritebackNeeded = true;
-      }
-    }
     if (Object.prototype.hasOwnProperty.call(parsed, "invoices")) {
       delete parsed.invoices;
       legacyStoreWritebackNeeded = true;
@@ -448,10 +442,36 @@ export function createStoreUtils({
     return JSON.parse(raw);
   }
 
+  function normalizeRawStoreDocumentShape(store = {}) {
+    const next = store && typeof store === "object" && !Array.isArray(store)
+      ? store
+      : initialStoreDocument();
+    next.bookings = Array.isArray(next.bookings) ? next.bookings : [];
+    next.activities = Array.isArray(next.activities) ? next.activities : [];
+    next.payment_documents = Array.isArray(next.payment_documents) ? next.payment_documents : [];
+    if (!Array.isArray(next.destination_scope_destinations) || !next.destination_scope_destinations.length) {
+      next.destination_scope_destinations = defaultDestinationScopeDestinations();
+    }
+    next.destination_regions = Array.isArray(next.destination_regions) ? next.destination_regions : [];
+    next.destination_places = Array.isArray(next.destination_places) ? next.destination_places : [];
+    return next;
+  }
+
+  async function readRawStoreFromDisk() {
+    const storeDocument = await readStoreDocumentFromDisk();
+    const destinationCatalog = await readDestinationCatalogFromDisk(storeDocument);
+    return normalizeRawStoreDocumentShape(mergeDestinationCatalogIntoStore(storeDocument, destinationCatalog));
+  }
+
   async function readStoreFromDisk() {
     const storeDocument = await readStoreDocumentFromDisk();
     const destinationCatalog = await readDestinationCatalogFromDisk(storeDocument);
     return await normalizeParsedStore(mergeDestinationCatalogIntoStore(storeDocument, destinationCatalog));
+  }
+
+  async function readRawStore() {
+    await writeQueueRef.current.catch(() => {});
+    return readRawStoreFromDisk();
   }
 
   async function readStore() {
@@ -592,6 +612,7 @@ export function createStoreUtils({
 
   return {
     ensureStorage,
+    readRawStore,
     readStore,
     persistStore,
     readTours,

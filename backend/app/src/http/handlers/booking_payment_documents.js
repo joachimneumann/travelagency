@@ -17,6 +17,7 @@ export function createBookingPaymentDocumentHandlers(deps) {
     readBodyJson,
     sendJson,
     readStore,
+    readRawStore = readStore,
     getPrincipal,
     canAccessBooking,
     canEditBooking,
@@ -605,7 +606,7 @@ export function createBookingPaymentDocumentHandlers(deps) {
   }
 
   async function handleListBookingPaymentDocuments(req, res, [bookingId]) {
-    const store = await readStore();
+    const store = await readRawStore();
     const booking = store.bookings.find((item) => item.id === bookingId);
     if (!booking) {
       sendJson(res, 404, { error: "Booking not found" });

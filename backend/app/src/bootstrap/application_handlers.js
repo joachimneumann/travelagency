@@ -191,6 +191,7 @@ export function createApplicationRoutes({
     sendJson: httpHelpers.sendJson,
     validateBookingInput: bookingViewHelpers.validateBookingInput,
     readStore: storeUtils.readStore,
+    readRawStore: storeUtils.readRawStore,
     readTours: storeUtils.readTours,
     readCountryPracticalInfo: countryReferenceStore.readCountryPracticalInfo,
     normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
@@ -280,7 +281,7 @@ export function createApplicationRoutes({
     getPrincipal,
     canViewKeycloakUsers,
     listAssignableUsers: keycloakDirectory.listAssignableUsers,
-    listCachedAssignableUsers: atpStaffDirectory.listCachedAssignableUsers,
+    listCachedAssignableUsers: atpStaffDirectory.listCachedEligibleStaffUsers,
     keycloakDisplayName: keycloakDirectory.toDisplayName,
     sendJson: httpHelpers.sendJson
   });

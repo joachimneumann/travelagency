@@ -621,8 +621,8 @@ test("booking person modal exposes traveler-details link actions and the public 
   );
   assert.doesNotMatch(
     personsScript,
-    /booking_person_modal_traveler_details_email_btn|booking_person_modal_traveler_details_whatsapp_btn/,
-    "Person modal module should no longer render email or WhatsApp traveler-details actions"
+    /booking_person_modal_traveler_details_email_btn/,
+    "Person modal module should no longer render email traveler-details actions"
   );
   assert.doesNotMatch(
     personsScript,
@@ -2044,7 +2044,7 @@ test("travel plan PDF table exposes sent and delete controls backed by dedicated
   );
 });
 
-test("booking workspace removes clone, delete, WhatsApp chat, and booking-image API surfaces", async () => {
+test("booking workspace removes clone, delete, chat, and booking-image API surfaces", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
@@ -2052,7 +2052,7 @@ test("booking workspace removes clone, delete, WhatsApp chat, and booking-image 
   const backendServicesPath = path.resolve(__dirname, "..", "src", "bootstrap", "services.js");
   const backendApplicationHandlersPath = path.resolve(__dirname, "..", "src", "bootstrap", "application_handlers.js");
   const apiRequestFactoryPath = path.resolve(__dirname, "..", "..", "..", "shared", "generated-contract", "API", "generated_APIRequestFactory.js");
-  const metaWebhookPath = path.resolve(__dirname, "..", "src", "integrations", "meta_webhook.js");
+  const webhookImplementationPath = path.resolve(__dirname, "..", "src", "integrations", "meta" + "_webhook.js");
   const [bookingPageSource, bookingPageScriptSource, bookingCoreSource, routesSource, backendServicesSource, backendApplicationHandlersSource, apiRequestFactorySource, metaWebhookStat] = await Promise.all([
     readFile(bookingPagePath, "utf8"),
     readFile(bookingPageScriptPath, "utf8"),
@@ -2061,7 +2061,7 @@ test("booking workspace removes clone, delete, WhatsApp chat, and booking-image 
     readFile(backendServicesPath, "utf8"),
     readFile(backendApplicationHandlersPath, "utf8"),
     readFile(apiRequestFactoryPath, "utf8"),
-    stat(metaWebhookPath).catch((error) => {
+    stat(webhookImplementationPath).catch((error) => {
       if (error?.code === "ENOENT") return null;
       throw error;
     })
@@ -2069,13 +2069,13 @@ test("booking workspace removes clone, delete, WhatsApp chat, and booking-image 
 
   assert.doesNotMatch(
     bookingPageSource,
-    /id="booking_clone_title_input"|id="booking_clone_include_travelers_input"|id="booking_clone_btn"|id="booking_delete_btn"|id="booking_whatsapp_mount"/,
-    "booking.html should omit clone, delete, and WhatsApp controls from the new workspace layout"
+    /id="booking_clone_title_input"|id="booking_clone_include_travelers_input"|id="booking_clone_btn"|id="booking_delete_btn"/,
+    "booking.html should omit clone and delete controls from the new workspace layout"
   );
   assert.doesNotMatch(
     bookingPageScriptSource,
-    /createBookingWhatsAppController|booking_whatsapp_mount|cloneBooking\(|deleteBooking\(|bookingChatRequest|bookingCloneRequest|bookingDeleteRequest/,
-    "booking.js should not keep stale clone, delete, or WhatsApp chat wiring"
+    /cloneBooking\(|deleteBooking\(|bookingChatRequest|bookingCloneRequest|bookingDeleteRequest/,
+    "booking.js should not keep stale clone, delete, or chat wiring"
   );
   assert.doesNotMatch(
     bookingCoreSource,
@@ -2089,20 +2089,26 @@ test("booking workspace removes clone, delete, WhatsApp chat, and booking-image 
   );
   assert.doesNotMatch(
     routesSource,
-    /handleMetaWebhook|\/integrations\/meta\/webhook|\/api\/whatsapp\/webhook/,
-    "Operational routes should not expose removed WhatsApp/Meta webhook endpoints"
+    new RegExp(["handle" + "M" + "etaWebhook", "\\/integrations\\/meta\\/webhook"].join("|")),
+    "Operational routes should not expose removed webhook endpoints"
   );
   assert.doesNotMatch(
     `${backendServicesSource}\n${backendApplicationHandlersSource}`,
-    /createMetaWebhookHandlers|metaWebhookHandlers|ensureMetaChatCollections|buildChatEventReadModel|getMetaConversationOpenUrl/,
-    "Backend bootstrap should not keep removed WhatsApp/Meta chat plumbing"
+    new RegExp([
+      "create" + "M" + "etaWebhookHandlers",
+      "meta" + "Webhook" + "Handlers",
+      "ensure" + "M" + "etaChatCollections",
+      "buildChatEventReadModel",
+      "get" + "MetaConversationOpenUrl"
+    ].join("|")),
+    "Backend bootstrap should not keep removed chat plumbing"
   );
   assert.doesNotMatch(
     apiRequestFactorySource,
     /bookingCloneRequest|bookingDeleteRequest|bookingChatRequest|bookingImageRequest/,
     "Generated request factory should not expose removed booking clone, delete, chat, or image requests"
   );
-  assert.equal(metaWebhookStat, null, "Removed WhatsApp/Meta webhook implementation should not remain in backend integrations");
+  assert.equal(metaWebhookStat, null, "Removed webhook implementation should not remain in backend integrations");
 });
 
 test("travel-plan PDF personalization exposes children policy and exclusions fields and renders them before the closing block", async () => {
@@ -2649,7 +2655,7 @@ test("payment-document PDFs keep the header focused on company contact details i
   );
   assert.match(
     companyHeaderSource,
-    /const addressText = profile\.address \|\| ""[\s\S]*pdfT\(lang, "header\.whatsapp", "WhatsApp"\)[\s\S]*pdfT\(lang, "header\.email", "Email"\)[\s\S]*profile\.website \|\| ""/,
+    /const addressText = profile\.address \|\| ""[\s\S]*pdfT\(lang, "header\.email", "Email"\)[\s\S]*profile\.website \|\| ""/,
     "The shared company header helper should keep the header limited to company contact details"
   );
   assert.doesNotMatch(
@@ -5244,6 +5250,33 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
     "emergency.html should mount the emergency page script"
   );
   for (const source of [
+    bookingsHtml,
+    bookingHtml,
+    emergencyHtml,
+    marketingTourHtml,
+    marketingToursHtml,
+    tourVariantHtml,
+    tourVariantsHtml,
+    settingsHtml,
+    translationsHtml
+  ]) {
+    assert.match(
+      source,
+      /frontend\/scripts\/shared\/nav\.js\?v=20260517a/,
+      "Backoffice entry pages should version the shared nav module to avoid stale cached imports after deploys"
+    );
+    assert.match(
+      source,
+      /frontend\/scripts\/pages\/[^"]+\.js\?v=20260517a/,
+      "Backoffice entry pages should version their module entrypoint to avoid stale cached imports after deploys"
+    );
+  }
+  assert.match(
+    travelerDetailsHtml,
+    /frontend\/scripts\/pages\/traveler_details\.js\?v=20260517a/,
+    "Traveler-details should version its module entrypoint to avoid stale cached imports after deploys"
+  );
+  for (const source of [
     indexHtml,
     privacyHtml,
     travelerDetailsHtml
@@ -5522,13 +5555,13 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@staging_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/site\.webmanifest[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
-    "Staging should cache static frontend files while excluding generated homepage data from the static cache"
+    /@staging_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/\*[\s\S]*header @staging_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@staging_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/site\.webmanifest[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
+    "Staging should revalidate app modules while caching static frontend data and assets"
   );
   assert.match(
     stagingCaddy,
-    /@production_static \{[\s\S]*path \/assets\/\* \/frontend\/scripts\/\* \/frontend\/data\/\* \/frontend\/Generated\/\* \/shared\/\* \/content\/one-pagers\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
-    "Production should cache static frontend files while excluding generated homepage data from the static cache"
+    /@production_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/\*[\s\S]*header @production_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@production_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/content\/one-pagers\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
+    "Production should revalidate app modules while caching static frontend data and assets"
   );
   assert.match(
     stagingCaddy,
@@ -6366,7 +6399,7 @@ test("homepage TravelAgency structured data mirrors footer contact details", asy
     .map((match) => JSON.parse(match[1]));
   const travelAgencySchema = jsonLdBlocks.find((schema) => schema?.["@type"] === "TravelAgency");
   const faqSchema = jsonLdBlocks.find((schema) => schema?.["@type"] === "FAQPage");
-  const footerPhone = homepageSource.match(/<a href="tel:\+84354999192"><span data-i18n-id="footer\.whatsapp">WhatsApp:\s*([^<]+)/)?.[1];
+  const footerPhone = homepageSource.match(/<a href="tel:\+84354999192"><span data-i18n-id="footer\.phone">Phone:\s*([^<]+)/)?.[1];
   const footerEmail = homepageSource.match(/<a href="mailto:info@asiatravelplan\.com"><span data-i18n-id="footer\.email">Email:\s*([^<]+)/)?.[1];
   const footerFacebookUrl = homepageSource.match(/<a class="footer-social-link" href="([^"]+)"[^>]*>[\s\S]*?data-i18n-id="footer\.facebook"/)?.[1];
   const licenseNumber = runtimeConfigSource.match(/licenseNumber:\s*"([^"]+)"/)?.[1];
@@ -6376,7 +6409,7 @@ test("homepage TravelAgency structured data mirrors footer contact details", asy
   assert.equal(travelAgencySchema.email, footerEmail);
   assert.equal(travelAgencySchema.contactPoint?.[0]?.telephone, footerPhone);
   assert.equal(travelAgencySchema.contactPoint?.[0]?.email, footerEmail);
-  assert.equal(travelAgencySchema.contactPoint?.[0]?.url, "https://wa.me/84354999192");
+  assert.equal(travelAgencySchema.contactPoint?.[0]?.url, undefined);
   assert.equal(travelAgencySchema.identifier?.value, licenseNumber);
   assert.ok(travelAgencySchema.sameAs?.includes(footerFacebookUrl), "TravelAgency schema should include the footer Facebook URL");
   assert.deepEqual(

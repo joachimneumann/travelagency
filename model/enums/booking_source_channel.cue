@@ -4,7 +4,6 @@ BookingSourceChannelCatalog: [
 	"other",
 	"website",
 	"email",
-	"whatsapp",
 	"facebook_messenger",
 	"google_maps",
 	"instagram",

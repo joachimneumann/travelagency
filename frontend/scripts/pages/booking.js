@@ -1202,12 +1202,14 @@ function renderStaticSectionHeaders() {
 }
 
 async function loadActivities() {
-  if (!state.booking?.id || !els.activities_table) return;
+  const bookingId = normalizeText(state.booking?.id);
+  if (!bookingId || !els.activities_table) return;
   const request = bookingActivitiesRequest({
     baseURL: apiOrigin,
-    params: { booking_id: state.booking.id }
+    params: { booking_id: bookingId }
   });
   const payload = await fetchApi(request.url, { suppressNotFound: true });
+  if (normalizeText(state.booking?.id) !== bookingId) return;
   const items = Array.isArray(payload?.items) ? payload.items : payload?.activities;
   const nextLatestActivityAt = resolveLatestActivityTimestamp(items);
   const latestActivityChanged = nextLatestActivityAt !== state.latestActivityAt;
@@ -1239,7 +1241,8 @@ function renderTravelPlanPanel() {
 }
 
 async function loadPaymentDocuments() {
-  if (!state.booking?.id) {
+  const bookingId = normalizeText(state.booking?.id);
+  if (!bookingId) {
     state.paymentDocuments = [];
     renderPricingPanel();
     updateCleanStateActionAvailability();
@@ -1247,9 +1250,10 @@ async function loadPaymentDocuments() {
   }
   const request = bookingPaymentDocumentsRequest({
     baseURL: apiOrigin,
-    params: { booking_id: state.booking.id }
+    params: { booking_id: bookingId }
   });
   const payload = await fetchApi(request.url, { suppressNotFound: true });
+  if (normalizeText(state.booking?.id) !== bookingId) return state.paymentDocuments;
   state.paymentDocuments = Array.isArray(payload?.items)
     ? payload.items.slice().sort((left, right) => String(right.updated_at || right.created_at || "").localeCompare(String(left.updated_at || left.created_at || "")))
     : [];

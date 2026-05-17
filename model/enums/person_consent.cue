@@ -3,7 +3,6 @@ package enums
 PersonConsentTypeCatalog: [
 	"privacy_policy",
 	"marketing_email",
-	"marketing_whatsapp",
 	"profiling",
 ]
 

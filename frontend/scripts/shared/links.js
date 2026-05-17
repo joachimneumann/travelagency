@@ -10,8 +10,26 @@ function addLangParam(params) {
   if (lang) params.set("lang", lang);
 }
 
-export function buildBookingHref(id) {
+function normalizeContentLang(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function resolveBookingContentLang(source = {}) {
+  if (!source || typeof source !== "object") return "";
+  return normalizeContentLang(
+    source.content_lang
+    || source.contentLang
+    || source.customer_language
+    || source.customerLanguage
+    || source.web_form_submission?.preferred_language
+    || source.preferred_language
+  );
+}
+
+export function buildBookingHref(id, booking = {}) {
   const params = new URLSearchParams({ id });
+  const contentLang = resolveBookingContentLang(booking);
+  if (contentLang) params.set("content_lang", contentLang);
   addLangParam(params);
   return `booking.html?${params.toString()}`;
 }

@@ -22,7 +22,7 @@ Do not introduce a separate customer record as the messaging anchor.
 
 ### Phase 1: Quick switch
 
-- Show WhatsApp, Messenger, and Zalo actions from booking views.
+- Show phone, Messenger, and Zalo actions from booking views.
 - Open the native app with booking context.
 - No in-app sending yet.
 
@@ -74,7 +74,7 @@ Do not introduce a separate customer record as the messaging anchor.
 
 ## Booking Page User Interface
 
-The booking page should no longer assume that one booking has only one WhatsApp conversation. A booking can have:
+The booking page should no longer assume that one booking has only one phone conversation. A booking can have:
 - a conversation with the primary contact
 - separate conversations with one or more travelers
 - unknown phone numbers that are likely related to the booking but are not yet assigned to a person
@@ -83,7 +83,7 @@ The UI should therefore use a booking-scoped conversations model instead of a si
 
 ### Main Pattern
 
-Reproduce a simple WhatsApp-like interface inside `booking.html`:
+Reproduce a simple phone-like interface inside `booking.html`:
 
 1. Conversation list screen
    - show one row per booking person on the booking, even if no chat exists yet
@@ -91,12 +91,12 @@ Reproduce a simple WhatsApp-like interface inside `booking.html`:
      - avatar or initials
      - person name if known
      - role summary such as `Primary contact`, `Traveler`, `Traveler, Payer`
-   - if a WhatsApp conversation exists for that person, also show:
+   - if a phone conversation exists for that person, also show:
      - phone number
      - last message preview
      - time of last message
      - unread message count
-   - if no WhatsApp conversation exists yet for that person, show only the person identity row and no message preview
+   - if no phone conversation exists yet for that person, show only the person identity row and no message preview
 
 2. Conversation detail screen
    - when ATP staff click a conversation, animate to the right into the message thread

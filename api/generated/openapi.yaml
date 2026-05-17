@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-17T10:23:48Z
+# 2026-05-17T16:04:28Z
 
 ---
 openapi: 3.1.0
@@ -342,7 +342,6 @@ components:
       - other
       - website
       - email
-      - whatsapp
       - facebook_messenger
       - google_maps
       - instagram
@@ -353,7 +352,6 @@ components:
       - code: other
       - code: website
       - code: email
-      - code: whatsapp
       - code: facebook_messenger
       - code: google_maps
       - code: instagram
@@ -367,8 +365,6 @@ components:
         label: website
       - value: email
         label: email
-      - value: whatsapp
-        label: whatsapp
       - value: facebook_messenger
         label: facebook_messenger
       - value: google_maps
@@ -3664,20 +3660,16 @@ components:
       enum:
       - privacy_policy
       - marketing_email
-      - marketing_whatsapp
       - profiling
       x-enum-catalog:
       - code: privacy_policy
       - code: marketing_email
-      - code: marketing_whatsapp
       - code: profiling
       x-enum-options:
       - value: privacy_policy
         label: privacy_policy
       - value: marketing_email
         label: marketing_email
-      - value: marketing_whatsapp
-        label: marketing_whatsapp
       - value: profiling
         label: profiling
     PersonConsentStatus:

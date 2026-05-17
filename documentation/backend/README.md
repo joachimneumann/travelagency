@@ -35,9 +35,9 @@ Important environment variables:
 - `META_WEBHOOK_ENABLED`
 - `META_WEBHOOK_VERIFY_TOKEN`
 - `META_APP_SECRET`
-- `WHATSAPP_WEBHOOK_ENABLED`
-- `WHATSAPP_VERIFY_TOKEN`
-- `WHATSAPP_APP_SECRET`
+- `phone_WEBHOOK_ENABLED`
+- `phone_VERIFY_TOKEN`
+- `phone_APP_SECRET`
 - `GOOGLE_SERVICE_ACCOUNT_JSON_PATH`
 - `GOOGLE_IMPERSONATED_EMAIL`
 - `ZOHO_ACCOUNTS_BASE_URL`
@@ -111,9 +111,9 @@ Administrative pages:
 
 Operational and integration:
 - `GET /health`
-- `GET /integrations/meta/webhook/status`
-- `GET /integrations/meta/webhook`
-- `POST /integrations/meta/webhook`
+- `GET removed webhook status route`
+- `GET removed webhook route`
+- `POST removed webhook route`
 - staging access endpoints under `/staging-access/*`
 
 Public:

@@ -56,10 +56,7 @@ function emptyStore(base = {}) {
     ...base,
     bookings: Array.isArray(base.bookings) ? base.bookings : [],
     activities: Array.isArray(base.activities) ? base.activities : [],
-    payment_documents: Array.isArray(base.payment_documents) ? base.payment_documents : [],
-    chat_channel_accounts: Array.isArray(base.chat_channel_accounts) ? base.chat_channel_accounts : [],
-    chat_conversations: Array.isArray(base.chat_conversations) ? base.chat_conversations : [],
-    chat_events: Array.isArray(base.chat_events) ? base.chat_events : []
+    payment_documents: Array.isArray(base.payment_documents) ? base.payment_documents : []
   };
 }
 

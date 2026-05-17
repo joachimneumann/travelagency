@@ -83,8 +83,7 @@ export function createBookingPersonsModule(ctx) {
   const PERSON_CONSENT_TYPES = Object.freeze([
     "privacy_policy",
     "profiling",
-    "marketing_email",
-    "marketing_whatsapp"
+    "marketing_email"
   ]);
   const REQUIRED_PERSON_CONSENT_TYPES = Object.freeze([
     "privacy_policy",
@@ -172,7 +171,6 @@ export function createBookingPersonsModule(ctx) {
     if (normalized === "privacy_policy") return bookingT("booking.persons.consent.privacy_policy", "Privacy policy");
     if (normalized === "profiling") return bookingT("booking.persons.consent.profiling", "Personalization");
     if (normalized === "marketing_email") return bookingT("booking.persons.consent.marketing_email", "Marketing email");
-    if (normalized === "marketing_whatsapp") return bookingT("booking.persons.consent.marketing_whatsapp", "Marketing WhatsApp");
     return "";
   }
 
@@ -186,9 +184,6 @@ export function createBookingPersonsModule(ctx) {
     }
     if (normalized === "marketing_email") {
       return bookingT("booking.persons.consent.marketing_email_hint", "Permission to send future offers and updates by email.");
-    }
-    if (normalized === "marketing_whatsapp") {
-      return bookingT("booking.persons.consent.marketing_whatsapp_hint", "Permission to send future offers and updates via WhatsApp.");
     }
     return "";
   }

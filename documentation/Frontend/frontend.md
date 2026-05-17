@@ -148,7 +148,7 @@ Homepage source-of-truth model:
 
 3 columns:
 - Company summary + website
-- Contact details (address, WhatsApp, email, license placeholder)
+- Contact details (address, phone, email, license placeholder)
 - Social links (placeholder URLs)
 
 ## 6) Mobile conversion element
@@ -167,7 +167,7 @@ Step 1: Trip basics
 - destination, style, month, travelers, travel duration, budget lower/upper in USD
 
 Step 2: Contact details
-- name, email, phone/WhatsApp, language
+- name, email, phone, language
 
 Step 3: Notes
 - optional notes

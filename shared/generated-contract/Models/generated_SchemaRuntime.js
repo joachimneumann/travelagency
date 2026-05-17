@@ -1268,7 +1268,6 @@
   "enumValues": [
     "privacy_policy",
     "marketing_email",
-    "marketing_whatsapp",
     "profiling"
   ],
   "options": [
@@ -1279,10 +1278,6 @@
     {
       "value": "marketing_email",
       "label": "marketing_email"
-    },
-    {
-      "value": "marketing_whatsapp",
-      "label": "marketing_whatsapp"
     },
     {
       "value": "profiling",
@@ -1877,7 +1872,6 @@
     "other",
     "website",
     "email",
-    "whatsapp",
     "facebook_messenger",
     "google_maps",
     "instagram",
@@ -1897,10 +1891,6 @@
     {
       "value": "email",
       "label": "email"
-    },
-    {
-      "value": "whatsapp",
-      "label": "whatsapp"
     },
     {
       "value": "facebook_messenger",

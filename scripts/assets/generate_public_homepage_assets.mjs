@@ -152,8 +152,7 @@ const FOOTER_ALIGNED_TRAVEL_AGENCY_STRUCTURED_DATA = Object.freeze({
       "@type": "ContactPoint",
       contactType: "travel support",
       telephone: "+84 354999192",
-      email: "info@asiatravelplan.com",
-      url: "https://wa.me/84354999192"
+      email: "info@asiatravelplan.com"
     })
   ])
 });
@@ -1476,7 +1475,7 @@ function seoPageShell({
     <footer class="footer">
       <div class="wrap">
         <p class="meta">AsiaTravelPlan plans tailor-made Southeast Asia journeys from Vietnam.</p>
-        <p class="meta">${linkTag("mailto:info@asiatravelplan.com", "info@asiatravelplan.com")} · ${linkTag("https://wa.me/84354999192", "WhatsApp +84 354999192")}</p>
+        <p class="meta">${linkTag("mailto:info@asiatravelplan.com", "info@asiatravelplan.com")} · ${linkTag("tel:+84354999192", "+84 354999192")}</p>
       </div>
     </footer>
   </body>

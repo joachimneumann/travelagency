@@ -67,6 +67,7 @@ export function createBookingHandlers(deps) {
     sendJson,
     validateBookingInput,
     readStore,
+    readRawStore = readStore,
     readTours,
     readCountryPracticalInfo,
     normalizeTourForStorage,
@@ -659,6 +660,7 @@ export function createBookingHandlers(deps) {
     readBodyJson,
     sendJson,
     readStore,
+    readRawStore,
     getPrincipal,
     canEditBooking,
     canChangeBookingAssignment,
@@ -843,6 +845,7 @@ export function createBookingHandlers(deps) {
     readBodyJson,
     sendJson,
     readStore,
+    readRawStore,
     getPrincipal,
     canAccessBooking,
     canEditBooking,
@@ -1107,7 +1110,7 @@ export function createBookingHandlers(deps) {
   }
 
   async function handleGetBooking(req, res, [bookingId]) {
-    const store = await readStore();
+    const store = await readRawStore();
     const booking = store.bookings.find((item) => item.id === bookingId);
     if (!booking) {
       sendJson(res, 404, { error: "Booking not found" });

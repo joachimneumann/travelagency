@@ -58,7 +58,7 @@ Typical data in this area:
 - name
 - company / household / organization
 - email
-- phone / WhatsApp
+- phone
 - location
 - source
 - language
@@ -298,7 +298,7 @@ CRM systems increasingly win by being the operational center connected to everyt
 
 For AsiaTravelPlan, the highest-value integrations are probably:
 - email
-- WhatsApp or messaging proxy workflows
+- phone or messaging proxy workflows
 - payment-document / accounting flow
 - payment status
 - itinerary / quote generation
@@ -321,13 +321,13 @@ Key questions to ask each candidate CRM vendor:
 - What webhook events are available for contact changes, deal/booking changes, stage changes, owner changes, task updates, and incoming messages?
 - Are webhook retries, signatures, event IDs, and event ordering documented well enough for production use?
 - Can ATP store its own `booking_id` and other internal IDs in the CRM and query by them efficiently?
-- Can the CRM link inbound WhatsApp, Facebook Messenger, Instagram, TikTok, email, website form, and phone activity back to the correct booking?
-- Does the CRM offer official WhatsApp Business Platform integration, or does it depend on a third-party messaging provider?
-- If WhatsApp is supported, who owns the WhatsApp Business Account and phone number relationship: ATP, Meta, the CRM vendor, or a BSP?
-- Can the existing WhatsApp number be migrated away later without losing ownership or blocking another provider?
+- Can the CRM link inbound phone, Facebook Messenger, Instagram, TikTok, email, website form, and phone activity back to the correct booking?
+- Does the CRM offer official phone Business Platform integration, or does it depend on a third-party messaging provider?
+- If phone is supported, who owns the phone Business Account and phone number relationship: ATP, Meta, the CRM vendor, or a BSP?
+- Can the existing phone number be migrated away later without losing ownership or blocking another provider?
 - Does the CRM preserve full message history if staff reply from the CRM, mobile app, or native channel apps?
 - Can the CRM enforce an operating rule that replies should happen inside the CRM for tracked conversations?
-- How does the CRM handle Meta's 24-hour messaging window and approved WhatsApp templates?
+- How does the CRM handle Meta's 24-hour messaging window and approved phone templates?
 - Can message templates be created, approved, categorized, localized, and reported on from the CRM or connected provider?
 - Can the CRM expose conversation data to ATP's backend for a read-only booking timeline?
 - Can ATP send outbound messages through the CRM API later, or is sending limited to the CRM user interface?
@@ -435,7 +435,7 @@ These are clearly justified:
 These are strong next candidates:
 - task objects instead of only activity entries
 - dashboard for overdue bookings and next actions
-- customer communication log across email / WhatsApp / phone
+- customer communication log across email / phone
 - quote object and quote status lifecycle
 - booking checklist / readiness workflow
 - staff workload and assignment balancing

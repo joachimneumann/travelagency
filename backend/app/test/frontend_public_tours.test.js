@@ -610,6 +610,140 @@ test("collapsed public tour cards use swipe-only mobile galleries for multi-imag
   assert.match(els.tourGrid.innerHTML, /tour_multi_image[\s\S]*tour-card__media-dots/);
 });
 
+test("public tour random ordering persists through sessionStorage reloads", async () => {
+  const previousDocument = global.document;
+  const previousHTMLElement = global.HTMLElement;
+  const previousHTMLButtonElement = global.HTMLButtonElement;
+  const previousWindow = global.window;
+  const previousRandom = Math.random;
+  let createFrontendToursController;
+  const storage = new Map();
+  const sessionStorage = {
+    getItem(key) {
+      return storage.has(key) ? storage.get(key) : null;
+    },
+    setItem(key, value) {
+      storage.set(key, String(value));
+    },
+    removeItem(key) {
+      storage.delete(key);
+    }
+  };
+  const trips = [
+    {
+      id: "tour_random_alpha",
+      title: "Alpha",
+      short_description: "",
+      priority: 50,
+      styles: [],
+      destinations: ["Vietnam"],
+      pictures: [],
+      travel_plan: { days: [] }
+    },
+    {
+      id: "tour_random_beta",
+      title: "Beta",
+      short_description: "",
+      priority: 50,
+      styles: [],
+      destinations: ["Thailand"],
+      pictures: [],
+      travel_plan: { days: [] }
+    }
+  ];
+  const createControllerState = () => ({
+    lang: "en",
+    trips: trips.map((trip) => ({ ...trip })),
+    filteredTrips: [],
+    visibleToursCount: 2,
+    expandedTourIds: new Set(),
+    filterOptions: {
+      destinations: [],
+      styles: [],
+      destinationScopeCatalog: null
+    },
+    filters: {
+      dest: [],
+      area: "",
+      place: "",
+      style: []
+    }
+  });
+  const createController = (state) => {
+    const els = {
+      tourGrid: new FakeElement(),
+      noResultsMessage: new FakeElement(),
+      tourActions: null,
+      showMoreTours: null
+    };
+    return createFrontendToursController({
+      state,
+      els,
+      backendBaseUrl: "",
+      initialVisibleTours: 2,
+      showMoreBatch: 1,
+      frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+      )),
+      currentFrontendLang: () => "en",
+      preferredCurrencyForFrontendLang: () => "USD",
+      approximateDisplayAmountFromUSD: () => null,
+      formatDisplayMoney: () => "",
+      defaultBookingCurrency: "USD",
+      escapeHTML,
+      escapeAttr,
+      updateBookingModalTitle() {},
+      openBookingModal() {},
+      setSelectedTourContext() {},
+      clearSelectedTourContext() {},
+      setBookingField() {},
+      prefillBookingFormWithFilters() {}
+    });
+  };
+
+  global.HTMLElement = FakeElement;
+  global.HTMLButtonElement = FakeElement;
+  global.document = { title: "" };
+  global.window = {
+    sessionStorage,
+    addEventListener() {},
+    requestAnimationFrame(callback) {
+      if (typeof callback === "function") callback();
+    },
+    matchMedia() {
+      return { matches: false };
+    }
+  };
+
+  try {
+    ({ createFrontendToursController } = await loadToursController());
+    const randomValues = [0.95, 0.05];
+    Math.random = () => randomValues.shift() ?? 0.5;
+
+    const firstState = createControllerState();
+    createController(firstState).applyFilters();
+    const firstOrder = firstState.filteredTrips.map((trip) => trip.id);
+    assert.deepEqual(firstOrder, ["tour_random_alpha", "tour_random_beta"]);
+    assert.deepEqual(JSON.parse(storage.get("asiatravelplan_tour_random_boosts_v1")), {
+      tour_random_alpha: 48,
+      tour_random_beta: 2
+    });
+
+    Math.random = () => {
+      throw new Error("Persisted tour order should not need new random values on reload.");
+    };
+    const secondState = createControllerState();
+    createController(secondState).applyFilters();
+    assert.deepEqual(secondState.filteredTrips.map((trip) => trip.id), firstOrder);
+  } finally {
+    global.document = previousDocument;
+    global.HTMLElement = previousHTMLElement;
+    global.HTMLButtonElement = previousHTMLButtonElement;
+    global.window = previousWindow;
+    Math.random = previousRandom;
+  }
+});
+
 test("secret tour customization stays disabled when inactive and on mobile viewports", async () => {
   const storage = new Map();
   global.HTMLElement = FakeElement;

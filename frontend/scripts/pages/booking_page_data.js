@@ -49,6 +49,9 @@ export function createBookingPageDataController(ctx) {
     ensureTourImageLoaded
   } = ctx;
 
+  let secondaryLoadToken = 0;
+  let latestFullAssignmentDirectoryToken = 0;
+
   function hasAnyRole(...candidateRoles) {
     return candidateRoles.some((role) => state.roles.includes(role));
   }
@@ -235,6 +238,73 @@ export function createBookingPageDataController(ctx) {
     }
   }
 
+  function renderPrimaryBookingPage() {
+    renderBookingHeader();
+    renderBookingData();
+    renderActionControls();
+    renderPersonsEditor();
+    renderPricingPanel();
+    renderTravelPlanPanel();
+    renderOfferPanel();
+  }
+
+  function keycloakUsersUrl(query = {}) {
+    return keycloakUsersRequest({ baseURL: apiOrigin, query }).url;
+  }
+
+  async function loadCachedAssignmentDirectory(loadToken) {
+    if (!state.permissions.canReadAssignmentDirectory) return;
+    const usersPayload = await fetchApi(keycloakUsersUrl({ prefer_cache: "1" }), { suppressNotFound: true });
+    if (latestFullAssignmentDirectoryToken === loadToken) return;
+    if (loadToken !== secondaryLoadToken || !Array.isArray(usersPayload?.items) || usersPayload.items.length === 0) return;
+    state.keycloakUsers = mergeAssignableUsersWithStaffProfiles(usersPayload.items, []);
+    renderActionControls();
+  }
+
+  async function loadFullAssignmentDirectory(loadToken) {
+    if (!state.permissions.canReadAssignmentDirectory) {
+      state.keycloakUsers = [];
+      return;
+    }
+    const requests = [
+      fetchApi(keycloakUsersUrl(), { suppressNotFound: true }),
+      fetchApi(staffProfilesRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
+    ];
+    const [usersPayload, staffProfilesPayload] = await Promise.all(requests);
+    if (loadToken !== secondaryLoadToken) return;
+    latestFullAssignmentDirectoryToken = loadToken;
+    state.keycloakUsers = mergeAssignableUsersWithStaffProfiles(usersPayload?.items, staffProfilesPayload?.items);
+    renderActionControls();
+  }
+
+  async function loadTourImage(loadToken) {
+    await ensureTourImageLoaded();
+    if (loadToken !== secondaryLoadToken) return;
+    renderBookingHeader();
+  }
+
+  function logSecondaryLoadFailure(label, result) {
+    if (result?.status !== "rejected") return;
+    logBrowserConsoleError("[booking] Secondary booking page data failed to load.", {
+      booking_id: state.id || "",
+      secondary_load: label
+    }, result.reason);
+  }
+
+  function loadSecondaryBookingPageData() {
+    const loadToken = ++secondaryLoadToken;
+    void Promise.allSettled([
+      loadCachedAssignmentDirectory(loadToken),
+      loadFullAssignmentDirectory(loadToken),
+      loadTourImage(loadToken),
+      loadActivities(),
+      loadPaymentDocuments()
+    ]).then((results) => {
+      ["cached_assignment_directory", "assignment_directory", "tour_image", "activities", "payment_documents"]
+        .forEach((label, index) => logSecondaryLoadFailure(label, results[index]));
+    });
+  }
+
   async function loadBookingPage() {
     clearStatus();
     const requestedContentLang = normalizeBookingContentLang(state.contentLang || bookingContentLang("en"));
@@ -253,29 +323,10 @@ export function createBookingPageDataController(ctx) {
       }
     }
 
-    const requests = [
-      state.permissions.canReadAssignmentDirectory
-        ? fetchApi(keycloakUsersRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
-        : Promise.resolve(null),
-      state.permissions.canReadAssignmentDirectory
-        ? fetchApi(staffProfilesRequest({ baseURL: apiOrigin }).url, { suppressNotFound: true })
-        : Promise.resolve(null)
-    ];
-    const [usersPayload, staffProfilesPayload] = await Promise.all(requests);
-    state.keycloakUsers = mergeAssignableUsersWithStaffProfiles(usersPayload?.items, staffProfilesPayload?.items);
     applyBookingPayload(bookingPayload, { forceDraftReset: true });
     syncContentLanguageSelector?.();
-    await ensureTourImageLoaded();
-
-    renderBookingHeader();
-    renderBookingData();
-    renderActionControls();
-    renderPersonsEditor();
-    renderPricingPanel();
-    renderTravelPlanPanel();
-    renderOfferPanel();
-    await loadActivities();
-    await loadPaymentDocuments();
+    renderPrimaryBookingPage();
+    loadSecondaryBookingPageData();
     return true;
   }
 

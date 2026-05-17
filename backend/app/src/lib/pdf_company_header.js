@@ -69,12 +69,10 @@ export function drawPdfCompanyHeader(doc, {
     const addressHeight = addressText
       ? doc.heightOfString(addressText, addressOptions)
       : 0;
-    const whatsappY = addressY + addressHeight + 2;
-    const emailY = whatsappY + 16;
+    const emailY = addressY + addressHeight + 2;
     const websiteY = emailY + 16;
     doc
       .text(addressText, rightColumnX, addressY, addressOptions)
-      .text(`${pdfT(lang, "header.whatsapp", "WhatsApp")}: ${profile.whatsapp || ""}`, rightColumnX, whatsappY, addressOptions)
       .text(`${pdfT(lang, "header.email", "Email")}: ${profile.email || ""}`, rightColumnX, emailY, addressOptions)
       .text(profile.website || "", rightColumnX, websiteY, addressOptions);
 

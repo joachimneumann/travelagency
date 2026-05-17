@@ -121,9 +121,6 @@ function buildWipedStore(store) {
     activities: [],
     payment_documents: []
   };
-  delete next.chat_channel_accounts;
-  delete next.chat_conversations;
-  delete next.chat_events;
   return next;
 }
 
@@ -192,9 +189,7 @@ export async function runCli(argv = process.argv.slice(2)) {
     [
       `bookings=${result.summary.bookings}`,
       `activities=${result.summary.activities}`,
-      `payment_documents=${result.summary.payment_documents}`,
-      `chat_conversations=${result.summary.chat_conversations}`,
-      `chat_events=${result.summary.chat_events}`
+      `payment_documents=${result.summary.payment_documents}`
     ].join(" ")
   );
 }

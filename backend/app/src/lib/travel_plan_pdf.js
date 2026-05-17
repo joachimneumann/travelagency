@@ -956,8 +956,7 @@ export function createTravelPlanPdfWriter({
       textOrNull(resolveAtpGuideShortDescriptionText(guideContext, lang)),
       textOrNull(companyProfile?.name),
       textOrNull(companyProfile?.website),
-      textOrNull(companyProfile?.email),
-      textOrNull(companyProfile?.whatsapp)
+      textOrNull(companyProfile?.email)
     ]
       .filter(Boolean)
       .every((value) => /^[\x09\x0A\x0D\x20-\x7E]*$/.test(String(value)));
@@ -993,7 +992,6 @@ export function createTravelPlanPdfWriter({
     const onePagerFooterFonts = await timing.measure("footer_fonts", () => resolveMarketingTourOnePagerFooterFonts(lang, {
       fontDir: normalizeText(process.env.ONE_PAGER_FONT_DIR),
       sampleText: [
-        textOrNull(companyProfile?.whatsapp),
         textOrNull(companyProfile?.email),
         textOrNull(companyProfile?.website),
         textOrNull(companyProfile?.address)

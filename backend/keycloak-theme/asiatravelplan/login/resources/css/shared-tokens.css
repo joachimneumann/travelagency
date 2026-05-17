@@ -206,22 +206,6 @@
   --surface-white-alpha-92: var(--white-alpha-92);
   --surface-white-alpha-98: var(--white-alpha-98);
 
-  /* WhatsApp */
-  --wa-shell: #f7f4ef;
-  --wa-list-surface: #fcfbf8;
-  --wa-thread-surface: #ece8e0;
-  --wa-divider: #e9e4dd;
-  --wa-text-strong: #111111;
-  --wa-text-muted: #7a7873;
-  --wa-bubble-in: #ffffff;
-  --wa-bubble-out: #d9fdd3;
-  --wa-bubble-out-soft: var(--wa-bubble-out);
-  --wa-ticks: var(--info-text);
-  --wa-border: #d3d7db;
-  --wa-list-hover: #f3f1ec;
-  --wa-list-selected: var(--wa-list-hover);
-  --wa-avatar-surface: var(--surface-warm-avatar);
-
   /* Sizing and Typography */
   --radius: 14px;
   --font-family-sans: "Source Sans 3", "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;

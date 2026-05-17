@@ -48,7 +48,6 @@ const BOOKING_SOURCE_CHANNEL_OPTIONS = Object.freeze([
   Object.freeze({ value: "other", labelKey: "booking.source_channel.option.other", labelFallback: "Other" }),
   Object.freeze({ value: "website", labelKey: "booking.source_channel.option.website", labelFallback: "Website" }),
   Object.freeze({ value: "email", labelKey: "booking.source_channel.option.email", labelFallback: "Email" }),
-  Object.freeze({ value: "whatsapp", labelKey: "booking.source_channel.option.whatsapp", labelFallback: "WhatsApp" }),
   Object.freeze({ value: "facebook_messenger", labelKey: "booking.source_channel.option.facebook_messenger", labelFallback: "Facebook Messenger" }),
   Object.freeze({ value: "google_maps", labelKey: "booking.source_channel.option.google_maps", labelFallback: "Google Maps" }),
   Object.freeze({ value: "instagram", labelKey: "booking.source_channel.option.instagram", labelFallback: "Instagram" }),

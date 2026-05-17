@@ -125,9 +125,9 @@ It currently contains these top-level collections:
 - `bookings`
 - `activities`
 - `payment_documents`
-- `chat_channel_accounts`
-- `chat_conversations`
-- `chat_events`
+- `removed channel-account records`
+- `removed conversation records`
+- `removed message-event records`
 
 ### Current runtime file metadata outside `store.json`
 
@@ -637,7 +637,7 @@ Columns:
 
 ## 11. Chat tables
 
-### `chat_channel_accounts`
+### `removed channel-account records`
 
 - `id`
 - `channel`
@@ -647,7 +647,7 @@ Columns:
 - `created_at`
 - `updated_at`
 
-### `chat_conversations`
+### `removed conversation records`
 
 - `id`
 - `channel`
@@ -660,7 +660,7 @@ Columns:
 - `created_at`
 - `updated_at`
 
-### `chat_events`
+### `removed message-event records`
 
 - `id`
 - `conversation_id`
@@ -730,9 +730,9 @@ The following is the first-pass relational model for migration planning. It shou
 - `booking_travel_plan_services.day_id` should be a foreign key to `booking_travel_plan_days.id`.
 - `booking_travel_plan_service_images.service_id` should be a foreign key to `booking_travel_plan_services.id`.
 - `booking_travel_plan_attachments.travel_plan_booking_id` should be a foreign key to `booking_travel_plans.booking_id`.
-- `chat_conversations.channel_account_id` should be a foreign key to `chat_channel_accounts.id`.
-- `chat_conversations.booking_id` should remain nullable so conversations can exist before a booking is linked.
-- `chat_events.conversation_id` should be a foreign key to `chat_conversations.id`.
+- `removed conversation records.channel_account_id` should be a foreign key to `removed channel-account records.id`.
+- `removed conversation records.booking_id` should remain nullable so conversations can exist before a booking is linked.
+- `removed message-event records.conversation_id` should be a foreign key to `removed conversation records.id`.
 - `import_runs` is standalone audit data and should not depend on booking-owned tables.
 - Binary file references such as `image`, `photo_ref`, `document_picture_ref`, `storage_path`, and PDF file reference fields remain plain path/reference fields in v1, not foreign keys to a binary asset table.
 - External identity references such as `assigned_keycloak_user_id`, `referral_staff_user_id`, `deposit_confirmed_by_atp_staff_id`, and similar staff/user IDs should remain plain text references in v1 because those source systems stay outside PostgreSQL.
@@ -740,7 +740,7 @@ The following is the first-pass relational model for migration planning. It shou
 ### First-pass delete behavior
 
 - Prefer `ON DELETE CASCADE` for booking-owned child tables.
-- Prefer `ON DELETE RESTRICT` for shared reference tables such as `chat_channel_accounts`.
+- Prefer `ON DELETE RESTRICT` for shared reference tables such as `removed channel-account records`.
 - For nullable cross-references from `bookings` to generated artifacts, prefer `ON DELETE SET NULL` if deletion is allowed at all.
 
 ### Mermaid ER diagrams
@@ -904,14 +904,14 @@ Create indexes for real access paths already visible in the current application.
 - unique `booking_generated_offers_booking_version_uidx` on `(booking_id, version)`
 - `booking_generated_offers_booking_created_idx` on `(booking_id, created_at desc)`
 
-### `chat_conversations`
+### `removed conversation records`
 
-- `chat_conversations_booking_last_event_idx` on `(booking_id, last_event_at desc)`
-- `chat_conversations_contact_idx` on `(channel, external_contact_id)`
+- `removed conversation records_booking_last_event_idx` on `(booking_id, last_event_at desc)`
+- `removed conversation records_contact_idx` on `(channel, external_contact_id)`
 
-### `chat_events`
+### `removed message-event records`
 
-- `chat_events_conversation_sent_idx` on `(conversation_id, sent_at desc)`
+- `removed message-event records_conversation_sent_idx` on `(conversation_id, sent_at desc)`
 - unique dedupe index on `(conversation_id, external_message_id, event_type, direction, external_status, sent_at)`
 
 ### `travel_plan_pdf_artifacts`

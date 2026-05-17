@@ -8,6 +8,8 @@ import { createTourCustomizer } from "./tour_customize.js";
 const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_PLAN_DAY_DETAILS_TRANSITION_MS = 300;
+const TOUR_RANDOM_BOOST_SESSION_KEY = "asiatravelplan_tour_random_boosts_v1";
+const TOUR_RANDOM_BOOST_MAX = 50;
 const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
   VN: "vietnam",
   TH: "thailand",
@@ -3038,19 +3040,94 @@ export function createFrontendToursController(ctx) {
     updateTourActions();
   }
 
-  function rankTripsByPriorityAndRandom(trips) {
-    const randomBoostByTripId = state.tourRandomBoostById && typeof state.tourRandomBoostById === "object"
-      ? state.tourRandomBoostById
-      : (state.tourRandomBoostById = {});
+  function tourRandomBoostSessionStorage() {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.sessionStorage || null;
+    } catch {
+      return null;
+    }
+  }
 
-    return trips
+  function normalizedTourRandomBoost(value) {
+    const boost = Number(value);
+    if (!Number.isFinite(boost)) return null;
+    const normalizedBoost = Math.trunc(boost);
+    if (normalizedBoost < 0 || normalizedBoost > TOUR_RANDOM_BOOST_MAX) return null;
+    return normalizedBoost;
+  }
+
+  function newTourRandomBoost() {
+    return Math.floor(Math.random() * (TOUR_RANDOM_BOOST_MAX + 1));
+  }
+
+  function readTourRandomBoostsFromSession() {
+    const storage = tourRandomBoostSessionStorage();
+    if (!storage) return {};
+    try {
+      const rawBoosts = storage.getItem(TOUR_RANDOM_BOOST_SESSION_KEY);
+      if (!rawBoosts) return {};
+      const parsedBoosts = JSON.parse(rawBoosts);
+      if (!parsedBoosts || typeof parsedBoosts !== "object" || Array.isArray(parsedBoosts)) return {};
+      return Object.entries(parsedBoosts).reduce((boosts, [tripId, boost]) => {
+        const normalizedTripId = normalizeText(tripId);
+        const normalizedBoost = normalizedTourRandomBoost(boost);
+        if (normalizedTripId && normalizedBoost !== null) {
+          boosts[normalizedTripId] = normalizedBoost;
+        }
+        return boosts;
+      }, {});
+    } catch {
+      return {};
+    }
+  }
+
+  function writeTourRandomBoostsToSession(randomBoostByTripId) {
+    const storage = tourRandomBoostSessionStorage();
+    if (!storage) return;
+    const persistedBoosts = Object.entries(randomBoostByTripId || {}).reduce((boosts, [tripId, boost]) => {
+      const normalizedTripId = normalizeText(tripId);
+      const normalizedBoost = normalizedTourRandomBoost(boost);
+      if (normalizedTripId && normalizedBoost !== null) {
+        boosts[normalizedTripId] = normalizedBoost;
+      }
+      return boosts;
+    }, {});
+    try {
+      storage.setItem(TOUR_RANDOM_BOOST_SESSION_KEY, JSON.stringify(persistedBoosts));
+    } catch {
+      // Ranking still works for the current page load if storage is blocked or full.
+    }
+  }
+
+  function tourRandomBoostByTripId() {
+    if (
+      state.tourRandomBoostById
+      && typeof state.tourRandomBoostById === "object"
+      && !Array.isArray(state.tourRandomBoostById)
+    ) {
+      return state.tourRandomBoostById;
+    }
+    state.tourRandomBoostById = readTourRandomBoostsFromSession();
+    return state.tourRandomBoostById;
+  }
+
+  function rankTripsByPriorityAndRandom(trips) {
+    const randomBoostByTripId = tourRandomBoostByTripId();
+    let randomBoostsChanged = false;
+
+    const rankedEntries = trips
       .map((trip) => {
         const tripId = normalizeText(trip?.id);
         const basePriority = Number.isFinite(Number(trip.priority)) ? Number(trip.priority) : 50;
-        if (!Number.isFinite(randomBoostByTripId[tripId])) {
-          randomBoostByTripId[tripId] = Math.floor(Math.random() * 51);
+        let randomBoost = normalizedTourRandomBoost(randomBoostByTripId[tripId]);
+        if (randomBoost === null) {
+          randomBoost = newTourRandomBoost();
+          if (tripId) {
+            randomBoostByTripId[tripId] = randomBoost;
+            randomBoostsChanged = true;
+          }
         }
-        const randomBoost = randomBoostByTripId[tripId];
         return {
           trip,
           priority: basePriority,
@@ -3061,8 +3138,12 @@ export function createFrontendToursController(ctx) {
       .sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return String(a.trip?.id || "").localeCompare(String(b.trip?.id || ""));
-      })
-      .map((entry) => entry);
+      });
+
+    if (randomBoostsChanged) {
+      writeTourRandomBoostsToSession(randomBoostByTripId);
+    }
+    return rankedEntries;
   }
 
   function renderPriorityDebug() {

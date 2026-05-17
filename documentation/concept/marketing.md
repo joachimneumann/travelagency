@@ -35,7 +35,7 @@ Current implementation note:
 ### Bottom Funnel (Conversion)
 
 - Keep discovery call as primary CTA.
-- Add/optimize WhatsApp consult flow for fast qualification.
+- Add/optimize phone consult flow for fast qualification.
 - Reduce friction in form completion and follow up quickly.
 
 ## 90-Day Action Plan

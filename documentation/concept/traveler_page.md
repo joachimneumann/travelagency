@@ -5,7 +5,7 @@
 Allow each traveler to fill in and update their own travel information without requiring a username/password account.
 
 The access pattern should work from:
-- WhatsApp
+- phone
 - email
 
 The traveler must only be able to access their own traveler page.
@@ -39,7 +39,7 @@ This is the best tradeoff between usability and security.
 It keeps the process simple enough for real travelers:
 - no account creation
 - no remembered password
-- works directly from WhatsApp or email
+- works directly from phone or email
 
 It also avoids the largest privacy and conflict risks:
 - no booking-wide shared link
@@ -50,7 +50,7 @@ It also avoids the largest privacy and conflict risks:
 
 ### Invitation
 
-ATP staff sends an invitation to one traveler through WhatsApp or email.
+ATP staff sends an invitation to one traveler through phone or email.
 
 The message contains:
 - a short explanation
@@ -70,7 +70,7 @@ The one-time verification code should be delivered through the same verified cha
 
 Recommended rule:
 - email invitation -> verification code to the same email address
-- WhatsApp invitation -> verification code to the same phone number if the provider supports it reliably
+- phone invitation -> verification code to the same phone number if the provider supports it reliably
 - if both email and phone exist, prefer the channel with stronger delivery reliability and clearer ownership
 
 After successful verification:

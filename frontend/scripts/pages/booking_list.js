@@ -320,7 +320,7 @@ async function createBackendBooking() {
     }
 
     closeCreateBookingModal({ returnFocus: false });
-    window.location.href = buildBookingHref(bookingId);
+    window.location.href = buildBookingHref(bookingId, payload.booking);
   } finally {
     state.createBookingInFlight = false;
     setCreateBookingControlsDisabled(false);
@@ -709,7 +709,7 @@ function renderBookings(items) {
 
   const rows = items
     .map((booking) => {
-      const bookingHref = buildBookingHref(booking.id);
+      const bookingHref = buildBookingHref(booking.id, booking);
       const bookingName = normalizeText(booking.name) || "-";
       const bookingPlanSummary = formatBookingPlanSummary(booking);
       const representativeTraveler = getRepresentativeTraveler(booking);

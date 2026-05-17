@@ -18,7 +18,7 @@ Do not try to rebuild the full ATP booking workspace inside Kommo. The better wo
 Staff should spend most day-to-day time in Kommo when they are:
 
 - triaging new inquiries
-- replying on WhatsApp, email, or other CRM channels
+- replying on phone, email, or other CRM channels
 - assigning owners
 - moving leads through a sales pipeline
 - tracking follow-up tasks
@@ -100,7 +100,7 @@ Recommended Kommo contact fields:
 
 - name
 - email
-- phone / WhatsApp
+- phone
 - preferred language
 - country or nationality if appropriate
 
@@ -207,15 +207,15 @@ Important implementation note:
 - Webhook processing should be idempotent.
 - Store the external Kommo event identifiers where available.
 
-## 7. Decide who owns WhatsApp and customer communication
+## 7. Decide who owns phone and customer communication
 
 This is the most important product decision.
 
-The ATP codebase already has Meta/WhatsApp webhook storage and a booking chat view. Kommo is also designed around CRM communication and WhatsApp workflows.
+The ATP codebase already has removed messaging webhook storage and a booking chat view. Kommo is also designed around CRM communication and phone workflows.
 
 Recommendation:
 
-- Kommo should own active WhatsApp/email customer communication.
+- Kommo should own active phone/email customer communication.
 - ATP should show a summary, recent activity, or a link back to the Kommo lead.
 - Avoid asking staff to reply from both Kommo and ATP.
 

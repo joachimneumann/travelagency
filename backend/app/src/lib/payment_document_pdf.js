@@ -226,8 +226,7 @@ function footerText(companyProfile, lang) {
     return [
       companyProfile.name,
       companyProfile.website,
-      companyProfile.email,
-      companyProfile.whatsapp
+      companyProfile.email
     ].filter(Boolean).join(" · ");
   }
   return pdfT(lang, "document.footer", "Issued by Asia Travel Plan");

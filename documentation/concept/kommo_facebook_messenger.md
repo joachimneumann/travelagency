@@ -307,7 +307,7 @@ This document does not cover:
 - Facebook Lead Ads integration
 - Meta Conversions API setup
 - Instagram integration
-- WhatsApp integration
+- phone integration
 - advanced ManyChat or Chatfuel architecture
 
 ## Recommended Operational Checklist

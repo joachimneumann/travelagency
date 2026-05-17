@@ -101,7 +101,7 @@ Booking page feature modules:
 - `frontend/scripts/booking/payment_flow.js`
 - `frontend/scripts/booking/currency.js`
 - `frontend/scripts/booking/travel_plan.js`
-- `frontend/scripts/booking/whatsapp.js`
+- `removed booking chat module`
 
 The payment flow and payment-document creation now live inside:
 - `frontend/scripts/booking/payment_flow.js`

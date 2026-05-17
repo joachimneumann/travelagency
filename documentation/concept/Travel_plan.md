@@ -2,7 +2,7 @@
 
 ## Summary
 
-Implement Travel plan as a booking-owned, structured day-by-day itinerary, placed on `booking.html` between WhatsApp and Offer. Build it as a new booking subresource with its own revision and new dedicated frontend/backend modules so existing booking files do not grow further.
+Implement Travel plan as a booking-owned, structured day-by-day itinerary, placed on `booking.html` between phone and Offer. Build it as a new booking subresource with its own revision and new dedicated frontend/backend modules so existing booking files do not grow further.
 
 ## Data Model and API
 
@@ -122,7 +122,7 @@ Update:
 - `frontend/scripts/pages/booking.js`
   - mount/wire the travel-plan module only
 - `frontend/pages/booking.html`
-  - add a collapsible Travel plan section between WhatsApp and Offer
+  - add a collapsible Travel plan section between phone and Offer
 - add styling in a dedicated CSS file if it grows beyond a small block:
   - prefer `shared/css/pages/backend-booking-travel-plan.css`
   - import through the shared stylesheet chain
@@ -190,5 +190,5 @@ Acceptance scenarios:
 - Travel plan is the only user-facing term
 - v1 is structured day-by-day, not rich text and not PDF-exportable yet
 - Travel plan is operational only and separate from Offer/Payments
-- placement is between WhatsApp and Offer
+- placement is between phone and Offer
 - save model is section-level explicit save, not autosave

@@ -20,11 +20,33 @@ export function createKeycloakUserHandlers(deps) {
     };
   }
 
+  function requestPrefersCache(req) {
+    try {
+      const requestUrl = new URL(req?.url || "/", "http://localhost");
+      return requestUrl.searchParams.get("prefer_cache") === "1"
+        || requestUrl.searchParams.get("cache") === "1";
+    } catch {
+      return false;
+    }
+  }
+
   async function handleListKeycloakUsers(req, res) {
     const principal = getPrincipal(req);
     if (!canViewKeycloakUsers(principal)) {
       sendJson(res, 403, { error: "Forbidden" });
       return;
+    }
+    if (requestPrefersCache(req)) {
+      const cachedItems = await listCachedAssignableUsers().catch(() => []);
+      if (cachedItems.length) {
+        sendJson(res, 200, {
+          items: cachedItems.map(toKeycloakUserResponse),
+          total: cachedItems.length,
+          cached: true,
+          stale: true
+        });
+        return;
+      }
     }
     try {
       const items = await listAssignableUsers();

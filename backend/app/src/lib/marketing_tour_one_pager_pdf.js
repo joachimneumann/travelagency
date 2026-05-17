@@ -1629,38 +1629,6 @@ function drawCalendarIcon(doc, x, y, width, height, color) {
   doc.restore();
 }
 
-function drawFooterWhatsappIcon(doc, x, y, size, color) {
-  const cx = x + size / 2;
-  const cy = y + size / 2;
-  const r = size * 0.39;
-  doc.save();
-  doc.lineWidth(1).strokeColor(color).lineCap("round").lineJoin("round");
-  doc.circle(cx, cy, r).stroke();
-  doc
-    .moveTo(x + size * 0.28, y + size * 0.75)
-    .lineTo(x + size * 0.2, y + size * 0.94)
-    .lineTo(x + size * 0.41, y + size * 0.84)
-    .stroke();
-  doc
-    .moveTo(x + size * 0.39, y + size * 0.36)
-    .bezierCurveTo(
-      x + size * 0.3,
-      y + size * 0.49,
-      x + size * 0.43,
-      y + size * 0.68,
-      x + size * 0.62,
-      y + size * 0.68
-    )
-    .stroke();
-  doc
-    .moveTo(x + size * 0.39, y + size * 0.36)
-    .lineTo(x + size * 0.48, y + size * 0.45)
-    .moveTo(x + size * 0.62, y + size * 0.68)
-    .lineTo(x + size * 0.7, y + size * 0.58)
-    .stroke();
-  doc.restore();
-}
-
 function drawFooterEnvelopeIcon(doc, x, y, size, color) {
   const left = x + size * 0.08;
   const top = y + size * 0.22;
@@ -1728,9 +1696,7 @@ function drawFooterPinIcon(doc, x, y, size, color) {
 }
 
 function drawFooterPictogram(doc, icon, x, y, size, color) {
-  if (icon === "whatsapp") {
-    drawFooterWhatsappIcon(doc, x, y, size, color);
-  } else if (icon === "email") {
+  if (icon === "email") {
     drawFooterEnvelopeIcon(doc, x, y, size, color);
   } else if (icon === "website") {
     drawFooterGlobeIcon(doc, x, y, size, color);
@@ -1951,10 +1917,9 @@ export function drawMarketingTourOnePagerFooter(doc, companyProfile, fonts) {
   const iconSize = 16;
   const itemY = footerY + 14;
   const slots = [
-    { icon: "whatsapp", text: companyProfile?.whatsapp, x: 34, width: 112 },
-    { icon: "email", text: companyProfile?.email, x: 146, width: 148 },
-    { icon: "website", text: companyProfile?.website, x: 294, width: 118 },
-    { icon: "address", text: companyProfile?.address, x: 412, width: 166 }
+    { icon: "email", text: companyProfile?.email, x: 34, width: 174 },
+    { icon: "website", text: companyProfile?.website, x: 208, width: 134 },
+    { icon: "address", text: companyProfile?.address, x: 342, width: 236 }
   ]
     .map((slot) => ({ ...slot, text: normalizeText(slot.text) }))
     .filter((slot) => slot.text);
