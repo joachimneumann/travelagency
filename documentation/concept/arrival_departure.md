@@ -42,7 +42,7 @@ This keeps source data reusable while preserving the client experience: the firs
 
 ## Data Model
 
-Add an optional boundary-logistics object to the neutral `#TravelPlan` model so both marketing tours and booking travel plans can use the same concept.
+Use the same boundary-service concept for marketing tours and booking travel plans. Boundary services do not store their own arrival/departure dates; booking presentation derives those dates from the itinerary day dates and the selected placement.
 
 Recommended CUE shape:
 
@@ -66,16 +66,29 @@ Recommended CUE shape:
   }
 }
 
-#TravelPlanBoundaryLogistics: {
-  arrival?: #TravelPlanBoundaryService
-  departure?: #TravelPlanBoundaryService
+#MarketingTourTravelPlanBoundaryService: #TravelPlanBoundaryService
+
+#MarketingTourTravelPlanBoundaryLogistics: {
+  arrival?: #MarketingTourTravelPlanBoundaryService
+  departure?: #MarketingTourTravelPlanBoundaryService
 }
 
-#TravelPlan: {
-  destination_scope?: [...#TravelPlanDestinationScopeEntry]
-  destinations?: [...enums.#CountryCode]
-  boundary_logistics?: #TravelPlanBoundaryLogistics
-  days?: [...#TravelPlanDay]
+#BookingTravelPlanBoundaryService: #TravelPlanBoundaryService
+
+#BookingTravelPlanBoundaryLogistics: {
+  arrival?: #BookingTravelPlanBoundaryService
+  departure?: #BookingTravelPlanBoundaryService
+}
+
+#MarketingTourTravelPlan: {
+  boundary_logistics?: #MarketingTourTravelPlanBoundaryLogistics
+  days?: [...#MarketingTourTravelPlanDay]
+  ...
+}
+
+#BookingTravelPlan: {
+  boundary_logistics?: #BookingTravelPlanBoundaryLogistics
+  days?: [...#BookingTravelPlanDay]
   ...
 }
 ```

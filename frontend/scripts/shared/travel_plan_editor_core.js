@@ -448,16 +448,21 @@ export function createBookingTravelPlanModule(ctx) {
     return isValidIsoCalendarDate(firstDay?.date);
   }
 
+  function travelPlanRenumberDaysButton() {
+    const button = document.getElementById("travel_plan_renumber_days_btn") || els.travel_plan_renumber_days_btn;
+    return button instanceof HTMLButtonElement ? button : null;
+  }
+
   function syncTravelPlanRenumberDaysAction() {
-    if (!(els.travel_plan_renumber_days_btn instanceof HTMLButtonElement)) return;
-    const button = els.travel_plan_renumber_days_btn;
+    const button = travelPlanRenumberDaysButton();
+    if (!button) return;
     if (!allowRenumberDays) {
       button.hidden = true;
       button.disabled = true;
       button.removeAttribute("title");
       return;
     }
-    button.textContent = bookingT("booking.travel_plan.renumber_days", "Renumber days");
+    button.textContent = bookingT("booking.travel_plan.renumber_days", "Renumber Dates");
     const canEdit = state.permissions.canEditBooking === true;
     const hasFirstDate = firstTravelPlanDayHasSpecifiedDate();
     button.disabled = !canEdit || !hasFirstDate;
@@ -535,14 +540,14 @@ export function createBookingTravelPlanModule(ctx) {
   function travelPlanBoundaryHasContent(item) {
     if (!item || typeof item !== "object" || Array.isArray(item)) return false;
     return [
-        "time_label",
-        "title",
-        "details",
-        "image_subtitle",
-        "airport_code",
-        "from_label",
-        "to_label"
-      ].some((fieldName) => localizedTravelPlanFieldHasContent(item, fieldName))
+      "time_label",
+      "title",
+      "details",
+      "image_subtitle",
+      "airport_code",
+      "from_label",
+      "to_label"
+    ].some((fieldName) => localizedTravelPlanFieldHasContent(item, fieldName))
       || hasTravelPlanTextContent(item.time_point)
       || hasTravelPlanTextContent(item.start_time)
       || hasTravelPlanTextContent(item.end_time)
@@ -600,6 +605,8 @@ export function createBookingTravelPlanModule(ctx) {
       next.start_time = "";
       next.end_time = "";
     }
+    delete next.date;
+    delete next.date_string;
     if (!allowServiceDetails) {
       delete next.details;
       delete next.details_i18n;
@@ -1044,6 +1051,15 @@ export function createBookingTravelPlanModule(ctx) {
     return formatIsoLocalDate(date);
   }
 
+  function shiftIsoDate(value, dayOffset) {
+    const raw = String(value || "").trim();
+    if (!isIsoDateString(raw)) return "";
+    const date = new Date(`${raw}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return "";
+    date.setDate(date.getDate() + dayOffset);
+    return formatIsoLocalDate(date);
+  }
+
   const TRAVEL_PLAN_DAY_DATE_STRING = Object.freeze({
     BEFORE_TRIP: "before_trip",
     AFTER_TRIP: "after_trip"
@@ -1468,6 +1484,12 @@ export function createBookingTravelPlanModule(ctx) {
     };
   }
 
+  function timeValueFromTravelPlanTime(value, dayDate = "") {
+    const raw = String(value || "").trim();
+    if (/^\d{2}:\d{2}$/.test(raw)) return raw;
+    return splitDateTimeValue(dayDate, raw).time;
+  }
+
   function combineDateAndTime(dateValue, timeValue) {
     const date = String(dateValue || "").trim();
     const time = String(timeValue || "").trim();
@@ -1572,7 +1594,7 @@ export function createBookingTravelPlanModule(ctx) {
     const textInput = targetId ? document.getElementById(targetId) : null;
     if (!(textInput instanceof HTMLInputElement)) return null;
     textInput.value = String(pickerInput.value || "").trim();
-    clearTravelPlanDayDateString(textInput);
+    clearTravelPlanDateString(textInput);
     validateTravelPlanDateTextInput(textInput, { allowPartial: false });
     return textInput;
   }
@@ -1606,9 +1628,14 @@ export function createBookingTravelPlanModule(ctx) {
     return applyTravelPlanDayDateSelection(textInput, { date: suggestedDate });
   }
 
-  function clearTravelPlanDayDateString(textInput) {
+  function dateStringInputForDateTextInput(textInput) {
+    const wrapper = textInput?.closest(".travel-plan-date-input");
+    return wrapper?.querySelector('[data-travel-plan-day-field="date_string"]') || null;
+  }
+
+  function clearTravelPlanDateString(textInput) {
     if (!allowDates) return;
-    const hiddenInput = textInput?.closest(".travel-plan-date-input")?.querySelector('[data-travel-plan-day-field="date_string"]');
+    const hiddenInput = dateStringInputForDateTextInput(textInput);
     if (hiddenInput instanceof HTMLInputElement) {
       hiddenInput.value = "";
     }
@@ -1617,7 +1644,7 @@ export function createBookingTravelPlanModule(ctx) {
   function applyTravelPlanDayDateSelection(textInput, { date = "", dateString = "" } = {}) {
     if (!allowDates) return null;
     if (!(textInput instanceof HTMLInputElement)) return null;
-    const hiddenInput = textInput.closest(".travel-plan-date-input")?.querySelector('[data-travel-plan-day-field="date_string"]');
+    const hiddenInput = dateStringInputForDateTextInput(textInput);
     textInput.value = String(date || "").trim();
     if (hiddenInput instanceof HTMLInputElement) {
       hiddenInput.value = textInput.value ? "" : normalizeTravelPlanDayDateString(dateString);
@@ -1627,7 +1654,7 @@ export function createBookingTravelPlanModule(ctx) {
     refreshTravelPlanVisibleHeadCopy(textInput);
     updateTravelPlanDirtyState();
     renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
-    syncTravelPlanDayDateShortcutButtons();
+    syncTravelPlanDateShortcutButtons();
     return textInput;
   }
 
@@ -1672,6 +1699,10 @@ export function createBookingTravelPlanModule(ctx) {
         afterTripButton.classList.toggle("is-active", !currentDate && currentDateString === TRAVEL_PLAN_DAY_DATE_STRING.AFTER_TRIP);
       }
     });
+  }
+
+  function syncTravelPlanDateShortcutButtons() {
+    syncTravelPlanDayDateShortcutButtons();
   }
 
   function validateTravelPlanDateFieldsInDom({ allowPartial = false, focusFirstInvalid = false } = {}) {
@@ -1901,6 +1932,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (!allowTiming) return "";
     const idPart = `${boundaryKind}_${item.id}`;
     const timingKind = String(item?.timing_kind || "label");
+    const derivedDate = deriveTravelPlanBoundaryDate(boundaryKind);
     if (timingKind === "not_applicable") {
       return `
         <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
@@ -1912,7 +1944,7 @@ export function createBookingTravelPlanModule(ctx) {
       `;
     }
     if (timingKind === "point") {
-      const pointParts = splitDateTimeValue("", item.time_point);
+      const pointTime = timeValueFromTravelPlanTime(item.time_point, derivedDate);
       return `
         <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
           <label for="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "When?"))}</label>
@@ -1920,27 +1952,17 @@ export function createBookingTravelPlanModule(ctx) {
             ${timingKindOptions(timingKind)}
           </select>
         </div>
-        <div class="field travel-plan-timing-field travel-plan-timing-field--date">
-          <label for="travel_plan_boundary_time_point_date_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.date", "Date"))}</label>
-          ${renderTravelPlanDateInput({
-            id: `travel_plan_boundary_time_point_date_${idPart}`,
-            dataAttribute: 'data-travel-plan-boundary-field="time_point_date"',
-            value: pointParts.date,
-            disabled: !state.permissions.canEditBooking,
-            ariaLabel: bookingT("booking.date", "Date")
-          })}
-        </div>
         <div class="field travel-plan-timing-field travel-plan-timing-field--time">
           <label for="travel_plan_boundary_time_point_time_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.time", "Time"))}</label>
           <select id="travel_plan_boundary_time_point_time_${escapeHtml(idPart)}" data-travel-plan-boundary-field="time_point_time">
-            ${timeSelectOptions(pointParts.time)}
+            ${timeSelectOptions(pointTime)}
           </select>
         </div>
       `;
     }
     if (timingKind === "range") {
-      const startParts = splitDateTimeValue("", item.start_time);
-      const endParts = splitDateTimeValue("", item.end_time);
+      const startTime = timeValueFromTravelPlanTime(item.start_time, derivedDate);
+      const endTime = timeValueFromTravelPlanTime(item.end_time, derivedDate);
       return `
         <div class="field travel-plan-timing-field travel-plan-timing-field--kind">
           <label for="travel_plan_boundary_timing_kind_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.time_information", "When?"))}</label>
@@ -1948,36 +1970,16 @@ export function createBookingTravelPlanModule(ctx) {
             ${timingKindOptions(timingKind)}
           </select>
         </div>
-        <div class="field travel-plan-timing-field travel-plan-timing-field--start-date">
-          <label for="travel_plan_boundary_start_time_date_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.start_date", "Start date"))}</label>
-          ${renderTravelPlanDateInput({
-            id: `travel_plan_boundary_start_time_date_${idPart}`,
-            dataAttribute: 'data-travel-plan-boundary-field="start_time_date"',
-            value: startParts.date,
-            disabled: !state.permissions.canEditBooking,
-            ariaLabel: bookingT("booking.travel_plan.start_date", "Start date")
-          })}
-        </div>
         <div class="field travel-plan-timing-field travel-plan-timing-field--start-time">
           <label for="travel_plan_boundary_start_time_time_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.start_time", "Start time"))}</label>
           <select id="travel_plan_boundary_start_time_time_${escapeHtml(idPart)}" data-travel-plan-boundary-field="start_time_time">
-            ${timeSelectOptions(startParts.time)}
+            ${timeSelectOptions(startTime)}
           </select>
-        </div>
-        <div class="field travel-plan-timing-field travel-plan-timing-field--end-date">
-          <label for="travel_plan_boundary_end_time_date_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.end_date", "End date"))}</label>
-          ${renderTravelPlanDateInput({
-            id: `travel_plan_boundary_end_time_date_${idPart}`,
-            dataAttribute: 'data-travel-plan-boundary-field="end_time_date"',
-            value: endParts.date,
-            disabled: !state.permissions.canEditBooking,
-            ariaLabel: bookingT("booking.travel_plan.end_date", "End date")
-          })}
         </div>
         <div class="field travel-plan-timing-field travel-plan-timing-field--end-time">
           <label for="travel_plan_boundary_end_time_time_${escapeHtml(idPart)}">${escapeHtml(bookingT("booking.travel_plan.end_time", "End time"))}</label>
           <select id="travel_plan_boundary_end_time_time_${escapeHtml(idPart)}" data-travel-plan-boundary-field="end_time_time">
-            ${timeSelectOptions(endParts.time)}
+            ${timeSelectOptions(endTime)}
           </select>
         </div>
       `;
@@ -2496,6 +2498,21 @@ export function createBookingTravelPlanModule(ctx) {
     return [title || fallback, airport].filter(Boolean).join(" · ") || "None";
   }
 
+  function deriveTravelPlanBoundaryDate(boundaryKind) {
+    if (!allowDates) return "";
+    const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    const days = travelPlanDays();
+    const source = state.travelPlanDraft?.boundary_logistics?.[normalizedBoundaryKind] || {};
+    const presentation = defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind, source?.presentation?.attach_to || "");
+    const adjacentDay = normalizedBoundaryKind === "departure" ? days[days.length - 1] : days[0];
+    const adjacentDate = String(adjacentDay?.date || "").trim();
+    if (!isIsoDateString(adjacentDate)) return "";
+    if (normalizedBoundaryKind === "departure") {
+      return presentation.attach_to === "after_last_day" ? shiftIsoDate(adjacentDate, 1) : adjacentDate;
+    }
+    return presentation.attach_to === "before_first_day" ? shiftIsoDate(adjacentDate, -1) : adjacentDate;
+  }
+
   function cloneTravelPlanCustomizerJson(value) {
     return value === undefined ? undefined : JSON.parse(JSON.stringify(value));
   }
@@ -2729,38 +2746,42 @@ export function createBookingTravelPlanModule(ctx) {
 
   function renderTravelPlanCustomizerLauncher() {
     return `
-      <div class="travel-plan-customizer-card" aria-label="Route customizer preview">
-        <div class="travel-plan-customizer-card__head">
-          <span>Route customizer</span>
-          <span class="travel-plan-customizer-card__hint">Full screen</span>
-        </div>
-        <div
-          class="travel-plan-customizer-preview"
-          role="button"
-          tabindex="0"
-          aria-controls="travelPlanCustomizerOverlay"
-          aria-expanded="${travelPlanCustomizerOverlayOpen ? "true" : "false"}"
-          aria-label="Open route customizer"
-          data-travel-plan-open-customizer
-        >
-          <div class="travel-plan-customizer-preview__mount" data-travel-plan-customizer-preview></div>
-          <span class="travel-plan-customizer-preview__cta">
-            <span>Open</span>
-            <span class="travel-plan-customizer-preview__cta-arrow" aria-hidden="true"></span>
-          </span>
-        </div>
-        <div
-          id="travelPlanCustomizerOverlay"
-          class="travel-plan-customizer-overlay"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Route customizer"
-          ${travelPlanCustomizerOverlayOpen ? "" : "hidden"}
-        >
-          <div class="travel-plan-customizer-overlay__mount" data-travel-plan-customizer-overlay></div>
-          <button class="btn btn-ghost travel-plan-customizer-overlay__close" type="button" data-travel-plan-close-customizer${travelPlanCustomizerOverlayOpen ? "" : " hidden"}>Close</button>
-        </div>
+      <div
+        class="travel-plan-customizer-preview"
+        role="button"
+        tabindex="0"
+        aria-controls="travelPlanCustomizerOverlay"
+        aria-expanded="${travelPlanCustomizerOverlayOpen ? "true" : "false"}"
+        aria-label="Open route customizer"
+        data-travel-plan-open-customizer
+      >
+        <div class="travel-plan-customizer-preview__mount" data-travel-plan-customizer-preview></div>
       </div>
+      <div
+        id="travelPlanCustomizerOverlay"
+        class="travel-plan-customizer-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Route customizer"
+        ${travelPlanCustomizerOverlayOpen ? "" : "hidden"}
+      >
+        <div class="travel-plan-customizer-overlay__mount" data-travel-plan-customizer-overlay></div>
+        <button class="btn btn-ghost travel-plan-customizer-overlay__close" type="button" data-travel-plan-close-customizer${travelPlanCustomizerOverlayOpen ? "" : " hidden"}>Close</button>
+      </div>
+    `;
+  }
+
+  function renderTravelPlanRenumberDatesAction() {
+    if (!allowRenumberDays) return "";
+    return `
+      <button
+        class="btn btn-ghost travel-plan-renumber-dates-btn"
+        id="travel_plan_renumber_days_btn"
+        data-travel-plan-renumber-days
+        type="button"
+      >
+        ${escapeHtml(bookingT("booking.travel_plan.renumber_days", "Renumber Dates"))}
+      </button>
     `;
   }
 
@@ -2948,6 +2969,7 @@ export function createBookingTravelPlanModule(ctx) {
     return `
       <aside class="travel-plan-booking-sidebar" aria-label="Travel plan navigation">
         ${renderTravelPlanCustomizerLauncher()}
+        ${renderTravelPlanRenumberDatesAction()}
         <div class="travel-plan-route-list">
           <button class="travel-plan-route-list__item${arrivalSelected ? " is-selected" : ""}" data-travel-plan-select-boundary="arrival" type="button">
             <span class="travel-plan-route-list__badge travel-plan-route-list__badge--image" aria-hidden="true">
@@ -3104,6 +3126,8 @@ export function createBookingTravelPlanModule(ctx) {
     item.from_label = String(previous.from_label || "").trim();
     item.to_label = String(previous.to_label || "").trim();
     item.presentation = defaultTravelPlanBoundaryPresentation(normalizedBoundaryKind, placement);
+    delete item.date;
+    delete item.date_string;
     item.timing_kind = allowTiming
       ? String(node?.querySelector('[data-travel-plan-boundary-field="timing_kind"]')?.value || previous.timing_kind || "label").trim()
       : "label";
@@ -3116,18 +3140,9 @@ export function createBookingTravelPlanModule(ctx) {
       );
       item.time_label = timeLabel.text;
       item.time_label_i18n = timeLabel.map;
-      item.time_point = combineDateAndTime(
-        String(node?.querySelector('[data-travel-plan-boundary-field="time_point_date"]')?.value || "").trim(),
-        String(node?.querySelector('[data-travel-plan-boundary-field="time_point_time"]')?.value || "").trim()
-      );
-      item.start_time = combineDateAndTime(
-        String(node?.querySelector('[data-travel-plan-boundary-field="start_time_date"]')?.value || "").trim(),
-        String(node?.querySelector('[data-travel-plan-boundary-field="start_time_time"]')?.value || "").trim()
-      );
-      item.end_time = combineDateAndTime(
-        String(node?.querySelector('[data-travel-plan-boundary-field="end_time_date"]')?.value || "").trim(),
-        String(node?.querySelector('[data-travel-plan-boundary-field="end_time_time"]')?.value || "").trim()
-      );
+      item.time_point = String(node?.querySelector('[data-travel-plan-boundary-field="time_point_time"]')?.value || "").trim();
+      item.start_time = String(node?.querySelector('[data-travel-plan-boundary-field="start_time_time"]')?.value || "").trim();
+      item.end_time = String(node?.querySelector('[data-travel-plan-boundary-field="end_time_time"]')?.value || "").trim();
     } else {
       item.time_label = "";
       item.time_label_i18n = {};
@@ -4710,11 +4725,11 @@ export function createBookingTravelPlanModule(ctx) {
       els.travel_plan_editor.addEventListener("input", (event) => {
         const target = event.target;
         if (target?.matches?.('[data-travel-plan-date-text="true"]')) {
-          clearTravelPlanDayDateString(target);
+          clearTravelPlanDateString(target);
           validateTravelPlanDateTextInput(target, { allowPartial: true });
         }
         syncTravelPlanDraftFromDom();
-        syncTravelPlanDayDateShortcutButtons();
+        syncTravelPlanDateShortcutButtons();
         refreshTravelPlanVisibleHeadCopy(target);
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
@@ -4726,11 +4741,11 @@ export function createBookingTravelPlanModule(ctx) {
           target = applyTravelPlanDatePickerValue(target) || target;
         }
         if (target?.matches?.('[data-travel-plan-date-text="true"]')) {
-          clearTravelPlanDayDateString(target);
+          clearTravelPlanDateString(target);
           validateTravelPlanDateTextInput(target, { allowPartial: false });
         }
         syncTravelPlanDraftFromDom();
-        syncTravelPlanDayDateShortcutButtons();
+        syncTravelPlanDateShortcutButtons();
         refreshTravelPlanVisibleHeadCopy(target);
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
@@ -4770,6 +4785,10 @@ export function createBookingTravelPlanModule(ctx) {
         }
         const button = event.target.closest("button");
         if (!button) return;
+        if (button.hasAttribute("data-travel-plan-renumber-days")) {
+          renumberTravelPlanDays();
+          return;
+        }
         if (button.hasAttribute("data-destination-scope-add-region")) {
           void createDestinationScopeRegion(button.getAttribute("data-destination-scope-add-region"));
           return;
@@ -5041,12 +5060,6 @@ export function createBookingTravelPlanModule(ctx) {
       });
       els.travel_plan_translate_all_btn.dataset.travelPlanBound = "true";
     }
-    if (allowRenumberDays && els.travel_plan_renumber_days_btn instanceof HTMLButtonElement && els.travel_plan_renumber_days_btn.dataset.travelPlanBound !== "true") {
-      els.travel_plan_renumber_days_btn.addEventListener("click", () => {
-        renumberTravelPlanDays();
-      });
-      els.travel_plan_renumber_days_btn.dataset.travelPlanBound = "true";
-    }
     travelPlanServiceLibraryModule.bindTravelPlanServiceLibrary();
     if (allowImageUpload) {
       travelPlanImagesModule.bindTravelPlanImageInput();
@@ -5131,7 +5144,7 @@ export function createBookingTravelPlanModule(ctx) {
       els.travel_plan_pdf_workspace.innerHTML = "";
     }
     syncTravelPlanCollapsibleUi(false);
-    syncTravelPlanDayDateShortcutButtons();
+    syncTravelPlanDateShortcutButtons();
     updateTravelPlanDirtyState();
     syncTravelPlanTranslateButton();
     syncTravelPlanRenumberDaysAction();

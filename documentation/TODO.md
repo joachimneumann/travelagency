@@ -4,7 +4,15 @@ Reel
 ====
 Share button
 
+Booking.html
+============
+in booking.html:
+-- place this button above arrival
+-- Add date to arrival (also in the model)
 
+Index.html
+==========
+tour variants: specify web page pictures!
 
 Customization
 =============

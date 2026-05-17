@@ -3660,7 +3660,7 @@
 },
   FIELD_87: {
   "kind": "transport",
-  "typeName": "TravelPlanBoundaryLogistics",
+  "typeName": "MarketingTourTravelPlanBoundaryLogistics",
   "isArray": false
 },
   FIELD_88: {
@@ -3789,60 +3789,65 @@
 },
   FIELD_104: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanDay",
-  "isArray": true
+  "typeName": "BookingTravelPlanBoundaryLogistics",
+  "isArray": false
 },
   FIELD_105: {
   "kind": "transport",
-  "typeName": "BookingTravelPlanAttachment",
+  "typeName": "BookingTravelPlanDay",
   "isArray": true
 },
   FIELD_106: {
   "kind": "transport",
+  "typeName": "BookingTravelPlanAttachment",
+  "isArray": true
+},
+  FIELD_107: {
+  "kind": "transport",
   "typeName": "MoneyAmount",
   "isArray": false
 },
-  FIELD_107: {
+  FIELD_108: {
   "kind": "transport",
   "typeName": "PaymentDocumentComponent",
   "isArray": true
 },
-  FIELD_108: {
+  FIELD_109: {
   "kind": "transport",
   "typeName": "SettingsObservabilityBookingActivity",
   "isArray": false
 },
-  FIELD_109: {
-  "kind": "transport",
-  "typeName": "TravelPlanDay",
-  "isArray": true
-},
   FIELD_110: {
   "kind": "transport",
-  "typeName": "TourVariantDayRef",
+  "typeName": "MarketingTourTravelPlanDay",
   "isArray": true
 },
   FIELD_111: {
   "kind": "transport",
+  "typeName": "TourVariantDayRef",
+  "isArray": true
+},
+  FIELD_112: {
+  "kind": "transport",
   "typeName": "TourVariantPublication",
   "isArray": false
 },
-  FIELD_112: {
+  FIELD_113: {
   "kind": "transport",
   "typeName": "TourVariantBaseTourOption",
   "isArray": true
 },
-  FIELD_113: {
-  "kind": "transport",
-  "typeName": "TravelPlanBoundaryService",
-  "isArray": false
-},
   FIELD_114: {
   "kind": "transport",
-  "typeName": "TravelPlanDay",
+  "typeName": "MarketingTourTravelPlanBoundaryService",
   "isArray": false
 },
   FIELD_115: {
+  "kind": "transport",
+  "typeName": "MarketingTourTravelPlanDay",
+  "isArray": false
+},
+  FIELD_116: {
   "kind": "enum",
   "typeName": "TravelPlanServiceKind",
   "isArray": false,
@@ -3891,67 +3896,72 @@
     }
   ]
 },
-  FIELD_116: {
+  FIELD_117: {
   "kind": "transport",
   "typeName": "BookingOfferCategoryRule",
   "isArray": true
 },
-  FIELD_117: {
+  FIELD_118: {
   "kind": "transport",
   "typeName": "BookingOfferTripPriceInternal",
   "isArray": false
 },
-  FIELD_118: {
+  FIELD_119: {
   "kind": "transport",
   "typeName": "BookingOfferDayPriceInternal",
   "isArray": true
 },
-  FIELD_119: {
+  FIELD_120: {
   "kind": "transport",
   "typeName": "BookingOfferDiscount",
   "isArray": false
 },
-  FIELD_120: {
+  FIELD_121: {
   "kind": "transport",
   "typeName": "BookingOfferTotals",
   "isArray": false
 },
-  FIELD_121: {
+  FIELD_122: {
   "kind": "transport",
   "typeName": "BookingOfferQuotationSummary",
   "isArray": false
 },
-  FIELD_122: {
+  FIELD_123: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentTermsReadModel",
   "isArray": false
 },
-  FIELD_123: {
+  FIELD_124: {
   "kind": "transport",
   "typeName": "BookingOfferVisiblePricingReadModel",
   "isArray": false
 },
-  FIELD_124: {
+  FIELD_125: {
+  "kind": "transport",
+  "typeName": "BookingTravelPlanBoundaryService",
+  "isArray": false
+},
+  FIELD_126: {
   "kind": "transport",
   "typeName": "BookingTravelPlanService",
   "isArray": true
 },
-  FIELD_125: {
+  FIELD_127: {
   "kind": "transport",
   "typeName": "BookingOfferTaxBucket",
   "isArray": true
 },
-  FIELD_126: {
+  FIELD_128: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentTermLine",
   "isArray": true
 },
-  FIELD_127: {
+  FIELD_129: {
   "kind": "transport",
   "typeName": "TravelPlanService",
   "isArray": true
 },
-  FIELD_128: {
+  FIELD_130: {
   "kind": "enum",
   "typeName": "TravelPlanBoundaryKind",
   "isArray": false,
@@ -3970,7 +3980,7 @@
     }
   ]
 },
-  FIELD_129: {
+  FIELD_131: {
   "kind": "enum",
   "typeName": "TravelPlanTimingKind",
   "isArray": false,
@@ -3999,37 +4009,37 @@
     }
   ]
 },
-  FIELD_130: {
+  FIELD_132: {
   "kind": "transport",
   "typeName": "TravelPlanServiceImage",
   "isArray": false
 },
-  FIELD_131: {
+  FIELD_133: {
   "kind": "transport",
   "typeName": "TravelPlanBoundaryPresentation",
   "isArray": false
 },
-  FIELD_132: {
+  FIELD_134: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentTermLineReadModel",
   "isArray": true
 },
-  FIELD_133: {
+  FIELD_135: {
   "kind": "transport",
   "typeName": "BookingOfferVisibleTripPriceReadModel",
   "isArray": false
 },
-  FIELD_134: {
+  FIELD_136: {
   "kind": "transport",
   "typeName": "BookingOfferVisibleDayPriceReadModel",
   "isArray": true
 },
-  FIELD_135: {
+  FIELD_137: {
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImage",
   "isArray": false
 },
-  FIELD_136: {
+  FIELD_138: {
   "kind": "enum",
   "typeName": "OfferPaymentTermKind",
   "isArray": false,
@@ -4053,27 +4063,27 @@
     }
   ]
 },
-  FIELD_137: {
+  FIELD_139: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentAmountSpec",
   "isArray": false
 },
-  FIELD_138: {
+  FIELD_140: {
   "kind": "transport",
   "typeName": "BookingOfferPaymentDueRule",
   "isArray": false
 },
-  FIELD_139: {
+  FIELD_141: {
   "kind": "transport",
   "typeName": "TravelPlanServiceImageSourceAttribution",
   "isArray": false
 },
-  FIELD_140: {
+  FIELD_142: {
   "kind": "transport",
   "typeName": "TravelPlanServiceImageFocalPoint",
   "isArray": false
 },
-  FIELD_141: {
+  FIELD_143: {
   "kind": "enum",
   "typeName": "TravelPlanBoundaryPlacementKind",
   "isArray": false,
@@ -4102,17 +4112,17 @@
     }
   ]
 },
-  FIELD_142: {
+  FIELD_144: {
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImageSourceAttribution",
   "isArray": false
 },
-  FIELD_143: {
+  FIELD_145: {
   "kind": "transport",
   "typeName": "BookingTravelPlanServiceImageFocalPoint",
   "isArray": false
 },
-  FIELD_144: {
+  FIELD_146: {
   "kind": "enum",
   "typeName": "OfferPaymentAmountMode",
   "isArray": false,
@@ -4136,7 +4146,7 @@
     }
   ]
 },
-  FIELD_145: {
+  FIELD_147: {
   "kind": "enum",
   "typeName": "OfferPaymentDueType",
   "isArray": false,

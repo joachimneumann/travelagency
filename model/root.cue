@@ -19,6 +19,8 @@ import (
 		BaseBooking:                                    databaseModel.#BaseBooking
 		BaseBookingWithPersons:                         databaseModel.#BaseBookingWithPersons
 		BookingTravelPlan:                              databaseModel.#BookingTravelPlan
+		BookingTravelPlanBoundaryLogistics:             databaseModel.#BookingTravelPlanBoundaryLogistics
+		BookingTravelPlanBoundaryService:               databaseModel.#BookingTravelPlanBoundaryService
 		BookingTravelPlanDay:                           databaseModel.#BookingTravelPlanDay
 		BookingTravelPlanAttachment:                    databaseModel.#BookingTravelPlanAttachment
 		BookingTravelPlanService:                       databaseModel.#BookingTravelPlanService
@@ -26,6 +28,9 @@ import (
 		BookingTravelPlanServiceImageSourceAttribution: databaseModel.#BookingTravelPlanServiceImageSourceAttribution
 		BookingTravelPlanServiceImageFocalPoint:        databaseModel.#BookingTravelPlanServiceImageFocalPoint
 		MarketingTourTravelPlan:                        databaseModel.#MarketingTourTravelPlan
+		MarketingTourTravelPlanBoundaryLogistics:       databaseModel.#MarketingTourTravelPlanBoundaryLogistics
+		MarketingTourTravelPlanBoundaryService:         databaseModel.#MarketingTourTravelPlanBoundaryService
+		MarketingTourTravelPlanDay:                     databaseModel.#MarketingTourTravelPlanDay
 		TravelPlanDestinationScopeEntry:                databaseModel.#TravelPlanDestinationScopeEntry
 		TravelPlanDestinationRegionSelection:             databaseModel.#TravelPlanDestinationRegionSelection
 		TravelPlanDestinationPlaceSelection:            databaseModel.#TravelPlanDestinationPlaceSelection

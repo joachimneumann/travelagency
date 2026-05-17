@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-16T13:18:58Z
+# 2026-05-17T05:21:33Z
 
 ---
 openapi: 3.1.0
@@ -4056,7 +4056,7 @@ components:
         image:
           "$ref": "#/components/schemas/TravelPlanServiceImage"
           nullable: true
-    TravelPlanDay:
+    MarketingTourTravelPlanDay:
       type: object
       required:
       - id
@@ -4096,7 +4096,7 @@ components:
           "$ref": "#/components/schemas/TravelPlanBoundaryPlacementKind"
         position:
           type: string
-    TravelPlanBoundaryService:
+    MarketingTourTravelPlanBoundaryService:
       type: object
       required:
       - id
@@ -4171,15 +4171,100 @@ components:
         presentation:
           "$ref": "#/components/schemas/TravelPlanBoundaryPresentation"
           nullable: true
-    TravelPlanBoundaryLogistics:
+    MarketingTourTravelPlanBoundaryLogistics:
       type: object
       required: []
       properties:
         arrival:
-          "$ref": "#/components/schemas/TravelPlanBoundaryService"
+          "$ref": "#/components/schemas/MarketingTourTravelPlanBoundaryService"
           nullable: true
         departure:
-          "$ref": "#/components/schemas/TravelPlanBoundaryService"
+          "$ref": "#/components/schemas/MarketingTourTravelPlanBoundaryService"
+          nullable: true
+    BookingTravelPlanBoundaryService:
+      type: object
+      required:
+      - id
+      - boundary_kind
+      - timing_kind
+      - kind
+      properties:
+        id:
+          type: string
+        boundary_kind:
+          "$ref": "#/components/schemas/TravelPlanBoundaryKind"
+        enabled:
+          type: boolean
+          nullable: true
+        timing_kind:
+          "$ref": "#/components/schemas/TravelPlanTimingKind"
+        time_label:
+          type: string
+          nullable: true
+        time_label_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        time_point:
+          type: string
+          nullable: true
+        kind:
+          "$ref": "#/components/schemas/TravelPlanServiceKind"
+        title:
+          type: string
+          nullable: true
+        title_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        details:
+          type: string
+          nullable: true
+        details_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        image_subtitle:
+          type: string
+          nullable: true
+        image_subtitle_i18n:
+          type: object
+          additionalProperties:
+            type: string
+          nullable: true
+        start_time:
+          type: string
+          nullable: true
+        end_time:
+          type: string
+          nullable: true
+        image:
+          "$ref": "#/components/schemas/TravelPlanServiceImage"
+          nullable: true
+        airport_code:
+          type: string
+          nullable: true
+        from_label:
+          type: string
+          nullable: true
+        to_label:
+          type: string
+          nullable: true
+        presentation:
+          "$ref": "#/components/schemas/TravelPlanBoundaryPresentation"
+          nullable: true
+    BookingTravelPlanBoundaryLogistics:
+      type: object
+      required: []
+      properties:
+        arrival:
+          "$ref": "#/components/schemas/BookingTravelPlanBoundaryService"
+          nullable: true
+        departure:
+          "$ref": "#/components/schemas/BookingTravelPlanBoundaryService"
           nullable: true
     TravelPlanDestinationPlaceSelection:
       type: object
@@ -4233,12 +4318,12 @@ components:
           items:
             type: string
         boundary_logistics:
-          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          "$ref": "#/components/schemas/MarketingTourTravelPlanBoundaryLogistics"
           nullable: true
         days:
           type: array
           items:
-            "$ref": "#/components/schemas/TravelPlanDay"
+            "$ref": "#/components/schemas/MarketingTourTravelPlanDay"
     MarketingTourTravelPlan:
       type: object
       required: []
@@ -4258,12 +4343,12 @@ components:
           items:
             type: string
         boundary_logistics:
-          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          "$ref": "#/components/schemas/MarketingTourTravelPlanBoundaryLogistics"
           nullable: true
         days:
           type: array
           items:
-            "$ref": "#/components/schemas/TravelPlanDay"
+            "$ref": "#/components/schemas/MarketingTourTravelPlanDay"
     BookingPersonAddress:
       type: object
       required: []
@@ -4618,7 +4703,7 @@ components:
           items:
             type: string
         boundary_logistics:
-          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          "$ref": "#/components/schemas/BookingTravelPlanBoundaryLogistics"
           nullable: true
         days:
           type: array
@@ -5953,7 +6038,7 @@ components:
           type: string
           nullable: true
         boundary_logistics:
-          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          "$ref": "#/components/schemas/MarketingTourTravelPlanBoundaryLogistics"
           nullable: true
         days:
           type: array
@@ -6039,7 +6124,7 @@ components:
           type: integer
           nullable: true
         source_day:
-          "$ref": "#/components/schemas/TravelPlanDay"
+          "$ref": "#/components/schemas/MarketingTourTravelPlanDay"
           nullable: true
     TourVariantSourceDayList:
       type: object
@@ -7606,7 +7691,7 @@ components:
           type: string
           nullable: true
         boundary_logistics:
-          "$ref": "#/components/schemas/TravelPlanBoundaryLogistics"
+          "$ref": "#/components/schemas/MarketingTourTravelPlanBoundaryLogistics"
           nullable: true
         days:
           type: array

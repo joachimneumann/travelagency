@@ -7,6 +7,7 @@ import {
 import { createTravelPlanHelpers } from "../src/domain/travel_plan.js";
 
 const {
+  normalizeMarketingTourTravelPlan,
   normalizeBookingTravelPlan,
   composeTravelPlanForPresentation,
   validateBookingTravelPlanInput
@@ -203,6 +204,78 @@ test("boundary logistics can render outside itinerary day numbering", () => {
       { day_number: null, boundary_kind: "departure", boundary_day: true, services: ["departure_service"] }
     ]
   );
+});
+
+test("booking boundary logistics derive presentation dates from itinerary days", () => {
+  const source = {
+    boundary_logistics: {
+      arrival: {
+        id: "arrival_service",
+        boundary_kind: "arrival",
+        enabled: true,
+        date: "2026-06-01",
+        date_string: "ignored when date is present",
+        timing_kind: "point",
+        time_point: "2026-06-01T09:00",
+        kind: "transport",
+        title: "Airport pickup",
+        presentation: {
+          attach_to: "before_first_day",
+          position: "start"
+        }
+      },
+      departure: {
+        id: "departure_service",
+        boundary_kind: "departure",
+        enabled: true,
+        date_string: "After the trip",
+        timing_kind: "range",
+        start_time: "2026-06-03T14:00",
+        end_time: "2026-06-03T15:00",
+        kind: "transport",
+        title: "Airport drop-off",
+        presentation: {
+          attach_to: "after_last_day",
+          position: "end"
+        }
+      }
+    },
+    days: [
+      {
+        id: "day_1",
+        day_number: 1,
+        date: "2026-06-02",
+        title: "Hanoi",
+        services: []
+      }
+    ]
+  };
+
+  const bookingPlan = normalizeBookingTravelPlan(source);
+  assert.equal(Object.hasOwn(bookingPlan.boundary_logistics.arrival, "date"), false);
+  assert.equal(Object.hasOwn(bookingPlan.boundary_logistics.arrival, "date_string"), false);
+  assert.equal(Object.hasOwn(bookingPlan.boundary_logistics.departure, "date"), false);
+  assert.equal(Object.hasOwn(bookingPlan.boundary_logistics.departure, "date_string"), false);
+  assert.equal(bookingPlan.boundary_logistics.arrival.time_point, "09:00");
+  assert.equal(bookingPlan.boundary_logistics.departure.start_time, "14:00");
+  assert.equal(bookingPlan.boundary_logistics.departure.end_time, "15:00");
+
+  const presentation = composeTravelPlanForPresentation(bookingPlan, {
+    boundaryLogisticsPlacement: "outside_days"
+  });
+  assert.equal(presentation.days[0].date, "2026-06-01");
+  assert.equal(presentation.days[0].date_string, null);
+  assert.equal(presentation.days[2].date, "2026-06-03");
+  assert.equal(presentation.days[2].date_string, null);
+
+  const marketingTourPlan = normalizeMarketingTourTravelPlan(source);
+  assert.equal(Object.hasOwn(marketingTourPlan.boundary_logistics.arrival, "date"), false);
+  assert.equal(Object.hasOwn(marketingTourPlan.boundary_logistics.arrival, "date_string"), false);
+  assert.equal(Object.hasOwn(marketingTourPlan.boundary_logistics.departure, "date"), false);
+  assert.equal(Object.hasOwn(marketingTourPlan.boundary_logistics.departure, "date_string"), false);
+  assert.equal(marketingTourPlan.boundary_logistics.arrival.time_point, "09:00");
+  assert.equal(marketingTourPlan.boundary_logistics.departure.start_time, "14:00");
+  assert.equal(marketingTourPlan.boundary_logistics.departure.end_time, "15:00");
 });
 
 test("boundary logistics validation rejects duplicate service ids", () => {

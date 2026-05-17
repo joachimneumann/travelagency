@@ -77,9 +77,20 @@ import (
 	presentation?:   #TravelPlanBoundaryPresentation
 }
 
-#TravelPlanBoundaryLogistics: {
-	arrival?:   #TravelPlanBoundaryService
-	departure?: #TravelPlanBoundaryService
+#TravelPlanBoundaryLogistics: #MarketingTourTravelPlanBoundaryLogistics
+
+#MarketingTourTravelPlanBoundaryService: #TravelPlanBoundaryService
+
+#MarketingTourTravelPlanBoundaryLogistics: {
+	arrival?:   #MarketingTourTravelPlanBoundaryService
+	departure?: #MarketingTourTravelPlanBoundaryService
+}
+
+#BookingTravelPlanBoundaryService: #TravelPlanBoundaryService
+
+#BookingTravelPlanBoundaryLogistics: {
+	arrival?:   #BookingTravelPlanBoundaryService
+	departure?: #BookingTravelPlanBoundaryService
 }
 
 #BookingTravelPlanService: #TravelPlanService
@@ -93,7 +104,7 @@ import (
 	created_at?:  common.#Timestamp
 }
 
-#TravelPlanDay: {
+#TravelPlanDayBase: {
 	id:                  common.#Identifier
 	day_number:          >0 & int
 	title?:              string
@@ -101,11 +112,16 @@ import (
 	primary_location_id?: common.#Identifier
 	secondary_location_id?: common.#Identifier
 	experience_highlight_ids?: [...common.#Identifier]
-	services?: [...#TravelPlanService]
 	notes?: string
 	notes_i18n?: [string]: string
 	...
 }
+
+#MarketingTourTravelPlanDay: #TravelPlanDayBase & {
+	services?: [...#TravelPlanService]
+}
+
+#TravelPlanDay: #MarketingTourTravelPlanDay
 
 #TravelPlanDestinationPlaceSelection: {
 	place_id: common.#Identifier
@@ -122,33 +138,32 @@ import (
 	places?: [...#TravelPlanDestinationPlaceSelection]
 }
 
-#BookingTravelPlanDay: #TravelPlanDay & {
+#BookingTravelPlanDay: #TravelPlanDayBase & {
 	date?:        common.#DateOnly
 	date_string?: string
 	services?: [...#BookingTravelPlanService]
 }
 
-#TravelPlan: {
+#TravelPlanCommon: {
 	tour_card_primary_image_id?: common.#Identifier
 	tour_card_image_ids?: [...common.#Identifier]
 	one_pager_hero_image_id?: common.#Identifier
 	one_pager_image_ids?: [...common.#Identifier]
-	boundary_logistics?: #TravelPlanBoundaryLogistics
-	days?: [...#TravelPlanDay]
 	...
 }
 
-#MarketingTourTravelPlan: {
-	tour_card_primary_image_id?: common.#Identifier
-	tour_card_image_ids?: [...common.#Identifier]
-	one_pager_hero_image_id?: common.#Identifier
-	one_pager_image_ids?: [...common.#Identifier]
+#TravelPlan: #TravelPlanCommon & {
 	boundary_logistics?: #TravelPlanBoundaryLogistics
 	days?: [...#TravelPlanDay]
-	...
 }
 
-#BookingTravelPlan: #TravelPlan & {
+#MarketingTourTravelPlan: #TravelPlanCommon & {
+	boundary_logistics?: #MarketingTourTravelPlanBoundaryLogistics
+	days?: [...#MarketingTourTravelPlanDay]
+}
+
+#BookingTravelPlan: #TravelPlanCommon & {
+	boundary_logistics?: #BookingTravelPlanBoundaryLogistics
 	days?: [...#BookingTravelPlanDay]
 	attachments?: [...#BookingTravelPlanAttachment]
 }

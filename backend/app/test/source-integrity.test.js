@@ -349,15 +349,16 @@ test("booking page does not declare duplicate imported bindings", async () => {
   );
 });
 
-test("booking page uses a page-level dirty bar instead of local section save buttons", async () => {
+test("booking page uses a page-level dirty bar without local section save buttons", async () => {
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const bookingSource = await readFile(bookingPagePath, "utf8");
 
   assert.match(
     bookingSource,
-    /id="booking_dirty_bar"[\s\S]*?id="booking_discard_edits_btn"[\s\S]*?id="booking_save_edits_btn"[\s\S]*?id="backToBackend"/,
-    "Booking UI should expose one sticky page-level control bar with discard, save, and close actions"
+    /id="booking_dirty_bar"[\s\S]*?id="booking_discard_edits_btn"[\s\S]*?id="booking_save_edits_btn"/,
+    "Booking UI should expose one sticky page-level control bar with discard and save actions"
   );
+  assert.doesNotMatch(bookingSource, /id="backToBackend"/, "Booking detail should not render the old back button");
   assert.doesNotMatch(bookingSource, /booking-detail-page__topbar/, "Booking page should not render a separate close-button topbar");
   assert.doesNotMatch(bookingSource, /id="booking_note_save_btn"/, "Booking notes should no longer expose a local update button");
   assert.doesNotMatch(bookingSource, /id="pricing_save_btn"/, "Pricing should no longer expose a local save button");
@@ -3508,6 +3509,14 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
     readFile(uiPath, "utf8"),
     readFile(travelPlanStylesPath, "utf8")
   ]);
+  const modelBoundaryService = modelSource.slice(
+    modelSource.indexOf("#BookingTravelPlanBoundaryService:"),
+    modelSource.indexOf("#BookingTravelPlanBoundaryLogistics:")
+  );
+  const openApiBoundaryService = openApiSource.slice(
+    openApiSource.indexOf("    BookingTravelPlanBoundaryService:"),
+    openApiSource.indexOf("    BookingTravelPlanBoundaryLogistics:")
+  );
 
   assert.match(
     modelSource,
@@ -3515,29 +3524,69 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
     "The travel-plan day model should expose an optional date_string field for preset labels"
   );
   assert.match(
+    modelBoundaryService,
+    /#BookingTravelPlanBoundaryService:\s+#TravelPlanBoundaryService/,
+    "Booking boundary services should reuse the date-free boundary service model"
+  );
+  assert.match(
     openApiSource,
     /BookingTravelPlanDay:[\s\S]*date_string:\n\s+type: string\n\s+nullable: true/,
     "The OpenAPI contract should expose the optional travel-plan day date_string"
+  );
+  assert.doesNotMatch(
+    openApiBoundaryService,
+    /\bdate(?:_string)?:/,
+    "The OpenAPI contract should keep booking boundary services date-free"
   );
   assert.match(
     backendSource,
     /date_string: normalizedDate \? null : normalizeOptionalText\(day\?\.date_string\)/,
     "The backend travel-plan normalizer should persist the optional day date_string when no concrete date is set"
   );
+  assert.doesNotMatch(
+    backendSource,
+    /includeBoundaryDates/,
+    "The backend booking travel-plan normalizer should derive boundary dates instead of storing them"
+  );
+  assert.match(
+    backendSource,
+    /function normalizeBoundaryTimeValue/,
+    "The backend boundary normalizer should strip legacy date portions from boundary timing values"
+  );
   assert.match(
     helperSource,
     /date_string: normalizedDate \? "" : normalizeOptionalText\(rawDay\.date_string\)/,
     "The frontend travel-plan helper should normalize the optional day date_string"
+  );
+  assert.doesNotMatch(
+    helperSource,
+    /date_string: normalizedDate \? "" : normalizeOptionalText\(source\.date_string\)/,
+    "The frontend travel-plan helper should not normalize boundary date fields"
   );
   assert.match(
     uiSource,
     /data-travel-plan-day-field="date_string"|data-travel-plan-set-date-string/,
     "The booking travel-plan UI should expose the day date preset controls and hidden date_string field"
   );
+  assert.doesNotMatch(
+    uiSource,
+    /data-travel-plan-boundary-field="date"/,
+    "The booking travel-plan UI should not expose boundary date controls"
+  );
+  assert.doesNotMatch(
+    uiSource,
+    /data-travel-plan-boundary-field="(?:time_point|start_time|end_time)_date"/,
+    "The booking travel-plan UI should derive boundary timing dates instead of exposing boundary date inputs"
+  );
   assert.match(
     travelPlanStyles,
     /\.booking-detail-page \.travel-plan-day__date-shortcut\.is-active \{[\s\S]*color: var\(--text-black\);/,
     "The active travel-plan day date preset should use black text"
+  );
+  assert.doesNotMatch(
+    travelPlanStyles,
+    /\.travel-plan-boundary__date-field/,
+    "The booking travel-plan styles should not include boundary date fields"
   );
 });
 

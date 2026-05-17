@@ -311,6 +311,12 @@ function normalizeTravelPlanBoundaryPresentation(value, boundaryKind) {
   };
 }
 
+function normalizeBoundaryTimeValue(value) {
+  const raw = normalizeOptionalText(value);
+  const dateTimeMatch = raw.match(/^\d{4}-\d{2}-\d{2}[T ](\d{2}:\d{2})/);
+  return dateTimeMatch ? dateTimeMatch[1] : raw;
+}
+
 function normalizeTravelPlanBoundaryService(rawService, boundaryKind, options = {}) {
   const source = rawService && typeof rawService === "object" && !Array.isArray(rawService)
     ? rawService
@@ -330,6 +336,9 @@ function normalizeTravelPlanBoundaryService(rawService, boundaryKind, options = 
     ...service,
     boundary_kind: normalizedBoundaryKind,
     enabled: source.enabled === false ? false : true,
+    time_point: service.timing_kind === "point" ? normalizeBoundaryTimeValue(service.time_point) : null,
+    start_time: service.timing_kind === "range" ? normalizeBoundaryTimeValue(service.start_time) : null,
+    end_time: service.timing_kind === "range" ? normalizeBoundaryTimeValue(service.end_time) : null,
     kind: normalizeItemKind(source.kind || "transport"),
     airport_code: normalizeOptionalText(source.airport_code),
     from_label: normalizeOptionalText(source.from_label),
@@ -551,16 +560,79 @@ function presentationBoundaryService(service, boundaryKind) {
   };
 }
 
+function isIsoCalendarDate(value) {
+  const normalized = normalizeText(value);
+  const match = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  return (
+    candidate.getUTCFullYear() === year &&
+    candidate.getUTCMonth() === month - 1 &&
+    candidate.getUTCDate() === day
+  );
+}
+
+function shiftIsoCalendarDate(value, dayOffset) {
+  if (!isIsoCalendarDate(value)) return "";
+  const [year, month, day] = normalizeText(value).split("-").map(Number);
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  candidate.setUTCDate(candidate.getUTCDate() + dayOffset);
+  return [
+    String(candidate.getUTCFullYear()).padStart(4, "0"),
+    String(candidate.getUTCMonth() + 1).padStart(2, "0"),
+    String(candidate.getUTCDate()).padStart(2, "0")
+  ].join("-");
+}
+
+function normalizedDayDateFields(day) {
+  const date = normalizeOptionalText(day?.date);
+  return {
+    date,
+    date_string: date ? null : normalizeOptionalText(day?.date_string)
+  };
+}
+
+function deriveBoundaryPresentationDateFields(boundaryKind, attachTo, days) {
+  const itineraryDays = Array.isArray(days) ? days : [];
+  const adjacentDay = boundaryKind === "departure"
+    ? itineraryDays[itineraryDays.length - 1]
+    : itineraryDays[0];
+  if (!adjacentDay) return {};
+
+  const sameDay = boundaryKind === "departure"
+    ? attachTo !== "after_last_day"
+    : attachTo !== "before_first_day";
+  if (sameDay) return normalizedDayDateFields(adjacentDay);
+
+  const adjacentDate = normalizeOptionalText(adjacentDay.date);
+  const shiftedDate = boundaryKind === "departure"
+    ? shiftIsoCalendarDate(adjacentDate, 1)
+    : shiftIsoCalendarDate(adjacentDate, -1);
+  return shiftedDate
+    ? { date: shiftedDate, date_string: null }
+    : {
+        date: null,
+        date_string: boundaryKind === "departure" ? "after_trip" : "before_trip"
+      };
+}
+
 function presentationBoundaryDay(boundaryService, boundaryKind, dayNumber, options = {}) {
   const source = boundaryService && typeof boundaryService === "object" && !Array.isArray(boundaryService)
     ? boundaryService
     : {};
   const fallbackTitle = boundaryKind === "departure" ? "Departure" : "Arrival";
   const outsideDayNumbering = options?.outsideDayNumbering === true;
+  const boundaryDateFields = options?.dateFields && typeof options.dateFields === "object" && !Array.isArray(options.dateFields)
+    ? normalizedDayDateFields(options.dateFields)
+    : {};
   return {
     id: `travel_plan_boundary_${boundaryKind}_day`,
     day_number: outsideDayNumbering ? null : dayNumber,
     boundary_kind: boundaryKind,
+    ...boundaryDateFields,
     title: outsideDayNumbering ? null : (normalizeOptionalText(source.title) || fallbackTitle),
     title_i18n: source.title_i18n && typeof source.title_i18n === "object" && !Array.isArray(source.title_i18n)
       ? { ...source.title_i18n }
@@ -589,14 +661,18 @@ function composeBoundaryIntoDays(days, boundaryService, boundaryKind) {
   const attachTo = normalizeTravelPlanBoundaryPresentation(boundaryService.presentation, boundaryKind).attach_to;
   if (boundaryKind === "arrival" && attachTo === "before_first_day") {
     return renumberPresentationDays([
-      presentationBoundaryDay(boundaryService, boundaryKind, 1),
+      presentationBoundaryDay(boundaryService, boundaryKind, 1, {
+        dateFields: deriveBoundaryPresentationDateFields(boundaryKind, attachTo, days)
+      }),
       ...days
     ]);
   }
   if (boundaryKind === "departure" && attachTo === "after_last_day") {
     return renumberPresentationDays([
       ...days,
-      presentationBoundaryDay(boundaryService, boundaryKind, days.length + 1)
+      presentationBoundaryDay(boundaryService, boundaryKind, days.length + 1, {
+        dateFields: deriveBoundaryPresentationDateFields(boundaryKind, attachTo, days)
+      })
     ]);
   }
   if (!days.length) return days;
@@ -639,10 +715,18 @@ function composeBoundaryOutsideDays(days, boundaries) {
   if (hasDeparture) {
     itineraryDays = removeBoundaryFromDays(itineraryDays, departure, "departure");
   }
+  const arrivalAttachTo = normalizeTravelPlanBoundaryPresentation(arrival?.presentation, "arrival").attach_to;
+  const departureAttachTo = normalizeTravelPlanBoundaryPresentation(departure?.presentation, "departure").attach_to;
   return [
-    ...(hasArrival ? [presentationBoundaryDay(arrival, "arrival", null, { outsideDayNumbering: true })] : []),
+    ...(hasArrival ? [presentationBoundaryDay(arrival, "arrival", null, {
+      outsideDayNumbering: true,
+      dateFields: deriveBoundaryPresentationDateFields("arrival", arrivalAttachTo, itineraryDays)
+    })] : []),
     ...itineraryDays,
-    ...(hasDeparture ? [presentationBoundaryDay(departure, "departure", null, { outsideDayNumbering: true })] : [])
+    ...(hasDeparture ? [presentationBoundaryDay(departure, "departure", null, {
+      outsideDayNumbering: true,
+      dateFields: deriveBoundaryPresentationDateFields("departure", departureAttachTo, itineraryDays)
+    })] : [])
   ];
 }
 

@@ -1534,6 +1534,7 @@
   align-items: center;
   gap: 0.5rem;
   min-width: 0;
+  padding-block: 0.85rem 0.35rem;
   justify-content: flex-start;
 }
 

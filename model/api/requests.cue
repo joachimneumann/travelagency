@@ -379,7 +379,7 @@ import (
 	seasonality_start_month?: enums.#MonthCode
 	seasonality_end_month?:   enums.#MonthCode
 	base_marketing_tour_id?:  common.#Identifier
-	boundary_logistics?:      databaseModel.#TravelPlanBoundaryLogistics
+	boundary_logistics?:      databaseModel.#MarketingTourTravelPlanBoundaryLogistics
 	days?: [...#TourVariantDayRefInput]
 }
 

@@ -1086,7 +1086,7 @@
   "booking.travel_plan.remove_item_confirm": "Remove this service?",
   "booking.travel_plan.remove_linked_offer_component": "Remove linked offer component",
   "booking.travel_plan.removing_image": "Removing image...",
-  "booking.travel_plan.renumber_days": "Renumber days",
+  "booking.travel_plan.renumber_days": "Renumber Dates",
   "booking.travel_plan.renumber_days_disabled": "Set a date on the first day to enable renumbering.",
   "booking.travel_plan.renumber_days_done": "Days renumbered from the first day.",
   "booking.travel_plan.route_scope": "Destination(s)",

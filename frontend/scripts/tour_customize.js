@@ -724,7 +724,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 
 .tour-customize-root .tour-customize__workspace {
   display: grid;
-  grid-template-columns: 30% minmax(0, 1fr);
+  grid-template-columns: minmax(0, min(30%, 400px)) minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
   overflow: hidden;
@@ -773,10 +773,12 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   max-height: none;
 }
 
-.tour-customize-root .tour-customize-embedded--preview .tour-customize-map {
-  width: 100%;
-  height: 100%;
-  min-height: var(--tour-customize-preview-min-height, 0);
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-map__stage {
+  justify-self: center;
+  width: min(100%, 200px);
+  height: auto;
+  min-height: 0;
+  max-height: 400px;
   border: 0;
 }
 
@@ -792,13 +794,17 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   opacity: 0.68;
 }
 
-.tour-customize-root .tour-customize-map {
+.tour-customize-root .tour-customize-map__stage {
   position: relative;
+  grid-column: 1;
+  grid-row: 1;
   display: grid;
   place-items: center;
   align-self: stretch;
-  width: 100%;
+  justify-self: center;
+  width: min(100%, 400px);
   height: 100%;
+  max-width: 400px;
   max-height: 100%;
   min-height: 0;
   overflow: hidden;
@@ -807,21 +813,12 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   cursor: zoom-in;
   touch-action: manipulation;
   user-select: none;
-}
-
-.tour-customize-root .tour-customize-map__stage {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  overflow: hidden;
   aspect-ratio: 1 / 2;
 }
 
 @supports (width: 1cqw) {
   .tour-customize-root .tour-customize-map__stage {
-    width: min(100cqw, 50cqh);
+    width: min(100%, 400px, 50cqh);
     height: min(100cqh, 200cqw);
   }
 }
@@ -837,20 +834,26 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   transition: background-size 0.22s ease, background-position 0.22s ease;
 }
 
-.tour-customize-root .tour-customize-map.is-zoomed {
+.tour-customize-root .tour-customize-map__stage.is-zoomed {
   cursor: grab;
 }
 
-.tour-customize-root .tour-customize-map.is-zoomed.is-panning {
+.tour-customize-root .tour-customize-map__stage.is-zoomed.is-panning {
   cursor: grabbing;
 }
 
-.tour-customize-root .tour-customize-map.is-zoomed .tour-customize-map__region {
+.tour-customize-root .tour-customize-map__stage.is-zoomed .tour-customize-map__region {
   background-size: 300% 300%;
 }
 
-.tour-customize-root .tour-customize-map.is-panning .tour-customize-map__region {
+.tour-customize-root .tour-customize-map__stage.is-panning .tour-customize-map__region {
   transition: none;
+}
+
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-map__stage,
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-map__stage.is-zoomed,
+.tour-customize-root .tour-customize-embedded--preview .tour-customize-map__stage.is-zoomed.is-panning {
+  cursor: pointer;
 }
 
 .tour-customize-root .tour-customize-map__controls {
@@ -897,7 +900,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   border-radius: 999px;
 }
 
-.tour-customize-root .tour-customize-map.is-zoomed .tour-customize-map__zoom-out {
+.tour-customize-root .tour-customize-map__stage.is-zoomed .tour-customize-map__zoom-out {
   display: grid;
 }
 
@@ -994,6 +997,8 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 }
 
 .tour-customize-root .tour-customize-options {
+  grid-column: 2;
+  grid-row: 1;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
@@ -1392,6 +1397,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 
 .tour-customize-root .tour-customize-timeline {
   grid-column: 1 / -1;
+  grid-row: 2;
   min-height: 0;
   overflow: hidden;
   padding: 0.85rem 1rem 0.95rem;
@@ -1569,13 +1575,22 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
     max-height: none;
   }
 
-  .tour-customize-root .tour-customize-map {
+  .tour-customize-root .tour-customize-map__stage {
+    grid-column: 1;
+    grid-row: 1;
     min-height: 7rem;
   }
 
   .tour-customize-root .tour-customize-options {
+    grid-column: 1;
+    grid-row: 2;
     max-height: none;
     border-bottom: 1px solid var(--line);
+  }
+
+  .tour-customize-root .tour-customize-timeline {
+    grid-column: 1;
+    grid-row: 3;
   }
 
   .tour-customize-root .tour-customize-option {
@@ -2552,31 +2567,29 @@ export function createTourCustomizer({
     const path = routePathData(points);
     const optimizeDisabled = isEmbeddedWorkspace() && (embeddedWorkspaceDisabled || draft.timelineDays.length <= 1);
     return `
-      <section class="tour-customize-map${zoomClass}"${zoomStyle} aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
-        <div class="tour-customize-map__stage">
-          <div class="tour-customize-map__region" aria-hidden="true"></div>
-          <div class="tour-customize-map__controls">
-            <button class="tour-customize-map__optimize" type="button" data-customize-optimize data-customize-map-control aria-label="${escapeAttr(t("tour.customize.optimize", "Optimize"))}" title="${escapeAttr(t("tour.customize.optimize", "Optimize"))}"${optimizeDisabled ? " disabled" : ""}>
-              ${escapeHTML(t("tour.customize.optimize", "Optimize"))}
-            </button>
-            <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out data-customize-map-control aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
-              <span aria-hidden="true"></span>
-            </button>
-          </div>
-          <svg class="tour-customize-map__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-            ${path ? `<path d="${escapeAttr(path)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
-          </svg>
-          ${groups.map((group) => {
-            const label = formatDayNumbers(group.dayNumbers);
-            const location = group.locationLabel || group.item.locationLabel;
-            const aria = t("tour.customize.marker_label", "Days {days}, {location}", { days: label, location });
-            return `
-              <button class="tour-customize-map__marker" type="button" data-customize-route-key="${escapeAttr(group.key)}" style="left:${group.mapPoint.x}%;top:${group.mapPoint.y}%;" aria-label="${escapeAttr(aria)}" title="${escapeAttr(aria)}">
-                ${escapeHTML(label)}
-              </button>
-            `;
-          }).join("")}
+      <section class="tour-customize-map__stage${zoomClass}"${zoomStyle} aria-label="${escapeAttr(t("tour.customize.map", "Route map"))}">
+        <div class="tour-customize-map__region" aria-hidden="true"></div>
+        <div class="tour-customize-map__controls">
+          <button class="tour-customize-map__optimize" type="button" data-customize-optimize data-customize-map-control aria-label="${escapeAttr(t("tour.customize.optimize", "Optimize"))}" title="${escapeAttr(t("tour.customize.optimize", "Optimize"))}"${optimizeDisabled ? " disabled" : ""}>
+            ${escapeHTML(t("tour.customize.optimize", "Optimize"))}
+          </button>
+          <button class="tour-customize-map__zoom-out" type="button" data-customize-map-zoom-out data-customize-map-control aria-label="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}" title="${escapeAttr(t("tour.customize.zoom_out", "Zoom out"))}">
+            <span aria-hidden="true"></span>
+          </button>
         </div>
+        <svg class="tour-customize-map__route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+          ${path ? `<path d="${escapeAttr(path)}" fill="none" vector-effect="non-scaling-stroke" />` : ""}
+        </svg>
+        ${groups.map((group) => {
+          const label = formatDayNumbers(group.dayNumbers);
+          const location = group.locationLabel || group.item.locationLabel;
+          const aria = t("tour.customize.marker_label", "Days {days}, {location}", { days: label, location });
+          return `
+            <button class="tour-customize-map__marker" type="button" data-customize-route-key="${escapeAttr(group.key)}" style="left:${group.mapPoint.x}%;top:${group.mapPoint.y}%;" aria-label="${escapeAttr(aria)}" title="${escapeAttr(aria)}">
+              ${escapeHTML(label)}
+            </button>
+          `;
+        }).join("")}
       </section>
     `;
   }
@@ -2698,7 +2711,7 @@ export function createTourCustomizer({
 
     function refreshMap(root) {
       if (!root) return false;
-      const currentMap = root.querySelector(".tour-customize-map");
+      const currentMap = root.querySelector(".tour-customize-map__stage");
       if (!(currentMap instanceof HTMLElement)) return false;
       currentMap.outerHTML = renderMap();
       bindMapZoom(root);
@@ -3530,8 +3543,7 @@ export function createTourCustomizer({
     const mapPoint = displayedMapPoint(item.mapPoint);
     marker.style.left = `${mapPoint.x}%`;
     marker.style.top = `${mapPoint.y}%`;
-    const mapStage = modal?.querySelector(".tour-customize-map__stage")
-      || modal?.querySelector(".tour-customize-map");
+    const mapStage = modal?.querySelector(".tour-customize-map__stage");
     mapStage?.appendChild(marker);
   }
 
@@ -4076,15 +4088,14 @@ export function createTourCustomizer({
   }
 
   function bindMapZoom(root) {
-    const map = root?.querySelector?.(".tour-customize-map");
+    const map = root?.querySelector?.(".tour-customize-map__stage");
     if (!(map instanceof HTMLElement) || map.dataset.customizeMapZoomBound === "1") return;
     map.dataset.customizeMapZoomBound = "1";
     const zoomOutButton = map.querySelector("[data-customize-map-zoom-out]");
     const optimizeButton = map.querySelector("[data-customize-optimize]");
     const isMapControlTarget = (target) => target instanceof Element && Boolean(target.closest("[data-customize-map-control]"));
     const mapCoordinateRect = () => {
-      const stage = map.querySelector(".tour-customize-map__stage");
-      return (stage instanceof HTMLElement ? stage : map).getBoundingClientRect();
+      return map.getBoundingClientRect();
     };
     const applyZoomStateToCurrentMap = () => {
       const zoom = currentMapZoom();

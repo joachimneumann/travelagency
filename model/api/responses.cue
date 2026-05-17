@@ -167,7 +167,7 @@ import (
 	seasonality_start_month?:   enums.#MonthCode
 	seasonality_end_month?:     enums.#MonthCode
 	base_marketing_tour_id?:    common.#Identifier
-	boundary_logistics?:        databaseModel.#TravelPlanBoundaryLogistics
+	boundary_logistics?:        databaseModel.#MarketingTourTravelPlanBoundaryLogistics
 	days?: [...#TourVariantDayRef]
 	publication?:               #TourVariantPublication
 	created_at?:                common.#Timestamp
@@ -208,7 +208,7 @@ import (
 	thumbnail_urls?: [...string]
 	service_count?:    >=0 & int
 	image_count?:      >=0 & int
-	source_day?:       databaseModel.#TravelPlanDay
+	source_day?:       databaseModel.#MarketingTourTravelPlanDay
 }
 
 #TourVariantSourceDayList: {
@@ -252,7 +252,7 @@ import (
 	source_tour_id:      common.#Identifier
 	source_tour_title?:  string
 	source_tour_code?:   string
-	source_day?:         databaseModel.#TravelPlanDay
+	source_day?:         databaseModel.#MarketingTourTravelPlanDay
 	day_id:              common.#Identifier
 	day_number?:         >0 & int
 	title?:              string

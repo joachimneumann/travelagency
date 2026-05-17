@@ -1,5 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import sharp from "sharp";
 import { drawMarketingTourFramedImage } from "./marketing_tour_one_pager_pdf.js";
 import { pdfImageFileExists, rasterizePdfImage } from "./pdf_image_cache.js";
 import { normalizeText } from "./text.js";
@@ -10,6 +11,10 @@ const ITEM_CARD_PADDING = 14;
 const ITEM_COLUMN_GAP = 18;
 const ITEM_VERTICAL_GAP = 6;
 const DAY_HEADER_TOP_GAP = 18;
+const BOUNDARY_DAY_HEADER_TOP_GAP = 10;
+const BOUNDARY_DAY_HEADER_BOTTOM_GAP = 3;
+const BOUNDARY_DAY_AFTER_GAP = 4;
+const BOUNDARY_DAY_BEFORE_REGULAR_DAY_GAP = 8;
 const IMAGE_CARD_MIN_HEIGHT = 92;
 const IMAGE_CARD_MAX_HEIGHT = 118;
 const IMAGE_PLACEMENT_LOOKAHEAD = 8;
@@ -17,9 +22,14 @@ const FLUID_TEXT_IMAGE_SERVICE_LIMIT = 2;
 const TRAVEL_PLAN_IMAGE_FRAME_INSET = 8;
 const TRAVEL_PLAN_IMAGE_FRAME_SHAPE_INTENSITY = 0.38;
 const TRAVEL_PLAN_TRIP_LABEL_COLOR = "#F27A1A";
-const BOUNDARY_INLINE_ICON_WIDTH = 27.6;
-const BOUNDARY_INLINE_ICON_HEIGHT = 20.4;
-const BOUNDARY_INLINE_ICON_GAP = 10;
+const BOUNDARY_ICON_COLOR = Object.freeze({ r: 242, g: 122, b: 26 });
+const BOUNDARY_INLINE_ICON_WIDTH = 18;
+const BOUNDARY_INLINE_ICON_HEIGHT = 10;
+const BOUNDARY_INLINE_ICON_GAP = 6;
+const BOUNDARY_INLINE_ICON_Y_OFFSET = Object.freeze({
+  arrival: -3.2,
+  departure: -1.7
+});
 const DEFAULT_THUMBNAIL_CONCURRENCY = 4;
 
 function safeArray(value) {
@@ -40,6 +50,58 @@ function extractPublicRelativePath(publicUrl, prefix) {
 
 async function rasterizeImage(filePath, { width, height } = {}) {
   return rasterizePdfImage(filePath, { width, height, quality: 88 });
+}
+
+async function readTintedBoundaryIcon(filePath) {
+  const sourceBuffer = await readFile(filePath).catch(() => null);
+  if (!sourceBuffer) return null;
+  const rawImage = await sharp(sourceBuffer)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+    .catch(() => null);
+  if (!rawImage?.data || !rawImage?.info?.width || !rawImage?.info?.height) return sourceBuffer;
+  const tinted = Buffer.from(rawImage.data);
+  let minX = rawImage.info.width;
+  let minY = rawImage.info.height;
+  let maxX = -1;
+  let maxY = -1;
+  for (let y = 0; y < rawImage.info.height; y += 1) {
+    for (let x = 0; x < rawImage.info.width; x += 1) {
+      const index = (y * rawImage.info.width + x) * 4;
+      const alpha = tinted[index + 3];
+      if (alpha === 0) continue;
+      if (alpha > 8) {
+        minX = Math.min(minX, x);
+        minY = Math.min(minY, y);
+        maxX = Math.max(maxX, x);
+        maxY = Math.max(maxY, y);
+      }
+      tinted[index] = BOUNDARY_ICON_COLOR.r;
+      tinted[index + 1] = BOUNDARY_ICON_COLOR.g;
+      tinted[index + 2] = BOUNDARY_ICON_COLOR.b;
+    }
+  }
+  const icon = sharp(tinted, {
+    raw: {
+      width: rawImage.info.width,
+      height: rawImage.info.height,
+      channels: 4
+    }
+  });
+  const croppedIcon = maxX >= minX && maxY >= minY
+    ? icon.extract({
+        left: minX,
+        top: minY,
+        width: maxX - minX + 1,
+        height: maxY - minY + 1
+      })
+    : icon;
+  return croppedIcon
+    .flop()
+    .png()
+    .toBuffer()
+    .catch(() => sourceBuffer);
 }
 
 function itemHasExplicitImage(item) {
@@ -89,7 +151,7 @@ export async function buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, op
     if (!thumbnailPath || !(await pdfImageFileExists(thumbnailPath))) return [item.id, null];
     const boundaryIcon = isBoundaryLogisticsKind(item?.boundary_kind) && !itemHasExplicitImage(item);
     const thumbnail = boundaryIcon
-      ? { buffer: await readFile(thumbnailPath).catch(() => null) }
+      ? { buffer: await readTintedBoundaryIcon(thumbnailPath) }
       : await rasterizeImage(thumbnailPath, {
           width: ITEM_THUMBNAIL_WIDTH * 3,
           height: ITEM_THUMBNAIL_HEIGHT * 3
@@ -230,12 +292,10 @@ function boundaryInlineIcon(entry) {
 }
 
 function serviceTextLayout(entry, contentWidth) {
-  const icon = boundaryInlineIcon(entry);
-  const iconColumnWidth = icon ? BOUNDARY_INLINE_ICON_WIDTH + BOUNDARY_INLINE_ICON_GAP : 0;
   return {
-    icon,
-    textXOffset: iconColumnWidth,
-    textWidth: Math.max(1, contentWidth - iconColumnWidth)
+    icon: null,
+    textXOffset: 0,
+    textWidth: contentWidth
   };
 }
 
@@ -261,7 +321,7 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps, entr
   const details = textOrNull(item?.details);
   let textHeight = 0;
   if (metaParts.length) {
-    textHeight += measureTextHeight(doc, metaParts.join(" · "), { width: textWidth, fontSize: 9.2, fonts, lineGap: 1, pdfFontName: deps.pdfFontName }) + 4;
+    textHeight += measureTextHeight(doc, metaParts.join(" · "), { width: contentWidth, fontSize: 9.2, fonts, lineGap: 1, pdfFontName: deps.pdfFontName }) + 4;
   }
   textHeight += measureTextHeight(doc, title, { width: textWidth, fontSize: 11.2, fonts, weight: "bold", lineGap: 1, pdfFontName: deps.pdfFontName });
   if (details) {
@@ -321,16 +381,7 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
   const item = entry?.item || entry;
   const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, width, deps, entry);
   const { icon, textXOffset, textWidth } = serviceTextLayout(entry, width);
-
-  if (icon?.buffer) {
-    doc.image(icon.buffer, x, y + 1, {
-      fit: [BOUNDARY_INLINE_ICON_WIDTH, BOUNDARY_INLINE_ICON_HEIGHT],
-      align: "center",
-      valign: "center"
-    });
-  }
-
-  const innerX = x + textXOffset;
+  const titleX = x + textXOffset;
   let innerY = y;
 
   const metaParts = [formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
@@ -339,18 +390,26 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
       .font(deps.pdfFontName("regular", fonts))
       .fontSize(9.2)
       .fillColor(deps.colors.textMutedStrong)
-      .text(metaParts.join(" · "), innerX, innerY, deps.pdfTextOptions(lang, {
-        width: textWidth,
+      .text(metaParts.join(" · "), x, innerY, deps.pdfTextOptions(lang, {
+        width,
         lineGap: 1
       }));
     innerY = doc.y + 4;
+  }
+
+  if (icon?.buffer) {
+    doc.image(icon.buffer, x, innerY + 0.8, {
+      fit: [BOUNDARY_INLINE_ICON_WIDTH, BOUNDARY_INLINE_ICON_HEIGHT],
+      align: "center",
+      valign: "center"
+    });
   }
 
   doc
     .font(deps.pdfFontName("bold", fonts))
     .fontSize(11.2)
     .fillColor(deps.colors.textStrong)
-    .text(textOrNull(item?.title) || deps.pdfT(lang, "offer.item_fallback", "Planned service"), innerX, innerY, deps.pdfTextOptions(lang, {
+    .text(textOrNull(item?.title) || deps.pdfT(lang, "offer.item_fallback", "Planned service"), titleX, innerY, deps.pdfTextOptions(lang, {
       width: textWidth,
       lineGap: 1
     }));
@@ -362,7 +421,7 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
       .font(deps.pdfFontName("regular", fonts))
       .fontSize(10.2)
       .fillColor(deps.colors.text)
-      .text(details, innerX, innerY, deps.pdfTextOptions(lang, {
+      .text(details, titleX, innerY, deps.pdfTextOptions(lang, {
         width: textWidth,
         lineGap: 2
       }));
@@ -380,6 +439,20 @@ function buildTravelPlanDayLayoutEntries(day, itemThumbnailMap) {
     }
     return layout;
   }, { services: [], images: [] });
+}
+
+function boundaryHeaderIconFromLayoutEntries(items) {
+  return safeArray(items?.services)
+    .map((entry) => boundaryInlineIcon(entry))
+    .find((icon) => icon?.buffer) || null;
+}
+
+function boundaryHeaderIconY(doc, y, dayLabel, dayLabelOptions, fonts, deps, boundaryKind) {
+  doc
+    .font(deps.pdfFontName("bold", fonts))
+    .fontSize(9.6);
+  const labelHeight = doc.heightOfString(dayLabel, dayLabelOptions);
+  return y + (labelHeight - BOUNDARY_INLINE_ICON_HEIGHT) / 2 + (BOUNDARY_INLINE_ICON_Y_OFFSET[boundaryKind] || 0);
 }
 
 function remainingTravelPlanLayoutItemCount(items) {
@@ -657,10 +730,11 @@ function drawTravelPlanItemStack(doc, startY, contentWidth, pageLayout, fonts, l
   }
 }
 
-function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = false } = {}) {
+function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = false, boundaryIcon = null } = {}) {
   const boundaryKind = boundaryPresentationDayKind(day);
   const dateLabel = boundaryKind ? "" : formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly, deps.pdfT);
   const separateDayLabel = deps.separateDayLabel === true;
+  const isBoundaryStandalone = boundaryKind && day?._presentation_boundary_day === true;
   const titleText = boundaryKind && day?._presentation_boundary_day === true && separateDayLabel
     ? ""
     : separateDayLabel
@@ -686,16 +760,50 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
 
   if (separateDayLabel) {
     const dayLabel = dayLabelText(day, lang, deps.pdfT).toUpperCase();
+    const hasBoundaryIcon = isBoundaryStandalone && boundaryIcon?.buffer;
+    const iconTrailsLabel = hasBoundaryIcon && boundaryKind === "departure";
+    const labelOffset = hasBoundaryIcon && !iconTrailsLabel
+      ? BOUNDARY_INLINE_ICON_WIDTH + BOUNDARY_INLINE_ICON_GAP
+      : 0;
+    const labelX = deps.pageMargin + labelOffset;
+    const trailingIconOffset = iconTrailsLabel
+      ? BOUNDARY_INLINE_ICON_WIDTH + BOUNDARY_INLINE_ICON_GAP
+      : 0;
     const dayLabelOptions = deps.pdfTextOptions(lang, {
-      width: titleWidth,
+      width: Math.max(1, titleWidth - labelOffset - trailingIconOffset),
       characterSpacing: 0
     });
+    if (hasBoundaryIcon) {
+      doc
+        .font(deps.pdfFontName("bold", fonts))
+        .fontSize(9.6);
+      const measuredLabelWidth = iconTrailsLabel
+        ? Math.min(doc.widthOfString(dayLabel, dayLabelOptions), dayLabelOptions.width || titleWidth)
+        : 0;
+      const iconX = iconTrailsLabel
+        ? labelX + measuredLabelWidth + BOUNDARY_INLINE_ICON_GAP
+        : deps.pageMargin;
+      doc.image(
+        boundaryIcon.buffer,
+        iconX,
+        boundaryHeaderIconY(doc, y, dayLabel, dayLabelOptions, fonts, deps, boundaryKind),
+        {
+          fit: [BOUNDARY_INLINE_ICON_WIDTH, BOUNDARY_INLINE_ICON_HEIGHT],
+          align: "center",
+          valign: "center"
+        }
+      );
+    }
     doc
       .font(deps.pdfFontName("bold", fonts))
       .fontSize(9.6)
       .fillColor(TRAVEL_PLAN_TRIP_LABEL_COLOR)
-      .text(dayLabel, deps.pageMargin, y, dayLabelOptions)
-      .text(dayLabel, deps.pageMargin + 0.28, y, dayLabelOptions);
+      .text(dayLabel, labelX, y, dayLabelOptions)
+      .text(dayLabel, labelX + 0.28, y, dayLabelOptions);
+  }
+
+  if (isBoundaryStandalone && separateDayLabel && !titleText) {
+    return doc.y + BOUNDARY_DAY_HEADER_BOTTOM_GAP;
   }
 
   if (titleText) {
@@ -752,7 +860,7 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
     }
   }
 
-  return nextY + (Number(deps.dayHeaderBottomGap) || 0);
+  return nextY + (isBoundaryStandalone ? BOUNDARY_DAY_HEADER_BOTTOM_GAP : (Number(deps.dayHeaderBottomGap) || 0));
 }
 
 function drawEmptyState(doc, y, fonts, lang, deps) {
@@ -852,14 +960,22 @@ export function drawTravelPlanDaysSection({
     y = doc.y + (sectionTitleUsesTripLabel ? 0 : 10);
   }
 
+  let previousWasBoundaryDay = false;
   for (const day of days) {
+    const isBoundaryDay = Boolean(boundaryPresentationDayKind(day));
     const contentWidth = doc.page.width - pageMargin * 2;
     const columnWidth = (contentWidth - ITEM_COLUMN_GAP) / 2;
     let remainingItems = buildTravelPlanDayLayoutEntries(day, itemThumbnailMap);
+    const boundaryIcon = isBoundaryDay ? boundaryHeaderIconFromLayoutEntries(remainingItems) : null;
+    const headerTopGap = isBoundaryDay
+      ? BOUNDARY_DAY_HEADER_TOP_GAP
+      : previousWasBoundaryDay
+        ? BOUNDARY_DAY_BEFORE_REGULAR_DAY_GAP
+        : DAY_HEADER_TOP_GAP;
 
-    y = ensureSpace(y + DAY_HEADER_TOP_GAP, 90);
-    y += DAY_HEADER_TOP_GAP;
-    y = drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps);
+    y = ensureSpace(y + headerTopGap, 90);
+    y += headerTopGap;
+    y = drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { boundaryIcon });
 
     let continuationPageReady = false;
 
@@ -917,12 +1033,13 @@ export function drawTravelPlanDaysSection({
       } else {
         drawTravelPlanItemColumns(doc, y, columnWidth, pageLayout, fonts, lang, day?.date, deps);
       }
-      y += pageLayout.height + 14;
+      y += pageLayout.height + (isBoundaryDay ? BOUNDARY_DAY_AFTER_GAP : 14);
       remainingItems = pageLayout.rest;
       continuationPageReady = false;
     }
 
-    y += 6;
+    y += isBoundaryDay ? 0 : 6;
+    previousWasBoundaryDay = isBoundaryDay;
   }
 
   return y;
