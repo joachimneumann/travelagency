@@ -4,7 +4,6 @@
   "short_description": "An eight-day northern route from Sapa's high passes to Tam Dao's mist and Ninh Binh's river caves, temples and karst viewpoints.",
   "styles": [
     "grand-expeditions",
-    "budget",
     "culture",
     "family",
     "gastronomic-experiences",
@@ -14,7 +13,7 @@
   "seasonality_end_month": "",
   "priority": 100,
   "created_at": "2026-04-09T03:29:39.112Z",
-  "updated_at": "2026-05-16T14:22:40.114Z",
+  "updated_at": "2026-05-17T13:59:11.092Z",
   "travel_plan": {
     "tour_card_image_ids": [
       "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
@@ -29,7 +28,6 @@
       "travel_plan_service_image_f2390d49-c52a-47c1-8b32-32d0d22efa3c",
       "travel_plan_service_image_b79f493c-9a5f-4f83-9215-54007249a0ba"
     ],
-    "tour_card_primary_image_id": "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
     "one_pager_hero_image_id": "travel_plan_service_image_9fd14563-b2e0-4680-8202-4c00e641471c",
     "one_pager_image_ids": [],
     "boundary_logistics": {
@@ -337,7 +335,7 @@
       {
         "id": "travel_plan_day_b1574690-7e56-428e-abe9-358b259bf9e1",
         "day_number": 4,
-        "title": "Sapa to Tam Dao",
+        "title": "Sapa(Ham Rong Mountain,Silver Waterfall)  to Tam Dao",
         "primary_location_id": "place_a8172e07-213b-46ed-bb88-f0f77bb7fbe0",
         "secondary_location_id": null,
         "experience_highlight_ids": [

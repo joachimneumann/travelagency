@@ -1,7 +1,7 @@
 {
   "id": "tour_variant_6c543681-43d6-43ee-9999-ffd377268541",
   "title": "Da Nang, Mui Ne & Ho Chi Minh City",
-  "short_description": "Our journey takes us from Da Nang’s lively coast to the sandy landscapes of Mui Ne, ending in the vibrant streets and flavors of Ho Chi Minh City",
+  "short_description": "Our journey takes us from Da Nang’s lively coast to the sandy landscapes of Mui Ne, ending in the vibrant streets and flavors of Ho Chi Minh City.",
   "styles": [
     "beach",
     "budget",
@@ -102,5 +102,12 @@
     }
   ],
   "created_at": "2026-05-17T03:23:41.248Z",
-  "updated_at": "2026-05-17T03:29:21.760Z"
+  "updated_at": "2026-05-17T22:53:55.224Z",
+  "tour_card_image_ids": [
+    "travel_plan_service_image_1b426748-54e6-4c47-b9f3-710e1d9b9ada",
+    "travel_plan_service_image_bb060486-2aba-4a3c-98db-bddae95914c5",
+    "travel_plan_service_image_40f8f1a4-1dd4-4a1d-9dfb-97918e208340",
+    "travel_plan_service_image_e7e4b9a7-7097-4f05-86d6-e40e02a2fb93",
+    "travel_plan_service_image_a95865da-d256-4e1d-8fc9-fdaf4c6799a2"
+  ]
 }
