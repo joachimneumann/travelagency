@@ -1,8 +1,8 @@
 {
   "schema": "translation-snapshot/v1",
   "schema_version": 1,
-  "generated_at": "2026-05-17T05:21:11.913Z",
-  "source_set_hash": "8f9f3701a79338c22f27a318ffb8fe19f7bf8be28460d0670ceeb90f437cbdbe",
+  "generated_at": "2026-05-17T13:49:30.254Z",
+  "source_set_hash": "52f7a2582440c9f28590cc5ee21d90b45a5f946d94e37705a3c03c337e653f0d",
   "staff_languages": [
     "vi"
   ],
@@ -24,8 +24,8 @@
     "vi",
     "zh"
   ],
-  "items_count": 17554,
-  "total_items": 17554,
+  "items_count": 17874,
+  "total_items": 17874,
   "sections": [
     {
       "domain": "frontend",
@@ -387,7 +387,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "ar",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.ar.json"
     },
     {
@@ -398,7 +398,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "da",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.da.json"
     },
     {
@@ -409,7 +409,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "de",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.de.json"
     },
     {
@@ -420,7 +420,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "es",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.es.json"
     },
     {
@@ -431,7 +431,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "fr",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.fr.json"
     },
     {
@@ -442,7 +442,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "it",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.it.json"
     },
     {
@@ -453,7 +453,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "ja",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.ja.json"
     },
     {
@@ -464,7 +464,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "ko",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.ko.json"
     },
     {
@@ -475,7 +475,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "ms",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.ms.json"
     },
     {
@@ -486,7 +486,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "nl",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.nl.json"
     },
     {
@@ -497,7 +497,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "no",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.no.json"
     },
     {
@@ -508,7 +508,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "pl",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.pl.json"
     },
     {
@@ -519,7 +519,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "ru",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.ru.json"
     },
     {
@@ -530,7 +530,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "sv",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.sv.json"
     },
     {
@@ -541,7 +541,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "vi",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.vi.json"
     },
     {
@@ -552,7 +552,7 @@
       "audience": "customer",
       "source_lang": "en",
       "target_lang": "zh",
-      "item_count": 582,
+      "item_count": 602,
       "file": "customers/marketing-tours.zh.json"
     },
     {
