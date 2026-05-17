@@ -1792,11 +1792,10 @@ export function createTourCustomizer({
 
   function appendCustomizerFloatingElement(element) {
     if (typeof HTMLElement === "undefined" || !(element instanceof HTMLElement)) return false;
-    const ownerDocument = customizerOwnerDocument();
     const root = modal instanceof HTMLElement
       ? modal
-      : ownerDocument?.body instanceof HTMLElement
-        ? ownerDocument.body
+      : embeddedWorkspaceRoot instanceof HTMLElement
+        ? embeddedWorkspaceRoot
         : null;
     if (!(root instanceof HTMLElement)) return false;
     root.appendChild(element);
@@ -4315,9 +4314,13 @@ export function createTourCustomizer({
 
     function destroy() {
       const ownerDocument = customizerOwnerDocument();
+      const root = embeddedWorkspaceRoot;
       if (activePointerDrag) cleanupPointerDrag({ animateCancel: false });
       setCustomizerDocumentClass("tour-customize-pointer-dragging", false, ownerDocument);
       setCustomizerDocumentClass("tour-customize-sticky-dragging", false, ownerDocument);
+      if (root instanceof HTMLElement) {
+        root.classList.remove("tour-customize-runtime-root");
+      }
       if (modal === embeddedWorkspaceRoot) {
         modal = null;
         draft = null;

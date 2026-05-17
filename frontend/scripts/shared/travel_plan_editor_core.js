@@ -2744,7 +2744,10 @@ export function createBookingTravelPlanModule(ctx) {
           data-travel-plan-open-customizer
         >
           <div class="travel-plan-customizer-preview__mount" data-travel-plan-customizer-preview></div>
-          <span class="travel-plan-customizer-preview__cta">Open customizer</span>
+          <span class="travel-plan-customizer-preview__cta">
+            <span>Open</span>
+            <span class="travel-plan-customizer-preview__cta-arrow" aria-hidden="true"></span>
+          </span>
         </div>
         <div
           id="travelPlanCustomizerOverlay"
