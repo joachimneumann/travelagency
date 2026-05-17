@@ -419,53 +419,7 @@ async function readTourRecords(toursDir) {
   return records;
 }
 
-function buildSourceDayIndex(tourRecords) {
-  const toursById = new Map();
-  const daysByKey = new Map();
-  for (const record of tourRecords) {
-    const ids = Array.from(new Set([record.id, record.dirName].map((value) => normalizeText(value)).filter(Boolean)));
-    for (const id of ids) toursById.set(id, record.tourJson);
-    for (const day of Array.isArray(record.tourJson?.travel_plan?.days) ? record.tourJson.travel_plan.days : []) {
-      const dayId = normalizeText(day?.id);
-      if (!dayId) continue;
-      for (const id of ids) daysByKey.set(`${id}:${dayId}`, { day, sourceTourId: record.id });
-    }
-  }
-  return { toursById, daysByKey };
-}
-
-function cloneJson(value, fallback = null) {
-  try {
-    return JSON.parse(JSON.stringify(value ?? fallback));
-  } catch {
-    return fallback;
-  }
-}
-
-function collectVariantDays(variantJson, sourceDayIndex, toursDir, translations, language) {
-  const days = [];
-  for (const [index, ref] of (Array.isArray(variantJson?.days) ? variantJson.days : []).entries()) {
-    const sourceTourId = normalizeText(ref?.source_tour_id);
-    const sourceDayId = normalizeText(ref?.source_day_id);
-    const sourceTour = sourceDayIndex.toursById.get(sourceTourId);
-    if (!sourceTour || !isPublishedOnWebpage(sourceTour)) continue;
-
-    const resolved = sourceDayIndex.daysByKey.get(`${sourceTourId}:${sourceDayId}`);
-    if (!resolved?.day) continue;
-
-    const day = {
-      ...cloneJson(resolved.day, {}),
-      id: normalizeText(ref?.id) || `tour_variant_day_${index + 1}`,
-      day_number: index + 1,
-      source_tour_id: sourceTourId,
-      source_day_id: sourceDayId
-    };
-    days.push(collectDay(day, resolved.sourceTourId || sourceTourId, toursDir, translations, language, index));
-  }
-  return days;
-}
-
-function variantRowFromJson(variantJson, sourceDayIndex, toursDir, translations, language) {
+function variantRowFromJson(variantJson, translations, language) {
   const variantId = normalizeText(variantJson?.id);
   if (!variantId || variantJson?.published_on_webpage !== true) return null;
   return {
@@ -476,11 +430,11 @@ function variantRowFromJson(variantJson, sourceDayIndex, toursDir, translations,
     description: getTourDescription(variantJson, translations, language),
     published: true,
     baseTourId: normalizeText(variantJson?.base_marketing_tour_id),
-    days: collectVariantDays(variantJson, sourceDayIndex, toursDir, translations, language)
+    days: []
   };
 }
 
-async function readPublishedTourVariants(tourVariantsDir, sourceDayIndex, toursDir, translations, language) {
+async function readPublishedTourVariants(tourVariantsDir, translations, language) {
   if (!(await pathExists(tourVariantsDir))) return [];
   const entries = await readdir(tourVariantsDir, { withFileTypes: true });
   const variantDirs = entries
@@ -494,8 +448,6 @@ async function readPublishedTourVariants(tourVariantsDir, sourceDayIndex, toursD
 
     const variant = variantRowFromJson(
       await readJson(variantJsonPath),
-      sourceDayIndex,
-      toursDir,
       translations,
       language
     );
@@ -506,9 +458,8 @@ async function readPublishedTourVariants(tourVariantsDir, sourceDayIndex, toursD
 
 async function readToursAndVariants({ toursDir, tourVariantsDir, translations, language }) {
   const tourRecords = await readTourRecords(toursDir);
-  const sourceDayIndex = buildSourceDayIndex(tourRecords);
   const tours = tourRecords.map((record) => tourRowFromJson(record.tourJson, record.id, toursDir, translations, language));
-  const variants = await readPublishedTourVariants(tourVariantsDir, sourceDayIndex, toursDir, translations, language);
+  const variants = await readPublishedTourVariants(tourVariantsDir, translations, language);
   return [...tours, ...variants].sort(compareTours);
 }
 
@@ -642,7 +593,9 @@ function renderHtml({ tours, toursDir, tourVariantsDir, outputPath, language }) 
         existing.push(day);
         daysByNumber.set(day.dayNumber, existing);
       }
-      const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1) || [], marketingTourHref)).join("");
+      const dayCells = tour.recordType === "tour_variant"
+        ? ""
+        : Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1) || [], marketingTourHref)).join("");
       const description = tour.description ? `<div class="tour-description">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.description))}</div>` : "";
 
       return `<tr data-published="${tour.published ? "true" : "false"}">
