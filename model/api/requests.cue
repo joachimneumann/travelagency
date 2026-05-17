@@ -377,6 +377,8 @@ import (
 	short_description_i18n?:   [string]: string
 	styles?: [...enums.#TourStyleCode]
 	priority?:                int
+	tour_card_primary_image_id?: common.#Identifier
+	tour_card_image_ids?: [...common.#Identifier]
 	published_on_webpage?:    bool
 	seasonality_start_month?: enums.#MonthCode
 	seasonality_end_month?:   enums.#MonthCode

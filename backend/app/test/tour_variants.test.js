@@ -76,6 +76,130 @@ test("Tour Variant creation from a base marketing tour keeps the seeded timeline
   assert.equal(stored.boundary_logistics.departure.mode, "none");
 });
 
+test("Tour Variant stores explicit web page image order and resolves it into the generated travel plan", () => {
+  const baseTour = {
+    id: "tour_base",
+    title: "Image source tour",
+    styles: ["culture"],
+    published_on_webpage: true,
+    travel_plan: {
+      days: [
+        {
+          id: "day_hanoi",
+          day_number: 1,
+          title: "Hanoi",
+          primary_location_id: "hanoi",
+          services: [
+            {
+              title: "First image",
+              image: {
+                id: "image_one",
+                storage_path: "/public/v1/tour-images/tour_base/one.webp",
+                include_in_travel_tour_card: true
+              }
+            },
+            {
+              title: "Second image",
+              image: {
+                id: "image_two",
+                storage_path: "/public/v1/tour-images/tour_base/two.webp",
+                include_in_travel_tour_card: true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  const variant = tourVariantHelpers.buildTourVariantPayload({
+    id: "tour_variant_images",
+    title: "Image variant",
+    styles: ["culture"],
+    base_marketing_tour_id: "tour_base",
+    days: [
+      {
+        id: "tour_variant_day_1",
+        day_number: 1,
+        source_tour_id: "tour_base",
+        source_day_id: "day_hanoi"
+      }
+    ],
+    tour_card_image_ids: ["image_two", "image_one"]
+  }, {
+    existing: {
+      boundary_logistics: tourVariantHelpers.emptyBoundaryLogistics(),
+      days: []
+    },
+    lang: "en"
+  });
+
+  const resolvedTour = tourVariantHelpers.resolveTourVariantToTour(variant, [baseTour]);
+
+  assert.deepEqual(variant.tour_card_image_ids, ["image_two", "image_one"]);
+  assert.equal(variant.tour_card_primary_image_id, "image_two");
+  assert.deepEqual(resolvedTour.travel_plan.tour_card_image_ids, ["image_two", "image_one"]);
+  assert.equal(resolvedTour.travel_plan.tour_card_primary_image_id, "image_two");
+});
+
+test("Tour Variant without stored image ids keeps deriving web page images from source days", () => {
+  const baseTour = {
+    id: "tour_base",
+    title: "Legacy source tour",
+    styles: ["culture"],
+    published_on_webpage: true,
+    travel_plan: {
+      days: [
+        {
+          id: "day_legacy",
+          day_number: 1,
+          title: "Legacy day",
+          primary_location_id: "hanoi",
+          services: [
+            {
+              image: {
+                id: "legacy_one",
+                storage_path: "/public/v1/tour-images/tour_base/legacy-one.webp",
+                include_in_travel_tour_card: true
+              }
+            },
+            {
+              image: {
+                id: "legacy_two",
+                storage_path: "/public/v1/tour-images/tour_base/legacy-two.webp",
+                include_in_travel_tour_card: true
+              }
+            }
+          ]
+        }
+      ]
+    }
+  };
+  const legacyVariant = {
+    id: "tour_variant_legacy",
+    title: "Legacy variant",
+    styles: ["culture"],
+    published_on_webpage: true,
+    base_marketing_tour_id: "tour_base",
+    boundary_logistics: tourVariantHelpers.emptyBoundaryLogistics(),
+    days: [
+      {
+        id: "tour_variant_day_1",
+        day_number: 1,
+        source_tour_id: "tour_base",
+        source_day_id: "day_legacy"
+      }
+    ]
+  };
+
+  const readModel = tourVariantHelpers.buildTourVariantEditorResponse(legacyVariant, [baseTour], { lang: "en" });
+  const resolvedTour = tourVariantHelpers.resolveTourVariantToTour(legacyVariant, [baseTour]);
+
+  assert.deepEqual(readModel.tour_card_image_ids, ["legacy_one", "legacy_two"]);
+  assert.equal(readModel.tour_card_primary_image_id, "legacy_one");
+  assert.deepEqual(resolvedTour.travel_plan.tour_card_image_ids, ["legacy_one", "legacy_two"]);
+});
+
 test("Tour Variant source-day options include only published marketing tours", () => {
   const tours = [
     {

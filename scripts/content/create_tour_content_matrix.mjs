@@ -644,21 +644,11 @@ function renderHtml({ tours, toursDir, tourVariantsDir, outputPath, language }) 
       }
       const dayCells = Array.from({ length: maxDayNumber }, (_, index) => renderDayCell(daysByNumber.get(index + 1) || [], marketingTourHref)).join("");
       const description = tour.description ? `<div class="tour-description">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.description))}</div>` : "";
-      const typeBadge = tour.recordType === "tour_variant" ? '<div class="record-type-badge">Tour Variant</div>' : "";
-      const baseTour = tour.baseTourId
-        ? `<div class="tour-id">Base: ${matrixMarketingTourAnchor(matrixMarketingTourHref(tour.baseTourId), escapeHtml(tour.baseTourId))}</div>`
-        : "";
 
       return `<tr data-published="${tour.published ? "true" : "false"}">
       <th class="tour-cell" scope="row">
-        <div class="tour-name">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.name))}</div>
         <div class="tour-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.title))}</div>
-        ${typeBadge}
-        <div class="publication-badge ${tour.published ? "is-published" : "is-unpublished"}">${tour.published ? "Show on web page" : "Not published"}</div>
         ${description}
-        <div class="tour-id">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(tour.id))}</div>
-        ${baseTour}
-        <a class="matrix-tour-link" href="${escapeAttr(marketingTourHref)}" target="_blank" rel="noopener" data-open-marketing-tour>Open marketing tour</a>
       </th>
       ${dayCells}
     </tr>`;
@@ -796,7 +786,6 @@ ${matrixPageControlStyles}
       z-index: 2;
     }
 
-    .tour-name,
     .day-title,
     .service-title {
       font-weight: 700;
@@ -808,24 +797,6 @@ ${matrixPageControlStyles}
       margin-top: 4px;
     }
 
-    .publication-badge {
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-
-    .record-type-badge {
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 700;
-      margin-top: 4px;
-    }
-
-    .publication-badge.is-unpublished {
-      color: var(--warning);
-    }
-
     .tour-description,
     .day-details,
     .service-details {
@@ -834,7 +805,6 @@ ${matrixPageControlStyles}
       white-space: normal;
     }
 
-    .tour-id,
     .service-meta,
     .day-overnight,
     .no-services {

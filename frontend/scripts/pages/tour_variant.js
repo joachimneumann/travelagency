@@ -999,6 +999,8 @@ async function loadOptionsForCreate() {
     seasonality_start_month: "",
     seasonality_end_month: "",
     published_on_webpage: false,
+    tour_card_primary_image_id: null,
+    tour_card_image_ids: [],
     base_marketing_tour_id: normalizeText(qs.get("base_marketing_tour_id")),
     boundary_logistics: {
       arrival: defaultBoundary("arrival"),
@@ -1024,11 +1026,19 @@ async function loadTourVariant() {
   state.options = payload.options && typeof payload.options === "object" ? payload.options : state.options;
   renderForm();
   await loadSourceDays();
+  markCurrentPayloadClean();
   setStatus("");
 }
 
 function buildPayload() {
   const variant = state.variant || {};
+  const tourCardImageIds = normalizeTourCardImageIdList(variant.tour_card_image_ids);
+  const publishOnWebpage = Boolean(
+    els.published instanceof HTMLInputElement
+    && els.published.checked === true
+    && state.sourceDaysLoaded
+    && tourVariantWebPagePublicationEligibility().canPublish
+  );
   return {
     expected_updated_at: normalizeText(variant.updated_at),
     title_i18n: localizedPairForSave(variant.title_i18n, variant.title, els.title?.value),
@@ -1037,7 +1047,9 @@ function buildPayload() {
     seasonality_start_month: normalizeText(els.seasonStart?.value),
     seasonality_end_month: normalizeText(els.seasonEnd?.value),
     priority: Number.isFinite(Number(els.priority?.value)) ? Number(els.priority.value) : 50,
-    published_on_webpage: els.published instanceof HTMLInputElement ? els.published.checked === true : false,
+    tour_card_primary_image_id: tourCardImageIds[0] || null,
+    tour_card_image_ids: tourCardImageIds,
+    published_on_webpage: publishOnWebpage,
     base_marketing_tour_id: normalizeText(variant.base_marketing_tour_id || els.baseTour?.value),
     boundary_logistics: {
       arrival: boundaryPayload("arrival"),
@@ -1168,6 +1180,7 @@ function handleBackendLanguageChanged() {
   renderHeader();
   renderBaseTourOptions(normalizeText(qs.get("base_marketing_tour_id")) || state.variant?.base_marketing_tour_id || "");
   renderCustomizer();
+  renderTourCardImageSelector();
   updateSaveButtonState();
 }
 
@@ -1182,6 +1195,23 @@ function bindControls() {
   els.mapPreview?.addEventListener("keydown", handleMapPreviewKeydown);
   els.customizerClose?.addEventListener("click", closeCustomizerOverlay);
   els.customizerOverlay?.addEventListener("keydown", handleCustomizerOverlayKeydown);
+  els.tourCardImageSelector?.addEventListener("click", (event) => {
+    const tourCardImageButton = event.target instanceof Element
+      ? event.target.closest("[data-tour-card-select-image]")
+      : null;
+    if (tourCardImageButton) {
+      event.preventDefault();
+      selectTourCardImageForWebPage(tourCardImageButton.getAttribute("data-tour-card-select-image"));
+      return;
+    }
+    const tourCardClearButton = event.target instanceof Element
+      ? event.target.closest("[data-tour-card-clear-images]")
+      : null;
+    if (tourCardClearButton) {
+      event.preventDefault();
+      clearTourCardImagesForWebPage();
+    }
+  });
   [
     els.baseTour,
     els.title,
