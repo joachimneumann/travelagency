@@ -32,3 +32,27 @@ test("travel plan pdf still resolves raw relative booking image paths", () => {
     path.resolve(bookingImagesDir, "booking_123/travel-plan-services/service_1.webp")
   );
 });
+
+test("travel plan pdf resolves default arrival and departure boundary thumbnails", () => {
+  const boundaryLogisticsImagePaths = {
+    arrival: "/repo/assets/img/arrival.png",
+    departure: "/repo/assets/img/departure.png"
+  };
+
+  assert.equal(
+    resolveTravelPlanServiceThumbnailPath(
+      { boundary_kind: "arrival", _presentation_source: "boundary_logistics" },
+      "",
+      { boundaryLogisticsImagePaths }
+    ),
+    boundaryLogisticsImagePaths.arrival
+  );
+  assert.equal(
+    resolveTravelPlanServiceThumbnailPath(
+      { boundary_kind: "departure", _presentation_source: "boundary_logistics" },
+      "",
+      { boundaryLogisticsImagePaths }
+    ),
+    boundaryLogisticsImagePaths.departure
+  );
+});

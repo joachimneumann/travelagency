@@ -4598,7 +4598,7 @@ test("shared travel-plan PDF item packing defers oversized cards instead of draw
 test("shared travel-plan PDF uses text-only service cards with interleaved standalone image cards", async () => {
   const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
   const source = await readFile(travelPlanSectionPath, "utf8");
-  const itemBoxHeightSource = source.match(/function itemBoxHeight\([\s\S]*?return Math\.max\(1, textHeight\);\n\}/)?.[0] || "";
+  const itemBoxHeightSource = source.match(/function itemBoxHeight\([\s\S]*?return Math\.max\(1, textHeight[\s\S]*?\n\}/)?.[0] || "";
 
   assert.ok(
     itemBoxHeightSource,
@@ -4606,8 +4606,8 @@ test("shared travel-plan PDF uses text-only service cards with interleaved stand
   );
   assert.match(
     source,
-    /function buildTravelPlanDayLayoutEntries\(day, itemThumbnailMap\)[\s\S]*\{ kind: "service", item \}[\s\S]*\{ kind: "image", item, thumbnail \}/,
-    "The shared travel-plan PDF renderer should build each day's flow from standalone service and image entries"
+    /function buildTravelPlanDayLayoutEntries\(day, itemThumbnailMap\)[\s\S]*layout\.services\.push\(\{ kind: "service", item, thumbnail:[\s\S]*thumbnail\.boundaryIcon[\s\S]*layout\.images\.push\(\{ kind: "image", item, thumbnail \}\)/,
+    "The shared travel-plan PDF renderer should build each day's flow from service entries and standalone image entries while keeping boundary icons inline"
   );
   assert.match(
     source,

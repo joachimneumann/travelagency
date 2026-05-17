@@ -141,6 +141,70 @@ test("boundary logistics can add presentation days before and after the itinerar
   assert.equal(normalized.days.length, 1);
 });
 
+test("boundary logistics can render outside itinerary day numbering", () => {
+  const normalized = normalizeBookingTravelPlan({
+    boundary_logistics: {
+      arrival: {
+        id: "arrival_service",
+        boundary_kind: "arrival",
+        enabled: true,
+        timing_kind: "label",
+        kind: "transport",
+        title: "Airport pickup",
+        presentation: {
+          attach_to: "first_day",
+          position: "start"
+        }
+      },
+      departure: {
+        id: "departure_service",
+        boundary_kind: "departure",
+        enabled: true,
+        timing_kind: "label",
+        kind: "transport",
+        title: "Airport drop-off",
+        presentation: {
+          attach_to: "last_day",
+          position: "end"
+        }
+      }
+    },
+    days: [
+      {
+        id: "day_1",
+        day_number: 1,
+        title: "Hanoi",
+        services: [
+          {
+            id: "service_1",
+            timing_kind: "label",
+            kind: "activity",
+            title: "Old Quarter walk"
+          }
+        ]
+      }
+    ]
+  });
+
+  const presentation = composeTravelPlanForPresentation(normalized, {
+    boundaryLogisticsPlacement: "outside_days"
+  });
+
+  assert.deepEqual(
+    presentation.days.map((day) => ({
+      day_number: day.day_number,
+      boundary_kind: day.boundary_kind || null,
+      boundary_day: day._presentation_boundary_day === true,
+      services: day.services.map((service) => service.id)
+    })),
+    [
+      { day_number: null, boundary_kind: "arrival", boundary_day: true, services: ["arrival_service"] },
+      { day_number: 1, boundary_kind: null, boundary_day: false, services: ["service_1"] },
+      { day_number: null, boundary_kind: "departure", boundary_day: true, services: ["departure_service"] }
+    ]
+  );
+});
+
 test("boundary logistics validation rejects duplicate service ids", () => {
   const result = validateBookingTravelPlanInput({
     boundary_logistics: {

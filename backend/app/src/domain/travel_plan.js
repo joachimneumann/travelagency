@@ -551,21 +551,24 @@ function presentationBoundaryService(service, boundaryKind) {
   };
 }
 
-function presentationBoundaryDay(boundaryService, boundaryKind, dayNumber) {
+function presentationBoundaryDay(boundaryService, boundaryKind, dayNumber, options = {}) {
   const source = boundaryService && typeof boundaryService === "object" && !Array.isArray(boundaryService)
     ? boundaryService
     : {};
   const fallbackTitle = boundaryKind === "departure" ? "Departure" : "Arrival";
+  const outsideDayNumbering = options?.outsideDayNumbering === true;
   return {
     id: `travel_plan_boundary_${boundaryKind}_day`,
-    day_number: dayNumber,
-    title: normalizeOptionalText(source.title) || fallbackTitle,
+    day_number: outsideDayNumbering ? null : dayNumber,
+    boundary_kind: boundaryKind,
+    title: outsideDayNumbering ? null : (normalizeOptionalText(source.title) || fallbackTitle),
     title_i18n: source.title_i18n && typeof source.title_i18n === "object" && !Array.isArray(source.title_i18n)
       ? { ...source.title_i18n }
       : {},
     services: [presentationBoundaryService(boundaryService, boundaryKind)],
     notes: null,
     notes_i18n: {},
+    ...(outsideDayNumbering ? { _presentation_boundary_day: true } : {}),
     _presentation_source: "boundary_logistics"
   };
 }
@@ -613,6 +616,36 @@ function composeBoundaryIntoDays(days, boundaryService, boundaryKind) {
   });
 }
 
+function removeBoundaryFromDays(days, boundaryService, boundaryKind) {
+  if (!Array.isArray(days)) return [];
+  return days.map((day) => {
+    const services = Array.isArray(day?.services) ? day.services : [];
+    return {
+      ...day,
+      services: services.filter((service) => !boundaryServiceTargetAlreadyContains({ services: [service] }, boundaryService, boundaryKind))
+    };
+  });
+}
+
+function composeBoundaryOutsideDays(days, boundaries) {
+  let itineraryDays = Array.isArray(days) ? days : [];
+  const arrival = boundaries?.arrival;
+  const departure = boundaries?.departure;
+  const hasArrival = arrival && arrival.enabled !== false && boundaryServiceHasPresentationContent(arrival);
+  const hasDeparture = departure && departure.enabled !== false && boundaryServiceHasPresentationContent(departure);
+  if (hasArrival) {
+    itineraryDays = removeBoundaryFromDays(itineraryDays, arrival, "arrival");
+  }
+  if (hasDeparture) {
+    itineraryDays = removeBoundaryFromDays(itineraryDays, departure, "departure");
+  }
+  return [
+    ...(hasArrival ? [presentationBoundaryDay(arrival, "arrival", null, { outsideDayNumbering: true })] : []),
+    ...itineraryDays,
+    ...(hasDeparture ? [presentationBoundaryDay(departure, "departure", null, { outsideDayNumbering: true })] : [])
+  ];
+}
+
 function composeTravelPlanForPresentation(rawTravelPlan, options = {}) {
   if (options?.includeBoundaryLogistics === false) {
     return cloneJson(rawTravelPlan, { days: [] });
@@ -628,8 +661,12 @@ function composeTravelPlanForPresentation(rawTravelPlan, options = {}) {
   const boundaries = source.boundary_logistics && typeof source.boundary_logistics === "object" && !Array.isArray(source.boundary_logistics)
     ? source.boundary_logistics
     : {};
-  days = composeBoundaryIntoDays(days, boundaries.arrival, "arrival");
-  days = composeBoundaryIntoDays(days, boundaries.departure, "departure");
+  if (options?.boundaryLogisticsPlacement === "outside_days") {
+    days = composeBoundaryOutsideDays(days, boundaries);
+  } else {
+    days = composeBoundaryIntoDays(days, boundaries.arrival, "arrival");
+    days = composeBoundaryIntoDays(days, boundaries.departure, "departure");
+  }
   return {
     ...cloneJson(source, {}),
     days

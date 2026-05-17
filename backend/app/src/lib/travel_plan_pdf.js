@@ -854,6 +854,7 @@ export function createTravelPlanPdfWriter({
   logoPath = "",
   marketingTourLogoPath = "",
   fallbackImagePath = "",
+  boundaryLogisticsImagePaths = {},
   travelPlanAttachmentsDir = "",
   companyProfile = null,
   composeTravelPlanForPresentation = null
@@ -872,15 +873,17 @@ export function createTravelPlanPdfWriter({
     }
     await mkdir(path.dirname(outputPath), { recursive: true });
     const sourcePlan = travelPlan && typeof travelPlan === "object" ? travelPlan : { days: [] };
+    const includeGuideSection = options?.includeGuideSection !== false;
+    const includeEndingSection = options?.includeEndingSection !== false;
+    const includeMarketingTourBackground = options?.includeMarketingTourBackground === true;
     const plan = typeof composeTravelPlanForPresentation === "function"
-      ? composeTravelPlanForPresentation(sourcePlan)
+      ? composeTravelPlanForPresentation(sourcePlan, {
+          boundaryLogisticsPlacement: includeMarketingTourBackground ? "outside_days" : "stored"
+        })
       : sourcePlan;
     const attachmentPaths = resolveTravelPlanAttachmentPaths(plan, travelPlanAttachmentsDir);
     const heroSubtitle = resolveTravelPlanSubtitle(booking, plan, lang);
     const welcomeText = resolveTravelPlanWelcomeText(booking, lang);
-    const includeGuideSection = options?.includeGuideSection !== false;
-    const includeEndingSection = options?.includeEndingSection !== false;
-    const includeMarketingTourBackground = options?.includeMarketingTourBackground === true;
     const childrenPolicyText = includeEndingSection ? resolveTravelPlanChildrenPolicyText(booking, lang) : "";
     const whatsNotIncludedText = includeEndingSection ? resolveTravelPlanWhatsNotIncludedText(booking, lang) : "";
     const closingText = includeEndingSection ? resolveTravelPlanClosingText(booking, lang) : "";
@@ -898,7 +901,8 @@ export function createTravelPlanPdfWriter({
       rasterizeImage(logoPath, { width: 1000 }).catch(() => null),
       resolveBookingImageForPdf({ booking, readTours, resolveTourImageDiskPath }),
       buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, {
-        resolveServiceImageDiskPath: resolveTravelPlanServiceImageDiskPath
+        resolveServiceImageDiskPath: resolveTravelPlanServiceImageDiskPath,
+        boundaryLogisticsImagePaths
       }),
       guideContext?.photoDiskPath
         ? rasterizeImage(guideContext.photoDiskPath, {

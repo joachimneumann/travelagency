@@ -222,6 +222,10 @@ export function createBackendServices({
     logoPath: collections.logoPngPath,
     marketingTourLogoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.large.transparent.png"),
     fallbackImagePath: collections.fallbackBookingImagePath,
+    boundaryLogisticsImagePaths: {
+      arrival: path.join(repoRoot, "assets", "img", "arrival.png"),
+      departure: path.join(repoRoot, "assets", "img", "departure.png")
+    },
     travelPlanAttachmentsDir: collections.bookingTravelPlanAttachmentsDir,
     companyProfile: runtime.companyProfile,
     composeTravelPlanForPresentation: travelPlanHelpers.composeTravelPlanForPresentation

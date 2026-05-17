@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { drawMarketingTourFramedImage } from "./marketing_tour_one_pager_pdf.js";
 import { pdfImageFileExists, rasterizePdfImage } from "./pdf_image_cache.js";
@@ -16,6 +17,9 @@ const FLUID_TEXT_IMAGE_SERVICE_LIMIT = 2;
 const TRAVEL_PLAN_IMAGE_FRAME_INSET = 8;
 const TRAVEL_PLAN_IMAGE_FRAME_SHAPE_INTENSITY = 0.38;
 const TRAVEL_PLAN_TRIP_LABEL_COLOR = "#F27A1A";
+const BOUNDARY_INLINE_ICON_WIDTH = 27.6;
+const BOUNDARY_INLINE_ICON_HEIGHT = 20.4;
+const BOUNDARY_INLINE_ICON_GAP = 10;
 const DEFAULT_THUMBNAIL_CONCURRENCY = 4;
 
 function safeArray(value) {
@@ -38,23 +42,43 @@ async function rasterizeImage(filePath, { width, height } = {}) {
   return rasterizePdfImage(filePath, { width, height, quality: 88 });
 }
 
+function itemHasExplicitImage(item) {
+  return Boolean(
+    item?.image && typeof item.image === "object" && !Array.isArray(item.image) && textOrNull(item.image.storage_path)
+  ) || safeArray(item?.images).some((image) => image?.is_customer_visible !== false && textOrNull(image?.storage_path));
+}
+
+function isBoundaryLogisticsKind(value) {
+  const boundaryKind = normalizeText(value).toLowerCase();
+  return boundaryKind === "arrival" || boundaryKind === "departure";
+}
+
 export function resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir, options = {}) {
   const candidate = item?.image && typeof item.image === "object" && !Array.isArray(item.image)
     ? item.image
     : safeArray(item?.images)
       .filter((image) => image?.is_customer_visible !== false)
       .find((image) => textOrNull(image?.storage_path));
-  if (!candidate) return null;
-  const storagePath = String(candidate.storage_path || "");
-  const publicBookingRelativePath = extractPublicRelativePath(storagePath, "/public/v1/booking-images/");
-  if (publicBookingRelativePath && bookingImagesDir) return path.resolve(bookingImagesDir, publicBookingRelativePath);
-  if (typeof options.resolveServiceImageDiskPath === "function") {
-    const resolvedPath = options.resolveServiceImageDiskPath(storagePath, item);
-    if (resolvedPath) return resolvedPath;
+  if (candidate) {
+    const storagePath = String(candidate.storage_path || "");
+    const publicBookingRelativePath = extractPublicRelativePath(storagePath, "/public/v1/booking-images/");
+    if (publicBookingRelativePath && bookingImagesDir) return path.resolve(bookingImagesDir, publicBookingRelativePath);
+    if (typeof options.resolveServiceImageDiskPath === "function") {
+      const resolvedPath = options.resolveServiceImageDiskPath(storagePath, item);
+      if (resolvedPath) return resolvedPath;
+    }
+    if (bookingImagesDir) {
+      const relativePath = storagePath.replace(/^\/+/, "");
+      if (relativePath) return path.resolve(bookingImagesDir, relativePath);
+    }
   }
-  if (!bookingImagesDir) return null;
-  const relativePath = storagePath.replace(/^\/+/, "");
-  return relativePath ? path.resolve(bookingImagesDir, relativePath) : null;
+
+  const boundaryKind = normalizeText(item?.boundary_kind).toLowerCase();
+  if (!isBoundaryLogisticsKind(boundaryKind)) return null;
+  const boundaryLogisticsImagePaths = options.boundaryLogisticsImagePaths && typeof options.boundaryLogisticsImagePaths === "object" && !Array.isArray(options.boundaryLogisticsImagePaths)
+    ? options.boundaryLogisticsImagePaths
+    : {};
+  return textOrNull(boundaryLogisticsImagePaths[boundaryKind]);
 }
 
 export async function buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, options = {}) {
@@ -63,11 +87,19 @@ export async function buildTravelPlanItemThumbnailMap(plan, bookingImagesDir, op
   const entries = await mapWithConcurrency(items, concurrency, async (item) => {
     const thumbnailPath = resolveTravelPlanServiceThumbnailPath(item, bookingImagesDir, options);
     if (!thumbnailPath || !(await pdfImageFileExists(thumbnailPath))) return [item.id, null];
-    const thumbnail = await rasterizeImage(thumbnailPath, {
-      width: ITEM_THUMBNAIL_WIDTH * 3,
-      height: ITEM_THUMBNAIL_HEIGHT * 3
-    }).catch(() => null);
-    return [item.id, thumbnail];
+    const boundaryIcon = isBoundaryLogisticsKind(item?.boundary_kind) && !itemHasExplicitImage(item);
+    const thumbnail = boundaryIcon
+      ? { buffer: await readFile(thumbnailPath).catch(() => null) }
+      : await rasterizeImage(thumbnailPath, {
+          width: ITEM_THUMBNAIL_WIDTH * 3,
+          height: ITEM_THUMBNAIL_HEIGHT * 3
+        }).catch(() => null);
+    return [item.id, thumbnail?.buffer
+      ? {
+          ...thumbnail,
+          boundaryIcon
+        }
+      : null];
   });
   return new Map(entries.filter(([, thumbnail]) => thumbnail?.buffer));
 }
@@ -151,9 +183,23 @@ function resolveDayAccommodationTitle(day) {
 }
 
 function dayLabelText(day, lang, pdfT) {
+  const boundaryKind = boundaryPresentationDayKind(day);
+  if (boundaryKind) {
+    return pdfT(
+      lang,
+      `booking.travel_plan.${boundaryKind}`,
+      boundaryKind === "departure" ? "Departure" : "Arrival"
+    );
+  }
   return pdfT(lang, "offer.day_label", "Day {day}", {
     day: Number(day?.day_number || 0) || 1
   });
+}
+
+function boundaryPresentationDayKind(day) {
+  if (day?._presentation_source !== "boundary_logistics" && day?._presentation_boundary_day !== true) return "";
+  const boundaryKind = normalizeText(day?.boundary_kind || safeArray(day?.services || day?.items)[0]?.boundary_kind).toLowerCase();
+  return boundaryKind === "arrival" || boundaryKind === "departure" ? boundaryKind : "";
 }
 
 export function dayHeading(day, lang, pdfT) {
@@ -177,6 +223,22 @@ function travelPlanImageFrameVariant(entry) {
   return Array.from(seed).reduce((sum, char) => sum + char.charCodeAt(0), 0);
 }
 
+function boundaryInlineIcon(entry) {
+  return entry?.kind === "service" && entry?.thumbnail?.boundaryIcon === true && entry.thumbnail?.buffer
+    ? entry.thumbnail
+    : null;
+}
+
+function serviceTextLayout(entry, contentWidth) {
+  const icon = boundaryInlineIcon(entry);
+  const iconColumnWidth = icon ? BOUNDARY_INLINE_ICON_WIDTH + BOUNDARY_INLINE_ICON_GAP : 0;
+  return {
+    icon,
+    textXOffset: iconColumnWidth,
+    textWidth: Math.max(1, contentWidth - iconColumnWidth)
+  };
+}
+
 function imageBoxHeight(doc, entry, contentWidth, fonts, deps) {
   const innerWidth = contentWidth - ITEM_CARD_PADDING * 2;
   const naturalHeight = innerWidth * (ITEM_THUMBNAIL_HEIGHT / ITEM_THUMBNAIL_WIDTH);
@@ -192,8 +254,8 @@ function imageBoxHeight(doc, entry, contentWidth, fonts, deps) {
   }) + 8;
 }
 
-function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
-  const textWidth = contentWidth;
+function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps, entry = null) {
+  const { icon, textWidth } = serviceTextLayout(entry, contentWidth);
   const metaParts = [formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
   const title = textOrNull(item?.title) || deps.pdfT(lang, "offer.item_fallback", "Planned service");
   const details = textOrNull(item?.details);
@@ -205,7 +267,7 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps) {
   if (details) {
     textHeight += 4 + measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2, pdfFontName: deps.pdfFontName });
   }
-  return Math.max(1, textHeight);
+  return Math.max(1, textHeight, icon ? BOUNDARY_INLINE_ICON_HEIGHT : 0);
 }
 
 function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, deps) {
@@ -257,10 +319,18 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
   }
 
   const item = entry?.item || entry;
-  const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, width, deps);
+  const itemHeight = itemBoxHeight(doc, item, fonts, lang, dayDate, width, deps, entry);
+  const { icon, textXOffset, textWidth } = serviceTextLayout(entry, width);
 
-  const innerX = x;
-  const textWidth = width;
+  if (icon?.buffer) {
+    doc.image(icon.buffer, x, y + 1, {
+      fit: [BOUNDARY_INLINE_ICON_WIDTH, BOUNDARY_INLINE_ICON_HEIGHT],
+      align: "center",
+      valign: "center"
+    });
+  }
+
+  const innerX = x + textXOffset;
   let innerY = y;
 
   const metaParts = [formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
@@ -303,9 +373,9 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
 
 function buildTravelPlanDayLayoutEntries(day, itemThumbnailMap) {
   return safeArray(day?.services || day?.items).reduce((layout, item) => {
-    layout.services.push({ kind: "service", item });
     const thumbnail = itemThumbnailMap.get(item?.id) || null;
-    if (thumbnail?.buffer) {
+    layout.services.push({ kind: "service", item, thumbnail: thumbnail?.boundaryIcon === true ? thumbnail : null });
+    if (thumbnail?.buffer && thumbnail.boundaryIcon !== true) {
       layout.images.push({ kind: "image", item, thumbnail });
     }
     return layout;
@@ -350,7 +420,7 @@ function layoutTravelPlanFluidTextImagePair(doc, items, fonts, lang, dayDate, co
     .slice(0, Math.min(FLUID_TEXT_IMAGE_SERVICE_LIMIT, services.length))
     .map((entry) => ({
       entry,
-      itemHeight: itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps)
+      itemHeight: itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps, entry)
     }));
   const pairedTextIndex = textEntries.reduce((matchedIndex, { entry }, index) => (
     findPairedImageIndex(images, entry) >= 0 ? index : matchedIndex
@@ -460,7 +530,7 @@ function layoutTravelPlanItemsForPage(doc, items, fonts, lang, dayDate, columnWi
 
   while (serviceIndex < services.length) {
     const entry = services[serviceIndex];
-    const itemHeight = itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps);
+    const itemHeight = itemBoxHeight(doc, entry.item, fonts, lang, dayDate, columnWidth, deps, entry);
     const pairedImageIndex = findPairedImageIndex(images, entry, placedImageIndexes);
     const pairedImageHeight = pairedImageIndex >= 0
       ? imageBoxHeight(doc, images[pairedImageIndex], columnWidth, fonts, deps)
@@ -526,7 +596,7 @@ function layoutTravelPlanServiceForFullWidthPage(doc, items, fonts, lang, dayDat
     };
   }
   const entries = [];
-  const itemHeight = itemBoxHeight(doc, service.item, fonts, lang, dayDate, contentWidth, deps);
+  const itemHeight = itemBoxHeight(doc, service.item, fonts, lang, dayDate, contentWidth, deps, service);
   if (itemHeight <= availableHeight) entries.push({ entry: service, itemHeight });
 
   return {
@@ -588,11 +658,14 @@ function drawTravelPlanItemStack(doc, startY, contentWidth, pageLayout, fonts, l
 }
 
 function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = false } = {}) {
-  const dateLabel = formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly, deps.pdfT);
+  const boundaryKind = boundaryPresentationDayKind(day);
+  const dateLabel = boundaryKind ? "" : formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly, deps.pdfT);
   const separateDayLabel = deps.separateDayLabel === true;
-  const titleText = separateDayLabel
-    ? dayTitleText(day, lang, deps.pdfT)
-    : dayHeading(day, lang, deps.pdfT);
+  const titleText = boundaryKind && day?._presentation_boundary_day === true && separateDayLabel
+    ? ""
+    : separateDayLabel
+      ? dayTitleText(day, lang, deps.pdfT)
+      : dayHeading(day, lang, deps.pdfT);
   const titleWidth = doc.page.width - deps.pageMargin * 2 - 150;
   const titleY = separateDayLabel ? y + 15 : y;
   const titleHeight = measureTextHeight(doc, titleText, {
@@ -625,13 +698,15 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
       .text(dayLabel, deps.pageMargin + 0.28, y, dayLabelOptions);
   }
 
-  doc
-    .font(deps.pdfFontName("bold", fonts))
-    .fontSize(15)
-    .fillColor(deps.colors.textStrong)
-    .text(titleText, deps.pageMargin, titleY, deps.pdfTextOptions(lang, {
-      width: titleWidth
-    }));
+  if (titleText) {
+    doc
+      .font(deps.pdfFontName("bold", fonts))
+      .fontSize(15)
+      .fillColor(deps.colors.textStrong)
+      .text(titleText, deps.pageMargin, titleY, deps.pdfTextOptions(lang, {
+        width: titleWidth
+      }));
+  }
   if (dateLabel) {
     doc
       .font(deps.pdfFontName("regular", fonts))
