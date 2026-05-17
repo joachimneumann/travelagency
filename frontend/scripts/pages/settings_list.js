@@ -57,6 +57,20 @@ const els = {
   settingsObservabilityRefreshBtn: document.getElementById("settingsObservabilityRefreshBtn"),
   settingsLoggedInUsers: document.getElementById("settingsLoggedInUsers"),
   settingsLastChangedBooking: document.getElementById("settingsLastChangedBooking"),
+  translationPolicyPanel: document.getElementById("translationPolicyPanel"),
+  translationPolicyStatus: document.getElementById("translationPolicyStatus"),
+  translationPolicyReloadBtn: document.getElementById("translationPolicyReloadBtn"),
+  translationPolicySaveBtn: document.getElementById("translationPolicySaveBtn"),
+  translationPhraseOverridesJson: document.getElementById("translationPhraseOverridesJson"),
+  translationPhraseOverridesMeta: document.getElementById("translationPhraseOverridesMeta"),
+  translationPhraseOverrideLang: document.getElementById("translationPhraseOverrideLang"),
+  translationPhraseOverrideSource: document.getElementById("translationPhraseOverrideSource"),
+  translationPhraseOverrideTarget: document.getElementById("translationPhraseOverrideTarget"),
+  translationPhraseOverrideAddBtn: document.getElementById("translationPhraseOverrideAddBtn"),
+  translationPhraseOverrideClearBtn: document.getElementById("translationPhraseOverrideClearBtn"),
+  translationPhraseOverridesRows: document.getElementById("translationPhraseOverridesRows"),
+  translationProtectedTermsJson: document.getElementById("translationProtectedTermsJson"),
+  translationProtectedTermsMeta: document.getElementById("translationProtectedTermsMeta"),
   settingsPanel: document.getElementById("settingsPanel"),
   staffStatus: document.getElementById("staffStatus"),
   staffTable: document.getElementById("staffTable"),
@@ -131,6 +145,23 @@ const QUALIFICATION_LANGUAGE_OPTIONS = Object.freeze(
     }))
     .filter((entry) => entry.value)
 );
+
+const PHRASE_OVERRIDE_LANGUAGE_OPTIONS = Object.freeze(
+  (Array.isArray(window.ASIATRAVELPLAN_LANGUAGE_CATALOG?.languages)
+    && window.ASIATRAVELPLAN_LANGUAGE_CATALOG.languages.length
+    ? window.ASIATRAVELPLAN_LANGUAGE_CATALOG.languages
+    : CUSTOMER_CONTENT_LANGUAGES)
+    .filter((entry) => entry?.customerContentSupported !== false)
+    .map((entry) => ({
+      value: normalizeCatalogLanguageCode(entry?.code, { fallback: "" }),
+      label: normalizeText(entry?.shortLabel) || normalizeText(entry?.nativeLabel) || normalizeText(entry?.apiValue) || normalizeText(entry?.code).toUpperCase()
+    }))
+    .filter((entry) => entry.value && entry.value !== "en")
+    .sort((left, right) => String(left.label || "").localeCompare(String(right.label || ""), "en", { sensitivity: "base" }))
+);
+
+const PHRASE_OVERRIDE_LANGUAGE_CODES = Object.freeze(PHRASE_OVERRIDE_LANGUAGE_OPTIONS.map((option) => option.value));
+const TRANSLATION_PHRASE_OVERRIDES_SCHEMA = "translation-phrase-overrides/v1";
 
 function currentStaffSourceLang() {
   return normalizeCatalogLanguageCode(
@@ -215,6 +246,8 @@ const state = {
   roles: [],
   permissions: {
     canReadObservability: false,
+    canReadTranslationPolicy: false,
+    canEditTranslationPolicy: false,
     canReadSettings: false,
     canReadStaffProfiles: false,
     canEditStaffProfiles: false,
@@ -229,6 +262,23 @@ const state = {
     sessionCount: 0,
     userCount: 0,
     latestChangedBooking: null
+  },
+  translationPolicy: {
+    loaded: false,
+    loading: false,
+    saving: false,
+    canWrite: false,
+    phraseOverridesRevision: "",
+    protectedTermsRevision: "",
+    phraseOverridesItemCount: 0,
+    protectedTermsItemCount: 0,
+    phraseOverridesPath: "",
+    protectedTermsPath: "",
+    phraseOverridesJson: "",
+    protectedTermsJson: "",
+    phraseOverridesOriginalJson: "",
+    protectedTermsOriginalJson: "",
+    phraseOverrideEditIndex: -1
   },
   keycloakUsers: [],
   staffProfilesByUsername: {},
@@ -443,6 +493,449 @@ function clearObservabilityStatus() {
   showObservabilityStatus("", false);
 }
 
+function showTranslationPolicyStatus(message = "", isError = false) {
+  if (!els.translationPolicyStatus) return;
+  els.translationPolicyStatus.textContent = normalizeText(message);
+  els.translationPolicyStatus.classList.toggle("is-error", Boolean(isError));
+}
+
+function formatTranslationPolicyJson(value) {
+  return `${JSON.stringify(value && typeof value === "object" ? value : {}, null, 2)}\n`;
+}
+
+function updatePhraseOverridesMeta() {
+  if (!els.translationPhraseOverridesMeta) return;
+  els.translationPhraseOverridesMeta.textContent = state.translationPolicy.phraseOverridesPath
+    ? `${state.translationPolicy.phraseOverridesItemCount} items | ${state.translationPolicy.phraseOverridesPath}`
+    : "";
+}
+
+function updateProtectedTermsMeta() {
+  if (!els.translationProtectedTermsMeta) return;
+  els.translationProtectedTermsMeta.textContent = state.translationPolicy.protectedTermsPath
+    ? `${state.translationPolicy.protectedTermsItemCount} terms | ${state.translationPolicy.protectedTermsPath}`
+    : "";
+}
+
+function normalizePhraseOverrideItem(item) {
+  if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+  const sourcePhrase = normalizeText(item.source_phrase || item.sourcePhrase);
+  const targetLang = normalizeText(item.target_lang || item.targetLang).toLowerCase();
+  const targetPhrase = normalizeText(item.target_phrase || item.targetPhrase);
+  if (!sourcePhrase || !targetLang || !targetPhrase) return null;
+  return {
+    source_phrase: sourcePhrase,
+    target_lang: targetLang,
+    target_phrase: targetPhrase
+  };
+}
+
+function sortPhraseOverrideItems(left, right) {
+  return [
+    normalizeText(left?.target_lang).localeCompare(normalizeText(right?.target_lang), "en"),
+    normalizeText(left?.source_phrase).localeCompare(normalizeText(right?.source_phrase), "en", { sensitivity: "base" })
+  ].find((value) => value !== 0) || 0;
+}
+
+function normalizePhraseOverrideItems(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => normalizePhraseOverrideItem(item))
+    .filter(Boolean)
+    .sort(sortPhraseOverrideItems);
+}
+
+function parsePhraseOverrideItemsFromJson(text) {
+  const payload = parseTranslationPolicyJson(text, "translation_phrase_overrides.json");
+  return normalizePhraseOverrideItems(Array.isArray(payload?.items) ? payload.items : []);
+}
+
+function phraseOverridesPayloadFromItems(items) {
+  return {
+    schema: TRANSLATION_PHRASE_OVERRIDES_SCHEMA,
+    schema_version: 1,
+    items: normalizePhraseOverrideItems(items)
+  };
+}
+
+function phraseOverrideLanguageOptions(selectedValue = "") {
+  const selectedLang = normalizeText(selectedValue).toLowerCase();
+  const options = [...PHRASE_OVERRIDE_LANGUAGE_OPTIONS];
+  if (selectedLang && !options.some((option) => option.value === selectedLang)) {
+    options.unshift({ value: selectedLang, label: selectedLang.toUpperCase() });
+  }
+  return options;
+}
+
+function phraseOverrideLanguageLabel(lang) {
+  const normalizedLang = normalizeText(lang).toLowerCase();
+  return normalizeText(PHRASE_OVERRIDE_LANGUAGE_OPTIONS.find((option) => option.value === normalizedLang)?.label)
+    || normalizedLang.toUpperCase();
+}
+
+function renderPhraseOverrideLanguageOptions(selectedValue = "") {
+  if (!(els.translationPhraseOverrideLang instanceof HTMLSelectElement)) return;
+  const currentValue = normalizeText(selectedValue || els.translationPhraseOverrideLang.value).toLowerCase();
+  const fallbackValue = PHRASE_OVERRIDE_LANGUAGE_CODES.includes("vi")
+    ? "vi"
+    : (PHRASE_OVERRIDE_LANGUAGE_CODES[0] || "");
+  const selectedLang = currentValue || fallbackValue;
+  els.translationPhraseOverrideLang.innerHTML = phraseOverrideLanguageOptions(selectedLang)
+    .map((option) => `
+      <option value="${escapeHtml(option.value)}" ${option.value === selectedLang ? "selected" : ""}>${escapeHtml(option.label)}</option>
+    `).join("");
+}
+
+function setPhraseOverrideFormMode() {
+  if (!els.translationPhraseOverrideAddBtn) return;
+  els.translationPhraseOverrideAddBtn.textContent = state.translationPolicy.phraseOverrideEditIndex >= 0
+    ? backendT("backend.settings.translation_policy.update_phrase", "Update phrase")
+    : backendT("backend.settings.translation_policy.add_phrase", "Add phrase");
+}
+
+function resetPhraseOverrideForm() {
+  state.translationPolicy.phraseOverrideEditIndex = -1;
+  if (els.translationPhraseOverrideSource instanceof HTMLInputElement) {
+    els.translationPhraseOverrideSource.value = "";
+  }
+  if (els.translationPhraseOverrideTarget instanceof HTMLInputElement) {
+    els.translationPhraseOverrideTarget.value = "";
+  }
+  renderPhraseOverrideLanguageOptions();
+  setPhraseOverrideFormMode();
+}
+
+function loadPhraseOverrideForm(index) {
+  const items = parsePhraseOverrideItemsFromJson(state.translationPolicy.phraseOverridesJson);
+  const item = items[index];
+  if (!item) return;
+  state.translationPolicy.phraseOverrideEditIndex = index;
+  renderPhraseOverrideLanguageOptions(item.target_lang);
+  if (els.translationPhraseOverrideLang instanceof HTMLSelectElement) {
+    els.translationPhraseOverrideLang.value = item.target_lang;
+  }
+  if (els.translationPhraseOverrideSource instanceof HTMLInputElement) {
+    els.translationPhraseOverrideSource.value = item.source_phrase;
+    els.translationPhraseOverrideSource.focus();
+  }
+  if (els.translationPhraseOverrideTarget instanceof HTMLInputElement) {
+    els.translationPhraseOverrideTarget.value = item.target_phrase;
+  }
+  setPhraseOverrideFormMode();
+  updateTranslationPolicyControls();
+}
+
+function writePhraseOverrideItemsToJson(items) {
+  const normalizedItems = normalizePhraseOverrideItems(items);
+  const json = formatTranslationPolicyJson(phraseOverridesPayloadFromItems(normalizedItems));
+  state.translationPolicy.phraseOverridesJson = json;
+  state.translationPolicy.phraseOverridesItemCount = normalizedItems.length;
+  if (els.translationPhraseOverridesJson instanceof HTMLTextAreaElement) {
+    els.translationPhraseOverridesJson.value = json;
+  }
+  renderPhraseOverridesTable();
+  updatePhraseOverridesMeta();
+}
+
+function savePhraseOverrideFromForm() {
+  const busy = state.translationPolicy.loading || state.translationPolicy.saving;
+  const canEdit = state.permissions.canEditTranslationPolicy && state.translationPolicy.canWrite;
+  if (!canEdit || busy) return;
+
+  const allowedCodes = PHRASE_OVERRIDE_LANGUAGE_CODES.length ? PHRASE_OVERRIDE_LANGUAGE_CODES : undefined;
+  const targetLang = normalizeCatalogLanguageCode(els.translationPhraseOverrideLang?.value, {
+    allowedCodes,
+    fallback: allowedCodes?.includes("vi") ? "vi" : allowedCodes?.[0]
+  });
+  const sourcePhrase = normalizeText(els.translationPhraseOverrideSource?.value);
+  const targetPhrase = normalizeText(els.translationPhraseOverrideTarget?.value);
+  if (!targetLang || !sourcePhrase || !targetPhrase) {
+    showTranslationPolicyStatus(
+      backendT("backend.settings.translation_policy.phrase_required", "Target language, source phrase, and target phrase are required."),
+      true
+    );
+    return;
+  }
+
+  let items = [];
+  try {
+    items = parsePhraseOverrideItemsFromJson(state.translationPolicy.phraseOverridesJson);
+  } catch (error) {
+    showTranslationPolicyStatus(error?.message || "Invalid translation_phrase_overrides.json.", true);
+    return;
+  }
+
+  const nextItem = {
+    source_phrase: sourcePhrase,
+    target_lang: targetLang,
+    target_phrase: targetPhrase
+  };
+  const editIndex = state.translationPolicy.phraseOverrideEditIndex;
+  if (Number.isInteger(editIndex) && editIndex >= 0 && editIndex < items.length) {
+    items.splice(editIndex, 1, nextItem);
+  } else {
+    const existingIndex = items.findIndex((item) => item.target_lang === targetLang && item.source_phrase === sourcePhrase);
+    if (existingIndex >= 0) {
+      items.splice(existingIndex, 1, nextItem);
+    } else {
+      items.push(nextItem);
+    }
+  }
+
+  writePhraseOverrideItemsToJson(items);
+  resetPhraseOverrideForm();
+  showTranslationPolicyStatus(translationPolicyDirty()
+    ? backendT("backend.settings.translation_policy.unsaved", "Unsaved changes.")
+    : backendT("backend.settings.translation_policy.loaded", "Translation policy loaded."));
+  updateTranslationPolicyControls();
+}
+
+function deletePhraseOverride(index) {
+  const busy = state.translationPolicy.loading || state.translationPolicy.saving;
+  const canEdit = state.permissions.canEditTranslationPolicy && state.translationPolicy.canWrite;
+  if (!canEdit || busy) return;
+  let items = [];
+  try {
+    items = parsePhraseOverrideItemsFromJson(state.translationPolicy.phraseOverridesJson);
+  } catch (error) {
+    showTranslationPolicyStatus(error?.message || "Invalid translation_phrase_overrides.json.", true);
+    return;
+  }
+  if (!Number.isInteger(index) || index < 0 || index >= items.length) return;
+  items.splice(index, 1);
+  writePhraseOverrideItemsToJson(items);
+  resetPhraseOverrideForm();
+  showTranslationPolicyStatus(backendT("backend.settings.translation_policy.unsaved", "Unsaved changes."));
+  updateTranslationPolicyControls();
+}
+
+function renderPhraseOverridesTable() {
+  if (!els.translationPhraseOverridesRows) return;
+  let items = [];
+  let parseError = "";
+  try {
+    items = parsePhraseOverrideItemsFromJson(state.translationPolicy.phraseOverridesJson || "{}");
+  } catch (error) {
+    parseError = error?.message || "Invalid translation_phrase_overrides.json.";
+  }
+
+  if (parseError) {
+    els.translationPhraseOverridesRows.innerHTML = `
+      <tr>
+        <td class="settings-phrase-overrides__invalid" colspan="4">${escapeHtml(parseError)}</td>
+      </tr>
+    `;
+    return;
+  }
+
+  state.translationPolicy.phraseOverridesItemCount = items.length;
+  updatePhraseOverridesMeta();
+  const busy = state.translationPolicy.loading || state.translationPolicy.saving;
+  const canEdit = state.permissions.canEditTranslationPolicy && state.translationPolicy.canWrite;
+  const disabled = !canEdit || busy ? "disabled" : "";
+
+  if (!items.length) {
+    els.translationPhraseOverridesRows.innerHTML = `
+      <tr>
+        <td class="settings-phrase-overrides__empty" colspan="4">${escapeHtml(backendT("backend.settings.translation_policy.no_phrases", "No phrase overrides."))}</td>
+      </tr>
+    `;
+    return;
+  }
+
+  els.translationPhraseOverridesRows.innerHTML = items.map((item, index) => `
+    <tr>
+      <td class="settings-phrase-overrides__lang">${escapeHtml(phraseOverrideLanguageLabel(item.target_lang))}</td>
+      <td class="settings-phrase-overrides__phrase">${escapeHtml(item.source_phrase)}</td>
+      <td class="settings-phrase-overrides__phrase">${escapeHtml(item.target_phrase)}</td>
+      <td class="settings-phrase-overrides__actions">
+        <button class="btn btn-ghost settings-phrase-overrides__edit-btn" type="button" data-phrase-override-edit="${index}" ${disabled}>${escapeHtml(backendT("common.edit", "Edit"))}</button>
+        <button class="btn btn-ghost offer-remove-btn" type="button" data-phrase-override-delete="${index}" aria-label="${escapeHtml(backendT("backend.settings.translation_policy.delete_phrase", "Delete phrase override"))}" title="${escapeHtml(backendT("backend.settings.translation_policy.delete_phrase", "Delete phrase override"))}" ${disabled}>&times;</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+function handlePhraseOverridesTableClick(event) {
+  const target = event.target instanceof Element ? event.target : null;
+  if (!target) return;
+  const editButton = target.closest("[data-phrase-override-edit]");
+  if (editButton) {
+    loadPhraseOverrideForm(Number(editButton.getAttribute("data-phrase-override-edit")));
+    return;
+  }
+  const deleteButton = target.closest("[data-phrase-override-delete]");
+  if (deleteButton) {
+    deletePhraseOverride(Number(deleteButton.getAttribute("data-phrase-override-delete")));
+  }
+}
+
+function translationPolicyDirty() {
+  return normalizeText(state.translationPolicy.phraseOverridesJson) !== normalizeText(state.translationPolicy.phraseOverridesOriginalJson)
+    || normalizeText(state.translationPolicy.protectedTermsJson) !== normalizeText(state.translationPolicy.protectedTermsOriginalJson);
+}
+
+function syncTranslationPolicyStateFromDom() {
+  if (els.translationPhraseOverridesJson) {
+    state.translationPolicy.phraseOverridesJson = String(els.translationPhraseOverridesJson.value || "");
+  }
+  if (els.translationProtectedTermsJson) {
+    state.translationPolicy.protectedTermsJson = String(els.translationProtectedTermsJson.value || "");
+  }
+}
+
+function updateTranslationPolicyControls() {
+  const busy = state.translationPolicy.loading || state.translationPolicy.saving;
+  const canRead = state.permissions.canReadTranslationPolicy;
+  const canEdit = state.permissions.canEditTranslationPolicy && state.translationPolicy.canWrite;
+  if (els.translationPolicyReloadBtn) {
+    els.translationPolicyReloadBtn.disabled = !canRead || busy;
+  }
+  if (els.translationPolicySaveBtn) {
+    els.translationPolicySaveBtn.disabled = !canEdit || busy || !translationPolicyDirty();
+  }
+  for (const textarea of [els.translationPhraseOverridesJson, els.translationProtectedTermsJson]) {
+    if (!(textarea instanceof HTMLTextAreaElement)) continue;
+    textarea.disabled = !canRead || state.translationPolicy.loading;
+    textarea.readOnly = !canEdit || busy;
+  }
+  if (els.translationPhraseOverrideLang instanceof HTMLSelectElement) {
+    els.translationPhraseOverrideLang.disabled = !canEdit || busy;
+  }
+  for (const input of [els.translationPhraseOverrideSource, els.translationPhraseOverrideTarget]) {
+    if (!(input instanceof HTMLInputElement)) continue;
+    input.disabled = !canEdit || busy;
+    input.readOnly = !canEdit || busy;
+  }
+  for (const button of [els.translationPhraseOverrideAddBtn, els.translationPhraseOverrideClearBtn]) {
+    if (!(button instanceof HTMLButtonElement)) continue;
+    button.disabled = !canEdit || busy;
+  }
+  els.translationPhraseOverridesRows?.querySelectorAll("button").forEach((button) => {
+    if (button instanceof HTMLButtonElement) {
+      button.disabled = !canEdit || busy;
+    }
+  });
+}
+
+function renderTranslationPolicyEditor() {
+  renderPhraseOverrideLanguageOptions();
+  if (els.translationPhraseOverridesJson && els.translationPhraseOverridesJson.value !== state.translationPolicy.phraseOverridesJson) {
+    els.translationPhraseOverridesJson.value = state.translationPolicy.phraseOverridesJson;
+  }
+  if (els.translationProtectedTermsJson && els.translationProtectedTermsJson.value !== state.translationPolicy.protectedTermsJson) {
+    els.translationProtectedTermsJson.value = state.translationPolicy.protectedTermsJson;
+  }
+  renderPhraseOverridesTable();
+  setPhraseOverrideFormMode();
+  updatePhraseOverridesMeta();
+  updateProtectedTermsMeta();
+  updateTranslationPolicyControls();
+}
+
+function applyTranslationPolicyPayload(payload) {
+  const phraseJson = formatTranslationPolicyJson(payload?.phrase_overrides?.data || {});
+  const protectedJson = formatTranslationPolicyJson(payload?.protected_terms?.data || {});
+  state.translationPolicy = {
+    ...state.translationPolicy,
+    loaded: true,
+    canWrite: payload?.permissions?.can_write === true,
+    phraseOverridesRevision: normalizeText(payload?.phrase_overrides?.revision),
+    protectedTermsRevision: normalizeText(payload?.protected_terms?.revision),
+    phraseOverridesItemCount: Number(payload?.phrase_overrides?.item_count || 0),
+    protectedTermsItemCount: Number(payload?.protected_terms?.item_count || 0),
+    phraseOverridesPath: normalizeText(payload?.phrase_overrides?.path),
+    protectedTermsPath: normalizeText(payload?.protected_terms?.path),
+    phraseOverridesJson: phraseJson,
+    protectedTermsJson: protectedJson,
+    phraseOverridesOriginalJson: phraseJson,
+    protectedTermsOriginalJson: protectedJson,
+    phraseOverrideEditIndex: -1
+  };
+}
+
+async function loadTranslationPolicyEditor() {
+  if (!state.permissions.canReadTranslationPolicy) return;
+  state.translationPolicy.loading = true;
+  showTranslationPolicyStatus(backendT("backend.settings.translation_policy.loading", "Loading translation policy..."));
+  updateTranslationPolicyControls();
+  try {
+    const payload = await fetchApiJson("/api/v1/static-translations/policy", {
+      apiBase,
+      onError: (message) => showTranslationPolicyStatus(message, true),
+      connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API."),
+      includeDetailInError: true
+    });
+    if (!payload) return;
+    applyTranslationPolicyPayload(payload);
+    renderTranslationPolicyEditor();
+    showTranslationPolicyStatus(payload?.permissions?.can_write === true
+      ? backendT("backend.settings.translation_policy.loaded", "Translation policy loaded.")
+      : backendT("backend.settings.translation_policy.read_only", "Translation policy is read-only in this environment."));
+  } finally {
+    state.translationPolicy.loading = false;
+    updateTranslationPolicyControls();
+  }
+}
+
+function parseTranslationPolicyJson(text, label) {
+  try {
+    const parsed = JSON.parse(String(text || ""));
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error(`${label} must be a JSON object.`);
+    }
+    return parsed;
+  } catch (error) {
+    throw new Error(`${label}: ${error?.message || "Invalid JSON."}`);
+  }
+}
+
+async function saveTranslationPolicyEditor() {
+  if (!state.permissions.canEditTranslationPolicy || state.translationPolicy.saving) return;
+  syncTranslationPolicyStateFromDom();
+  if (!translationPolicyDirty()) return;
+
+  let body = {};
+  try {
+    if (normalizeText(state.translationPolicy.phraseOverridesJson) !== normalizeText(state.translationPolicy.phraseOverridesOriginalJson)) {
+      body.phrase_overrides = {
+        expected_revision: state.translationPolicy.phraseOverridesRevision,
+        data: parseTranslationPolicyJson(state.translationPolicy.phraseOverridesJson, "translation_phrase_overrides.json")
+      };
+    }
+    if (normalizeText(state.translationPolicy.protectedTermsJson) !== normalizeText(state.translationPolicy.protectedTermsOriginalJson)) {
+      body.protected_terms = {
+        expected_revision: state.translationPolicy.protectedTermsRevision,
+        data: parseTranslationPolicyJson(state.translationPolicy.protectedTermsJson, "translation_protected_terms.json")
+      };
+    }
+  } catch (error) {
+    showTranslationPolicyStatus(error?.message || "Invalid translation policy JSON.", true);
+    return;
+  }
+
+  state.translationPolicy.saving = true;
+  showTranslationPolicyStatus(backendT("backend.settings.translation_policy.saving", "Saving translation policy..."));
+  updateTranslationPolicyControls();
+  try {
+    const payload = await fetchApiJson("/api/v1/static-translations/policy", {
+      apiBase,
+      method: "PATCH",
+      body,
+      onError: (message) => showTranslationPolicyStatus(message, true),
+      connectionErrorMessage: backendT("booking.error.connect", "Could not connect to backend API."),
+      includeDetailInError: true
+    });
+    if (!payload) return;
+    applyTranslationPolicyPayload(payload);
+    renderTranslationPolicyEditor();
+    showTranslationPolicyStatus(backendT("backend.settings.translation_policy.saved", "Translation policy saved."));
+    showError("");
+  } finally {
+    state.translationPolicy.saving = false;
+    updateTranslationPolicyControls();
+  }
+}
+
 function updateObservabilityRefreshButtonState() {
   if (!els.settingsObservabilityRefreshBtn) return;
   els.settingsObservabilityRefreshBtn.disabled = !state.permissions.canReadObservability || state.observabilityLoading;
@@ -611,6 +1104,8 @@ async function init() {
       refreshNav: refreshBackendNavElements,
       computePermissions: (roles) => ({
         canReadObservability: roles.includes(ROLES.ADMIN),
+        canReadTranslationPolicy: roles.includes(ROLES.ADMIN),
+        canEditTranslationPolicy: roles.includes(ROLES.ADMIN),
         canReadStaffProfiles: roles.includes(ROLES.ADMIN),
         canEditStaffProfiles: roles.includes(ROLES.ADMIN),
         canReadLocations: roles.includes(ROLES.ADMIN),
@@ -630,6 +1125,8 @@ async function init() {
     state.roles = authState.roles;
     state.permissions = {
       canReadObservability: Boolean(authState.permissions?.canReadObservability),
+      canReadTranslationPolicy: Boolean(authState.permissions?.canReadTranslationPolicy),
+      canEditTranslationPolicy: Boolean(authState.permissions?.canEditTranslationPolicy),
       canReadSettings: Boolean(authState.permissions?.canReadSettings),
       canReadStaffProfiles: Boolean(authState.permissions?.canReadStaffProfiles),
       canEditStaffProfiles: Boolean(authState.permissions?.canEditStaffProfiles),
@@ -645,6 +1142,7 @@ async function init() {
     if (state.permissions.canReadSettings) {
       await Promise.all([
         state.permissions.canReadObservability ? loadObservability() : Promise.resolve(),
+        state.permissions.canReadTranslationPolicy ? loadTranslationPolicyEditor() : Promise.resolve(),
         state.permissions.canReadStaffProfiles ? loadStaffDirectoryEntries() : Promise.resolve(),
         state.permissions.canEditStaffProfiles ? loadDestinationOptions() : Promise.resolve(),
         state.permissions.canReadLocations ? loadLocationCatalog().then(() => initLocationUsageCountsLazyLoad()) : Promise.resolve(),
@@ -666,6 +1164,7 @@ function handleBackendLanguageChanged() {
   renderPermissionScopedSections();
   updateStatusCopy();
   renderObservability();
+  renderTranslationPolicyEditor();
   renderLocationManager();
   renderEmergencyAddCountryOptions();
   renderEmergencyEditor();
@@ -677,6 +1176,33 @@ function bindEvents() {
   els.settingsObservabilityRefreshBtn?.addEventListener("click", () => {
     void loadObservability();
   });
+  els.translationPolicyReloadBtn?.addEventListener("click", () => {
+    if (translationPolicyDirty() && !window.confirm("Discard unsaved translation policy edits and reload?")) return;
+    void loadTranslationPolicyEditor();
+  });
+  els.translationPolicySaveBtn?.addEventListener("click", () => {
+    void saveTranslationPolicyEditor();
+  });
+  for (const textarea of [els.translationPhraseOverridesJson, els.translationProtectedTermsJson]) {
+    textarea?.addEventListener("input", () => {
+      syncTranslationPolicyStateFromDom();
+      if (textarea === els.translationPhraseOverridesJson) {
+        state.translationPolicy.phraseOverrideEditIndex = -1;
+        renderPhraseOverridesTable();
+        setPhraseOverrideFormMode();
+      }
+      showTranslationPolicyStatus(translationPolicyDirty()
+        ? backendT("backend.settings.translation_policy.unsaved", "Unsaved changes.")
+        : backendT("backend.settings.translation_policy.loaded", "Translation policy loaded."));
+      updateTranslationPolicyControls();
+    });
+  }
+  els.translationPhraseOverrideAddBtn?.addEventListener("click", savePhraseOverrideFromForm);
+  els.translationPhraseOverrideClearBtn?.addEventListener("click", () => {
+    resetPhraseOverrideForm();
+    updateTranslationPolicyControls();
+  });
+  els.translationPhraseOverridesRows?.addEventListener("click", handlePhraseOverridesTableClick);
   els.staffTable?.addEventListener("click", handleStaffTableClick);
   els.staffTable?.addEventListener("keydown", handleStaffTableKeydown);
   els.locationManagerSaveBtn?.addEventListener("click", () => {
@@ -867,6 +1393,9 @@ function bindEvents() {
 function renderPermissionScopedSections() {
   if (els.settingsObservabilityPanel) {
     els.settingsObservabilityPanel.hidden = !state.permissions.canReadObservability;
+  }
+  if (els.translationPolicyPanel) {
+    els.translationPolicyPanel.hidden = !state.permissions.canReadTranslationPolicy;
   }
   if (els.settingsPanel) {
     els.settingsPanel.hidden = !state.permissions.canReadStaffProfiles;

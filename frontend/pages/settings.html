@@ -96,6 +96,67 @@
             <p class="micro settings-observability__hint">Current-process only: this list is cleared when the backend restarts.</p>
           </section>
 
+          <section class="backend-section settings-translation-policy" id="translationPolicyPanel" hidden>
+            <div class="settings-translation-policy__head">
+              <div>
+                <h2 class="section-title u-title-medium">Translation policy</h2>
+                <p class="micro">Edit the phrase override and protected-term JSON files used by translation generation.</p>
+              </div>
+              <div class="settings-translation-policy__actions">
+                <p class="micro settings-translation-policy__status" id="translationPolicyStatus" role="status" aria-live="polite"></p>
+                <div class="settings-translation-policy__buttons">
+                  <button class="btn btn-ghost" id="translationPolicyReloadBtn" type="button">Reload</button>
+                  <button class="btn btn-primary" id="translationPolicySaveBtn" type="button" disabled data-i18n-id="common.save">Save</button>
+                </div>
+              </div>
+            </div>
+            <div class="settings-translation-policy__grid">
+              <div class="field full settings-translation-policy__field">
+                <label class="field-label" for="translationPhraseOverridesJson">translation_phrase_overrides.json</label>
+                <div class="settings-phrase-overrides" id="translationPhraseOverridesEditor">
+                  <div class="settings-phrase-overrides__form">
+                    <div class="field">
+                      <label class="field-label" for="translationPhraseOverrideLang">Target language</label>
+                      <select id="translationPhraseOverrideLang"></select>
+                    </div>
+                    <div class="field">
+                      <label class="field-label" for="translationPhraseOverrideSource">Source phrase</label>
+                      <input id="translationPhraseOverrideSource" type="text" autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div class="field">
+                      <label class="field-label" for="translationPhraseOverrideTarget">Target phrase</label>
+                      <input id="translationPhraseOverrideTarget" type="text" autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div class="settings-phrase-overrides__form-actions">
+                      <button class="btn btn-primary" id="translationPhraseOverrideAddBtn" type="button">Add phrase</button>
+                      <button class="btn btn-ghost" id="translationPhraseOverrideClearBtn" type="button">Clear</button>
+                    </div>
+                  </div>
+                  <div class="settings-phrase-overrides__table-wrap">
+                    <table class="backend-table settings-phrase-overrides__table">
+                      <thead>
+                        <tr>
+                          <th>Lang</th>
+                          <th>Source phrase</th>
+                          <th>Target phrase</th>
+                          <th class="settings-phrase-overrides__actions-col">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody id="translationPhraseOverridesRows"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <textarea id="translationPhraseOverridesJson" spellcheck="false" autocomplete="off" data-translation-policy-field="phrase_overrides"></textarea>
+                <p class="micro settings-translation-policy__meta" id="translationPhraseOverridesMeta"></p>
+              </div>
+              <div class="field full settings-translation-policy__field">
+                <label class="field-label" for="translationProtectedTermsJson">translation_protected_terms.json</label>
+                <textarea id="translationProtectedTermsJson" spellcheck="false" autocomplete="off" data-translation-policy-field="protected_terms"></textarea>
+                <p class="micro settings-translation-policy__meta" id="translationProtectedTermsMeta"></p>
+              </div>
+            </div>
+          </section>
+
           <section class="backend-section settings-location-manager" id="locationManagerPanel" hidden>
             <div class="settings-destination-publication__head">
               <div>

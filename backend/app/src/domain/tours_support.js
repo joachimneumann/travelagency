@@ -93,7 +93,6 @@ export function createTourHelpers({ toursDir, safeInt, normalizeMarketingTourTra
       tour_card_image_ids: Array.isArray(value?.tour_card_image_ids)
         ? value.tour_card_image_ids.map((entry) => normalizeText(entry)).filter(Boolean)
         : [],
-      tour_card_primary_image_id: normalizeText(value?.tour_card_primary_image_id) || null,
       days: Array.isArray(value?.days) ? value.days : []
     };
   }

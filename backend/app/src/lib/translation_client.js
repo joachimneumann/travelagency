@@ -9,6 +9,12 @@ import {
   normalizeStoredTranslationProtectedTerms,
   normalizeTranslationProtectedTerms
 } from "./translation_protected_terms.js";
+import {
+  createTranslationPhraseOverrideIndex,
+  normalizeStoredTranslationPhraseOverrides,
+  normalizeTranslationPhraseOverrideItems,
+  translationPhraseOverridesForTargetLang
+} from "./translation_phrase_overrides.js";
 
 function nowMs() {
   return Date.now();
@@ -195,16 +201,16 @@ function cloneTranslationResult(result) {
   };
 }
 
-const PROTECTED_TERM_PLACEHOLDER_PATTERN = /\[\[ATP_PROTECTED_TERM_\d+\]\]/g;
+const TRANSLATION_PLACEHOLDER_PATTERN = /\[\[ATP_(?:PROTECTED_TERM|PHRASE_OVERRIDE)_\d+\]\]/g;
 
-function replaceOutsideProtectedTermPlaceholders(value, source, placeholder) {
+function replaceOutsideTranslationPlaceholders(value, source, placeholder) {
   const sourceText = normalizeText(source);
   if (!sourceText) return { value, replaced: false };
 
   let replaced = false;
   let cursor = 0;
   let nextValue = "";
-  for (const match of String(value || "").matchAll(PROTECTED_TERM_PLACEHOLDER_PATTERN)) {
+  for (const match of String(value || "").matchAll(TRANSLATION_PLACEHOLDER_PATTERN)) {
     const index = Number(match.index || 0);
     const segment = String(value || "").slice(cursor, index);
     if (segment.includes(sourceText)) replaced = true;
@@ -228,28 +234,43 @@ function compareReplacementRules(left, right) {
   if (rightSource.length !== leftSource.length) {
     return rightSource.length - leftSource.length;
   }
+  if (left?.kind !== right?.kind) {
+    return left?.kind === "phrase_override" ? -1 : 1;
+  }
   return leftSource.localeCompare(rightSource, "en", { sensitivity: "base" });
 }
 
-function prepareEntriesWithProtectedTerms(entries, protectedTerms = []) {
+function normalizePhraseOverrideRules(phraseOverrides, targetLang) {
+  const index = createTranslationPhraseOverrideIndex(normalizeStoredTranslationPhraseOverrides({ items: phraseOverrides }));
+  return translationPhraseOverridesForTargetLang(index, targetLang)
+    .map((item) => ({
+      kind: "phrase_override",
+      source: item.source_phrase,
+      target: item.target_phrase
+    }));
+}
+
+function prepareEntriesWithTranslationRules(entries, protectedTerms = [], phraseOverrides = [], targetLang = "") {
   const protectedRules = normalizeTranslationProtectedTerms(protectedTerms)
     .map((term) => ({
+      kind: "protected_term",
       source: term,
       target: term
     }));
-  const replacementRules = protectedRules.sort(compareReplacementRules);
+  const phraseRules = normalizePhraseOverrideRules(phraseOverrides, targetLang);
+  const replacementRules = [...phraseRules, ...protectedRules].sort(compareReplacementRules);
   const exactEntries = {};
   const providerEntries = {};
   const replacementsByKey = {};
-  const exactProtectedBySource = new Map(protectedRules.map((rule) => [rule.source, rule.target]));
+  const exactBySource = new Map([...protectedRules, ...phraseRules].map((rule) => [rule.source, rule.target]));
   let placeholderCounter = 0;
 
   for (const [key, value] of Object.entries(entries || {})) {
     const sourceText = normalizeText(value);
     if (!sourceText) continue;
-    const exactProtected = exactProtectedBySource.get(sourceText);
-    if (exactProtected) {
-      exactEntries[key] = exactProtected;
+    const exactTarget = exactBySource.get(sourceText);
+    if (exactTarget) {
+      exactEntries[key] = exactTarget;
       continue;
     }
 
@@ -257,8 +278,9 @@ function prepareEntriesWithProtectedTerms(entries, protectedTerms = []) {
     const replacements = [];
     for (const rule of replacementRules) {
       if (!rule.source || !maskedSourceText.includes(rule.source)) continue;
-      const placeholder = `[[ATP_PROTECTED_TERM_${placeholderCounter}]]`;
-      const masked = replaceOutsideProtectedTermPlaceholders(maskedSourceText, rule.source, placeholder);
+      const placeholderKind = rule.kind === "phrase_override" ? "PHRASE_OVERRIDE" : "PROTECTED_TERM";
+      const placeholder = `[[ATP_${placeholderKind}_${placeholderCounter}]]`;
+      const masked = replaceOutsideTranslationPlaceholders(maskedSourceText, rule.source, placeholder);
       if (!masked.replaced) continue;
       placeholderCounter += 1;
       maskedSourceText = masked.value;
@@ -274,6 +296,7 @@ function prepareEntriesWithProtectedTerms(entries, protectedTerms = []) {
 
   return {
     protectedTerms: protectedRules.map((rule) => rule.source),
+    phraseOverrideCount: phraseRules.length,
     exactEntries,
     providerEntries,
     replacementsByKey
@@ -311,6 +334,8 @@ export function createTranslationClient({
   projectId = "",
   protectedTerms = [],
   protectedTermsPath = process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("config", "i18n", "translation_protected_terms.json"),
+  phraseOverrides = [],
+  phraseOverridesPath = process.env.TRANSLATION_PHRASE_OVERRIDES_PATH || path.join("config", "i18n", "translation_phrase_overrides.json"),
   googleFallbackEnabled = true,
   googleRetryMaxAttempts = 3,
   googleRetryBaseDelayMs = 250,
@@ -328,6 +353,10 @@ export function createTranslationClient({
   const normalizedProtectedTermsPath = normalizeText(protectedTermsPath)
     ? path.resolve(process.cwd(), normalizeText(protectedTermsPath))
     : "";
+  const normalizedDefaultPhraseOverrides = normalizeTranslationPhraseOverrideItems(phraseOverrides);
+  const normalizedPhraseOverridesPath = normalizeText(phraseOverridesPath)
+    ? path.resolve(process.cwd(), normalizeText(phraseOverridesPath))
+    : "";
   const translationCache = new Map();
   const MAX_TRANSLATION_CACHE_ENTRIES = 2500;
 
@@ -342,12 +371,25 @@ export function createTranslationClient({
     }
   }
 
-  async function resolveClientTranslationProfileOptions(options = {}) {
+  async function readConfiguredPhraseOverrides() {
+    if (!normalizedPhraseOverridesPath) return null;
+    try {
+      const raw = await readFile(normalizedPhraseOverridesPath, "utf8");
+      return normalizeStoredTranslationPhraseOverrides(JSON.parse(raw)).items;
+    } catch (error) {
+      if (error?.code === "ENOENT") return null;
+      throw error;
+    }
+  }
+
+  async function resolveClientTranslationProfileOptions(options = {}, targetLang = "") {
     const configuredProtectedTerms = await readConfiguredProtectedTerms();
+    const configuredPhraseOverrides = await readConfiguredPhraseOverrides();
+    const normalizedTargetLang = normalizeText(targetLang).toLowerCase();
     const baseProtectedTerms = Array.isArray(configuredProtectedTerms)
       ? configuredProtectedTerms
       : DEFAULT_TRANSLATION_PROTECTED_TERMS;
-    return resolveTranslationProfileOptions({
+    const profileOptions = resolveTranslationProfileOptions({
       ...options,
       protectedTerms: [
         ...baseProtectedTerms,
@@ -355,6 +397,14 @@ export function createTranslationClient({
         ...(Array.isArray(options?.protectedTerms) ? options.protectedTerms : [])
       ]
     });
+    return {
+      ...profileOptions,
+      phraseOverrides: [
+        ...(Array.isArray(configuredPhraseOverrides) ? configuredPhraseOverrides : []),
+        ...normalizedDefaultPhraseOverrides,
+        ...normalizeTranslationPhraseOverrideItems(options?.phraseOverrides)
+      ].filter((item) => !normalizedTargetLang || normalizeText(item.target_lang).toLowerCase() === normalizedTargetLang)
+    };
   }
 
   function googleRetryDelayMs(attempt) {
@@ -383,7 +433,8 @@ export function createTranslationClient({
         domain: profileOptions.domain,
         context: profileOptions.context,
         glossary_terms: profileOptions.glossaryTerms,
-        protected_terms: profileOptions.protectedTerms
+        protected_terms: profileOptions.protectedTerms,
+        phrase_overrides: profileOptions.phraseOverrides
       }))
       .digest("hex");
     return {
@@ -619,10 +670,12 @@ export function createTranslationClient({
     const normalizedEntriesObject = Object.fromEntries(normalizedEntries);
     const allowGoogleFallback = Boolean(options?.allowGoogleFallback) && allowGoogleFallbackByDefault;
     const forceGoogleProvider = normalizeText(options?.provider).toLowerCase() === "google";
-    const profileOptions = await resolveClientTranslationProfileOptions(options);
-    const preparedTranslation = prepareEntriesWithProtectedTerms(
+    const profileOptions = await resolveClientTranslationProfileOptions(options, targetLang);
+    const preparedTranslation = prepareEntriesWithTranslationRules(
       normalizedEntriesObject,
-      profileOptions.protectedTerms
+      profileOptions.protectedTerms,
+      profileOptions.phraseOverrides,
+      targetLang
     );
     const cacheKey = translationCacheKey(
       normalizedEntriesObject,
@@ -639,7 +692,8 @@ export function createTranslationClient({
         translation_profile: profileOptions.profile || "",
         source_lang: googleTranslateLangCode(options?.sourceLangCode || "en", "en"),
         target_lang: googleTranslateLangCode(targetLang, "en"),
-        protected_term_count: preparedTranslation.protectedTerms.length
+        protected_term_count: preparedTranslation.protectedTerms.length,
+        phrase_override_count: preparedTranslation.phraseOverrideCount
       });
       return cachedResult;
     }
@@ -658,7 +712,8 @@ export function createTranslationClient({
         target_lang: googleTranslateLangCode(targetLang, "en"),
         hit_count: entryCacheSplit.hitCount,
         miss_count: Object.keys(entryCacheSplit.missingProviderEntries).length,
-        protected_term_count: preparedTranslation.protectedTerms.length
+        protected_term_count: preparedTranslation.protectedTerms.length,
+        phrase_override_count: preparedTranslation.phraseOverrideCount
       });
     }
 
@@ -706,6 +761,7 @@ export function createTranslationClient({
     const targetLanguageName = promptLanguageName(targetLang, "English");
     const glossaryTerms = profileOptions.glossaryTerms;
     const protectedTerms = profileOptions.protectedTerms;
+    const phraseOverrides = profileOptions.phraseOverrides;
     const entriesToTranslate = Object.entries(stableEntriesObject(providerPreparedTranslation.providerEntries || {}));
     if (!entriesToTranslate.length) {
       return completeTranslationResult({
@@ -732,7 +788,8 @@ export function createTranslationClient({
       total_chars: entryStats.totalChars,
       chunk_count: chunks.length,
       exact_protected_term_count: Object.keys(preparedTranslation.exactEntries).length,
-      protected_term_count: preparedTranslation.protectedTerms.length
+      protected_term_count: preparedTranslation.protectedTerms.length,
+      phrase_override_count: preparedTranslation.phraseOverrideCount
     });
 
     for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex += 1) {
@@ -776,10 +833,13 @@ export function createTranslationClient({
             protectedTerms.length
               ? `Do not translate or rewrite these names and terms when they appear in the source unless the source already localizes them: ${protectedTerms.join(", ")}.`
               : "",
+            phraseOverrides.length
+              ? "Phrase override placeholders must be preserved exactly; they will be restored after translation."
+              : "",
             "Return JSON only.",
             "Keep the exact same keys.",
             "Preserve line breaks and blank lines within each value exactly.",
-            "Preserve placeholder tokens such as [[ATP_PROTECTED_TERM_0]] exactly when they appear.",
+            "Preserve placeholder tokens such as [[ATP_PROTECTED_TERM_0]] and [[ATP_PHRASE_OVERRIDE_0]] exactly when they appear.",
             "Preserve proper nouns, brand names, phone numbers, ISO codes, URLs, and currency codes unless a natural translation requires otherwise.",
             "Do not add explanations."
           ].filter(Boolean).join(" "),

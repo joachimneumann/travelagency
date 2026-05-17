@@ -27,6 +27,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   const generatedSitemapPath = path.join(frontendDataDir, "sitemap.xml");
   const homepageCopyGlobalPath = path.join(frontendDataDir, "public-homepage-copy.global.js");
   const homepageInitialBundlePath = path.join(frontendDataDir, "public-homepage-main.bundle.js");
+  const publicTourPdfCacheDir = path.join(root, "tmp", "public-tour-pdf-cache");
+  const staleCachedPdfPath = path.join(publicTourPdfCacheDir, "one-pagers", "stale.pdf");
 
   await mkdir(path.join(toursRoot, "tour_alpha"), { recursive: true });
   await mkdir(path.join(toursRoot, "tour_hidden"), { recursive: true });
@@ -34,6 +36,8 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   await mkdir(path.join(staffRoot, "photos"), { recursive: true });
   await mkdir(frontendI18nDir, { recursive: true });
   await mkdir(path.dirname(homepageHtmlPath), { recursive: true });
+  await mkdir(path.dirname(staleCachedPdfPath), { recursive: true });
+  await writeFile(staleCachedPdfPath, "%PDF-stale\n", "utf8");
 
   await writeJson(path.join(frontendI18nDir, "en.json"), {
     "hero.title": "Private holidays in Vietnam, Thailand, Cambodia and Laos",
@@ -65,7 +69,6 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     styles: ["budget"],
     image: "/public/v1/tour-images/tour_alpha/alpha.png",
     travel_plan: {
-      tour_card_primary_image_id: "travel_plan_service_image_featured",
       tour_card_image_ids: [
         "travel_plan_service_image_featured",
         "travel_plan_service_image_pickup"
@@ -151,12 +154,12 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       { key: "place.place_unused.name", source_text: "Unused", target_text: "Không dùng" }
     ]
   });
-  await writeJson(path.join(root, "config", "i18n", "translation_manual_overrides.json"), {
-    schema: "translation-manual-overrides/v2",
-    schema_version: 2,
+  await writeJson(path.join(root, "config", "i18n", "translation_phrase_overrides.json"), {
+    schema: "translation-phrase-overrides/v1",
+    schema_version: 1,
     items: [
-      { source_text: "Alpha tour", target_lang: "vi", manual_override: "Tour Alpha Manual" },
-      { source_text: "Central", target_lang: "vi", manual_override: "Miền Trung Manual" }
+      { source_phrase: "Alpha tour", target_lang: "vi", target_phrase: "Tour Alpha Phrase" },
+      { source_phrase: "Central", target_lang: "vi", target_phrase: "Miền Trung Phrase" }
     ]
   });
   await writeJson(path.join(contentRoot, "one-pagers", "manifest.json"), {
@@ -299,8 +302,11 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     frontendI18nDir,
     homepageCopyGlobalPath,
     homepageTemplatePath: homepageHtmlPath,
+    publicTourPdfCacheDir,
     languages: ["en", "de", "vi"]
   });
+
+  await assert.rejects(stat(staleCachedPdfPath), { code: "ENOENT" });
 
   const publicToursEn = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.en.json"), "utf8"));
   const publicToursDe = JSON.parse(await readFile(path.join(frontendDataDir, "public-tours.de.json"), "utf8"));
@@ -341,7 +347,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
     destinations: [
       { code: "vietnam", country_code: "VN", label: "Việt Nam" }
     ],
-    regions: [{ id: "region_central", destination: "vietnam", country_code: "VN", code: "central", label: "Miền Trung Manual" }],
+    regions: [{ id: "region_central", destination: "vietnam", country_code: "VN", code: "central", label: "Miền Trung Phrase" }],
     places: [{ id: "place_hoi_an", destination: "vietnam", country_code: "VN", region_id: "region_central", code: "hoi-an", label: "Hội An" }]
   });
   assert.equal("travel_plan" in publicToursEn.items[0], false);
@@ -362,7 +368,6 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
       ]
     }
   ]);
-  assert.equal(publicTourDetailsEn.travel_plan.tour_card_primary_image_id, "travel_plan_service_image_featured");
   assert.deepEqual(publicTourDetailsEn.travel_plan.tour_card_image_ids, [
     "travel_plan_service_image_featured",
     "travel_plan_service_image_pickup"
@@ -403,7 +408,7 @@ test("generatePublicHomepageAssets writes static tours, team, and copied assets"
   assert.equal(publicTourDetailsDe.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/de.pdf");
   assert.equal("one_pager_experience_highlight_ids" in publicTourDetailsDe, false);
   assert.equal(publicTourDetailsDe.one_pager_experience_highlights.length, 4);
-  assert.equal(publicToursVi.items[0].title, "Tour Alpha Manual");
+  assert.equal(publicToursVi.items[0].title, "Tour Alpha Phrase");
   assert.equal(publicToursVi.items[0].short_description, "Mo ta Alpha");
   assert.equal(publicTourDetailsVi.one_pager_pdf_url, "/content/one-pagers/pdfs/tour_alpha/vi.pdf");
   assert.deepEqual(publicTourDetailsVi.one_pager_experience_highlights.map((item) => item.title), [

@@ -1188,7 +1188,6 @@ function renderTourImageMarkup(tour) {
 }
 
 function firstTravelTourCardImagePath(tour) {
-  const selectedImageId = normalizeText(tour?.travel_plan?.tour_card_primary_image_id);
   const selectedImageIds = Array.from(new Set((Array.isArray(tour?.travel_plan?.tour_card_image_ids) ? tour.travel_plan.tour_card_image_ids : [])
     .map((value) => normalizeText(value))
     .filter(Boolean)));
@@ -1208,13 +1207,6 @@ function firstTravelTourCardImagePath(tour) {
         if (storagePath) entries.push({ id: normalizeText(image.id), storagePath });
       }
     }
-  }
-  const selectedEntryIndex = selectedImageId
-    ? entries.findIndex((entry) => entry.id === selectedImageId)
-    : -1;
-  if (selectedEntryIndex > 0) {
-    const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
-    entries.unshift(selectedEntry);
   }
   if (selectedImageIds.length) {
     entries.sort((left, right) => {

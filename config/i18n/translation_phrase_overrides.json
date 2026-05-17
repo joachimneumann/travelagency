@@ -1,0 +1,1351 @@
+{
+  "schema": "translation-phrase-overrides/v1",
+  "schema_version": 1,
+  "items": [
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "ar",
+      "target_phrase": "تحسين"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "da",
+      "target_phrase": "Optimer"
+    },
+    {
+      "source_phrase": "Next",
+      "target_lang": "de",
+      "target_phrase": "weiter"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "de",
+      "target_phrase": "Optimieren"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "es",
+      "target_phrase": "Optimizar"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "fr",
+      "target_phrase": "Optimiser"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "it",
+      "target_phrase": "Ottimizza"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "ja",
+      "target_phrase": "最適化"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "ko",
+      "target_phrase": "최적화"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "ms",
+      "target_phrase": "Optimumkan"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "nl",
+      "target_phrase": "Optimaliseren"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "no",
+      "target_phrase": "Optimaliser"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "pl",
+      "target_phrase": "Optymalizuj"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "ru",
+      "target_phrase": "Оптимизировать"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "sv",
+      "target_phrase": "Optimera"
+    },
+    {
+      "source_phrase": "(change below)",
+      "target_lang": "vi",
+      "target_phrase": "(thay đổi bên dưới)"
+    },
+    {
+      "source_phrase": "{base} Missing: {fields}.",
+      "target_lang": "vi",
+      "target_phrase": "{base} Thiếu: {fields}."
+    },
+    {
+      "source_phrase": "{count} day(s) found.",
+      "target_lang": "vi",
+      "target_phrase": "Tìm thấy {count} ngày."
+    },
+    {
+      "source_phrase": "{count} of {total}",
+      "target_lang": "vi",
+      "target_phrase": "{count} trên {total}"
+    },
+    {
+      "source_phrase": "{count} service(s)",
+      "target_lang": "vi",
+      "target_phrase": "{count} dịch vụ"
+    },
+    {
+      "source_phrase": "{kind}: Kind is invalid.",
+      "target_lang": "vi",
+      "target_phrase": "{kind}: Loại không hợp lệ."
+    },
+    {
+      "source_phrase": "{kind}: Service id is duplicated.",
+      "target_lang": "vi",
+      "target_phrase": "{kind}: ID dịch vụ bị trùng."
+    },
+    {
+      "source_phrase": "{kind}: Service id is missing.",
+      "target_lang": "vi",
+      "target_phrase": "{kind}: Thiếu ID dịch vụ."
+    },
+    {
+      "source_phrase": "{kind}: Start and end time are required.",
+      "target_lang": "vi",
+      "target_phrase": "{kind}: Cần nhập giờ bắt đầu và giờ kết thúc."
+    },
+    {
+      "source_phrase": "{kind}: Time information is invalid.",
+      "target_lang": "vi",
+      "target_phrase": "{kind}: Thông tin thời gian không hợp lệ."
+    },
+    {
+      "source_phrase": "{kind}: Time point is required.",
+      "target_lang": "vi",
+      "target_phrase": "{kind}: Cần nhập thời điểm."
+    },
+    {
+      "source_phrase": "{label} cannot be selected right now",
+      "target_lang": "vi",
+      "target_phrase": "Hiện không thể chọn {label}"
+    },
+    {
+      "source_phrase": "{label} is not shown in the card",
+      "target_lang": "vi",
+      "target_phrase": "{label} không hiển thị trong thẻ"
+    },
+    {
+      "source_phrase": "{label} is one-page PDF image {order}",
+      "target_lang": "vi",
+      "target_phrase": "{label} là ảnh PDF một trang số {order}"
+    },
+    {
+      "source_phrase": "{label} is the first image shown in the card",
+      "target_lang": "vi",
+      "target_phrase": "{label} là ảnh đầu tiên hiển thị trong thẻ"
+    },
+    {
+      "source_phrase": "{label} is the one-page PDF hero image",
+      "target_lang": "vi",
+      "target_phrase": "{label} là ảnh chính của PDF một trang"
+    },
+    {
+      "source_phrase": "{label} is web page image {order}",
+      "target_lang": "vi",
+      "target_phrase": "{label} là ảnh trang web số {order}"
+    },
+    {
+      "source_phrase": "{translated}/{total} fields",
+      "target_lang": "vi",
+      "target_phrase": "{translated}/{total} trường"
+    },
+    {
+      "source_phrase": "Add {label} to the one-page PDF images",
+      "target_lang": "vi",
+      "target_phrase": "Thêm {label} vào ảnh PDF một trang"
+    },
+    {
+      "source_phrase": "Add {label} to the web page images",
+      "target_lang": "vi",
+      "target_phrase": "Thêm {label} vào ảnh trang web"
+    },
+    {
+      "source_phrase": "Add at least one day to keep customizing.",
+      "target_lang": "vi",
+      "target_phrase": "Thêm ít nhất một ngày để tiếp tục tùy chỉnh."
+    },
+    {
+      "source_phrase": "Add destination",
+      "target_lang": "vi",
+      "target_phrase": "Thêm điểm đến"
+    },
+    {
+      "source_phrase": "Add English travel-plan or PDF text before translating.",
+      "target_lang": "vi",
+      "target_phrase": "Thêm lịch trình hoặc nội dung PDF bằng tiếng Anh trước khi dịch."
+    },
+    {
+      "source_phrase": "Add English website or travel-plan text before translating.",
+      "target_lang": "vi",
+      "target_phrase": "Vui lòng thêm nội dung website hoặc kế hoạch du lịch bằng tiếng Anh trước khi dịch."
+    },
+    {
+      "source_phrase": "Add place",
+      "target_lang": "vi",
+      "target_phrase": "Thêm địa điểm"
+    },
+    {
+      "source_phrase": "After last day",
+      "target_lang": "vi",
+      "target_phrase": "Sau ngày cuối cùng"
+    },
+    {
+      "source_phrase": "Airport code",
+      "target_lang": "vi",
+      "target_phrase": "Mã sân bay"
+    },
+    {
+      "source_phrase": "All",
+      "target_lang": "vi",
+      "target_phrase": "Tất cả"
+    },
+    {
+      "source_phrase": "All destinations are already in the catalog.",
+      "target_lang": "vi",
+      "target_phrase": "Tất cả điểm đến đã có trong danh mục."
+    },
+    {
+      "source_phrase": "Allow pop-ups to open the one-pager PDF.",
+      "target_lang": "vi",
+      "target_phrase": "Cho phép cửa sổ bật lên để mở PDF một trang."
+    },
+    {
+      "source_phrase": "Allow pop-ups to preview the PDF.",
+      "target_lang": "vi",
+      "target_phrase": "Cho phép cửa sổ bật lên để xem trước PDF."
+    },
+    {
+      "source_phrase": "Arrival",
+      "target_lang": "vi",
+      "target_phrase": "Đến"
+    },
+    {
+      "source_phrase": "Arrival & departure",
+      "target_lang": "vi",
+      "target_phrase": "Đến và khởi hành"
+    },
+    {
+      "source_phrase": "Arrival and Departure",
+      "target_lang": "vi",
+      "target_phrase": "Đến và khởi hành"
+    },
+    {
+      "source_phrase": "Arrival Details",
+      "target_lang": "vi",
+      "target_phrase": "Chi tiết phần đến"
+    },
+    {
+      "source_phrase": "Arrival Title",
+      "target_lang": "vi",
+      "target_phrase": "Tiêu đề phần đến"
+    },
+    {
+      "source_phrase": "Arrival/departure information is invalid.",
+      "target_lang": "vi",
+      "target_phrase": "Thông tin đến/khởi hành không hợp lệ."
+    },
+    {
+      "source_phrase": "At least one day is required.",
+      "target_lang": "vi",
+      "target_phrase": "Cần ít nhất một ngày."
+    },
+    {
+      "source_phrase": "at least one style",
+      "target_lang": "vi",
+      "target_phrase": "ít nhất một phong cách"
+    },
+    {
+      "source_phrase": "At least one style is required.",
+      "target_lang": "vi",
+      "target_phrase": "Cần ít nhất một phong cách."
+    },
+    {
+      "source_phrase": "Base marketing tour",
+      "target_lang": "vi",
+      "target_phrase": "Tour marketing gốc"
+    },
+    {
+      "source_phrase": "Base marketing tour is required.",
+      "target_lang": "vi",
+      "target_phrase": "Cần chọn tour marketing gốc."
+    },
+    {
+      "source_phrase": "Base marketing tour must be published.",
+      "target_lang": "vi",
+      "target_phrase": "Tour marketing gốc phải được xuất bản."
+    },
+    {
+      "source_phrase": "Base marketing tour was not found.",
+      "target_lang": "vi",
+      "target_phrase": "Không tìm thấy tour marketing gốc."
+    },
+    {
+      "source_phrase": "Before first day",
+      "target_lang": "vi",
+      "target_phrase": "Trước ngày đầu tiên"
+    },
+    {
+      "source_phrase": "Cancellation policy ({travelerRange})",
+      "target_lang": "vi",
+      "target_phrase": "Chính sách hủy ({travelerRange})"
+    },
+    {
+      "source_phrase": "Central",
+      "target_lang": "vi",
+      "target_phrase": "Miền Trung"
+    },
+    {
+      "source_phrase": "Change Reel",
+      "target_lang": "vi",
+      "target_phrase": "Đổi Reel"
+    },
+    {
+      "source_phrase": "Children's Policy",
+      "target_lang": "vi",
+      "target_phrase": "Chính sách trẻ em"
+    },
+    {
+      "source_phrase": "Choose a base marketing tour",
+      "target_lang": "vi",
+      "target_phrase": "Chọn tour marketing gốc"
+    },
+    {
+      "source_phrase": "Choose a base marketing tour and create the Tour Variant first.",
+      "target_lang": "vi",
+      "target_phrase": "Chọn tour marketing gốc và tạo biến thể tour trước."
+    },
+    {
+      "source_phrase": "Clear selection",
+      "target_lang": "vi",
+      "target_phrase": "Xóa lựa chọn"
+    },
+    {
+      "source_phrase": "Clearing marketing tour translation cache. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang xóa bộ nhớ đệm bản dịch tour marketing. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Click on &ldquo;Plan this trip&rdquo; or contact us directly via <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> or <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. We will design your itinerary, confirm details, and guide you through the booking process. Fast response within 2 hours.",
+      "target_lang": "vi",
+      "target_phrase": "Nhấp vào “Khám phá chuyến đi” hoặc liên hệ trực tiếp với chúng tôi qua <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> hoặc <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. Chúng tôi sẽ thiết kế hành trình của bạn, xác nhận chi tiết và hướng dẫn bạn trong quá trình đặt vé. Phản hồi nhanh trong vòng 2 giờ."
+    },
+    {
+      "source_phrase": "Collapse day",
+      "target_lang": "vi",
+      "target_phrase": "Thu gọn ngày"
+    },
+    {
+      "source_phrase": "Confirm payment",
+      "target_lang": "vi",
+      "target_phrase": "Xác nhận thanh toán"
+    },
+    {
+      "source_phrase": "Copied from booking {booking}",
+      "target_lang": "vi",
+      "target_phrase": "Sao chép từ đặt chỗ {booking}"
+    },
+    {
+      "source_phrase": "Could not insert this day.",
+      "target_lang": "vi",
+      "target_phrase": "Không thể chèn ngày này."
+    },
+    {
+      "source_phrase": "Could not load Tour Variant.",
+      "target_lang": "vi",
+      "target_phrase": "Không thể tải biến thể tour."
+    },
+    {
+      "source_phrase": "Could not load Tour Variants.",
+      "target_lang": "vi",
+      "target_phrase": "Không thể tải các biến thể tour."
+    },
+    {
+      "source_phrase": "Could not preview the travel plan PDF.",
+      "target_lang": "vi",
+      "target_phrase": "Không thể xem trước PDF lịch trình."
+    },
+    {
+      "source_phrase": "Could not search existing days.",
+      "target_lang": "vi",
+      "target_phrase": "Không thể tìm kiếm ngày hiện có."
+    },
+    {
+      "source_phrase": "Create",
+      "target_lang": "vi",
+      "target_phrase": "Tạo"
+    },
+    {
+      "source_phrase": "Create One-Page PDF",
+      "target_lang": "vi",
+      "target_phrase": "Tạo PDF một trang"
+    },
+    {
+      "source_phrase": "Creating...",
+      "target_lang": "vi",
+      "target_phrase": "Đang tạo..."
+    },
+    {
+      "source_phrase": "Day {day}",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}"
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Date must use YYYY-MM-DD.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: Ngày phải dùng định dạng YYYY-MM-DD."
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Dates must use YYYY-MM-DD.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: Ngày phải dùng định dạng YYYY-MM-DD."
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Kind is invalid.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: Loại không hợp lệ."
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Service id is duplicated.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: ID dịch vụ bị trùng."
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Service id is missing.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: Thiếu ID dịch vụ."
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Start and end time are required.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: Cần nhập giờ bắt đầu và giờ kết thúc."
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Time information is invalid.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: Thông tin thời gian không hợp lệ."
+    },
+    {
+      "source_phrase": "Day {day}, service {item}: Time point is required.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}, dịch vụ {item}: Cần nhập thời điểm."
+    },
+    {
+      "source_phrase": "Day {day}: Date must use YYYY-MM-DD.",
+      "target_lang": "vi",
+      "target_phrase": "Ngày {day}: Ngày phải dùng định dạng YYYY-MM-DD."
+    },
+    {
+      "source_phrase": "Day inserted.",
+      "target_lang": "vi",
+      "target_phrase": "Đã chèn ngày."
+    },
+    {
+      "source_phrase": "Delete {name}?",
+      "target_lang": "vi",
+      "target_phrase": "Xóa {name}?"
+    },
+    {
+      "source_phrase": "Delete all translations and translate",
+      "target_lang": "vi",
+      "target_phrase": "Xóa tất cả bản dịch và dịch lại"
+    },
+    {
+      "source_phrase": "Deleting...",
+      "target_lang": "vi",
+      "target_phrase": "Đang xóa..."
+    },
+    {
+      "source_phrase": "Departure",
+      "target_lang": "vi",
+      "target_phrase": "Khởi hành"
+    },
+    {
+      "source_phrase": "Departure Details",
+      "target_lang": "vi",
+      "target_phrase": "Chi tiết phần khởi hành"
+    },
+    {
+      "source_phrase": "Departure Title",
+      "target_lang": "vi",
+      "target_phrase": "Tiêu đề phần khởi hành"
+    },
+    {
+      "source_phrase": "Destination",
+      "target_lang": "vi",
+      "target_phrase": "Điểm đến"
+    },
+    {
+      "source_phrase": "destination {value}",
+      "target_lang": "vi",
+      "target_phrase": "điểm đến {value}"
+    },
+    {
+      "source_phrase": "Destination catalog saved.",
+      "target_lang": "vi",
+      "target_phrase": "Danh mục điểm đến đã được lưu."
+    },
+    {
+      "source_phrase": "Destination filter",
+      "target_lang": "vi",
+      "target_phrase": "Bộ lọc điểm đến"
+    },
+    {
+      "source_phrase": "Destination(s)",
+      "target_lang": "vi",
+      "target_phrase": "Điểm đến"
+    },
+    {
+      "source_phrase": "Destinations",
+      "target_lang": "vi",
+      "target_phrase": "Điểm đến"
+    },
+    {
+      "source_phrase": "Details",
+      "target_lang": "vi",
+      "target_phrase": "Chi tiết"
+    },
+    {
+      "source_phrase": "Displayed in the card",
+      "target_lang": "vi",
+      "target_phrase": "Hiển thị trong thẻ"
+    },
+    {
+      "source_phrase": "Draft",
+      "target_lang": "vi",
+      "target_phrase": "Bản nháp"
+    },
+    {
+      "source_phrase": "drop here",
+      "target_lang": "vi",
+      "target_phrase": "thả vào đây"
+    },
+    {
+      "source_phrase": "English source",
+      "target_lang": "vi",
+      "target_phrase": "Nguồn tiếng Anh"
+    },
+    {
+      "source_phrase": "Expand day",
+      "target_lang": "vi",
+      "target_phrase": "Mở rộng ngày"
+    },
+    {
+      "source_phrase": "Field translated to {lang}.",
+      "target_lang": "vi",
+      "target_phrase": "Trường đã được dịch sang {lang}."
+    },
+    {
+      "source_phrase": "First card image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "target_phrase": "Đã chọn ảnh đầu tiên cho thẻ tour. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_phrase": "First day",
+      "target_lang": "vi",
+      "target_phrase": "Ngày đầu tiên"
+    },
+    {
+      "source_phrase": "Hero image",
+      "target_lang": "vi",
+      "target_phrase": "Ảnh chính"
+    },
+    {
+      "source_phrase": "Hide",
+      "target_lang": "vi",
+      "target_phrase": "Ẩn"
+    },
+    {
+      "source_phrase": "ID: {id}",
+      "target_lang": "vi",
+      "target_phrase": "ID: {id}"
+    },
+    {
+      "source_phrase": "Image alt text",
+      "target_lang": "vi",
+      "target_phrase": "Văn bản thay thế của ảnh"
+    },
+    {
+      "source_phrase": "Image caption",
+      "target_lang": "vi",
+      "target_phrase": "Chú thích ảnh"
+    },
+    {
+      "source_phrase": "Image removed.",
+      "target_lang": "vi",
+      "target_phrase": "Ảnh đã được xóa."
+    },
+    {
+      "source_phrase": "Image subtitle (optional)",
+      "target_lang": "vi",
+      "target_phrase": "Phụ đề ảnh (tùy chọn)"
+    },
+    {
+      "source_phrase": "Include cancellation policy",
+      "target_lang": "vi",
+      "target_phrase": "Bao gồm chính sách hủy"
+    },
+    {
+      "source_phrase": "Include in travel tour card",
+      "target_lang": "vi",
+      "target_phrase": "Hiển thị trong thẻ tour du lịch"
+    },
+    {
+      "source_phrase": "Inserting day...",
+      "target_lang": "vi",
+      "target_phrase": "Đang chèn ngày..."
+    },
+    {
+      "source_phrase": "Last day",
+      "target_lang": "vi",
+      "target_phrase": "Ngày cuối cùng"
+    },
+    {
+      "source_phrase": "Loading destinations...",
+      "target_lang": "vi",
+      "target_phrase": "Đang tải điểm đến..."
+    },
+    {
+      "source_phrase": "Loading page content. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang tải nội dung trang. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Loading...",
+      "target_lang": "vi",
+      "target_phrase": "Đang tải..."
+    },
+    {
+      "source_phrase": "Machine translated",
+      "target_lang": "vi",
+      "target_phrase": "Dịch máy"
+    },
+    {
+      "source_phrase": "Manage destinations, regions, and places available to tour travel plans.",
+      "target_lang": "vi",
+      "target_phrase": "Quản lý điểm đến, khu vực và địa điểm có thể dùng trong kế hoạch tour."
+    },
+    {
+      "source_phrase": "Master language matches customer language. No translation is needed.",
+      "target_lang": "vi",
+      "target_phrase": "Ngôn ngữ gốc trùng với ngôn ngữ khách hàng. Không cần dịch."
+    },
+    {
+      "source_phrase": "Missing",
+      "target_lang": "vi",
+      "target_phrase": "Thiếu"
+    },
+    {
+      "source_phrase": "Mode",
+      "target_lang": "vi",
+      "target_phrase": "Chế độ"
+    },
+    {
+      "source_phrase": "move here",
+      "target_lang": "vi",
+      "target_phrase": "di chuyển đến đây"
+    },
+    {
+      "source_phrase": "New place",
+      "target_lang": "vi",
+      "target_phrase": "Địa điểm mới"
+    },
+    {
+      "source_phrase": "New Reel",
+      "target_lang": "vi",
+      "target_phrase": "Reel mới"
+    },
+    {
+      "source_phrase": "New Tour Variant",
+      "target_lang": "vi",
+      "target_phrase": "Biến thể tour mới"
+    },
+    {
+      "source_phrase": "Next",
+      "target_lang": "vi",
+      "target_phrase": "Tiếp"
+    },
+    {
+      "source_phrase": "No customer languages configured.",
+      "target_lang": "vi",
+      "target_phrase": "Chưa cấu hình ngôn ngữ khách hàng."
+    },
+    {
+      "source_phrase": "No destinations configured.",
+      "target_lang": "vi",
+      "target_phrase": "Chưa cấu hình điểm đến."
+    },
+    {
+      "source_phrase": "No existing days found.",
+      "target_lang": "vi",
+      "target_phrase": "Không tìm thấy ngày nào."
+    },
+    {
+      "source_phrase": "no filters",
+      "target_lang": "vi",
+      "target_phrase": "không có bộ lọc"
+    },
+    {
+      "source_phrase": "No optional days are available for this route yet.",
+      "target_lang": "vi",
+      "target_phrase": "Chưa có ngày tùy chọn nào cho tuyến này."
+    },
+    {
+      "source_phrase": "No places yet.",
+      "target_lang": "vi",
+      "target_phrase": "Chưa có địa điểm."
+    },
+    {
+      "source_phrase": "No published marketing tours",
+      "target_lang": "vi",
+      "target_phrase": "Không có tour marketing đã xuất bản"
+    },
+    {
+      "source_phrase": "No reel video uploaded yet.",
+      "target_lang": "vi",
+      "target_phrase": "Chưa tải video reel nào lên."
+    },
+    {
+      "source_phrase": "No service images are available for the web page.",
+      "target_lang": "vi",
+      "target_phrase": "Chưa có ảnh dịch vụ nào khả dụng cho trang web."
+    },
+    {
+      "source_phrase": "No service images are currently hidden from the card.",
+      "target_lang": "vi",
+      "target_phrase": "Hiện không có ảnh dịch vụ nào bị ẩn khỏi thẻ."
+    },
+    {
+      "source_phrase": "No service images are currently shown in the card.",
+      "target_lang": "vi",
+      "target_phrase": "Hiện không có ảnh dịch vụ nào được hiển thị trong thẻ."
+    },
+    {
+      "source_phrase": "No source text",
+      "target_lang": "vi",
+      "target_phrase": "Không có nội dung nguồn"
+    },
+    {
+      "source_phrase": "No Tour Variants found.",
+      "target_lang": "vi",
+      "target_phrase": "Không tìm thấy biến thể tour nào."
+    },
+    {
+      "source_phrase": "None",
+      "target_lang": "vi",
+      "target_phrase": "Không"
+    },
+    {
+      "source_phrase": "North",
+      "target_lang": "vi",
+      "target_phrase": "Miền Bắc"
+    },
+    {
+      "source_phrase": "Not shown",
+      "target_lang": "vi",
+      "target_phrase": "Không hiển thị"
+    },
+    {
+      "source_phrase": "Offer PDF",
+      "target_lang": "vi",
+      "target_phrase": "PDF báo giá"
+    },
+    {
+      "source_phrase": "One pager",
+      "target_lang": "vi",
+      "target_phrase": "Tờ giới thiệu một trang"
+    },
+    {
+      "source_phrase": "One reel video per tour. Uploading a new file replaces the previous reel and stores it as a normalized portrait MP4.",
+      "target_lang": "vi",
+      "target_phrase": "Mỗi tour có một video reel. Khi tải tệp mới lên, video reel hiện tại sẽ được thay thế và được lưu dưới dạng MP4 dọc đã chuẩn hóa."
+    },
+    {
+      "source_phrase": "One-page PDF hero image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "target_phrase": "Đã chọn ảnh chính cho PDF một trang. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_phrase": "One-page PDF image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "target_phrase": "Đã chọn ảnh PDF một trang. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_phrase": "One-page PDF image selection cleared. Select images again, then save changes.",
+      "target_lang": "vi",
+      "target_phrase": "Đã xóa lựa chọn ảnh PDF một trang. Chọn lại ảnh, rồi lưu thay đổi."
+    },
+    {
+      "source_phrase": "Only available service images can be selected for the web page.",
+      "target_lang": "vi",
+      "target_phrase": "Chỉ có thể chọn ảnh dịch vụ khả dụng cho trang web."
+    },
+    {
+      "source_phrase": "Only images shown in the card can be selected as first image.",
+      "target_lang": "vi",
+      "target_phrase": "Chỉ ảnh được hiển thị trong thẻ mới có thể được chọn làm ảnh đầu tiên."
+    },
+    {
+      "source_phrase": "Only images shown in the card can be selected as the first image on the public homepage.",
+      "target_lang": "vi",
+      "target_phrase": "Chỉ các ảnh được hiển thị trong thẻ mới có thể được chọn làm ảnh đầu tiên trên trang chủ công khai."
+    },
+    {
+      "source_phrase": "Opening one-pager PDF.",
+      "target_lang": "vi",
+      "target_phrase": "Đang mở PDF một trang."
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "vi",
+      "target_phrase": "Tối ưu"
+    },
+    {
+      "source_phrase": "Optional days",
+      "target_lang": "vi",
+      "target_phrase": "Ngày tùy chọn"
+    },
+    {
+      "source_phrase": "Other",
+      "target_lang": "vi",
+      "target_phrase": "Khác"
+    },
+    {
+      "source_phrase": "Outdated",
+      "target_lang": "vi",
+      "target_phrase": "Đã lỗi thời"
+    },
+    {
+      "source_phrase": "Partial",
+      "target_lang": "vi",
+      "target_phrase": "Một phần"
+    },
+    {
+      "source_phrase": "Payment confirmation closing",
+      "target_lang": "vi",
+      "target_phrase": "Lời kết xác nhận thanh toán"
+    },
+    {
+      "source_phrase": "Payment confirmation subtitle",
+      "target_lang": "vi",
+      "target_phrase": "Phụ đề xác nhận thanh toán"
+    },
+    {
+      "source_phrase": "Payment confirmation welcome",
+      "target_lang": "vi",
+      "target_phrase": "Lời mở đầu xác nhận thanh toán"
+    },
+    {
+      "source_phrase": "PDF language",
+      "target_lang": "vi",
+      "target_phrase": "Ngôn ngữ PDF"
+    },
+    {
+      "source_phrase": "PDF Texts",
+      "target_lang": "vi",
+      "target_phrase": "Nội dung PDF"
+    },
+    {
+      "source_phrase": "place {value}",
+      "target_lang": "vi",
+      "target_phrase": "địa điểm {value}"
+    },
+    {
+      "source_phrase": "place {value} under {region}",
+      "target_lang": "vi",
+      "target_phrase": "địa điểm {value} dưới {region}"
+    },
+    {
+      "source_phrase": "Plan this trip",
+      "target_lang": "vi",
+      "target_phrase": "Khám phá chuyến đi"
+    },
+    {
+      "source_phrase": "Please fix the invalid date.",
+      "target_lang": "vi",
+      "target_phrase": "Vui lòng sửa ngày không hợp lệ."
+    },
+    {
+      "source_phrase": "Previous",
+      "target_lang": "vi",
+      "target_phrase": "Trước"
+    },
+    {
+      "source_phrase": "Priority",
+      "target_lang": "vi",
+      "target_phrase": "Độ ưu tiên"
+    },
+    {
+      "source_phrase": "Private holidays in {destinations}",
+      "target_lang": "vi",
+      "target_phrase": "Kỳ nghỉ riêng tại {destinations}"
+    },
+    {
+      "source_phrase": "Publication",
+      "target_lang": "vi",
+      "target_phrase": "Trạng thái xuất bản"
+    },
+    {
+      "source_phrase": "Published",
+      "target_lang": "vi",
+      "target_phrase": "Đã xuất bản"
+    },
+    {
+      "source_phrase": "Published on webpage",
+      "target_lang": "vi",
+      "target_phrase": "Xuất bản trên trang web"
+    },
+    {
+      "source_phrase": "Referenced days are missing: {refs}.",
+      "target_lang": "vi",
+      "target_phrase": "Thiếu các ngày được tham chiếu: {refs}."
+    },
+    {
+      "source_phrase": "Referenced tours are not published: {refs}.",
+      "target_lang": "vi",
+      "target_phrase": "Các tour được tham chiếu chưa được xuất bản: {refs}."
+    },
+    {
+      "source_phrase": "Reload",
+      "target_lang": "vi",
+      "target_phrase": "Tải lại"
+    },
+    {
+      "source_phrase": "Remove reel",
+      "target_lang": "vi",
+      "target_phrase": "Xóa reel"
+    },
+    {
+      "source_phrase": "Remove reel video",
+      "target_lang": "vi",
+      "target_phrase": "Xóa video reel"
+    },
+    {
+      "source_phrase": "Removing image...",
+      "target_lang": "vi",
+      "target_phrase": "Đang xóa ảnh..."
+    },
+    {
+      "source_phrase": "Reorder Route",
+      "target_lang": "vi",
+      "target_phrase": "Sắp xếp lại tuyến"
+    },
+    {
+      "source_phrase": "Request payment",
+      "target_lang": "vi",
+      "target_phrase": "Yêu cầu thanh toán"
+    },
+    {
+      "source_phrase": "Retranslating backend Vietnamese. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch lại tiếng Việt cho backend. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Retranslating current language. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch lại ngôn ngữ hiện tại. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Retranslating customer UI strings. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch lại chuỗi giao diện khách hàng. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Review",
+      "target_lang": "vi",
+      "target_phrase": "Xem lại"
+    },
+    {
+      "source_phrase": "Reviewed",
+      "target_lang": "vi",
+      "target_phrase": "Đã xem lại"
+    },
+    {
+      "source_phrase": "Route map",
+      "target_lang": "vi",
+      "target_phrase": "Bản đồ tuyến"
+    },
+    {
+      "source_phrase": "Save",
+      "target_lang": "vi",
+      "target_phrase": "Lưu"
+    },
+    {
+      "source_phrase": "Save the tour before creating a one-pager PDF.",
+      "target_lang": "vi",
+      "target_phrase": "Hãy lưu tour trước khi tạo PDF một trang."
+    },
+    {
+      "source_phrase": "Saved.",
+      "target_lang": "vi",
+      "target_phrase": "Đã lưu."
+    },
+    {
+      "source_phrase": "Saving changes. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang lưu thay đổi. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Saving destination catalog, translating labels, and refreshing public homepage. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang lưu danh mục điểm đến, dịch nhãn và làm mới trang chủ công khai. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Saving destination catalog...",
+      "target_lang": "vi",
+      "target_phrase": "Đang lưu danh mục điểm đến..."
+    },
+    {
+      "source_phrase": "Saving...",
+      "target_lang": "vi",
+      "target_phrase": "Đang lưu..."
+    },
+    {
+      "source_phrase": "Search",
+      "target_lang": "vi",
+      "target_phrase": "Tìm kiếm"
+    },
+    {
+      "source_phrase": "Search and Filters: {filters}",
+      "target_lang": "vi",
+      "target_phrase": "Tìm kiếm và bộ lọc: {filters}"
+    },
+    {
+      "source_phrase": "Search existing booking days and append a copy to this travel plan.",
+      "target_lang": "vi",
+      "target_phrase": "Tìm kiếm các ngày đặt chỗ hiện có và thêm một bản sao vào cuối lịch trình này."
+    },
+    {
+      "source_phrase": "Searching days...",
+      "target_lang": "vi",
+      "target_phrase": "Đang tìm ngày..."
+    },
+    {
+      "source_phrase": "Season end month",
+      "target_lang": "vi",
+      "target_phrase": "Tháng kết thúc mùa"
+    },
+    {
+      "source_phrase": "Season start month",
+      "target_lang": "vi",
+      "target_phrase": "Tháng bắt đầu mùa"
+    },
+    {
+      "source_phrase": "Select 4 small images",
+      "target_lang": "vi",
+      "target_phrase": "Chọn 4 ảnh nhỏ"
+    },
+    {
+      "source_phrase": "Select at least 2 web page images before publishing on the web page.",
+      "target_lang": "vi",
+      "target_phrase": "Chọn ít nhất 2 ảnh trang web trước khi xuất bản trên trang web."
+    },
+    {
+      "source_phrase": "Select at least one small image to create the one-page PDF.",
+      "target_lang": "vi",
+      "target_phrase": "Chọn ít nhất một ảnh nhỏ để tạo PDF một trang."
+    },
+    {
+      "source_phrase": "SEO URL slug",
+      "target_lang": "vi",
+      "target_phrase": "Slug URL SEO"
+    },
+    {
+      "source_phrase": "Set traveler count to show the applicable cancellation policy section.",
+      "target_lang": "vi",
+      "target_phrase": "Đặt số lượng hành khách để hiển thị phần chính sách hủy phù hợp."
+    },
+    {
+      "source_phrase": "Short description",
+      "target_lang": "vi",
+      "target_phrase": "Mô tả ngắn"
+    },
+    {
+      "source_phrase": "Show on web page",
+      "target_lang": "vi",
+      "target_phrase": "Hiển thị trên trang web"
+    },
+    {
+      "source_phrase": "Some tours use destinations, regions, or places that are not configured.",
+      "target_lang": "vi",
+      "target_phrase": "Một số tour đang dùng điểm đến, khu vực hoặc địa điểm chưa được cấu hình."
+    },
+    {
+      "source_phrase": "South",
+      "target_lang": "vi",
+      "target_phrase": "Miền Nam"
+    },
+    {
+      "source_phrase": "Statistics: {count} tours",
+      "target_lang": "vi",
+      "target_phrase": "Thống kê: {count} tour"
+    },
+    {
+      "source_phrase": "Styles",
+      "target_lang": "vi",
+      "target_phrase": "Phong cách"
+    },
+    {
+      "source_phrase": "The selected days do not have enough public tour-card content.",
+      "target_lang": "vi",
+      "target_phrase": "Các ngày đã chọn chưa có đủ nội dung thẻ tour công khai."
+    },
+    {
+      "source_phrase": "This image is already selected for the one-page PDF.",
+      "target_lang": "vi",
+      "target_phrase": "Ảnh này đã được chọn cho PDF một trang."
+    },
+    {
+      "source_phrase": "This image is already selected for the web page.",
+      "target_lang": "vi",
+      "target_phrase": "Ảnh này đã được chọn cho trang web."
+    },
+    {
+      "source_phrase": "This image is already used as the one-page PDF hero image.",
+      "target_lang": "vi",
+      "target_phrase": "Ảnh này đã được dùng làm ảnh chính của PDF một trang."
+    },
+    {
+      "source_phrase": "Title",
+      "target_lang": "vi",
+      "target_phrase": "Tiêu đề"
+    },
+    {
+      "source_phrase": "Title is required.",
+      "target_lang": "vi",
+      "target_phrase": "Cần nhập tiêu đề."
+    },
+    {
+      "source_phrase": "Tour card images",
+      "target_lang": "vi",
+      "target_phrase": "Ảnh thẻ tour"
+    },
+    {
+      "source_phrase": "Tour Title and description",
+      "target_lang": "vi",
+      "target_phrase": "Tiêu đề và mô tả tour"
+    },
+    {
+      "source_phrase": "Tour Variant",
+      "target_lang": "vi",
+      "target_phrase": "Biến thể tour"
+    },
+    {
+      "source_phrase": "Tour Variant id is required.",
+      "target_lang": "vi",
+      "target_phrase": "Cần có ID biến thể tour."
+    },
+    {
+      "source_phrase": "Tour Variant timeline",
+      "target_lang": "vi",
+      "target_phrase": "Dòng thời gian biến thể tour"
+    },
+    {
+      "source_phrase": "Tour Variant timeline ({count})",
+      "target_lang": "vi",
+      "target_phrase": "Dòng thời gian biến thể tour ({count})"
+    },
+    {
+      "source_phrase": "Tour Variant title",
+      "target_lang": "vi",
+      "target_phrase": "Tiêu đề biến thể tour"
+    },
+    {
+      "source_phrase": "Tour Variants",
+      "target_lang": "vi",
+      "target_phrase": "Các biến thể tour"
+    },
+    {
+      "source_phrase": "Tour Variants pagination",
+      "target_lang": "vi",
+      "target_phrase": "Phân trang các biến thể tour"
+    },
+    {
+      "source_phrase": "Translate",
+      "target_lang": "vi",
+      "target_phrase": "Dịch"
+    },
+    {
+      "source_phrase": "Translate English customer-facing content",
+      "target_lang": "vi",
+      "target_phrase": "Dịch nội dung gửi khách bằng tiếng Anh"
+    },
+    {
+      "source_phrase": "Translate everything",
+      "target_lang": "vi",
+      "target_phrase": "Dịch toàn bộ"
+    },
+    {
+      "source_phrase": "Translate the English website content and travel plan",
+      "target_lang": "vi",
+      "target_phrase": "Dịch tiêu đề, mô tả website và kế hoạch du lịch tiếng Anh"
+    },
+    {
+      "source_phrase": "Translating {language} using {translator}. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch {language} bằng {translator}. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Translating content. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch nội dung và tạo tệp runtime. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Translating customer-facing content. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch nội dung gửi khách. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Translating customer-facing content...",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch nội dung gửi khách..."
+    },
+    {
+      "source_phrase": "Translating field from {language}...",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch trường từ {language}..."
+    },
+    {
+      "source_phrase": "Translating website content and travel plan. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch nội dung website và kế hoạch du lịch. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Translating website content and travel plan...",
+      "target_lang": "vi",
+      "target_phrase": "Đang dịch nội dung website và kế hoạch du lịch..."
+    },
+    {
+      "source_phrase": "Translation: incomplete",
+      "target_lang": "vi",
+      "target_phrase": "Bản dịch: chưa hoàn tất"
+    },
+    {
+      "source_phrase": "Translations",
+      "target_lang": "vi",
+      "target_phrase": "Bản dịch"
+    },
+    {
+      "source_phrase": "Translations updated.",
+      "target_lang": "vi",
+      "target_phrase": "Đã cập nhật bản dịch."
+    },
+    {
+      "source_phrase": "Travel plan image preview",
+      "target_lang": "vi",
+      "target_phrase": "Xem trước ảnh lịch trình"
+    },
+    {
+      "source_phrase": "Travel plan is invalid.",
+      "target_lang": "vi",
+      "target_phrase": "Lịch trình không hợp lệ."
+    },
+    {
+      "source_phrase": "Travel-plan day id {id} is duplicated.",
+      "target_lang": "vi",
+      "target_phrase": "ID ngày trong lịch trình {id} bị trùng."
+    },
+    {
+      "source_phrase": "Update",
+      "target_lang": "vi",
+      "target_phrase": "Cập nhật"
+    },
+    {
+      "source_phrase": "Update {language}",
+      "target_lang": "vi",
+      "target_phrase": "Cập nhật {language}"
+    },
+    {
+      "source_phrase": "Updated: {updated}",
+      "target_lang": "vi",
+      "target_phrase": "Đã cập nhật: {updated}"
+    },
+    {
+      "source_phrase": "Updating translations. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang tạo bản dịch runtime. Vui lòng chờ."
+    },
+    {
+      "source_phrase": "Upload reel video",
+      "target_lang": "vi",
+      "target_phrase": "Tải video reel lên"
+    },
+    {
+      "source_phrase": "Uploading image. Please wait.",
+      "target_lang": "vi",
+      "target_phrase": "Đang tải ảnh lên. Vui lòng đợi."
+    },
+    {
+      "source_phrase": "Use {label} as the first card image",
+      "target_lang": "vi",
+      "target_phrase": "Dùng {label} làm ảnh đầu tiên của thẻ"
+    },
+    {
+      "source_phrase": "Use {label} as the one-page PDF hero image",
+      "target_lang": "vi",
+      "target_phrase": "Dùng {label} làm ảnh chính của PDF một trang"
+    },
+    {
+      "source_phrase": "Used for /tours/{slug}. Leave blank to generate it from the title.",
+      "target_lang": "vi",
+      "target_phrase": "Dùng cho /tours/{slug}. Để trống để tạo từ tiêu đề."
+    },
+    {
+      "source_phrase": "web page",
+      "target_lang": "vi",
+      "target_phrase": "trang web"
+    },
+    {
+      "source_phrase": "Web page image selected. Save changes to publish it.",
+      "target_lang": "vi",
+      "target_phrase": "Đã chọn ảnh trang web. Lưu thay đổi để xuất bản."
+    },
+    {
+      "source_phrase": "Web page image selection cleared. Select images again, then save changes.",
+      "target_lang": "vi",
+      "target_phrase": "Đã xóa lựa chọn ảnh trang web. Chọn lại ảnh, rồi lưu thay đổi."
+    },
+    {
+      "source_phrase": "What's not included",
+      "target_lang": "vi",
+      "target_phrase": "Không bao gồm"
+    },
+    {
+      "source_phrase": "You do not have access to Tour Variants.",
+      "target_lang": "vi",
+      "target_phrase": "Bạn không có quyền truy cập các biến thể tour."
+    },
+    {
+      "source_phrase": "Your backend session expired. Sign in again to continue.",
+      "target_lang": "vi",
+      "target_phrase": "Phiên backend của bạn đã hết hạn. Vui lòng đăng nhập lại để tiếp tục."
+    },
+    {
+      "source_phrase": "Zoom out",
+      "target_lang": "vi",
+      "target_phrase": "Thu nhỏ"
+    },
+    {
+      "source_phrase": "Optimize",
+      "target_lang": "zh",
+      "target_phrase": "优化"
+    }
+  ]
+}

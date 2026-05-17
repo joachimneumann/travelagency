@@ -6,6 +6,7 @@ export const DEFAULT_TRANSLATION_PROTECTED_TERMS = Object.freeze([
   "ATP",
   "backend"
 ]);
+export const TRANSLATION_PROTECTED_TERMS_SCHEMA = "translation-protected-terms/v1";
 
 function compareProtectedTerms(left, right) {
   const leftText = normalizeText(left);
@@ -34,6 +35,8 @@ export function normalizeStoredTranslationProtectedTerms(payload) {
   const rawItems = Array.isArray(payload) ? payload : payload?.items;
   const updatedAt = Array.isArray(payload) ? null : (normalizeText(payload?.updated_at) || null);
   return {
+    schema: TRANSLATION_PROTECTED_TERMS_SCHEMA,
+    schema_version: 1,
     items: normalizeTranslationProtectedTerms(rawItems),
     updated_at: updatedAt
   };

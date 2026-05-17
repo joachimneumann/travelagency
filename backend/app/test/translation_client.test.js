@@ -364,6 +364,106 @@ test("global protected terms can satisfy an exact match without calling a provid
   }
 });
 
+test("global phrase overrides are restored inside longer translated strings", async () => {
+  const originalFetch = globalThis.fetch;
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "atp-phrase-overrides-"));
+  const phraseOverridesPath = path.join(tempDir, "translation_phrase_overrides.json");
+  await writeFile(phraseOverridesPath, `${JSON.stringify({
+    schema: "translation-phrase-overrides/v1",
+    schema_version: 1,
+    items: [
+      { source_phrase: "Basket boat", target_lang: "fr", target_phrase: "bateau panier" }
+    ]
+  }, null, 2)}\n`, "utf8");
+
+  let requestedSource = "";
+  globalThis.fetch = async (url) => {
+    const requestUrl = new URL(String(url || ""));
+    requestedSource = requestUrl.searchParams.get("q") || "";
+    return {
+      ok: true,
+      async json() {
+        return [[
+          ["Visite en [[ATP_PHRASE_OVERRIDE_0]] à Hoi An", null, null, null]
+        ]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      phraseOverridesPath,
+      googleFallbackEnabled: true
+    });
+    const translated = await client.translateEntries(
+      {
+        value: "Basket boat tour in Hoi An"
+      },
+      "fr",
+      {
+        sourceLangCode: "en",
+        provider: "google",
+        cacheNamespace: "phrase-overrides"
+      }
+    );
+
+    assert.equal(translated.value, "Visite en bateau panier à Hoi An");
+    assert.equal(requestedSource, "[[ATP_PHRASE_OVERRIDE_0]] tour in Hoi An");
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test("global phrase overrides can satisfy an exact match without calling a provider", async () => {
+  const originalFetch = globalThis.fetch;
+  const tempDir = await mkdtemp(path.join(os.tmpdir(), "atp-phrase-overrides-"));
+  const phraseOverridesPath = path.join(tempDir, "translation_phrase_overrides.json");
+  await writeFile(phraseOverridesPath, `${JSON.stringify({
+    schema: "translation-phrase-overrides/v1",
+    schema_version: 1,
+    items: [
+      { source_phrase: "Plan my trip", target_lang: "fr", target_phrase: "Planifier mon voyage" }
+    ]
+  }, null, 2)}\n`, "utf8");
+  let callCount = 0;
+  globalThis.fetch = async () => {
+    callCount += 1;
+    return {
+      ok: true,
+      async json() {
+        return [[["ignored", null, null, null]]];
+      }
+    };
+  };
+
+  try {
+    const client = createTranslationClient({
+      apiKey: "",
+      phraseOverridesPath,
+      googleFallbackEnabled: true
+    });
+    const translated = await client.translateEntries(
+      {
+        value: "Plan my trip"
+      },
+      "fr",
+      {
+        sourceLangCode: "en",
+        provider: "google",
+        cacheNamespace: "phrase-overrides-exact"
+      }
+    );
+
+    assert.equal(translated.value, "Planifier mon voyage");
+    assert.equal(callCount, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
 test("translation cache is keyed by source text hash, source lang, target lang, translation profile, and protected terms", async () => {
   const originalFetch = globalThis.fetch;
   const requestLog = [];

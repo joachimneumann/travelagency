@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-17T09:43:42Z
+# 2026-05-17T10:23:48Z
 
 ---
 openapi: 3.1.0
@@ -4303,9 +4303,6 @@ components:
       type: object
       required: []
       properties:
-        tour_card_primary_image_id:
-          type: string
-          nullable: true
         tour_card_image_ids:
           type: array
           items:
@@ -4328,9 +4325,6 @@ components:
       type: object
       required: []
       properties:
-        tour_card_primary_image_id:
-          type: string
-          nullable: true
         tour_card_image_ids:
           type: array
           items:
@@ -4688,9 +4682,6 @@ components:
       type: object
       required: []
       properties:
-        tour_card_primary_image_id:
-          type: string
-          nullable: true
         tour_card_image_ids:
           type: array
           items:
@@ -6024,9 +6015,6 @@ components:
             "$ref": "#/components/schemas/TourStyleCode"
         priority:
           type: integer
-          nullable: true
-        tour_card_primary_image_id:
-          type: string
           nullable: true
         tour_card_image_ids:
           type: array
@@ -7684,9 +7672,6 @@ components:
             "$ref": "#/components/schemas/TourStyleCode"
         priority:
           type: integer
-          nullable: true
-        tour_card_primary_image_id:
-          type: string
           nullable: true
         tour_card_image_ids:
           type: array

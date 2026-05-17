@@ -9,6 +9,7 @@ TOURS_DIR="$ROOT_DIR/content/tours"
 CATALOG_PATH="$ROOT_DIR/content/tours/destinations.json"
 HIGHLIGHT_MANIFEST_PATH="$ROOT_DIR/assets/img/experience-highlights/manifest.json"
 ONE_PAGERS_OUTPUT_DIR="${ONE_PAGERS_OUTPUT_DIR:-}"
+PDF_CACHE_DIR="${PUBLIC_TOUR_PDF_CACHE_DIR:-}"
 
 usage() {
   cat <<'EOF'
@@ -23,6 +24,7 @@ On staging, run this from /srv/asiatravelplan-staging to refresh:
   https://staging.asiatravelplan.com/content_matrix_vi.html
   https://staging.asiatravelplan.com/content_matrix_ja.html
   https://staging.asiatravelplan.com/one_pager_matrix.html
+  https://staging.asiatravelplan.com/travel_plan_matrix.html
 
 Options:
   --output-dir DIR              Publish directory. Default: repo root, or TOUR_MATRIX_OUTPUT_DIR.
@@ -30,6 +32,7 @@ Options:
   --catalog FILE                Destination catalog. Default: content/tours/destinations.json
   --highlight-manifest FILE     Highlight manifest. Default: assets/img/experience-highlights/manifest.json
   --one-pagers-output-dir DIR   One-pager PDF/image output directory. Default: content/one-pagers.
+  --pdf-cache-dir DIR           Public tour PDF cache root. Default: backend runtime cache.
   --help                        Show this help.
 EOF
 }
@@ -61,6 +64,11 @@ while [[ "$#" -gt 0 ]]; do
       ONE_PAGERS_OUTPUT_DIR="$2"
       shift 2
       ;;
+    --pdf-cache-dir)
+      [[ -n "${2:-}" ]] || { echo "--pdf-cache-dir requires a directory." >&2; exit 1; }
+      PDF_CACHE_DIR="$2"
+      shift 2
+      ;;
     --help|-h)
       usage
       exit 0
@@ -80,6 +88,9 @@ HIGHLIGHT_MANIFEST_PATH="$(cd "$ROOT_DIR" && cd "$(dirname "$HIGHLIGHT_MANIFEST_
 if [[ -n "$ONE_PAGERS_OUTPUT_DIR" ]]; then
   ONE_PAGERS_OUTPUT_DIR="$(cd "$ROOT_DIR" && mkdir -p "$ONE_PAGERS_OUTPUT_DIR" && cd "$ONE_PAGERS_OUTPUT_DIR" && pwd)"
 fi
+if [[ -n "$PDF_CACHE_DIR" ]]; then
+  PDF_CACHE_DIR="$(cd "$ROOT_DIR" && mkdir -p "$PDF_CACHE_DIR" && cd "$PDF_CACHE_DIR" && pwd)"
+fi
 
 if [[ "$OUTPUT_DIR" == "/" ]]; then
   echo "Refusing to publish matrices into /." >&2
@@ -93,6 +104,10 @@ fi
 
 if [[ -n "$ONE_PAGERS_OUTPUT_DIR" && ! -w "$ONE_PAGERS_OUTPUT_DIR" ]]; then
   echo "One-pager output directory is not writable by uid $(id -u):gid $(id -g): $ONE_PAGERS_OUTPUT_DIR" >&2
+  exit 1
+fi
+if [[ -n "$PDF_CACHE_DIR" && ! -w "$PDF_CACHE_DIR" ]]; then
+  echo "PDF cache directory is not writable by uid $(id -u):gid $(id -g): $PDF_CACHE_DIR" >&2
   exit 1
 fi
 
@@ -110,7 +125,8 @@ rm -f \
   "$OUTPUT_DIR/content_matrix.html" \
   "$OUTPUT_DIR/content_matrix_vi.html" \
   "$OUTPUT_DIR/content_matrix_ja.html" \
-  "$OUTPUT_DIR/one_pager_matrix.html"
+  "$OUTPUT_DIR/one_pager_matrix.html" \
+  "$OUTPUT_DIR/travel_plan_matrix.html"
 
 echo "Generating and publishing tour photo matrix..."
 "$SCRIPT_DIR/create_tour_photo_matrix.sh" \
@@ -139,14 +155,18 @@ node "$SCRIPT_DIR/create_tour_content_matrix.mjs" japanese \
   --tours "$TOURS_DIR" \
   --output "$OUTPUT_DIR/content_matrix_ja.html"
 
-echo "Generating and publishing one-pager PDF matrix..."
+echo "Generating and publishing one-pager and travel-plan PDF matrices..."
 ONE_PAGER_ARGS=(
   --tours "$TOURS_DIR"
   --highlight-manifest "$HIGHLIGHT_MANIFEST_PATH"
   --matrix-output "$OUTPUT_DIR/one_pager_matrix.html"
+  --travel-plan-matrix-output "$OUTPUT_DIR/travel_plan_matrix.html"
 )
 if [[ -n "$ONE_PAGERS_OUTPUT_DIR" ]]; then
   ONE_PAGER_ARGS+=(--output "$ONE_PAGERS_OUTPUT_DIR")
+fi
+if [[ -n "$PDF_CACHE_DIR" ]]; then
+  ONE_PAGER_ARGS+=(--pdf-cache-dir "$PDF_CACHE_DIR")
 fi
 node "$SCRIPT_DIR/create_all_one_pagers.mjs" "${ONE_PAGER_ARGS[@]}"
 
@@ -157,3 +177,4 @@ echo "  $OUTPUT_DIR/content_matrix.html"
 echo "  $OUTPUT_DIR/content_matrix_vi.html"
 echo "  $OUTPUT_DIR/content_matrix_ja.html"
 echo "  $OUTPUT_DIR/one_pager_matrix.html"
+echo "  $OUTPUT_DIR/travel_plan_matrix.html"

@@ -145,7 +145,6 @@ import (
 }
 
 #TravelPlanCommon: {
-	tour_card_primary_image_id?: common.#Identifier
 	tour_card_image_ids?: [...common.#Identifier]
 	one_pager_hero_image_id?: common.#Identifier
 	one_pager_image_ids?: [...common.#Identifier]

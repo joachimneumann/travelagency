@@ -1,63 +1,71 @@
 import { normalizeText } from "./text.js";
 
-export const TRANSLATION_MANUAL_OVERRIDES_SCHEMA = "translation-manual-overrides/v2";
+export const TRANSLATION_PHRASE_OVERRIDES_SCHEMA = "translation-phrase-overrides/v1";
 
 function sortOverrideItems(left, right) {
   return [
     normalizeText(left.target_lang).localeCompare(normalizeText(right.target_lang), "en"),
-    normalizeText(left.source_text).localeCompare(normalizeText(right.source_text), "en", { sensitivity: "base" })
+    normalizeText(left.source_phrase).localeCompare(normalizeText(right.source_phrase), "en", { sensitivity: "base" })
   ].find((value) => value !== 0) || 0;
 }
 
-function manualOverrideSourceKey(scope = {}) {
+function phraseOverrideSourceKey(scope = {}) {
   const targetLang = normalizeText(scope.target_lang || scope.targetLang).toLowerCase();
-  const sourceText = normalizeText(scope.source_text || scope.sourceText || scope.source);
-  return targetLang && sourceText ? `${targetLang}\u0000${sourceText}` : "";
+  const sourcePhrase = normalizeText(scope.source_phrase || scope.sourcePhrase || scope.source);
+  return targetLang && sourcePhrase ? `${targetLang}\u0000${sourcePhrase}` : "";
 }
 
-export function normalizeTranslationManualOverrideItems(payload = {}) {
+export function normalizeTranslationPhraseOverrideItems(payload = {}) {
   const rawItems = Array.isArray(payload) ? payload : payload?.items;
   return (Array.isArray(rawItems) ? rawItems : [])
     .map((item) => {
       const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
       const normalized = {
-        source_text: normalizeText(source.source_text),
+        source_phrase: normalizeText(source.source_phrase || source.sourcePhrase),
         target_lang: normalizeText(source.target_lang || source.targetLang).toLowerCase(),
-        manual_override: normalizeText(source.manual_override)
+        target_phrase: normalizeText(source.target_phrase || source.targetPhrase)
       };
-      return manualOverrideSourceKey(normalized) && normalized.manual_override ? normalized : null;
+      return phraseOverrideSourceKey(normalized) && normalized.target_phrase ? normalized : null;
     })
     .filter(Boolean)
     .sort(sortOverrideItems);
 }
 
-export function normalizeStoredTranslationManualOverrides(payload = {}) {
+export function normalizeStoredTranslationPhraseOverrides(payload = {}) {
   return {
-    schema: TRANSLATION_MANUAL_OVERRIDES_SCHEMA,
-    schema_version: 2,
-    items: normalizeTranslationManualOverrideItems(payload)
+    schema: TRANSLATION_PHRASE_OVERRIDES_SCHEMA,
+    schema_version: 1,
+    items: normalizeTranslationPhraseOverrideItems(payload)
   };
 }
 
-export function createTranslationManualOverrideIndex(payload = {}) {
-  const rawItems = Array.isArray(payload) ? normalizeTranslationManualOverrideItems(payload) : normalizeStoredTranslationManualOverrides(payload).items;
+export function createTranslationPhraseOverrideIndex(payload = {}) {
+  const rawItems = Array.isArray(payload) ? normalizeTranslationPhraseOverrideItems(payload) : normalizeStoredTranslationPhraseOverrides(payload).items;
   const bySource = new Map();
+  const byTargetLang = new Map();
   const items = [];
   const duplicates = [];
   for (const item of rawItems) {
-    const key = manualOverrideSourceKey(item);
+    const key = phraseOverrideSourceKey(item);
     if (!key) continue;
     const existing = bySource.get(key);
     if (existing) {
-      if (existing.manual_override !== item.manual_override) duplicates.push(key);
+      if (existing.target_phrase !== item.target_phrase) duplicates.push(key);
       continue;
     }
     bySource.set(key, item);
     items.push(item);
+    const targetLang = normalizeText(item.target_lang).toLowerCase();
+    if (!byTargetLang.has(targetLang)) byTargetLang.set(targetLang, []);
+    byTargetLang.get(targetLang).push(item);
+  }
+  for (const targetItems of byTargetLang.values()) {
+    targetItems.sort(sortOverrideItems);
   }
   return {
     items,
     bySource,
+    byTargetLang,
     duplicates
   };
 }
@@ -110,38 +118,43 @@ function listMismatchError(kind, expected, actual) {
   return parts.length ? `${kind} mismatch (${parts.join("; ")})` : "";
 }
 
-export function validateTranslationManualOverride(item = {}, {
+export function validateTranslationPhraseOverride(item = {}, {
   sourceText = "",
   context = ""
 } = {}) {
   const errors = [];
-  const label = normalizeText(context) || "manual override";
+  const label = normalizeText(context) || "phrase override";
   const expectedSourceText = normalizeText(sourceText);
-  const actualSourceText = normalizeText(item.source_text);
-  const override = normalizeText(item.manual_override);
+  const actualSourcePhrase = normalizeText(item.source_phrase);
+  const targetPhrase = normalizeText(item.target_phrase);
 
-  if (!actualSourceText) {
-    errors.push(`${label}: source_text is required.`);
-  } else if (expectedSourceText && actualSourceText !== expectedSourceText) {
-    errors.push(`${label}: source_text does not match the selected source.`);
+  if (!actualSourcePhrase) {
+    errors.push(`${label}: source_phrase is required.`);
+  } else if (expectedSourceText && !expectedSourceText.includes(actualSourcePhrase)) {
+    errors.push(`${label}: source_phrase does not occur in the selected source.`);
   }
   if (!normalizeText(item.target_lang)) {
     errors.push(`${label}: target_lang is required.`);
   }
-  if (!override) {
-    errors.push(`${label}: manual_override is required.`);
+  if (!targetPhrase) {
+    errors.push(`${label}: target_phrase is required.`);
   }
 
-  const tokenError = listMismatchError("template token", templateTokens(expectedSourceText || actualSourceText), templateTokens(override));
+  const tokenError = listMismatchError("template token", templateTokens(actualSourcePhrase), templateTokens(targetPhrase));
   if (tokenError) errors.push(`${label}: ${tokenError}.`);
 
-  const htmlError = listMismatchError("HTML tag", htmlTagSequence(expectedSourceText || actualSourceText), htmlTagSequence(override));
+  const htmlError = listMismatchError("HTML tag", htmlTagSequence(actualSourcePhrase), htmlTagSequence(targetPhrase));
   if (htmlError) errors.push(`${label}: ${htmlError}.`);
 
   return errors;
 }
 
-export function resolveTranslationManualOverride(index, scope = {}) {
+export function resolveTranslationPhraseOverride(index, scope = {}) {
   const bySource = index?.bySource instanceof Map ? index.bySource : new Map();
-  return bySource.get(manualOverrideSourceKey(scope)) || null;
+  return bySource.get(phraseOverrideSourceKey(scope)) || null;
+}
+
+export function translationPhraseOverridesForTargetLang(index, targetLang) {
+  const byTargetLang = index?.byTargetLang instanceof Map ? index.byTargetLang : new Map();
+  return [...(byTargetLang.get(normalizeText(targetLang).toLowerCase()) || [])];
 }

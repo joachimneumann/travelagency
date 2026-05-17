@@ -302,7 +302,6 @@ export function createEmptyTravelPlanDay(index = 0) {
 
 export function createEmptyTravelPlan() {
   return {
-    tour_card_primary_image_id: null,
     tour_card_image_ids: [],
     one_pager_hero_image_id: null,
     one_pager_image_ids: [],
@@ -353,14 +352,7 @@ function normalizeTourCardImageIds(source, days) {
       }
     }
   }
-  if (hasExplicitImageIds) return selectedIds;
-  const selectedImageId = normalizeOptionalText(source?.tour_card_primary_image_id);
-  const selectedIndex = selectedImageId ? legacyIncludedIds.indexOf(selectedImageId) : -1;
-  if (selectedIndex > 0) {
-    const [selectedId] = legacyIncludedIds.splice(selectedIndex, 1);
-    legacyIncludedIds.unshift(selectedId);
-  }
-  return legacyIncludedIds;
+  return hasExplicitImageIds ? selectedIds : legacyIncludedIds;
 }
 
 function normalizeAvailableImageIdList(values, days) {
@@ -563,7 +555,6 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
     .filter((imageId) => imageId !== one_pager_hero_image_id)
     .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
   const normalized = {
-    tour_card_primary_image_id: tour_card_image_ids[0] || null,
     tour_card_image_ids,
     one_pager_hero_image_id: one_pager_hero_image_id || null,
     one_pager_image_ids,

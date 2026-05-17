@@ -373,8 +373,7 @@ function firstMarketingTourOverviewImageEntry(plan) {
   const selectedImageIds = hasOnePagerImageIds && onePagerImageIds.length ? onePagerImageIds : webImageIds;
   const heroImageId = textOrNull(plan?.one_pager_hero_image_id)
     || selectedImageIds[0]
-    || webImageIds[0]
-    || textOrNull(plan?.tour_card_primary_image_id);
+    || webImageIds[0];
   if (!heroImageId) return null;
 
   for (const day of safeArray(plan?.days)) {

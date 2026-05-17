@@ -25,13 +25,14 @@ import {
   loadPublishedMarketingTourTranslations
 } from "../../backend/app/src/domain/marketing_tour_translations.js";
 import {
-  createTranslationManualOverrideIndex,
-  resolveTranslationManualOverride
-} from "../../backend/app/src/lib/translation_manual_overrides.js";
+  createTranslationPhraseOverrideIndex,
+  resolveTranslationPhraseOverride
+} from "../../backend/app/src/lib/translation_phrase_overrides.js";
 import {
   normalizeLocalizedTextMap,
   resolveLocalizedText
 } from "../../backend/app/src/domain/booking_content_i18n.js";
+import { PUBLIC_TOUR_PDF_CACHE_DIR } from "../../backend/app/src/config/runtime.js";
 import { normalizeDisplayLineBreaks, normalizeText } from "../../backend/app/src/lib/text.js";
 import {
   DESTINATION_COUNTRY_CODES,
@@ -45,6 +46,10 @@ import {
 
 const ROOT_DIR = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
 const CONTENT_ROOT = normalizeText(process.env.PUBLIC_HOMEPAGE_CONTENT_ROOT) || path.join(ROOT_DIR, "content");
+const PUBLIC_TOUR_PDF_CACHE_ROOT = normalizeText(
+  process.env.PUBLIC_HOMEPAGE_PUBLIC_TOUR_PDF_CACHE_DIR
+  || process.env.PUBLIC_TOUR_PDF_CACHE_DIR
+) || PUBLIC_TOUR_PDF_CACHE_DIR;
 const FRONTEND_I18N_DIR = path.join(ROOT_DIR, "frontend", "data", "i18n", "frontend");
 const TOURS_ROOT = normalizeText(
   process.env.PUBLIC_HOMEPAGE_TOURS_ROOT
@@ -68,9 +73,9 @@ const TRANSLATIONS_SNAPSHOT_DIR = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATIONS_SNAPSHOT_DIR || process.env.TRANSLATIONS_SNAPSHOT_DIR)
     || path.join(CONTENT_ROOT, "translations")
 );
-const TRANSLATION_MANUAL_OVERRIDES_PATH = path.resolve(
-  normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATION_MANUAL_OVERRIDES_PATH || process.env.TRANSLATION_MANUAL_OVERRIDES_PATH)
-    || path.join(ROOT_DIR, "config", "i18n", "translation_manual_overrides.json")
+const TRANSLATION_PHRASE_OVERRIDES_PATH = path.resolve(
+  normalizeText(process.env.PUBLIC_HOMEPAGE_TRANSLATION_PHRASE_OVERRIDES_PATH || process.env.TRANSLATION_PHRASE_OVERRIDES_PATH)
+    || path.join(ROOT_DIR, "config", "i18n", "translation_phrase_overrides.json")
 );
 const ONE_PAGERS_MANIFEST_PATH = path.resolve(
   normalizeText(process.env.PUBLIC_HOMEPAGE_ONE_PAGERS_MANIFEST_PATH || process.env.ONE_PAGERS_MANIFEST_PATH)
@@ -411,6 +416,13 @@ async function cleanGeneratedFrontendData(frontendDataDir) {
   }
 }
 
+async function clearPublicTourPdfCache(cacheDir) {
+  const normalizedCacheDir = normalizeText(cacheDir);
+  if (!normalizedCacheDir) return;
+  await rm(normalizedCacheDir, { recursive: true, force: true });
+  await ensureDirectory(normalizedCacheDir);
+}
+
 async function cleanGeneratedReelsData(reelsDataDir) {
   await ensureDirectory(reelsDataDir);
   const entries = await listDirectoryEntries(reelsDataDir);
@@ -732,16 +744,16 @@ function destinationTranslationKeyFromSourceRef(value) {
   return normalized.startsWith(prefix) ? normalized.slice(prefix.length) : normalized;
 }
 
-async function loadTranslationManualOverrideIndex(manualOverridesPath) {
-  const normalizedPath = normalizeText(manualOverridesPath);
-  if (!normalizedPath) return createTranslationManualOverrideIndex({ items: [] });
-  return createTranslationManualOverrideIndex(await readJson(normalizedPath, { fallback: { items: [] } }));
+async function loadTranslationPhraseOverrideIndex(phraseOverridesPath) {
+  const normalizedPath = normalizeText(phraseOverridesPath);
+  if (!normalizedPath) return createTranslationPhraseOverrideIndex({ items: [] });
+  return createTranslationPhraseOverrideIndex(await readJson(normalizedPath, { fallback: { items: [] } }));
 }
 
-async function loadPublishedDestinationScopeCatalogTranslations(translationsSnapshotDir, languages, manualOverridesPath = "") {
+async function loadPublishedDestinationScopeCatalogTranslations(translationsSnapshotDir, languages, phraseOverridesPath = "") {
   const mapsByLang = new Map();
   const root = normalizeText(translationsSnapshotDir);
-  const manualOverrideIndex = await loadTranslationManualOverrideIndex(manualOverridesPath);
+  const phraseOverrideIndex = await loadTranslationPhraseOverrideIndex(phraseOverridesPath);
   const uniqueLanguages = Array.from(new Set(
     (Array.isArray(languages) ? languages : [])
       .map((lang) => normalizeTourLang(lang))
@@ -763,7 +775,7 @@ async function loadPublishedDestinationScopeCatalogTranslations(translationsSnap
         if (sourceText) bySource.set(sourceText, targetText);
       }
     }
-    mapsByLang.set(lang, { lang, byKey, bySource, manualOverrideIndex });
+    mapsByLang.set(lang, { lang, byKey, bySource, phraseOverrideIndex });
   }));
   return mapsByLang;
 }
@@ -772,14 +784,14 @@ function destinationCatalogTranslation(translations, key, sourceText) {
   if (!translations || typeof translations !== "object") return "";
   const normalizedKey = normalizeText(key);
   const normalizedSource = normalizeText(sourceText);
-  const manualOverride = normalizedSource
-    ? resolveTranslationManualOverride(translations.manualOverrideIndex, {
+  const phraseOverride = normalizedSource
+    ? resolveTranslationPhraseOverride(translations.phraseOverrideIndex, {
         target_lang: translations.lang,
-        source_text: normalizedSource
+        source_phrase: normalizedSource
       })
     : null;
   return normalizeText(
-    normalizeText(manualOverride?.manual_override)
+    normalizeText(phraseOverride?.target_phrase)
     || (normalizedKey && translations.byKey instanceof Map ? translations.byKey.get(normalizedKey) : "")
     || (normalizedSource && translations.bySource instanceof Map ? translations.bySource.get(normalizedSource) : "")
   );
@@ -1083,7 +1095,6 @@ function publicHomepageTourListItem(readModel, travelPlan, pictures, detailsUrl,
 }
 
 function selectedTravelTourCardImagePaths(travelPlan) {
-  const selectedImageId = normalizeText(travelPlan?.tour_card_primary_image_id);
   const selectedImageIds = Array.from(new Set((Array.isArray(travelPlan?.tour_card_image_ids) ? travelPlan.tour_card_image_ids : [])
     .map((value) => normalizeText(value))
     .filter(Boolean)));
@@ -1109,13 +1120,6 @@ function selectedTravelTourCardImagePaths(travelPlan) {
         });
       }
     }
-  }
-  const selectedEntryIndex = selectedImageId
-    ? entries.findIndex((entry) => entry.id === selectedImageId)
-    : -1;
-  if (selectedEntryIndex > 0) {
-    const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
-    entries.unshift(selectedEntry);
   }
   if (selectedImageIds.length) {
     entries.sort((left, right) => {
@@ -1884,7 +1888,7 @@ async function generateTourAssets({
   destinationCatalogPath = "",
   onePagersManifestPath = ONE_PAGERS_MANIFEST_PATH,
   translationsSnapshotDir = TRANSLATIONS_SNAPSHOT_DIR,
-  translationManualOverridesPath = TRANSLATION_MANUAL_OVERRIDES_PATH,
+  translationPhraseOverridesPath = TRANSLATION_PHRASE_OVERRIDES_PATH,
   frontendI18nDir = FRONTEND_I18N_DIR,
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
@@ -2011,12 +2015,12 @@ async function generateTourAssets({
   const publishedCountryCodes = publicTourCountryCodes(sortedPublicTours);
   const destinationScopeFilters = publicTourDestinationScopeFilters(sortedPublicTours);
   const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages, {
-    manualOverridesPath: translationManualOverridesPath
+    phraseOverridesPath: translationPhraseOverridesPath
   });
   const publishedDestinationScopeTranslations = await loadPublishedDestinationScopeCatalogTranslations(
     translationsSnapshotDir,
     languages,
-    translationManualOverridesPath
+    translationPhraseOverridesPath
   );
   const onePagerArtifactsByTourId = await loadOnePagerArtifacts(onePagersManifestPath);
   const experienceHighlightCatalog = await loadExperienceHighlightCatalog();
@@ -2359,7 +2363,8 @@ export async function generatePublicHomepageAssets({
   homepageTemplatePath = HOMEPAGE_TEMPLATE_PATH,
   homepageIndexPath = "",
   translationsSnapshotDir = "",
-  translationManualOverridesPath = "",
+  translationPhraseOverridesPath = "",
+  publicTourPdfCacheDir = "",
   languages = FRONTEND_LANGUAGE_CODES
 } = {}) {
   const resolvedHomepageInitialBundlePath = normalizeText(homepageInitialBundlePath)
@@ -2384,10 +2389,11 @@ export async function generatePublicHomepageAssets({
     || (toursRoot === TOURS_ROOT ? ONE_PAGERS_MANIFEST_PATH : path.join(path.dirname(toursRoot), "one-pagers", "manifest.json"));
   const resolvedTranslationsSnapshotDir = normalizeText(translationsSnapshotDir)
     || (toursRoot === TOURS_ROOT ? TRANSLATIONS_SNAPSHOT_DIR : path.join(path.dirname(toursRoot), "translations"));
-  const resolvedTranslationManualOverridesPath = normalizeText(translationManualOverridesPath)
+  const resolvedTranslationPhraseOverridesPath = normalizeText(translationPhraseOverridesPath)
     || (toursRoot === TOURS_ROOT
-      ? TRANSLATION_MANUAL_OVERRIDES_PATH
-      : path.join(path.dirname(path.dirname(toursRoot)), "config", "i18n", "translation_manual_overrides.json"));
+      ? TRANSLATION_PHRASE_OVERRIDES_PATH
+      : path.join(path.dirname(path.dirname(toursRoot)), "config", "i18n", "translation_phrase_overrides.json"));
+  await clearPublicTourPdfCache(publicTourPdfCacheDir);
   await cleanGeneratedFrontendData(frontendDataDir);
   const tours = await generateTourAssets({
     toursRoot,
@@ -2398,7 +2404,7 @@ export async function generatePublicHomepageAssets({
     destinationCatalogPath: resolvedDestinationCatalogPath,
     onePagersManifestPath: resolvedOnePagersManifestPath,
     translationsSnapshotDir: resolvedTranslationsSnapshotDir,
-    translationManualOverridesPath: resolvedTranslationManualOverridesPath,
+    translationPhraseOverridesPath: resolvedTranslationPhraseOverridesPath,
     frontendI18nDir,
     languages
   });
@@ -2437,7 +2443,9 @@ export async function generatePublicHomepageAssets({
 }
 
 async function runCli() {
-  const result = await generatePublicHomepageAssets();
+  const result = await generatePublicHomepageAssets({
+    publicTourPdfCacheDir: PUBLIC_TOUR_PDF_CACHE_ROOT
+  });
   const logPath = normalizeText(process.env.PUBLIC_HOMEPAGE_ASSET_GENERATOR_LOG) || DEFAULT_CLI_LOG_PATH;
   await ensureDirectory(path.dirname(logPath));
   await writeFile(logPath, `${JSON.stringify(result, null, 2)}\n`);

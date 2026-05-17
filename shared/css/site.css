@@ -3954,6 +3954,154 @@ textarea:focus-visible {
   color: var(--text-muted);
 }
 
+.settings-translation-policy {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.settings-translation-policy[hidden] {
+  display: none !important;
+}
+
+.settings-translation-policy__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.settings-translation-policy__head > div > p,
+.settings-translation-policy__status,
+.settings-translation-policy__meta {
+  margin: 0;
+}
+
+.settings-translation-policy__actions {
+  display: grid;
+  gap: 0.5rem;
+  justify-items: end;
+}
+
+.settings-translation-policy__buttons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.settings-translation-policy__status,
+.settings-translation-policy__meta {
+  color: var(--text-muted);
+}
+
+.settings-translation-policy__status.is-error {
+  color: var(--error-text);
+}
+
+.settings-translation-policy__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.settings-translation-policy__field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.settings-translation-policy__field textarea {
+  min-height: 24rem;
+  resize: vertical;
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace);
+  font-size: var(--font-size-micro);
+  line-height: 1.45;
+}
+
+.settings-phrase-overrides {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.settings-phrase-overrides__form {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  align-items: end;
+}
+
+.settings-phrase-overrides__form .field {
+  margin: 0;
+}
+
+.settings-phrase-overrides__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.settings-phrase-overrides__table-wrap {
+  max-height: 18rem;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.backend-table.settings-phrase-overrides__table {
+  min-width: 720px;
+}
+
+.settings-phrase-overrides__table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.settings-phrase-overrides__table td {
+  vertical-align: top;
+}
+
+.settings-phrase-overrides__actions-col {
+  width: 8.5rem;
+}
+
+.settings-phrase-overrides__lang {
+  width: 4.5rem;
+  color: var(--text-muted-strong);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.settings-phrase-overrides__phrase {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.settings-phrase-overrides__actions {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.settings-phrase-overrides__edit-btn {
+  min-height: 34px;
+  padding-block: 0.35rem;
+}
+
+.settings-phrase-overrides__empty,
+.settings-phrase-overrides__invalid {
+  color: var(--text-muted-strong);
+  text-align: center;
+}
+
+.settings-phrase-overrides__invalid {
+  color: var(--error-text);
+}
+
 .settings-staff-table__username-cell {
   min-width: 170px;
   display: grid;
@@ -5157,6 +5305,7 @@ textarea.english-text-guard--invalid {
   }
 
   .settings-observability__head,
+  .settings-translation-policy__head,
   .settings-staff-editor__hero,
   .settings-staff-editor__head,
   .settings-destination-publication__head,
@@ -5167,6 +5316,7 @@ textarea.english-text-guard--invalid {
   }
 
   .settings-observability__actions,
+  .settings-translation-policy__actions,
   .settings-staff-editor__head-actions,
   .settings-destination-publication__actions {
     width: 100%;
@@ -5176,6 +5326,31 @@ textarea.english-text-guard--invalid {
 
   .settings-observability__grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-translation-policy__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-phrase-overrides__form {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .settings-phrase-overrides__form-actions {
+    justify-content: stretch;
+  }
+
+  .settings-phrase-overrides__form-actions .btn {
+    flex: 1 1 10rem;
+  }
+
+  .settings-translation-policy__buttons {
+    justify-content: stretch;
+  }
+
+  .settings-translation-policy__buttons .btn {
+    flex: 1 1 10rem;
   }
 
   .settings-staff-editor__qualification-row {

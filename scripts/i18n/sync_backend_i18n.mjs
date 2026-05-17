@@ -5,18 +5,18 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  createTranslationManualOverrideIndex,
-  normalizeStoredTranslationManualOverrides,
-  resolveTranslationManualOverride,
-  validateTranslationManualOverride
-} from "../../backend/app/src/lib/translation_manual_overrides.js";
+  createTranslationPhraseOverrideIndex,
+  normalizeStoredTranslationPhraseOverrides,
+  resolveTranslationPhraseOverride,
+  validateTranslationPhraseOverride
+} from "../../backend/app/src/lib/translation_phrase_overrides.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.resolve(__dirname, "..", "..");
 const BACKEND_SOURCE_CATALOG_PATH = path.join(ROOT, "scripts", "i18n", "source_catalogs", "backend.en.json");
 const BACKEND_I18N_DIR = path.join(ROOT, "frontend", "data", "i18n", "backend");
-const TRANSLATION_MANUAL_OVERRIDES_PATH = path.join(ROOT, "config", "i18n", "translation_manual_overrides.json");
+const TRANSLATION_PHRASE_OVERRIDES_PATH = path.join(ROOT, "config", "i18n", "translation_phrase_overrides.json");
 
 const DEFAULT_SOURCE_LANG = "en";
 const DEFAULT_TARGET_LANG = "vi";
@@ -101,25 +101,25 @@ function sourceHash(value) {
   return createHash("sha256").update(String(value ?? ""), "utf8").digest("hex");
 }
 
-async function readManualOverrides(source, targetLang) {
-  const payload = await readJsonFile(TRANSLATION_MANUAL_OVERRIDES_PATH, {});
-  const index = createTranslationManualOverrideIndex(normalizeStoredTranslationManualOverrides(payload));
+async function readPhraseOverrides(source, targetLang) {
+  const payload = await readJsonFile(TRANSLATION_PHRASE_OVERRIDES_PATH, {});
+  const index = createTranslationPhraseOverrideIndex(normalizeStoredTranslationPhraseOverrides(payload));
   if (index.duplicates.length) {
-    throw new Error(`Duplicate manual translation override: ${index.duplicates[0]}`);
+    throw new Error(`Duplicate phrase translation override: ${index.duplicates[0]}`);
   }
   const overrides = {};
   for (const [key, sourceText] of Object.entries(source || {})) {
-    const item = resolveTranslationManualOverride(index, {
+    const item = resolveTranslationPhraseOverride(index, {
       target_lang: targetLang,
-      source_text: sourceText
+      source_phrase: sourceText
     });
     if (!item) continue;
-    const errors = validateTranslationManualOverride(item, {
+    const errors = validateTranslationPhraseOverride(item, {
       sourceText,
       context: `backend/${targetLang}: ${key}`
     });
     if (errors.length) throw new Error(errors[0]);
-    overrides[key] = item.manual_override;
+    overrides[key] = item.target_phrase;
   }
   return overrides;
 }
@@ -169,7 +169,7 @@ function normalizeOverrideEntries(source, overrides) {
   );
 }
 
-function applyManualOverrides(source, target, meta, overrides, timestamp = "") {
+function applyPhraseOverrides(source, target, meta, overrides, timestamp = "") {
   const normalizedOverrides = normalizeOverrideEntries(source, overrides);
   const nextTarget = { ...(target || {}) };
   const nextMeta = { ...(meta || {}) };
@@ -179,7 +179,7 @@ function applyManualOverrides(source, target, meta, overrides, timestamp = "") {
     nextTarget[key] = value;
     nextMeta[key] = {
       source_hash: sourceHash(source[key]),
-      origin: "manual_override",
+      origin: "phrase_override",
       updated_at: normalizeText(nextMeta[key]?.updated_at) || effectiveTimestamp
     };
   }
@@ -375,8 +375,8 @@ async function runCheck(options) {
   const source = await readJsonFile(dictionaryPath(options.sourceLang));
   const target = await readJsonFile(dictionaryPath(options.targetLang));
   const meta = await readJsonFile(metadataPath(options.targetLang));
-  const overrides = await readManualOverrides(source, options.targetLang);
-  const effective = applyManualOverrides(source, target, meta, overrides);
+  const overrides = await readPhraseOverrides(source, options.targetLang);
+  const effective = applyPhraseOverrides(source, target, meta, overrides);
   const state = collectSyncState(source, effective.target, effective.meta);
   printCheckSummary(options.targetLang, state);
   return state.ok ? 0 : 1;
@@ -386,8 +386,8 @@ async function runTranslate(options) {
   const source = await readJsonFile(dictionaryPath(options.sourceLang));
   const target = await readJsonFile(dictionaryPath(options.targetLang));
   const meta = await readJsonFile(metadataPath(options.targetLang));
-  const overrides = await readManualOverrides(source, options.targetLang);
-  const effective = applyManualOverrides(source, target, meta, overrides);
+  const overrides = await readPhraseOverrides(source, options.targetLang);
+  const effective = applyPhraseOverrides(source, target, meta, overrides);
   const overrideKeySet = new Set(effective.overrideKeys);
   const state = collectSyncState(source, effective.target, effective.meta);
   const translationKeys = options.forceAll
@@ -444,7 +444,7 @@ async function runTranslate(options) {
     };
   }
 
-  const withOverrides = applyManualOverrides(source, nextTarget, nextMeta, overrides, timestamp);
+  const withOverrides = applyPhraseOverrides(source, nextTarget, nextMeta, overrides, timestamp);
   await writeJsonFile(dictionaryPath(options.targetLang), orderedObjectFromSourceKeys(source, withOverrides.target));
   await writeJsonFile(metadataPath(options.targetLang), orderedObjectFromSourceKeys(source, withOverrides.meta));
 

@@ -353,7 +353,6 @@ IR: {
 				module:     "database"
 				sourceType: "database.#TravelPlan"
 				fields: [
-					{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
@@ -367,7 +366,6 @@ IR: {
 			module:     "database"
 			sourceType: "database.#MarketingTourTravelPlan"
 			fields: [
-				{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
@@ -550,7 +548,6 @@ IR: {
 				module:     "database"
 				sourceType: "database.#BookingTravelPlan"
 				fields: [
-					{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 				{name: "one_pager_hero_image_id", kind: "scalar", typeName: "Identifier", required: false},
 				{name: "one_pager_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
@@ -1262,7 +1259,6 @@ IR: {
 					{name: "styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
 					{name: "style_codes", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
 					{name: "priority", kind: "scalar", typeName: "int", required: false},
-					{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
 					{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 					{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: false},
 					{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
@@ -2393,7 +2389,6 @@ IR: {
 					{name: "short_description_i18n", kind: "map", typeName: "string", required: false},
 					{name: "styles", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
 					{name: "priority", kind: "scalar", typeName: "int", required: false},
-					{name: "tour_card_primary_image_id", kind: "scalar", typeName: "Identifier", required: false},
 					{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
 					{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: false},
 					{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},

@@ -16,22 +16,22 @@ async function writeJson(filePath, data) {
   await writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 }
 
-function manualOverrideItem({
+function phraseOverrideItem({
   targetLang = "vi",
-  sourceText,
-  manualOverride
+  sourcePhrase,
+  targetPhrase
 }) {
   return {
-    source_text: sourceText,
+    source_phrase: sourcePhrase,
     target_lang: targetLang,
-    manual_override: manualOverride
+    target_phrase: targetPhrase
   };
 }
 
-async function writeManualOverrides(repoRoot, items = []) {
-  await writeJson(path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json"), {
-    schema: "translation-manual-overrides/v2",
-    schema_version: 2,
+async function writePhraseOverrides(repoRoot, items = []) {
+  await writeJson(path.join(repoRoot, "config", "i18n", "translation_phrase_overrides.json"), {
+    schema: "translation-phrase-overrides/v1",
+    schema_version: 1,
     items
   });
 }
@@ -68,11 +68,11 @@ async function createFixture() {
       updated_at: "2026-01-02T00:00:00.000Z"
     }
   });
-  await writeManualOverrides(repoRoot, [
-    manualOverrideItem({
+  await writePhraseOverrides(repoRoot, [
+    phraseOverrideItem({
       key: "hero.cta",
-      sourceText: "Plan my trip",
-      manualOverride: "Tạo chuyến đi riêng"
+      sourcePhrase: "Plan my trip",
+      targetPhrase: "Tạo chuyến đi riêng"
     })
   ]);
 
@@ -84,7 +84,7 @@ async function readTranslationSection(repoRoot, relativePath) {
   return JSON.parse(raw);
 }
 
-test("static translation service marks changed source strings stale and exposes manual overrides", async () => {
+test("static translation service marks changed source strings stale and exposes phrase overrides", async () => {
   const repoRoot = await createFixture();
   try {
     const service = createStaticTranslationService({ repoRoot });
@@ -98,7 +98,7 @@ test("static translation service marks changed source strings stale and exposes 
     assert.equal(title.publish_state, "unpublished");
     assert.equal(title.source_hash, sha("New private holidays"));
     assert.equal(cta.status, "manual_override");
-    assert.equal(cta.origin, "manual");
+    assert.equal(cta.origin, "phrase_override");
     assert.equal(cta.freshness_state, "current");
     assert.equal(cta.override, "Tạo chuyến đi riêng");
     assert.equal(extra.status, "extra");
@@ -107,7 +107,7 @@ test("static translation service marks changed source strings stale and exposes 
     assert.equal(state.counts.stale, 1);
     assert.equal(state.counts.manual_override, 1);
     assert.equal(state.counts["freshness_state.stale"], 1);
-    assert.equal(state.counts["origin.manual"], 1);
+    assert.equal(state.counts["origin.phrase_override"], 1);
   } finally {
     await rm(repoRoot, { recursive: true, force: true });
   }
@@ -148,7 +148,7 @@ test("static translation service publishes a versioned snapshot for clean target
     const cta = snapshot.items.find((item) => item.key === "hero.cta");
     assert.equal(snapshot.schema, "translation-snapshot/v1");
     assert.equal(snapshot.target_lang, "vi");
-    assert.equal(cta.origin, "manual");
+    assert.equal(cta.origin, "phrase_override");
     assert.equal(cta.target_text, "Tạo chuyến đi riêng");
     assert.equal(Object.hasOwn(cta, "manual_override"), false);
 
@@ -361,7 +361,7 @@ test("static translation publish uses English fallback for stale or missing requ
   }
 });
 
-test("static translation snapshot publish can run when manual translation writes are disabled", async () => {
+test("static translation snapshot publish can run when phrase policy writes are disabled", async () => {
   const repoRoot = await createFixture();
   try {
     const service = createStaticTranslationService({
@@ -409,7 +409,7 @@ test("static translation snapshot publish can be disabled separately", async () 
   }
 });
 
-test("static translation service rejects manual override writes because config policy is read-only", async () => {
+test("static translation service rejects phrase override writes because config policy is read-only", async () => {
   const repoRoot = await createFixture();
   try {
     const service = createStaticTranslationService({ repoRoot });
@@ -424,7 +424,7 @@ test("static translation service rejects manual override writes because config p
       }),
       (error) => {
         assert.equal(error.status, 403);
-        assert.equal(error.code, "STATIC_TRANSLATION_MANUAL_OVERRIDES_READ_ONLY");
+        assert.equal(error.code, "STATIC_TRANSLATION_PHRASE_OVERRIDES_READ_ONLY");
         return true;
       }
     );
@@ -433,7 +433,109 @@ test("static translation service rejects manual override writes because config p
   }
 });
 
-test("static translation service deletes static cached translations without clearing manual overrides", async () => {
+test("static translation service edits translation policy config files", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const service = createStaticTranslationService({
+      repoRoot,
+      nowIso: () => "2026-05-17T10:00:00.000Z"
+    });
+    const initial = await service.getTranslationPolicyConfig();
+
+    assert.equal(initial.permissions.can_write, true);
+    assert.equal(initial.phrase_overrides.path, "config/i18n/translation_phrase_overrides.json");
+    assert.equal(initial.phrase_overrides.item_count, 1);
+    assert.equal(initial.protected_terms.path, "config/i18n/translation_protected_terms.json");
+
+    const saved = await service.saveTranslationPolicyConfig({
+      phrase_overrides: {
+        expected_revision: initial.phrase_overrides.revision,
+        data: {
+          items: [
+            phraseOverrideItem({
+              sourcePhrase: "New private holidays",
+              targetPhrase: "Kỳ nghỉ riêng mới"
+            })
+          ]
+        }
+      },
+      protected_terms: {
+        expected_revision: initial.protected_terms.revision,
+        data: {
+          items: ["AsiaTravelPlan", "ATP"]
+        }
+      }
+    });
+
+    assert.equal(saved.phrase_overrides.item_count, 1);
+    assert.equal(saved.protected_terms.item_count, 2);
+
+    const phraseOverrides = JSON.parse(await readFile(path.join(repoRoot, "config", "i18n", "translation_phrase_overrides.json"), "utf8"));
+    assert.equal(phraseOverrides.schema, "translation-phrase-overrides/v1");
+    assert.deepEqual(phraseOverrides.items, [
+      phraseOverrideItem({
+        sourcePhrase: "New private holidays",
+        targetPhrase: "Kỳ nghỉ riêng mới"
+      })
+    ]);
+
+    const protectedTerms = JSON.parse(await readFile(path.join(repoRoot, "config", "i18n", "translation_protected_terms.json"), "utf8"));
+    assert.equal(protectedTerms.schema, "translation-protected-terms/v1");
+    assert.equal(protectedTerms.updated_at, "2026-05-17T10:00:00.000Z");
+    assert.deepEqual(protectedTerms.items, ["AsiaTravelPlan", "ATP"]);
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service rejects invalid translation policy config edits", async () => {
+  const repoRoot = await createFixture();
+  try {
+    const service = createStaticTranslationService({ repoRoot });
+
+    await assert.rejects(
+      () => service.saveTranslationPolicyConfig({
+        phrase_overrides: {
+          data: {
+            items: [
+              {
+                source_phrase: "Hello {name}",
+                target_lang: "vi",
+                target_phrase: "Xin chào"
+              }
+            ]
+          }
+        }
+      }),
+      (error) => {
+        assert.equal(error.status, 400);
+        assert.equal(error.code, "STATIC_TRANSLATION_PHRASE_OVERRIDES_INVALID");
+        assert.match(error.message, /template token mismatch/);
+        return true;
+      }
+    );
+
+    await assert.rejects(
+      () => service.saveTranslationPolicyConfig({
+        protected_terms: {
+          data: {
+            items: ["ATP", "atp"]
+          }
+        }
+      }),
+      (error) => {
+        assert.equal(error.status, 400);
+        assert.equal(error.code, "STATIC_TRANSLATION_PROTECTED_TERMS_INVALID");
+        assert.match(error.message, /duplicate protected term/);
+        return true;
+      }
+    );
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test("static translation service deletes static cached translations without clearing phrase overrides", async () => {
   const repoRoot = await createFixture();
   try {
     const service = createStaticTranslationService({ repoRoot });
@@ -443,7 +545,7 @@ test("static translation service deletes static cached translations without clea
     assert.equal(cta.cached, "");
     assert.equal(cta.override, "Tạo chuyến đi riêng");
     assert.equal(cta.status, "manual_override");
-    assert.equal(cta.origin, "manual");
+    assert.equal(cta.origin, "phrase_override");
 
     const section = await readTranslationSection(repoRoot, "customers/frontend-static.vi.json");
     const item = section.items.find((entry) => entry.key === "hero.cta");
@@ -455,7 +557,7 @@ test("static translation service deletes static cached translations without clea
   }
 });
 
-test("static translation service rejects manual override writes when disabled", async () => {
+test("static translation service rejects phrase override writes when disabled", async () => {
   const repoRoot = await createFixture();
   try {
     const service = createStaticTranslationService({ repoRoot, writesEnabled: false });
@@ -559,15 +661,15 @@ test("static translation service exposes marketing tour memory and saves manual 
     assert.equal(marketingTourDe.dirty_count > 0, true);
 
     assert.ok(changedState.revision);
-    await writeManualOverrides(repoRoot, [
-      manualOverrideItem({
+    await writePhraseOverrides(repoRoot, [
+      phraseOverrideItem({
         domain: "marketing-tour-memory",
         section: "customers",
         subsection: "marketing-tours",
         targetLang: "de",
         key: row.key,
-        sourceText: "Lantern walk",
-        manualOverride: "Laternen-Spaziergang"
+        sourcePhrase: "Lantern walk",
+        targetPhrase: "Laternen-Spaziergang"
       })
     ]);
     const saved = await service.getLanguageState("marketing-tour-memory", "de");
@@ -710,24 +812,24 @@ test("static translation service exposes destination scope catalog labels as cus
     assert.equal(sapa.status, "missing");
 
     assert.ok(state.revision);
-    await writeManualOverrides(repoRoot, [
-      manualOverrideItem({
+    await writePhraseOverrides(repoRoot, [
+      phraseOverrideItem({
         domain: "destination-scope-catalog",
         section: "customers",
         subsection: "tour-destinations",
         targetLang: "vi",
         key: "region.region_north.name",
-        sourceText: "North",
-        manualOverride: "Miền Bắc"
+        sourcePhrase: "North",
+        targetPhrase: "Miền Bắc"
       }),
-      manualOverrideItem({
+      phraseOverrideItem({
         domain: "destination-scope-catalog",
         section: "customers",
         subsection: "tour-destinations",
         targetLang: "vi",
         key: "place.place_sapa.name",
-        sourceText: "Sapa",
-        manualOverride: "Sa Pa"
+        sourcePhrase: "Sapa",
+        targetPhrase: "Sa Pa"
       })
     ]);
     const saved = await service.getLanguageState("destination-scope-catalog", "vi");
@@ -763,7 +865,7 @@ test("static translation service exposes destination scope catalog labels as cus
   }
 });
 
-test("static translation service clears marketing tour machine cache without deleting manual overrides", async () => {
+test("static translation service clears marketing tour machine cache without deleting phrase overrides", async () => {
   const repoRoot = await createFixture();
   try {
     const translationMemoryStore = createTranslationMemoryStore({
@@ -790,15 +892,15 @@ test("static translation service clears marketing tour machine cache without del
       "vi",
       { kind: "test", display: "test" }
     );
-    await writeManualOverrides(repoRoot, [
-      manualOverrideItem({
+    await writePhraseOverrides(repoRoot, [
+      phraseOverrideItem({
         domain: "marketing-tour-memory",
         section: "customers",
         subsection: "marketing-tours",
         targetLang: "vi",
         key: sha("Hoi An evening"),
-        sourceText: "Hoi An evening",
-        manualOverride: "manual:Hoi An evening"
+        sourcePhrase: "Hoi An evening",
+        targetPhrase: "phrase:Hoi An evening"
       })
     ]);
 

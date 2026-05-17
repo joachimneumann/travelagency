@@ -887,12 +887,6 @@ function selectedTourCardImageIds(plan, images) {
   const legacyIds = (Array.isArray(images) ? images : [])
     .filter((image) => image.included)
     .map((image) => image.id);
-  const storedPrimaryId = normalizeText(plan?.tour_card_primary_image_id);
-  const primaryIndex = storedPrimaryId ? legacyIds.indexOf(storedPrimaryId) : -1;
-  if (primaryIndex > 0) {
-    const [primaryId] = legacyIds.splice(primaryIndex, 1);
-    legacyIds.unshift(primaryId);
-  }
   return legacyIds;
 }
 
@@ -1092,7 +1086,6 @@ function applyTourCardImageSelectionToPlan(plan, orderedImageIds) {
   const normalizedIds = normalizeTourCardImageIdList(orderedImageIds);
   const selectedSet = new Set(normalizedIds);
   plan.tour_card_image_ids = normalizedIds;
-  plan.tour_card_primary_image_id = normalizedIds[0] || null;
   for (const day of Array.isArray(plan.days) ? plan.days : []) {
     for (const service of Array.isArray(day?.services) ? day.services : []) {
       const image = service?.image && typeof service.image === "object" && !Array.isArray(service.image)

@@ -10,11 +10,11 @@ import {
 } from "../../../../shared/generated/language_catalog.js";
 import { translationMemorySourceKey } from "../lib/translation_memory_store.js";
 import {
-  createTranslationManualOverrideIndex,
-  normalizeStoredTranslationManualOverrides,
-  resolveTranslationManualOverride,
-  validateTranslationManualOverride
-} from "../lib/translation_manual_overrides.js";
+  createTranslationPhraseOverrideIndex,
+  normalizeStoredTranslationPhraseOverrides,
+  resolveTranslationPhraseOverride,
+  validateTranslationPhraseOverride
+} from "../lib/translation_phrase_overrides.js";
 import { normalizeStoredTranslationProtectedTerms } from "../lib/translation_protected_terms.js";
 import { normalizeDestinationCountryCode } from "./destination_scope.js";
 
@@ -170,7 +170,7 @@ export function createStaticTranslationService({
   repoRoot,
   translationsSnapshotDir = path.join(repoRoot || "", "content", "translations"),
   protectedTermsPath = path.join(repoRoot || "", "config", "i18n", "translation_protected_terms.json"),
-  manualOverridesPath = path.join(repoRoot || "", "config", "i18n", "translation_manual_overrides.json"),
+  phraseOverridesPath = path.join(repoRoot || "", "config", "i18n", "translation_phrase_overrides.json"),
   readStore = null,
   readTours = null,
   readTourVariants = null,
@@ -220,7 +220,7 @@ export function createStaticTranslationService({
       context: config.context,
       writes_enabled: writesEnabled !== false,
       snapshot_publish_enabled: snapshotPublishEnabled !== false,
-      manual_overrides_writable: false
+      phrase_overrides_writable: false
     };
   }
 
@@ -244,12 +244,22 @@ export function createStaticTranslationService({
     }
   }
 
-  function assertManualOverrideWritesManagedInConfig() {
+  function assertPhraseOverrideWritesManagedInConfig() {
     throw apiError(
       403,
-      "STATIC_TRANSLATION_MANUAL_OVERRIDES_READ_ONLY",
-      "Manual translation overrides are managed in config/i18n/translation_manual_overrides.json."
+      "STATIC_TRANSLATION_PHRASE_OVERRIDES_READ_ONLY",
+      "Phrase translation overrides are managed in config/i18n/translation_phrase_overrides.json."
     );
+  }
+
+  function assertTranslationPolicyWritesEnabled() {
+    if (writesEnabled === false) {
+      throw apiError(
+        403,
+        "STATIC_TRANSLATION_POLICY_WRITES_DISABLED",
+        "Translation policy editing is disabled in this environment."
+      );
+    }
   }
 
   function translationScope(config) {
@@ -366,10 +376,10 @@ export function createStaticTranslationService({
   }
 
   function normalizeRowOrigin(row) {
-    if (normalizeText(row?.override)) return "manual";
+    const origin = normalizeText(row?.origin || row?.cache_meta?.origin);
+    if (normalizeText(row?.override)) return origin === "phrase_override" ? "phrase_override" : "manual";
     const status = normalizeText(row?.status);
     if (status === "content_translation") return "content";
-    const origin = normalizeText(row?.origin || row?.cache_meta?.origin);
     if (origin === "manual_override") return "manual";
     if (rowTargetText(row)) return origin || "machine";
     return "";
@@ -392,7 +402,7 @@ export function createStaticTranslationService({
     if (origin === "english_fallback") return "needs_translation";
     if (freshnessState === "missing") return "needs_translation";
     if (freshnessState === "stale" || freshnessState === "legacy") return "needs_update";
-    if (origin === "manual") return "protected";
+    if (origin === "manual" || origin === "phrase_override") return "protected";
     if (!rowTargetText(row)) return "needs_translation";
     return "reviewed";
   }
@@ -429,49 +439,227 @@ export function createStaticTranslationService({
     return readJsonFile(path.join(translationsSnapshotDir, "manifest.json"), {});
   }
 
-  async function readManualOverrideIndex() {
-    const { data } = await readJsonFile(manualOverridesPath, {});
-    const normalized = normalizeStoredTranslationManualOverrides(data);
-    const index = createTranslationManualOverrideIndex(normalized);
+  async function readPhraseOverrideIndex() {
+    const { data } = await readJsonFile(phraseOverridesPath, {});
+    const normalized = normalizeStoredTranslationPhraseOverrides(data);
+    const index = createTranslationPhraseOverrideIndex(normalized);
     if (index.duplicates.length) {
       throw apiError(
         500,
-        "STATIC_TRANSLATION_MANUAL_OVERRIDE_DUPLICATE",
-        `Duplicate manual translation override: ${index.duplicates[0]}`
+        "STATIC_TRANSLATION_PHRASE_OVERRIDE_DUPLICATE",
+        `Duplicate phrase translation override: ${index.duplicates[0]}`
       );
     }
     return index;
   }
 
-  function applyManualOverridePolicy(config, language, row, manualOverrideIndex) {
+  function relativeRepoPath(filePath) {
+    const relative = path.relative(repoRoot, filePath);
+    return relative && !relative.startsWith("..") && !path.isAbsolute(relative)
+      ? relative.split(path.sep).join("/")
+      : filePath;
+  }
+
+  function revisionForPolicyPayload(data) {
+    return sha256(JSON.stringify(data || {}));
+  }
+
+  function rawPhraseOverrideItems(payload) {
+    return Array.isArray(payload) ? payload : payload?.items;
+  }
+
+  function validatePhraseOverrideConfigPayload(payload) {
+    const items = rawPhraseOverrideItems(payload);
+    if (!Array.isArray(items)) {
+      throw apiError(
+        400,
+        "STATIC_TRANSLATION_PHRASE_OVERRIDES_INVALID",
+        "translation_phrase_overrides.json must contain an items array."
+      );
+    }
+
+    const errors = [];
+    const seen = new Set();
+    items.forEach((item, index) => {
+      const label = `phrase override item ${index + 1}`;
+      const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const normalized = {
+        source_phrase: normalizeText(source.source_phrase || source.sourcePhrase),
+        target_lang: normalizeText(source.target_lang || source.targetLang).toLowerCase(),
+        target_phrase: normalizeText(source.target_phrase || source.targetPhrase)
+      };
+      if (!item || typeof item !== "object" || Array.isArray(item)) {
+        errors.push(`${label}: item must be an object.`);
+        return;
+      }
+      errors.push(...validateTranslationPhraseOverride(normalized, { context: label }));
+      const duplicateKey = `${normalized.target_lang}\u0000${normalized.source_phrase}`;
+      if (normalized.target_lang && normalized.source_phrase) {
+        if (seen.has(duplicateKey)) errors.push(`${label}: duplicate target_lang/source_phrase pair.`);
+        seen.add(duplicateKey);
+      }
+    });
+
+    if (errors.length) {
+      const error = apiError(
+        400,
+        "STATIC_TRANSLATION_PHRASE_OVERRIDES_INVALID",
+        errors[0]
+      );
+      error.details = errors;
+      throw error;
+    }
+
+    return normalizeStoredTranslationPhraseOverrides(payload);
+  }
+
+  function validateProtectedTermsConfigPayload(payload) {
+    const rawItems = Array.isArray(payload) ? payload : payload?.items;
+    if (!Array.isArray(rawItems)) {
+      throw apiError(
+        400,
+        "STATIC_TRANSLATION_PROTECTED_TERMS_INVALID",
+        "translation_protected_terms.json must contain an items array."
+      );
+    }
+
+    const errors = [];
+    const seen = new Set();
+    rawItems.forEach((item, index) => {
+      const label = `protected term item ${index + 1}`;
+      if (typeof item !== "string") {
+        errors.push(`${label}: item must be text.`);
+        return;
+      }
+      const normalized = normalizeText(item);
+      if (!normalized) {
+        errors.push(`${label}: item cannot be blank.`);
+        return;
+      }
+      const duplicateKey = normalized.toLowerCase();
+      if (seen.has(duplicateKey)) errors.push(`${label}: duplicate protected term.`);
+      seen.add(duplicateKey);
+    });
+
+    if (errors.length) {
+      const error = apiError(
+        400,
+        "STATIC_TRANSLATION_PROTECTED_TERMS_INVALID",
+        errors[0]
+      );
+      error.details = errors;
+      throw error;
+    }
+
+    return {
+      ...normalizeStoredTranslationProtectedTerms(payload),
+      updated_at: nowIso()
+    };
+  }
+
+  async function getTranslationPolicyConfig() {
+    const [
+      { data: phraseOverridesData },
+      { data: protectedTermsData }
+    ] = await Promise.all([
+      readJsonFile(phraseOverridesPath, {}),
+      readJsonFile(protectedTermsPath, {})
+    ]);
+    const phraseOverrides = normalizeStoredTranslationPhraseOverrides(phraseOverridesData);
+    const protectedTerms = normalizeStoredTranslationProtectedTerms(protectedTermsData);
+    return {
+      permissions: {
+        can_write: writesEnabled !== false
+      },
+      phrase_overrides: {
+        path: relativeRepoPath(phraseOverridesPath),
+        revision: revisionForPolicyPayload(phraseOverrides),
+        item_count: phraseOverrides.items.length,
+        data: phraseOverrides
+      },
+      protected_terms: {
+        path: relativeRepoPath(protectedTermsPath),
+        revision: revisionForPolicyPayload(protectedTerms),
+        item_count: protectedTerms.items.length,
+        data: protectedTerms
+      }
+    };
+  }
+
+  async function saveTranslationPolicyConfig(payload = {}) {
+    assertTranslationPolicyWritesEnabled();
+    const phraseOverridePayload = payload?.phrase_overrides;
+    const protectedTermsPayload = payload?.protected_terms;
+    if (!phraseOverridePayload && !protectedTermsPayload) {
+      throw apiError(
+        400,
+        "STATIC_TRANSLATION_POLICY_EMPTY",
+        "Provide phrase_overrides or protected_terms."
+      );
+    }
+
+    const current = await getTranslationPolicyConfig();
+    const nextPhraseOverrides = phraseOverridePayload
+      ? validatePhraseOverrideConfigPayload(phraseOverridePayload.data || phraseOverridePayload)
+      : null;
+    const nextProtectedTerms = protectedTermsPayload
+      ? validateProtectedTermsConfigPayload(protectedTermsPayload.data || protectedTermsPayload)
+      : null;
+
+    if (
+      phraseOverridePayload
+      && normalizeText(phraseOverridePayload.expected_revision || payload.expected_phrase_overrides_revision)
+      && normalizeText(phraseOverridePayload.expected_revision || payload.expected_phrase_overrides_revision) !== current.phrase_overrides.revision
+    ) {
+      throw apiError(409, "STATIC_TRANSLATION_PHRASE_OVERRIDES_REVISION_MISMATCH", "Phrase translation overrides changed. Refresh and retry.");
+    }
+
+    if (
+      protectedTermsPayload
+      && normalizeText(protectedTermsPayload.expected_revision || payload.expected_protected_terms_revision)
+      && normalizeText(protectedTermsPayload.expected_revision || payload.expected_protected_terms_revision) !== current.protected_terms.revision
+    ) {
+      throw apiError(409, "STATIC_TRANSLATION_PROTECTED_TERMS_REVISION_MISMATCH", "Translation protected terms changed. Refresh and retry.");
+    }
+
+    if (nextPhraseOverrides) {
+      await writeJsonAtomic(phraseOverridesPath, nextPhraseOverrides);
+    }
+    if (nextProtectedTerms) {
+      await writeJsonAtomic(protectedTermsPath, nextProtectedTerms);
+    }
+    return getTranslationPolicyConfig();
+  }
+
+  function applyPhraseOverridePolicy(config, language, row, phraseOverrideIndex) {
     if (!row?.source) return row;
-    const item = resolveTranslationManualOverride(manualOverrideIndex, {
+    const item = resolveTranslationPhraseOverride(phraseOverrideIndex, {
       target_lang: language.code,
-      source_text: row.source
+      source_phrase: row.source
     });
     if (!item) return row;
 
-    const errors = validateTranslationManualOverride(item, {
+    const errors = validateTranslationPhraseOverride(item, {
       sourceText: row.source,
       context: `${config.id}/${language.code}:${row.key}`
     });
     const cacheMeta = {
       ...(row.cache_meta && typeof row.cache_meta === "object" && !Array.isArray(row.cache_meta) ? row.cache_meta : {}),
-      manual_override_source_text: item.source_text
+      phrase_override_source_phrase: item.source_phrase
     };
     if (errors.length) {
       return {
         ...row,
-        manual_override_error: errors[0],
+        phrase_override_error: errors[0],
         cache_meta: cacheMeta
       };
     }
     return {
       ...row,
-      override: item.manual_override,
-      origin: "manual_override",
+      override: item.target_phrase,
+      origin: "phrase_override",
       status: "manual_override",
-      manual_override_source_text: item.source_text,
+      phrase_override_source_phrase: item.source_phrase,
       cache_meta: cacheMeta
     };
   }
@@ -680,7 +868,7 @@ export function createStaticTranslationService({
 
   async function rowsFromTranslationStore(config, language, sourceRows, legacyRows = [], { publishedIndex = null } = {}) {
     const store = await readTranslationStoreSection(config, language);
-    const manualOverrideIndex = await readManualOverrideIndex();
+    const phraseOverrideIndex = await readPhraseOverrideIndex();
     const storeItemsByKey = new Map();
     for (const item of store.items) {
       const key = normalizeText(item?.key);
@@ -725,7 +913,7 @@ export function createStaticTranslationService({
       rows.push({ ...legacy, status: "extra" });
     }
 
-    const policyRows = rows.map((row) => applyManualOverridePolicy(config, language, row, manualOverrideIndex));
+    const policyRows = rows.map((row) => applyPhraseOverridePolicy(config, language, row, phraseOverrideIndex));
     const augmentedRows = await augmentRows(config, language, policyRows, publishedIndex);
     const counts = countRows(augmentedRows);
     return {
@@ -1254,7 +1442,7 @@ export function createStaticTranslationService({
   async function patchOverrides(domain, targetLang, payload = {}) {
     assertWritesEnabled();
     getLanguageConfig(domain, targetLang);
-    assertManualOverrideWritesManagedInConfig();
+    assertPhraseOverrideWritesManagedInConfig();
   }
 
   function translationProfileForConfig(config) {
@@ -1684,7 +1872,10 @@ export function createStaticTranslationService({
     const targetText = usesEnglishFallback ? normalizeText(row.source) : rowTargetText(row);
     const manualOverride = usesEnglishFallback ? "" : normalizeText(row.override);
     const machineText = usesEnglishFallback ? "" : normalizeText(row.cached);
-    const origin = usesEnglishFallback ? "english_fallback" : (manualOverride ? "manual" : (normalizeText(row.origin) || (machineText ? "machine" : "")));
+    const rowOrigin = normalizeText(row.origin);
+    const origin = usesEnglishFallback
+      ? "english_fallback"
+      : (manualOverride ? (rowOrigin === "phrase_override" ? "phrase_override" : "manual") : (rowOrigin || (machineText ? "machine" : "")));
     const freshnessState = targetText ? "current" : "missing";
     const reviewState = usesEnglishFallback
       ? "needs_translation"
@@ -1927,6 +2118,8 @@ export function createStaticTranslationService({
         languages: languageStates
       };
     },
+    getTranslationPolicyConfig,
+    saveTranslationPolicyConfig,
     patchOverrides,
     deleteCache,
     applyMissingTranslations,

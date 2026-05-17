@@ -77,31 +77,31 @@ function createSampleTour() {
   };
 }
 
-test("marketing tour translation overlay applies manual overrides over content translations and strips embedded fallback", async () => {
+test("marketing tour translation overlay applies phrase overrides over content translations and strips embedded fallback", async () => {
   const translationsRoot = await mkdtemp(path.join(os.tmpdir(), "marketing-tour-translations-"));
   const customersDir = path.join(translationsRoot, "customers");
-  const manualOverridesPath = path.join(translationsRoot, "..", "config", "i18n", "translation_manual_overrides.json");
+  const phraseOverridesPath = path.join(translationsRoot, "..", "config", "i18n", "translation_phrase_overrides.json");
   await mkdir(customersDir, { recursive: true });
-  await mkdir(path.dirname(manualOverridesPath), { recursive: true });
+  await mkdir(path.dirname(phraseOverridesPath), { recursive: true });
   await writeFile(path.join(customersDir, "marketing-tours.fr.json"), JSON.stringify({
     items: [
       { source_text: "English tour title", target_text: "Published French tour title" },
       { source_text: "English service title", target_text: "Published French service title" }
     ]
   }, null, 2), "utf8");
-  await writeFile(manualOverridesPath, JSON.stringify({
-    schema: "translation-manual-overrides/v2",
-    schema_version: 2,
+  await writeFile(phraseOverridesPath, JSON.stringify({
+    schema: "translation-phrase-overrides/v1",
+    schema_version: 1,
     items: [
-      { source_text: "English tour title", target_lang: "fr", manual_override: "Manual French tour title" }
+      { source_phrase: "English tour title", target_lang: "fr", target_phrase: "Phrase French tour title" }
     ]
   }, null, 2), "utf8");
 
-  const published = await loadPublishedMarketingTourTranslations(translationsRoot, ["fr"], { manualOverridesPath });
+  const published = await loadPublishedMarketingTourTranslations(translationsRoot, ["fr"], { phraseOverridesPath });
   const original = createSampleTour();
   const localized = applyMarketingTourTranslations(original, "fr", published.get("fr"));
 
-  assert.equal(localized.title, "Manual French tour title");
+  assert.equal(localized.title, "Phrase French tour title");
   assert.equal(localized.title_i18n, undefined);
   assert.equal(localized.short_description_i18n, undefined);
   assert.equal(localized.travel_plan.days[0].title_i18n, undefined);
@@ -121,24 +121,24 @@ test("marketing tour translation overlay strips embedded translations for Englis
   assert.equal(original.title_i18n.fr, "Embedded French tour title");
 });
 
-test("tour API applies marketing tour manual overrides over content translations", async () => {
+test("tour API applies marketing tour phrase overrides over content translations", async () => {
   const repoRoot = await mkdtemp(path.join(os.tmpdir(), "marketing-tour-handler-"));
   const translationsRoot = path.join(repoRoot, "content", "translations");
   const customersDir = path.join(translationsRoot, "customers");
-  const manualOverridesPath = path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
+  const phraseOverridesPath = path.join(repoRoot, "config", "i18n", "translation_phrase_overrides.json");
   await mkdir(customersDir, { recursive: true });
-  await mkdir(path.dirname(manualOverridesPath), { recursive: true });
+  await mkdir(path.dirname(phraseOverridesPath), { recursive: true });
   await writeFile(path.join(customersDir, "marketing-tours.fr.json"), JSON.stringify({
     items: [
       { source_text: "English tour title", target_text: "Published French tour title" },
       { source_text: "English service title", target_text: "Published French service title" }
     ]
   }, null, 2), "utf8");
-  await writeFile(manualOverridesPath, JSON.stringify({
-    schema: "translation-manual-overrides/v2",
-    schema_version: 2,
+  await writeFile(phraseOverridesPath, JSON.stringify({
+    schema: "translation-phrase-overrides/v1",
+    schema_version: 1,
     items: [
-      { source_text: "English tour title", target_lang: "fr", manual_override: "Manual French tour title" }
+      { source_phrase: "English tour title", target_lang: "fr", target_phrase: "Phrase French tour title" }
     ]
   }, null, 2), "utf8");
 
@@ -222,7 +222,7 @@ test("tour API applies marketing tour manual overrides over content translations
     TEMP_UPLOAD_DIR: path.join(repoRoot, "tmp"),
     TOURS_DIR: path.join(repoRoot, "content", "tours"),
     TRANSLATIONS_SNAPSHOT_DIR: translationsRoot,
-    TRANSLATION_MANUAL_OVERRIDES_PATH: manualOverridesPath,
+    TRANSLATION_PHRASE_OVERRIDES_PATH: phraseOverridesPath,
     BOOKING_IMAGES_DIR: path.join(repoRoot, "booking-images"),
     writeFile: async () => {},
     rm: async () => {}
@@ -230,7 +230,7 @@ test("tour API applies marketing tour manual overrides over content translations
 
   await handlers.handleListTours({ url: "/api/v1/tours?lang=fr" }, {});
   assert.equal(responses[0].status, 200);
-  assert.equal(responses[0].body.items[0].title, "Manual French tour title");
+  assert.equal(responses[0].body.items[0].title, "Phrase French tour title");
   assert.equal(responses[0].body.items[0].short_description, "English tour description");
 
   await handlers.handleSearchTourTravelPlanServices({ url: "/api/v1/tours/travel-plan-services/search?lang=fr&q=published" }, {});
@@ -381,7 +381,7 @@ test("public one-pager PDF route renders published Tour Variants without requiri
     PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR: cacheDir,
     TOURS_DIR: path.join(repoRoot, "content", "tours"),
     TRANSLATIONS_SNAPSHOT_DIR: path.join(repoRoot, "content", "translations"),
-    TRANSLATION_MANUAL_OVERRIDES_PATH: path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json"),
+    TRANSLATION_PHRASE_OVERRIDES_PATH: path.join(repoRoot, "config", "i18n", "translation_phrase_overrides.json"),
     BOOKING_IMAGES_DIR: path.join(repoRoot, "booking-images"),
     writeFile,
     rm

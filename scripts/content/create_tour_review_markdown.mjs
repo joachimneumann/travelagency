@@ -234,7 +234,6 @@ function collectImageCandidates(service) {
 
 function collectTravelTourCardImages(tour) {
   const travelPlan = tour?.travel_plan || {};
-  const selectedPrimaryId = normalizeText(travelPlan.tour_card_primary_image_id);
   const selectedImageIds = Array.from(new Set((Array.isArray(travelPlan.tour_card_image_ids)
     ? travelPlan.tour_card_image_ids
     : [])
@@ -261,13 +260,6 @@ function collectTravelTourCardImages(tour) {
     }
   }
 
-  const primaryIndex = selectedPrimaryId
-    ? entries.findIndex((entry) => entry.id === selectedPrimaryId)
-    : -1;
-  if (primaryIndex > 0) {
-    const [primaryEntry] = entries.splice(primaryIndex, 1);
-    entries.unshift(primaryEntry);
-  }
   if (selectedImageIds.length) {
     entries.sort((left, right) => {
       const leftIndex = selectedImageIds.indexOf(left.id);

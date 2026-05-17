@@ -528,7 +528,7 @@ test("translation policy lives under committed config while generated stores sta
 
   assert.match(
     runtimeSource,
-    /TRANSLATION_POLICY_DIR = resolveConfigPathFromRepoRoot\([\s\S]*path\.join\("config", "i18n"\)[\s\S]*TRANSLATION_PROTECTED_TERMS_PATH[\s\S]*path\.join\("config", "i18n", "translation_protected_terms\.json"\)[\s\S]*TRANSLATION_MANUAL_OVERRIDES_PATH[\s\S]*path\.join\("config", "i18n", "translation_manual_overrides\.json"\)/,
+    /TRANSLATION_POLICY_DIR = resolveConfigPathFromRepoRoot\([\s\S]*path\.join\("config", "i18n"\)[\s\S]*TRANSLATION_PROTECTED_TERMS_PATH[\s\S]*path\.join\("config", "i18n", "translation_protected_terms\.json"\)[\s\S]*TRANSLATION_PHRASE_OVERRIDES_PATH[\s\S]*path\.join\("config", "i18n", "translation_phrase_overrides\.json"\)/,
     "Runtime should load human-maintained translation policy from committed config/i18n files"
   );
   assert.match(
@@ -3925,10 +3925,10 @@ test("tour card images are selected from travel-plan service images", async () =
     /include_in_travel_tour_card\?: bool/,
     "Travel-plan service images should expose the tour-card inclusion flag"
   );
-  assert.match(
+  assert.doesNotMatch(
     travelPlanModelSource,
-    /tour_card_primary_image_id\?: common\.\#Identifier/,
-    "Travel plans should store the selected first tour-card image id separately from image inclusion"
+    /tour_card_primary_image_id/,
+    "Travel plans should use tour_card_image_ids as the only stored web-page card image selection"
   );
   assert.match(
     travelPlanModelSource,
@@ -3977,18 +3977,23 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     homepageGeneratorSource,
-    /function selectedTravelTourCardImagePaths\(travelPlan\)[\s\S]*const selectedImageId = normalizeText\(travelPlan\?\.tour_card_primary_image_id\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.findIndex\(\(entry\) => entry\.id === selectedImageId\)[\s\S]*const pictures = selectedTravelTourCardImagePaths\(travelPlan\)/,
-    "Public homepage generation should derive tour-card pictures from selected service images while honoring the explicit first image"
+    /function selectedTravelTourCardImagePaths\(travelPlan\)[\s\S]*const selectedImageIds = Array\.from\(new Set\(\(Array\.isArray\(travelPlan\?\.tour_card_image_ids\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.sort\(\(left, right\) => \{[\s\S]*selectedImageIds\.indexOf\(left\.id\)[\s\S]*const pictures = selectedTravelTourCardImagePaths\(travelPlan\)/,
+    "Public homepage generation should derive tour-card pictures from the ordered selected service image ids"
+  );
+  assert.doesNotMatch(
+    homepageGeneratorSource,
+    /tour_card_primary_image_id/,
+    "Public homepage generation should not read the removed primary tour-card image field"
   );
   assert.match(
     homepageGeneratorSource,
     /import \{ createTravelPlanHelpers \}[\s\S]*const \{ normalizeMarketingTourTravelPlan \} = createTravelPlanHelpers\(\);[\s\S]*createTourHelpers\(\{ toursDir: toursRoot, safeInt, normalizeMarketingTourTravelPlan \}\)/,
-    "Public homepage generation should use the full travel-plan normalizer so selected first image ids are preserved"
+    "Public homepage generation should use the full travel-plan normalizer so ordered selected image ids are preserved"
   );
   assert.match(
     mainToursSource,
-    /function selectedTravelTourCardPictures\(item\)[\s\S]*const selectedImageId = normalizeText\(item\?\.travel_plan\?\.tour_card_primary_image_id\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.findIndex\(\(entry\) => entry\.id === selectedImageId\)[\s\S]*return entries\.map\(\(entry\) => entry\.src\)/,
-    "Runtime homepage tour cards should honor the explicit first travel-plan service image"
+    /function selectedTravelTourCardPictures\(item\)[\s\S]*const selectedImageIds = Array\.from\(new Set\(\(Array\.isArray\(item\?\.travel_plan\?\.tour_card_image_ids\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.sort\(\(left, right\) => \{[\s\S]*selectedImageIds\.indexOf\(left\.id\)[\s\S]*return entries\.map\(\(entry\) => entry\.src\)/,
+    "Runtime homepage tour cards should honor ordered travel-plan service image ids"
   );
   assert.match(
     mainToursSource,
@@ -4002,8 +4007,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     toursListSource,
-    /function firstTravelTourCardImagePath\(tour\)[\s\S]*const selectedImageId = normalizeText\(tour\?\.travel_plan\?\.tour_card_primary_image_id\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.findIndex\(\(entry\) => entry\.id === selectedImageId\)[\s\S]*return entries\[0\]\?\.storagePath \|\| "";/,
-    "Marketing tour list thumbnails should honor the explicit first travel-plan service image"
+    /function firstTravelTourCardImagePath\(tour\)[\s\S]*const selectedImageIds = Array\.from\(new Set\(\(Array\.isArray\(tour\?\.travel_plan\?\.tour_card_image_ids\)[\s\S]*include_in_travel_tour_card !== true[\s\S]*entries\.sort\(\(left, right\) => \{[\s\S]*selectedImageIds\.indexOf\(left\.id\)[\s\S]*return entries\[0\]\?\.storagePath \|\| "";/,
+    "Marketing tour list thumbnails should honor ordered travel-plan service image ids"
   );
   assert.match(
     toursHandlerSource,
@@ -4017,8 +4022,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     toursHandlerSource,
-    /translationManualOverridesPath[\s\S]*loadMarketingTourContentTranslationMap\(lang\)[\s\S]*loadPublishedMarketingTourTranslations\(translationsSnapshotDir, \[normalizedLang\], \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\)[\s\S]*return publishedByLang\.get\(normalizedLang\) \|\| new Map\(\);[\s\S]*localizeMarketingToursForRead\(tours, lang\)[\s\S]*applyMarketingTourTranslations\(tour, lang, translations\)[\s\S]*localizeMarketingTourForRead\(tour, lang\)[\s\S]*const localizedTour = await localizeMarketingTourForRead\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
-    "On-demand one-pager PDFs should apply published content/translations and manual override marketing-tour copy before localized PDF rendering"
+    /translationPhraseOverridesPath[\s\S]*loadMarketingTourContentTranslationMap\(lang\)[\s\S]*loadPublishedMarketingTourTranslations\(translationsSnapshotDir, \[normalizedLang\], \{[\s\S]*phraseOverridesPath: translationPhraseOverridesPath[\s\S]*\}\)[\s\S]*return publishedByLang\.get\(normalizedLang\) \|\| new Map\(\);[\s\S]*localizeMarketingToursForRead\(tours, lang\)[\s\S]*applyMarketingTourTranslations\(tour, lang, translations\)[\s\S]*localizeMarketingTourForRead\(tour, lang\)[\s\S]*const localizedTour = await localizeMarketingTourForRead\(tour, lang\);[\s\S]*normalizeTourForRead\(localizedTour, \{ lang \}\)[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "On-demand one-pager PDFs should apply published content/translations and phrase override marketing-tour copy before localized PDF rendering"
   );
   assert.doesNotMatch(
     toursHandlerSource,
@@ -4027,13 +4032,13 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     onePagerScriptSource,
-    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*const translationManualOverridesPath = path\.join\(repoRoot, "config", "i18n", "translation_manual_overrides\.json"\);[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, options\.languages, \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
-    "Batch one-pager PDFs should apply published marketing-tour snapshots and manual overrides through the shared translator before localized PDF rendering"
+    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const translationsSnapshotDir = path\.join\(repoRoot, "content", "translations"\);[\s\S]*const translationPhraseOverridesPath = path\.join\(repoRoot, "config", "i18n", "translation_phrase_overrides\.json"\);[\s\S]*const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, options\.languages, \{[\s\S]*phraseOverridesPath: translationPhraseOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, lang, publishedTranslations\);[\s\S]*const readModel = tourHelpers\.normalizeTourForRead\(localizedTour, \{ lang \}\);[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*sourceLang: "en"[\s\S]*flatMode: "localized"/,
+    "Batch one-pager PDFs should apply published marketing-tour snapshots and phrase overrides through the shared translator before localized PDF rendering"
   );
   assert.match(
     homepageGeneratorSource,
-    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages, \{[\s\S]*manualOverridesPath: translationManualOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, normalizedLang, publishedTranslations\);[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
-    "Homepage generation should apply published marketing-tour snapshots and manual overrides to source-only tours"
+    /from "\.\.\/\.\.\/backend\/app\/src\/domain\/marketing_tour_translations\.js";[\s\S]*const publishedMarketingTourTranslations = await loadPublishedMarketingTourTranslations\(translationsSnapshotDir, languages, \{[\s\S]*phraseOverridesPath: translationPhraseOverridesPath[\s\S]*\}\);[\s\S]*const localizedTour = applyMarketingTourTranslations\(tour, normalizedLang, publishedTranslations\);[\s\S]*const readModelBase = normalizeTourForRead\(localizedTour, \{ lang: normalizedLang \}\)/,
+    "Homepage generation should apply published marketing-tour snapshots and phrase overrides to source-only tours"
   );
   assert.match(
     tourMatrixPublishSource,
@@ -4072,8 +4077,8 @@ test("tour card images are selected from travel-plan service images", async () =
   );
   assert.match(
     travelPlanEditorSource,
-    /function syncTravelPlanDraftFromDom\(\)[\s\S]*draft\.tour_card_primary_image_id = state\.travelPlanDraft\?\.tour_card_primary_image_id \|\| null;[\s\S]*state\.travelPlanDraft = normalizeTravelPlanState\(draft\);/,
-    "Travel-plan DOM sync should preserve the selected first card image through save"
+    /function syncTravelPlanDraftFromDom\(\)[\s\S]*draft\.tour_card_image_ids = Array\.isArray\(state\.travelPlanDraft\?\.tour_card_image_ids\)[\s\S]*state\.travelPlanDraft = normalizeTravelPlanState\(draft\);/,
+    "Travel-plan DOM sync should preserve ordered card image ids through save"
   );
   assert.doesNotMatch(
     travelPlanHelpersSource,
@@ -5105,7 +5110,7 @@ test("translations page exposes one translate action and leaves website generati
   assert.match(
     translationsSource,
     /async function saveOverrides\(section\)[\s\S]*try \{[\s\S]*await loadSectionState\(section, \{ preserveLanguage: true \}\)[\s\S]*await loadTranslationStatus\(\{ updateMessage: true \}\);[\s\S]*\} finally \{[\s\S]*state\.isSaving = false;[\s\S]*updateActions\(\);/,
-    "Saving manual overrides should keep the action buttons busy until the global status has refreshed"
+    "Saving phrase overrides should keep the action buttons busy until the global status has refreshed"
   );
   assert.match(
     translationsStyles,
@@ -6748,7 +6753,7 @@ test("marketing tour travel-plan PDF endpoint stays backend-only without an edit
   assert.doesNotMatch(tourAdapterSource, /\/api\/v1\/tours\/\$\{encodeURIComponent\(tourId\)\}\/travel-plan\.pdf/, "Marketing tour editor should not open the private tour travel-plan PDF endpoint directly");
   assert.doesNotMatch(tourAdapterSource, /saveCurrentTravelPlanBeforePdf|openTourTravelPlanPdf/, "Marketing tour editor should not wire a save-before-open full PDF action");
   assert.match(routesSource, /\/api\\\/v1\\\/tours\\\/\(\[\^\/\]\+\)\\\/travel-plan\\\.pdf[\s\S]*handleGetTourTravelPlanPdf/, "Routes should expose a private marketing tour travel-plan PDF endpoint");
-  assert.match(tourHandlersSource, /handleGetTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*writeTravelPlanPdf\(bookingLikeTour, travelPlan,[\s\S]*includeMarketingTourBackground: true,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/, "Marketing tour PDF handler should reuse the shared travel-plan PDF writer, use the overview background, and disable guide and closing sections");
+  assert.match(tourHandlersSource, /async function renderTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*publicTourTravelPlanPdfCacheKey[\s\S]*cachedPublicTravelPlanPdf[\s\S]*writeTravelPlanPdf\(bookingLikeTour, travelPlan,[\s\S]*includeMarketingTourBackground: true,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false[\s\S]*handleGetTourTravelPlanPdf[\s\S]*await renderTourTravelPlanPdf\(req, res, tour, lang\)/, "Marketing tour PDF handler should reuse the shared travel-plan PDF writer through the public-tour cache, use the overview background, and disable guide and closing sections");
   assert.match(travelPlanPdfSource, /includeGuideSection = options\?\.includeGuideSection !== false[\s\S]*includeEndingSection = options\?\.includeEndingSection !== false[\s\S]*if \(includeGuideSection\) \{[\s\S]*drawGuideSection[\s\S]*if \(includeEndingSection\) \{[\s\S]*drawClosing/, "Shared travel-plan PDF writer should allow callers to omit guide and closing sections");
   assert.match(travelPlanPdfSource, /drawMarketingTourOnePagerLogo,[\s\S]*drawMarketingTourOnePagerTripTitle,[\s\S]*marketingTourLogoPath = ""[\s\S]*drawPageBackground\(\{ includeHeroImage: true \}\)[\s\S]*drawMarketingTourOnePagerLogo\(doc, marketingTourLogoPath\)/, "Marketing tour travel-plan PDFs should reuse the one-page transparent brand logo at the top left of the first page");
   assert.match(travelPlanPdfSource, /resolveMarketingTourOnePagerCoverFonts[\s\S]*marketingCoverFonts[\s\S]*includeMarketingTourBackground[\s\S]*drawMarketingTourOnePagerTripTitle\(doc, heroTitle, marketingCoverFonts, lang\)[\s\S]*drawTravelPlanHero\(/, "Marketing tour travel-plan PDFs should reuse the one-page Trip to and title treatment instead of the booking-style header card");

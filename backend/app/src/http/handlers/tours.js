@@ -25,8 +25,14 @@ import {
   applyMarketingTourTranslations,
   loadPublishedMarketingTourTranslations
 } from "../../domain/marketing_tour_translations.js";
-import { createHash } from "node:crypto";
 import { rename } from "node:fs/promises";
+import {
+  publicTourOnePagerPdfCacheDir as defaultPublicTourOnePagerPdfCacheDir,
+  publicTourOnePagerPdfCacheKey,
+  publicTourPdfCachePath,
+  publicTourTravelPlanPdfCacheDir as defaultPublicTourTravelPlanPdfCacheDir,
+  publicTourTravelPlanPdfCacheKey
+} from "../../lib/public_tour_pdf_cache.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -82,12 +88,14 @@ export function createTourHandlers(deps) {
     path,
     execFile,
     TEMP_UPLOAD_DIR,
+    PUBLIC_TOUR_PDF_CACHE_DIR,
     PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR,
+    PUBLIC_TOUR_TRAVEL_PLAN_PDF_CACHE_DIR,
     PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR,
     PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR,
     TOURS_DIR,
     TRANSLATIONS_SNAPSHOT_DIR,
-    TRANSLATION_MANUAL_OVERRIDES_PATH,
+    TRANSLATION_PHRASE_OVERRIDES_PATH,
     BOOKING_IMAGES_DIR,
     writeFile,
     rm
@@ -98,8 +106,12 @@ export function createTourHandlers(deps) {
   const VIDEO_UPLOAD_BODY_MAX_BYTES = 150 * 1024 * 1024;
   const TOUR_STALE_UPDATE_MESSAGE = "This tour was updated by someone else. Reload before saving.";
   const CUSTOM_ONE_PAGER_PREVIEW_TTL_MS = 20 * 60 * 1000;
+  const publicTourPdfCacheDir = normalizeText(PUBLIC_TOUR_PDF_CACHE_DIR)
+    || path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-cache");
   const publicTourOnePagerPdfCacheDir = normalizeText(PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR)
-    || path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-cache", "one-pagers");
+    || defaultPublicTourOnePagerPdfCacheDir(publicTourPdfCacheDir);
+  const publicTourTravelPlanPdfCacheDir = normalizeText(PUBLIC_TOUR_TRAVEL_PLAN_PDF_CACHE_DIR)
+    || defaultPublicTourTravelPlanPdfCacheDir(publicTourPdfCacheDir);
   const publicTourOnePagerPdfPreviewDir = normalizeText(PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR)
     || path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-previews", "one-pagers");
   const publicTourTravelPlanPdfPreviewDir = normalizeText(PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR)
@@ -107,23 +119,18 @@ export function createTourHandlers(deps) {
   const CUSTOM_PREVIEW_TITLE_MAX_LENGTH = 120;
   const CUSTOM_PREVIEW_TITLE_PROPOSAL_LIMIT = 1;
   const CUSTOM_PREVIEW_TITLE_LOCATION_LIMIT = 3;
-  const PUBLIC_ONE_PAGER_CACHE_VERSION = "public-one-pager-v1";
   const PDF_SLOW_LOG_THRESHOLD_MS = 5000;
   const translationsSnapshotDir = normalizeText(TRANSLATIONS_SNAPSHOT_DIR) || path.join(repoRoot, "content", "translations");
-  const translationManualOverridesPath = normalizeText(TRANSLATION_MANUAL_OVERRIDES_PATH)
-    || path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
+  const translationPhraseOverridesPath = normalizeText(TRANSLATION_PHRASE_OVERRIDES_PATH)
+    || path.join(repoRoot, "config", "i18n", "translation_phrase_overrides.json");
   const customOnePagerPreviewTokens = new Map();
-  const publicOnePagerPdfInflight = new Map();
+  const publicTourPdfInflight = new Map();
   function nowMs() {
     return Date.now();
   }
 
   function durationMs(startMs) {
     return Math.max(0, nowMs() - Number(startMs || 0));
-  }
-
-  function sha256Json(value) {
-    return createHash("sha256").update(JSON.stringify(value)).digest("hex");
   }
 
   function shouldLogPdfTiming(elapsedMs) {
@@ -195,7 +202,7 @@ export function createTourHandlers(deps) {
     if (!normalizedLang || normalizedLang === "en") return new Map();
     try {
       const publishedByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, [normalizedLang], {
-        manualOverridesPath: translationManualOverridesPath
+        phraseOverridesPath: translationPhraseOverridesPath
       });
       return publishedByLang.get(normalizedLang) || new Map();
     } catch (error) {
@@ -893,14 +900,17 @@ export function createTourHandlers(deps) {
   }
 
   function publicOnePagerPdfCachePath(cacheKey) {
-    return path.join(publicTourOnePagerPdfCacheDir, `${cacheKey}.pdf`);
+    return publicTourPdfCachePath(publicTourOnePagerPdfCacheDir, cacheKey);
   }
 
-  async function cachedPublicOnePagerPdf(cacheKey, renderPdf) {
-    const outputPath = publicOnePagerPdfCachePath(cacheKey);
+  function publicTravelPlanPdfCachePath(cacheKey) {
+    return publicTourPdfCachePath(publicTourTravelPlanPdfCacheDir, cacheKey);
+  }
+
+  async function cachedPublicTourPdf(outputPath, renderPdf) {
     if (existsSync(outputPath)) return { outputPath, cached: true, stages: [] };
-    if (publicOnePagerPdfInflight.has(outputPath)) {
-      const result = await publicOnePagerPdfInflight.get(outputPath);
+    if (publicTourPdfInflight.has(outputPath)) {
+      const result = await publicTourPdfInflight.get(outputPath);
       return { ...result, cached: true };
     }
 
@@ -922,10 +932,18 @@ export function createTourHandlers(deps) {
         throw error;
       }
     })().finally(() => {
-      publicOnePagerPdfInflight.delete(outputPath);
+      publicTourPdfInflight.delete(outputPath);
     });
-    publicOnePagerPdfInflight.set(outputPath, promise);
+    publicTourPdfInflight.set(outputPath, promise);
     return promise;
+  }
+
+  async function cachedPublicOnePagerPdf(cacheKey, renderPdf) {
+    return cachedPublicTourPdf(publicOnePagerPdfCachePath(cacheKey), renderPdf);
+  }
+
+  async function cachedPublicTravelPlanPdf(cacheKey, renderPdf) {
+    return cachedPublicTourPdf(publicTravelPlanPdfCachePath(cacheKey), renderPdf);
   }
 
   async function renderTourOnePagerPdf(req, res, tour, lang) {
@@ -949,11 +967,7 @@ export function createTourHandlers(deps) {
       ...readModel,
       travel_plan: travelPlan
     };
-    const cacheKey = sha256Json({
-      version: PUBLIC_ONE_PAGER_CACHE_VERSION,
-      lang: normalizeTourLang(lang),
-      tour: renderTour
-    }).slice(0, 40);
+    const cacheKey = publicTourOnePagerPdfCacheKey({ lang, tour: renderTour });
     try {
       const result = await cachedPublicOnePagerPdf(cacheKey, (outputPath) => writeMarketingTourOnePagerPdf(renderTour, {
         lang,
@@ -972,6 +986,52 @@ export function createTourHandlers(deps) {
       });
     } catch (error) {
       sendJson(res, 500, { error: "Could not render tour one-pager PDF", detail: String(error?.message || error) });
+    }
+  }
+
+  async function renderTourTravelPlanPdf(req, res, tour, lang, { timingKind = "tour-travel-plan" } = {}) {
+    if (typeof writeTravelPlanPdf !== "function") {
+      sendJson(res, 503, { error: "Tour travel-plan PDF rendering is not configured" });
+      return;
+    }
+
+    const startedAtMs = nowMs();
+    const localizedTour = await localizeMarketingTourForRead(tour, lang);
+    const travelPlan = normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
+      sourceLang: "en",
+      contentLang: lang,
+      flatLang: lang,
+      flatMode: "localized",
+      strictReferences: false
+    });
+    const bookingLikeTour = travelPlanPdfBookingLikeTour(localizedTour, lang);
+    const tourId = normalizeText(tour?.id) || "tour";
+    const cacheKey = publicTourTravelPlanPdfCacheKey({
+      lang,
+      booking: bookingLikeTour,
+      travelPlan
+    });
+    try {
+      const result = await cachedPublicTravelPlanPdf(cacheKey, (outputPath) => writeTravelPlanPdf(bookingLikeTour, travelPlan, {
+        lang,
+        outputPath,
+        includeMarketingTourBackground: true,
+        includeGuideSection: false,
+        includeEndingSection: false
+      }));
+      await sendFileWithCache(req, res, result.outputPath, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${tourTravelPlanFilename(tour).replace(/"/g, "")}"`
+      });
+      logPdfTiming({
+        kind: timingKind,
+        tourId,
+        lang,
+        cached: result.cached,
+        elapsedMs: durationMs(startedAtMs),
+        stages: result.stages
+      });
+    } catch (error) {
+      sendJson(res, 500, { error: "Could not render tour travel-plan PDF", detail: String(error?.message || error) });
     }
   }
 
@@ -1224,6 +1284,7 @@ export function createTourHandlers(deps) {
 
     return {
       ok: true,
+      customized: hasCustomizedSelection,
       tour: {
         ...readModel,
         ...(customizedTitle ? {
@@ -1288,6 +1349,12 @@ export function createTourHandlers(deps) {
       sendJson(res, previewCheck.status || 400, { error: previewCheck.error || "Invalid customized tour preview" });
       return;
     }
+    if (previewCheck.customized !== true) {
+      sendJson(res, 200, {
+        pdf_url: `/public/v1/tours/${encodeURIComponent(baseTourId)}/one-pager.pdf?lang=${encodeURIComponent(lang)}`
+      }, { "Cache-Control": "no-store" });
+      return;
+    }
 
     const token = randomUUID();
     const expiresAtMs = nowMs() + CUSTOM_ONE_PAGER_PREVIEW_TTL_MS;
@@ -1325,6 +1392,12 @@ export function createTourHandlers(deps) {
     const previewCheck = await customizedPreviewTourFromTokenEntry({ baseTourId, lang, selectedDays, title });
     if (!previewCheck.ok) {
       sendJson(res, previewCheck.status || 400, { error: previewCheck.error || "Invalid customized tour preview" });
+      return;
+    }
+    if (previewCheck.customized !== true) {
+      sendJson(res, 200, {
+        pdf_url: `/public/v1/tours/${encodeURIComponent(baseTourId)}/travel-plan.pdf?lang=${encodeURIComponent(lang)}`
+      }, { "Cache-Control": "no-store" });
       return;
     }
 
@@ -1462,6 +1535,18 @@ export function createTourHandlers(deps) {
       return;
     }
     await renderTourOnePagerPdf(req, res, publicTour, lang);
+  }
+
+  async function handleGetPublicTourTravelPlanPdf(req, res, [tourId]) {
+    const lang = requestLang(req.url);
+    const tours = (await readTours()).map((tour) => normalizeTourForStorage(tour));
+    const tourVariants = await readStoredTourVariants();
+    const publicTour = publicTourLikeById(tours, tourId, tourVariants);
+    if (!publicTour) {
+      sendJson(res, 404, { error: "Tour not found" });
+      return;
+    }
+    await renderTourTravelPlanPdf(req, res, publicTour, lang, { timingKind: "public-travel-plan" });
   }
 
   async function handleListTours(req, res) {
@@ -1651,14 +1736,9 @@ export function createTourHandlers(deps) {
   }
 
   async function handleGetTourTravelPlanPdf(req, res, [tourId]) {
-    const startedAtMs = nowMs();
     const principal = getPrincipal(req);
     if (!canReadTours(principal)) {
       sendJson(res, 403, { error: "Forbidden" });
-      return;
-    }
-    if (typeof writeTravelPlanPdf !== "function") {
-      sendJson(res, 503, { error: "Tour travel-plan PDF rendering is not configured" });
       return;
     }
 
@@ -1670,47 +1750,7 @@ export function createTourHandlers(deps) {
       return;
     }
 
-    const localizedTour = await localizeMarketingTourForRead(tour, lang);
-    const travelPlan = normalizeMarketingTourTravelPlan(localizedTour.travel_plan, {
-      sourceLang: "en",
-      contentLang: lang,
-      flatLang: lang,
-      flatMode: "localized",
-      strictReferences: false
-    });
-    const bookingLikeTour = travelPlanPdfBookingLikeTour(localizedTour, lang);
-    const tourIdPart = normalizeText(tour?.id) || "tour";
-    const previewPath = path.join(publicTourTravelPlanPdfPreviewDir, `tour-travel-plan-${tourIdPart}-${randomUUID()}.pdf`);
-    let renderedPath = previewPath;
-    try {
-      await mkdir(path.dirname(previewPath), { recursive: true });
-      const result = await writeTravelPlanPdf(bookingLikeTour, travelPlan, {
-        lang,
-        outputPath: previewPath,
-        includeMarketingTourBackground: true,
-        includeGuideSection: false,
-        includeEndingSection: false
-      });
-      renderedPath = normalizeText(result?.outputPath) || previewPath;
-      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
-        "Content-Disposition": `inline; filename="${tourTravelPlanFilename(tour).replace(/"/g, "")}"`
-      });
-      logPdfTiming({
-        kind: "tour-travel-plan",
-        tourId: tourIdPart,
-        lang,
-        cached: false,
-        elapsedMs: durationMs(startedAtMs),
-        stages: result?.timings
-      });
-    } catch (error) {
-      sendJson(res, 500, { error: "Could not render tour travel-plan PDF", detail: String(error?.message || error) });
-    } finally {
-      await rm(renderedPath, { force: true }).catch(() => {});
-      if (renderedPath !== previewPath) {
-        await rm(previewPath, { force: true }).catch(() => {});
-      }
-    }
+    await renderTourTravelPlanPdf(req, res, tour, lang);
   }
 
   async function handleTranslateTourFields(req, res) {
@@ -2731,6 +2771,7 @@ export function createTourHandlers(deps) {
   return {
     handlePublicListTours,
     handleGetPublicTourOnePagerPdf,
+    handleGetPublicTourTravelPlanPdf,
     handlePostPublicTourOnePagerPreview,
     handleGetPublicTourOnePagerPreviewPdf,
     handlePostPublicTourTravelPlanPreview,

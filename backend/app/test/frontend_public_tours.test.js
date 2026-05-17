@@ -282,7 +282,6 @@ test("public tour travel-plan content and detail chrome follow the frontend lang
     destinations: ["Vietnam"],
     pictures: ["/assets/img/service-detail.webp"],
     travel_plan: {
-      tour_card_primary_image_id: "image_card_selected",
       tour_card_image_ids: ["image_card_selected"],
       days: [
         {

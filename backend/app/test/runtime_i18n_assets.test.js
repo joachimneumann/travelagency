@@ -202,16 +202,16 @@ test("runtime i18n generator preserves protected-term-only strings from snapshot
   assert.equal(frontendVi["backend.button_full"], "AsiaTravelPlan Backend");
 });
 
-test("runtime i18n generator applies committed manual overrides after snapshots", async () => {
+test("runtime i18n generator applies committed phrase overrides after snapshots", async () => {
   const { repoRoot, frontendSource } = await createRuntimeI18nFixture();
-  await writeJson(path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json"), {
-    schema: "translation-manual-overrides/v2",
-    schema_version: 2,
+  await writeJson(path.join(repoRoot, "config", "i18n", "translation_phrase_overrides.json"), {
+    schema: "translation-phrase-overrides/v1",
+    schema_version: 1,
     items: [
       {
-        source_text: frontendSource["tour.card.plan_trip"],
+        source_phrase: frontendSource["tour.card.plan_trip"],
         target_lang: "vi",
-        manual_override: "Khám phá chuyến đi"
+        target_phrase: "Khám phá chuyến đi"
       }
     ]
   });
@@ -221,7 +221,7 @@ test("runtime i18n generator applies committed manual overrides after snapshots"
   const frontendVi = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), "utf8"));
   const frontendMeta = JSON.parse(await readFile(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), "utf8"));
   assert.equal(frontendVi["tour.card.plan_trip"], "Khám phá chuyến đi");
-  assert.equal(frontendMeta["tour.card.plan_trip"].origin, "manual_override");
+  assert.equal(frontendMeta["tour.card.plan_trip"].origin, "phrase_override");
 });
 
 test("runtime i18n check validates snapshots without writing generated files", async () => {

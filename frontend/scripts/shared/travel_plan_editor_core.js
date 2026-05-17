@@ -670,7 +670,6 @@ export function createBookingTravelPlanModule(ctx) {
   function normalizeTravelPlanForEnabledFeatures(plan) {
     const source = plan && typeof plan === "object" && !Array.isArray(plan) ? plan : {};
     const next = {
-      tour_card_primary_image_id: source.tour_card_primary_image_id || null,
       tour_card_image_ids: Array.isArray(source.tour_card_image_ids) ? source.tour_card_image_ids : [],
       one_pager_hero_image_id: source.one_pager_hero_image_id || null,
       one_pager_image_ids: Array.isArray(source.one_pager_image_ids) ? source.one_pager_image_ids : [],
@@ -3187,7 +3186,6 @@ export function createBookingTravelPlanModule(ctx) {
         .map((item) => [item.id, item])
     );
     const draft = createEmptyTravelPlan();
-    draft.tour_card_primary_image_id = state.travelPlanDraft?.tour_card_primary_image_id || null;
     draft.tour_card_image_ids = Array.isArray(state.travelPlanDraft?.tour_card_image_ids)
       ? [...state.travelPlanDraft.tour_card_image_ids]
       : [];

@@ -2,9 +2,9 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { normalizeText } from "../lib/text.js";
 import {
-  createTranslationManualOverrideIndex,
-  resolveTranslationManualOverride
-} from "../lib/translation_manual_overrides.js";
+  createTranslationPhraseOverrideIndex,
+  resolveTranslationPhraseOverride
+} from "../lib/translation_phrase_overrides.js";
 import { translationMemorySourceKey } from "../lib/translation_memory_store.js";
 import { normalizeTourLang } from "./tour_catalog_i18n.js";
 
@@ -19,28 +19,28 @@ async function readJsonObject(filePath, fallback = {}) {
   }
 }
 
-async function readTranslationManualOverrideIndex(manualOverridesPath) {
-  const normalizedPath = normalizeText(manualOverridesPath);
-  if (!normalizedPath) return createTranslationManualOverrideIndex({ items: [] });
+async function readTranslationPhraseOverrideIndex(phraseOverridesPath) {
+  const normalizedPath = normalizeText(phraseOverridesPath);
+  if (!normalizedPath) return createTranslationPhraseOverrideIndex({ items: [] });
   const payload = await readJsonObject(normalizedPath, { items: [] });
-  const index = createTranslationManualOverrideIndex(payload);
+  const index = createTranslationPhraseOverrideIndex(payload);
   if (index.duplicates.length) {
-    throw new Error(`Duplicate manual translation override: ${index.duplicates[0]}`);
+    throw new Error(`Duplicate phrase translation override: ${index.duplicates[0]}`);
   }
   return index;
 }
 
-function overlayManualMarketingTourTranslations(entries, manualOverrideIndex, lang) {
+function overlayPhraseMarketingTourTranslations(entries, phraseOverrideIndex, lang) {
   if (!(entries instanceof Map)) return entries;
-  const items = Array.isArray(manualOverrideIndex?.items) ? manualOverrideIndex.items : [];
+  const items = Array.isArray(phraseOverrideIndex?.items) ? phraseOverrideIndex.items : [];
   for (const item of items) {
     if (normalizeTourLang(item?.target_lang) !== lang) continue;
-    const sourceText = normalizeText(item?.source_text);
-    const manualOverride = resolveTranslationManualOverride(manualOverrideIndex, {
+    const sourceText = normalizeText(item?.source_phrase);
+    const phraseOverride = resolveTranslationPhraseOverride(phraseOverrideIndex, {
       target_lang: lang,
-      source_text: sourceText
+      source_phrase: sourceText
     });
-    const targetText = normalizeText(manualOverride?.manual_override);
+    const targetText = normalizeText(phraseOverride?.target_phrase);
     if (!sourceText || !targetText) continue;
     entries.set(translationMemorySourceKey(sourceText), targetText);
   }
@@ -50,8 +50,8 @@ function overlayManualMarketingTourTranslations(entries, manualOverrideIndex, la
 export async function loadPublishedMarketingTourTranslations(translationsSnapshotDir, languages, options = {}) {
   const mapsByLang = new Map();
   const root = normalizeText(translationsSnapshotDir);
-  const manualOverridesPath = typeof options === "string" ? options : options?.manualOverridesPath;
-  const manualOverrideIndex = await readTranslationManualOverrideIndex(manualOverridesPath);
+  const phraseOverridesPath = typeof options === "string" ? options : options?.phraseOverridesPath;
+  const phraseOverrideIndex = await readTranslationPhraseOverrideIndex(phraseOverridesPath);
   const uniqueLanguages = Array.from(new Set(
     (Array.isArray(languages) ? languages : [])
       .map((lang) => normalizeTourLang(lang))
@@ -69,7 +69,7 @@ export async function loadPublishedMarketingTourTranslations(translationsSnapsho
         entries.set(translationMemorySourceKey(sourceText), targetText);
       }
     }
-    overlayManualMarketingTourTranslations(entries, manualOverrideIndex, lang);
+    overlayPhraseMarketingTourTranslations(entries, phraseOverrideIndex, lang);
     mapsByLang.set(lang, entries);
   }));
   return mapsByLang;

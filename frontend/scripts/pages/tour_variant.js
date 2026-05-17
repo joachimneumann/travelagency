@@ -491,12 +491,6 @@ function selectedTourCardImageIds(images = collectTourCardImageOptions()) {
   const legacyIds = (Array.isArray(images) ? images : [])
     .filter((image) => image.included)
     .map((image) => image.id);
-  const storedPrimaryId = normalizeText(state.variant?.tour_card_primary_image_id);
-  const primaryIndex = storedPrimaryId ? legacyIds.indexOf(storedPrimaryId) : -1;
-  if (primaryIndex > 0) {
-    const [primaryId] = legacyIds.splice(primaryIndex, 1);
-    legacyIds.unshift(primaryId);
-  }
   return legacyIds;
 }
 
@@ -504,7 +498,6 @@ function applyTourCardImageSelectionToVariant(orderedImageIds) {
   if (!state.variant || typeof state.variant !== "object" || Array.isArray(state.variant)) return;
   const normalizedIds = normalizeTourCardImageIdList(orderedImageIds);
   state.variant.tour_card_image_ids = normalizedIds;
-  state.variant.tour_card_primary_image_id = normalizedIds[0] || null;
 }
 
 function variantHasDayLocation() {
@@ -999,7 +992,6 @@ async function loadOptionsForCreate() {
     seasonality_start_month: "",
     seasonality_end_month: "",
     published_on_webpage: false,
-    tour_card_primary_image_id: null,
     tour_card_image_ids: [],
     base_marketing_tour_id: normalizeText(qs.get("base_marketing_tour_id")),
     boundary_logistics: {
@@ -1047,7 +1039,6 @@ function buildPayload() {
     seasonality_start_month: normalizeText(els.seasonStart?.value),
     seasonality_end_month: normalizeText(els.seasonEnd?.value),
     priority: Number.isFinite(Number(els.priority?.value)) ? Number(els.priority.value) : 50,
-    tour_card_primary_image_id: tourCardImageIds[0] || null,
     tour_card_image_ids: tourCardImageIds,
     published_on_webpage: publishOnWebpage,
     base_marketing_tour_id: normalizeText(variant.base_marketing_tour_id || els.baseTour?.value),

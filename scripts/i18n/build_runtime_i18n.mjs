@@ -10,11 +10,11 @@ import {
   FRONTEND_LANGUAGE_CODES
 } from "../../shared/generated/language_catalog.js";
 import {
-  createTranslationManualOverrideIndex,
-  normalizeStoredTranslationManualOverrides,
-  resolveTranslationManualOverride,
-  validateTranslationManualOverride
-} from "../../backend/app/src/lib/translation_manual_overrides.js";
+  createTranslationPhraseOverrideIndex,
+  normalizeStoredTranslationPhraseOverrides,
+  resolveTranslationPhraseOverride,
+  validateTranslationPhraseOverride
+} from "../../backend/app/src/lib/translation_phrase_overrides.js";
 import { normalizeStoredTranslationProtectedTerms } from "../../backend/app/src/lib/translation_protected_terms.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -119,17 +119,17 @@ async function readProtectedTermSet(filePath) {
   }
 }
 
-async function readManualOverrideIndex(filePath) {
+async function readPhraseOverrideIndex(filePath) {
   try {
     const parsed = await readJsonObject(filePath);
-    const normalized = normalizeStoredTranslationManualOverrides(parsed);
-    const index = createTranslationManualOverrideIndex(normalized);
+    const normalized = normalizeStoredTranslationPhraseOverrides(parsed);
+    const index = createTranslationPhraseOverrideIndex(normalized);
     if (index.duplicates.length) {
-      throw new Error(`Duplicate manual translation override: ${index.duplicates[0]}`);
+      throw new Error(`Duplicate phrase translation override: ${index.duplicates[0]}`);
     }
     return index;
   } catch (error) {
-    if (error?.code === "ENOENT") return createTranslationManualOverrideIndex({});
+    if (error?.code === "ENOENT") return createTranslationPhraseOverrideIndex({});
     throw error;
   }
 }
@@ -147,7 +147,7 @@ function usage() {
     "  --domain <domain>     Limit to frontend and/or backend. Repeatable.",
     "  --snapshot-dir <path> Override content/translations.",
     "  --protected-terms <path> Override config/i18n/translation_protected_terms.json.",
-    "  --manual-overrides <path> Override config/i18n/translation_manual_overrides.json.",
+    "  --phrase-overrides <path> Override config/i18n/translation_phrase_overrides.json.",
     "  --repo-root <path>    Override repository root.",
     "  --quiet               Suppress success output."
   ].join("\n"));
@@ -158,7 +158,7 @@ function parseArgs(argv) {
     repoRoot: DEFAULT_REPO_ROOT,
     snapshotDir: "",
     protectedTermsPath: "",
-    manualOverridesPath: "",
+    phraseOverridesPath: "",
     check: false,
     strict: true,
     quiet: false,
@@ -197,8 +197,8 @@ function parseArgs(argv) {
       options.protectedTermsPath = path.resolve(normalizeText(args.shift()));
       continue;
     }
-    if (token === "--manual-overrides") {
-      options.manualOverridesPath = path.resolve(normalizeText(args.shift()));
+    if (token === "--phrase-overrides") {
+      options.phraseOverridesPath = path.resolve(normalizeText(args.shift()));
       continue;
     }
     if (token === "--target") {
@@ -223,9 +223,9 @@ function parseArgs(argv) {
   options.protectedTermsPath = options.protectedTermsPath
     ? path.resolve(options.protectedTermsPath)
     : path.join(options.repoRoot, "config", "i18n", "translation_protected_terms.json");
-  options.manualOverridesPath = options.manualOverridesPath
-    ? path.resolve(options.manualOverridesPath)
-    : path.join(options.repoRoot, "config", "i18n", "translation_manual_overrides.json");
+  options.phraseOverridesPath = options.phraseOverridesPath
+    ? path.resolve(options.phraseOverridesPath)
+    : path.join(options.repoRoot, "config", "i18n", "translation_phrase_overrides.json");
   options.domains = unique(options.domains);
   options.targetLangs = unique(options.targetLangs);
 
@@ -290,7 +290,7 @@ function itemTargetText(item) {
   );
 }
 
-function validateSnapshotItems({ config, lang, source, snapshot, manifest, strict, protectedTerms = new Set(), manualOverrides = null }) {
+function validateSnapshotItems({ config, lang, source, snapshot, manifest, strict, protectedTerms = new Set(), phraseOverrides = null }) {
   const errors = [];
   const items = Array.isArray(snapshot?.items) ? snapshot.items : null;
   if (!items) {
@@ -366,9 +366,9 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
     const itemSourceHash = normalizeText(item.source_hash);
     const rawTargetText = itemTargetText(item);
     let targetText = shouldPreserveProtectedSource(sourceValue, protectedTerms) ? sourceValue : rawTargetText;
-    const manualOverride = resolveTranslationManualOverride(manualOverrides, {
+    const phraseOverride = resolveTranslationPhraseOverride(phraseOverrides, {
       target_lang: lang,
-      source_text: sourceValue
+      source_phrase: sourceValue
     });
 
     if (itemSourceText !== sourceValue) {
@@ -380,15 +380,15 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
       errors.push(`${config.id}/${lang}: ${key} has stale source_hash.`);
     }
 
-    if (manualOverride) {
-      const manualErrors = validateTranslationManualOverride(manualOverride, {
+    if (phraseOverride) {
+      const phraseErrors = validateTranslationPhraseOverride(phraseOverride, {
         sourceText: sourceValue,
         context: `${config.id}/${lang}: ${key}`
       });
-      if (manualErrors.length) {
-        errors.push(...manualErrors);
+      if (phraseErrors.length) {
+        errors.push(...phraseErrors);
       } else {
-        targetText = manualOverride.manual_override;
+        targetText = phraseOverride.target_phrase;
       }
     }
 
@@ -398,8 +398,8 @@ function validateSnapshotItems({ config, lang, source, snapshot, manifest, stric
 
     target[key] = targetText;
     meta[key] = metadataFromSnapshotItem(item, snapshot, manifest, expectedHash);
-    if (manualOverride && normalizeText(targetText) === normalizeText(manualOverride.manual_override)) {
-      meta[key].origin = "manual_override";
+    if (phraseOverride && normalizeText(targetText) === normalizeText(phraseOverride.target_phrase)) {
+      meta[key].origin = "phrase_override";
     }
   }
 
@@ -455,11 +455,11 @@ function selectSections({ manifest, config, targetLangs }) {
   return [...byLang.entries()].map(([lang, section]) => ({ lang, section }));
 }
 
-async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, protectedTermsPath, manualOverridesPath, domains, targetLangs, strict }) {
+async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, protectedTermsPath, phraseOverridesPath, domains, targetLangs, strict }) {
   const manifestPath = path.join(snapshotDir, "manifest.json");
   const manifest = await readJsonObject(manifestPath);
   const protectedTerms = await readProtectedTermSet(protectedTermsPath);
-  const manualOverrides = await readManualOverrideIndex(manualOverridesPath);
+  const phraseOverrides = await readPhraseOverrideIndex(phraseOverridesPath);
   if (strict && normalizeText(manifest.schema) && normalizeText(manifest.schema) !== TRANSLATION_SNAPSHOT_SCHEMA) {
     throw new Error(`Unsupported translation manifest schema: ${manifest.schema}`);
   }
@@ -487,7 +487,7 @@ async function loadRuntimeBuildPlan({ repoRoot, snapshotDir, protectedTermsPath,
         manifest,
         strict,
         protectedTerms,
-        manualOverrides
+        phraseOverrides
       });
       if (build.errors.length) {
         errors.push(...build.errors);
@@ -567,9 +567,9 @@ export async function generateRuntimeI18nFromSnapshots(rawOptions = {}) {
     protectedTermsPath: rawOptions.protectedTermsPath
       ? path.resolve(rawOptions.protectedTermsPath)
       : path.join(path.resolve(rawOptions.repoRoot || DEFAULT_REPO_ROOT), "config", "i18n", "translation_protected_terms.json"),
-    manualOverridesPath: rawOptions.manualOverridesPath
-      ? path.resolve(rawOptions.manualOverridesPath)
-      : path.join(path.resolve(rawOptions.repoRoot || DEFAULT_REPO_ROOT), "config", "i18n", "translation_manual_overrides.json"),
+    phraseOverridesPath: rawOptions.phraseOverridesPath
+      ? path.resolve(rawOptions.phraseOverridesPath)
+      : path.join(path.resolve(rawOptions.repoRoot || DEFAULT_REPO_ROOT), "config", "i18n", "translation_phrase_overrides.json"),
     domains: unique(rawOptions.domains || []),
     targetLangs: unique(rawOptions.targetLangs || []),
     check: Boolean(rawOptions.check),

@@ -69,6 +69,31 @@ export function createStaticTranslationHandlers({
     }
   }
 
+  async function handleGetStaticTranslationPolicy(req, res) {
+    if (!canAccess(req)) {
+      rejectForbidden(res);
+      return;
+    }
+    try {
+      sendJson(res, 200, await staticTranslationService.getTranslationPolicyConfig());
+    } catch (error) {
+      sendError(sendJson, res, error);
+    }
+  }
+
+  async function handlePatchStaticTranslationPolicy(req, res) {
+    if (!canAccess(req)) {
+      rejectForbidden(res);
+      return;
+    }
+    try {
+      const payload = await readBodyJson(req);
+      sendJson(res, 200, await staticTranslationService.saveTranslationPolicyConfig(payload));
+    } catch (error) {
+      sendError(sendJson, res, error);
+    }
+  }
+
   async function handleGetStaticTranslationLanguageState(req, res, params = []) {
     if (!canAccess(req)) {
       rejectForbidden(res);
@@ -174,6 +199,8 @@ export function createStaticTranslationHandlers({
     handleListStaticTranslationDomains,
     handleListStaticTranslationLanguages,
     handleGetStaticTranslationStatus,
+    handleGetStaticTranslationPolicy,
+    handlePatchStaticTranslationPolicy,
     handleGetStaticTranslationLanguageState,
     handlePatchStaticTranslationOverrides,
     handleDeleteStaticTranslationCache,

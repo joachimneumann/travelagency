@@ -98,16 +98,8 @@ function normalizeTourVariantImageIds(values) {
 function applyTourVariantImageSelection(target, source) {
   if (!target || typeof target !== "object" || Array.isArray(target)) return;
   if (hasOwn(source, "tour_card_image_ids")) {
-    const imageIds = normalizeTourVariantImageIds(source.tour_card_image_ids);
-    target.tour_card_image_ids = imageIds;
-    target.tour_card_primary_image_id = imageIds[0] || null;
+    target.tour_card_image_ids = normalizeTourVariantImageIds(source.tour_card_image_ids);
     return;
-  }
-  const primaryImageId = normalizeText(source?.tour_card_primary_image_id);
-  if (primaryImageId) {
-    target.tour_card_primary_image_id = primaryImageId;
-  } else {
-    delete target.tour_card_primary_image_id;
   }
   delete target.tour_card_image_ids;
 }
@@ -309,20 +301,7 @@ export function createTourVariantHelpers({
     if (payload.seasonality_start_month !== undefined) next.seasonality_start_month = normalizeText(payload.seasonality_start_month);
     if (payload.seasonality_end_month !== undefined) next.seasonality_end_month = normalizeText(payload.seasonality_end_month);
     if (payload.priority !== undefined) next.priority = safeInt(payload.priority) ?? 50;
-    if (payload.tour_card_image_ids !== undefined || payload.tour_card_primary_image_id !== undefined) {
-      if (payload.tour_card_image_ids !== undefined) {
-        applyTourVariantImageSelection(next, payload);
-      } else {
-        const imageIds = normalizeTourVariantImageIds(next.tour_card_image_ids);
-        const primaryImageId = normalizeText(payload.tour_card_primary_image_id);
-        if (primaryImageId && imageIds.includes(primaryImageId)) {
-          next.tour_card_image_ids = [primaryImageId, ...imageIds.filter((imageId) => imageId !== primaryImageId)];
-          next.tour_card_primary_image_id = primaryImageId;
-        } else if (primaryImageId) {
-          next.tour_card_primary_image_id = primaryImageId;
-        }
-      }
-    }
+    if (payload.tour_card_image_ids !== undefined) applyTourVariantImageSelection(next, payload);
     if (payload.base_marketing_tour_id !== undefined) {
       next.base_marketing_tour_id = normalizeText(payload.base_marketing_tour_id);
     }
@@ -357,10 +336,7 @@ export function createTourVariantHelpers({
       priority: safeInt(storedBaseTour.priority) ?? 50,
       published_on_webpage: false,
       base_marketing_tour_id: normalizeText(storedBaseTour.id),
-      ...(baseTourCardImageIds.length ? {
-        tour_card_image_ids: baseTourCardImageIds,
-        tour_card_primary_image_id: baseTourCardImageIds[0]
-      } : {}),
+      ...(baseTourCardImageIds.length ? { tour_card_image_ids: baseTourCardImageIds } : {}),
       boundary_logistics: emptyBoundaryLogistics(),
       days: (Array.isArray(baseTravelPlan?.days) ? baseTravelPlan.days : []).map((day, index) => ({
         id: `tour_variant_day_${index + 1}`,
@@ -407,8 +383,6 @@ export function createTourVariantHelpers({
     };
     if (hasOwn(stored, "tour_card_image_ids")) {
       travelPlanSource.tour_card_image_ids = stored.tour_card_image_ids;
-    } else if (normalizeText(stored.tour_card_primary_image_id)) {
-      travelPlanSource.tour_card_primary_image_id = stored.tour_card_primary_image_id;
     }
     const normalizedTravelPlan = normalizeMarketingTourTravelPlan(travelPlanSource, options.travelPlanOptions || {});
     normalizedTravelPlan.days = (Array.isArray(normalizedTravelPlan.days) ? normalizedTravelPlan.days : []).map((day, index) => ({
@@ -574,7 +548,6 @@ export function createTourVariantHelpers({
     return {
       ...readModel,
       tour_card_image_ids: resolvedTourCardImageIds,
-      tour_card_primary_image_id: resolvedTourCardImageIds[0] || null,
       days: dayStatuses,
       publication
     };

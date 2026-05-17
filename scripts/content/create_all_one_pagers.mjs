@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { execFile as execFileCallback } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, readdir, readFile, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
@@ -9,7 +9,8 @@ import { CUSTOMER_CONTENT_LANGUAGES } from "../../shared/generated/language_cata
 import {
   CONTENT_ONE_PAGERS_DIR,
   COMPANY_PROFILE,
-  FALLBACK_BOOKING_IMAGE_PATH
+  FALLBACK_BOOKING_IMAGE_PATH,
+  PUBLIC_TOUR_PDF_CACHE_DIR
 } from "../../backend/app/src/config/runtime.js";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
 import { createTourVariantHelpers } from "../../backend/app/src/domain/tour_variants.js";
@@ -20,6 +21,14 @@ import {
   loadPublishedMarketingTourTranslations
 } from "../../backend/app/src/domain/marketing_tour_translations.js";
 import { createMarketingTourOnePagerPdfWriter } from "../../backend/app/src/lib/marketing_tour_one_pager_pdf.js";
+import { createTravelPlanPdfWriter } from "../../backend/app/src/lib/travel_plan_pdf.js";
+import {
+  publicTourOnePagerPdfCacheDir,
+  publicTourOnePagerPdfCacheKey,
+  publicTourPdfCachePath,
+  publicTourTravelPlanPdfCacheDir,
+  publicTourTravelPlanPdfCacheKey
+} from "../../backend/app/src/lib/public_tour_pdf_cache.js";
 import { escapeHtml, normalizeText } from "../../backend/app/src/lib/text.js";
 
 const execFile = promisify(execFileCallback);
@@ -29,8 +38,9 @@ const repoRoot = path.resolve(__dirname, "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
 const defaultTourVariantsDir = path.join(repoRoot, "content", "tour_variants");
 const translationsSnapshotDir = path.join(repoRoot, "content", "translations");
-const translationManualOverridesPath = path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
+const translationPhraseOverridesPath = path.join(repoRoot, "config", "i18n", "translation_phrase_overrides.json");
 const defaultOutputDir = CONTENT_ONE_PAGERS_DIR;
+const defaultPdfCacheDir = normalizeText(process.env.PUBLIC_TOUR_PDF_CACHE_DIR) || PUBLIC_TOUR_PDF_CACHE_DIR;
 const flagTokensPath = path.join(repoRoot, "shared", "css", "tokens.css");
 const defaultExperienceHighlightsManifestPath = path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json");
 const googleSitesBaseUrl = "https://sites.google.com";
@@ -60,6 +70,9 @@ Options:
   --tour-variants DIR       Tour variants directory. Default: content/tour_variants
   --output DIR              Output directory. Default: content/one-pagers
   --matrix-output FILE      Extra HTML matrix output path. Default: <output>/index.html
+  --travel-plan-matrix-output FILE
+                            Extra travel-plan HTML matrix output path. Default: <output>/travel_plan_matrix.html
+  --pdf-cache-dir DIR       Public tour PDF cache root. Default: backend/app/data/tmp/public-tour-pdf-cache
   --languages LIST          Comma-separated language codes. Default: all customer languages, EN and VI first
   --tour TOUR_ID            Render one tour only. Can be repeated.
   --limit N                 Render only the first N tours after filtering.
@@ -74,8 +87,10 @@ Environment:
 
 Generated files:
   <output>/pdfs/<tour-id>/<lang>.pdf
+  <output>/travel-plans/<tour-id>/<lang>.pdf
   <output>/images/<tour-id>/<lang>.jpg
   <output>/index.html
+  <output>/travel_plan_matrix.html
   <output>/manifest.json
 
 Only tours with at least ${minOnePagerImageCount} usable one-pager images are rendered.`);
@@ -95,6 +110,8 @@ function parseArgs(argv) {
     tourVariantsDir: "",
     outputDir: defaultOutputDir,
     matrixOutputPath: "",
+    travelPlanMatrixOutputPath: "",
+    pdfCacheDir: defaultPdfCacheDir,
     languages: [...defaultPdfColumnLanguages],
     tours: new Set(),
     highlightManifestPath: defaultExperienceHighlightsManifestPath,
@@ -122,6 +139,18 @@ function parseArgs(argv) {
       const value = String(argv[++index] || "");
       if (!value) throw new Error("--matrix-output requires a file path.");
       options.matrixOutputPath = path.resolve(value);
+      continue;
+    }
+    if (arg === "--travel-plan-matrix-output") {
+      const value = String(argv[++index] || "");
+      if (!value) throw new Error("--travel-plan-matrix-output requires a file path.");
+      options.travelPlanMatrixOutputPath = path.resolve(value);
+      continue;
+    }
+    if (arg === "--pdf-cache-dir") {
+      const value = String(argv[++index] || "");
+      if (!value) throw new Error("--pdf-cache-dir requires a directory.");
+      options.pdfCacheDir = path.resolve(value);
       continue;
     }
     if (arg === "--tours") {
@@ -190,6 +219,9 @@ function parseArgs(argv) {
   }
   if (!options.matrixOutputPath) {
     options.matrixOutputPath = path.join(options.outputDir, "index.html");
+  }
+  if (!options.travelPlanMatrixOutputPath) {
+    options.travelPlanMatrixOutputPath = path.join(options.outputDir, "travel_plan_matrix.html");
   }
   options.tourVariantsDir = options.tourVariantsDir
     || (options.toursDir === defaultToursDir ? defaultTourVariantsDir : path.join(path.dirname(options.toursDir), "tour_variants"));
@@ -531,6 +563,53 @@ function applyScriptExperienceHighlights(tour, seed, experienceHighlightCatalog)
   };
 }
 
+function travelPlanPdfBookingLikeTour(tourHelpers, tour, lang) {
+  const tourId = normalizeText(tour?.id) || "tour";
+  const tourTitle = normalizeText(
+    tourHelpers.resolveLocalizedText(tour?.title, lang)
+      || tourHelpers.resolveLocalizedText(tour?.title, "en")
+      || tour?.title
+      || tourId
+  );
+  return {
+    id: tourId,
+    name: tourTitle || tourId || "Travel plan overview",
+    destinations: Array.isArray(tour?.destinations) ? tour.destinations : [],
+    travel_styles: Array.isArray(tour?.styles)
+      ? tour.styles
+      : (Array.isArray(tour?.travel_styles) ? tour.travel_styles : []),
+    customer_language: lang,
+    web_form_submission: {
+      tour_id: tourId
+    },
+    pdf_personalization: {
+      travel_plan: {
+        include_subtitle: true,
+        include_welcome: true,
+        include_closing: false,
+        include_children_policy: false,
+        include_whats_not_included: false,
+        include_who_is_traveling: false
+      }
+    }
+  };
+}
+
+function resolveTravelPlanServiceImageDiskPath(tourHelpers, storagePath) {
+  const normalizedPath = String(storagePath || "").split("?")[0].replace(/^\/+/, "");
+  const publicTourPrefix = "public/v1/tour-images/";
+  if (normalizedPath.startsWith(publicTourPrefix)) {
+    return tourHelpers.resolveTourImageDiskPath(normalizedPath.slice(publicTourPrefix.length));
+  }
+  return normalizedPath.startsWith("tour_") ? tourHelpers.resolveTourImageDiskPath(normalizedPath) : "";
+}
+
+async function copyRenderedPdfToCache(sourcePath, cachePath) {
+  if (!normalizeText(sourcePath) || !normalizeText(cachePath) || path.resolve(sourcePath) === path.resolve(cachePath)) return;
+  await mkdir(path.dirname(cachePath), { recursive: true });
+  await copyFile(sourcePath, cachePath);
+}
+
 function tourTitleForSort(tourHelpers, tour) {
   return tourHelpers.resolveLocalizedText(tour?.title, "en") || normalizeText(tour?.id);
 }
@@ -730,6 +809,163 @@ function buildMatrixHtml({ matrixOutputPath, rows, languages, generatedAt, flagD
 `;
 }
 
+function buildTravelPlanMatrixHtml({ matrixOutputPath, rows, languages, generatedAt, flagDataUrls }) {
+  const indexPath = matrixOutputPath;
+  const languageLabels = new Map(CUSTOMER_CONTENT_LANGUAGES.map((language) => [language.code, language.shortLabel || language.nativeLabel || language.code.toUpperCase()]));
+  const languageFlags = new Map(CUSTOMER_CONTENT_LANGUAGES.map((language) => [language.code, language.flagClass || `flag-${language.code}`]));
+  const headerCells = languages.map((lang) => {
+    const label = languageLabels.get(lang) || lang.toUpperCase();
+    const flagClass = languageFlags.get(lang) || `flag-${lang}`;
+    const flagDataUrl = flagDataUrls?.get(lang);
+    const flagHtml = flagDataUrl
+      ? `<img class="lang-flag" src="${escapeHtml(flagDataUrl)}" alt="">`
+      : `<span class="lang-flag ${escapeHtml(flagClass)}" aria-hidden="true"></span>`;
+    return `<th>
+        <span class="lang-heading">
+          ${flagHtml}
+          <span>${escapeHtml(label)}</span>
+        </span>
+      </th>`;
+  }).join("");
+  const bodyRows = rows.map((row) => {
+    const cells = languages.map((lang) => {
+      const artifact = row.artifacts.find((item) => item.lang === lang);
+      if (!artifact) return "<td class=\"missing\">-</td>";
+      const pdfUrl = relativeUrl(indexPath, artifact.travelPlanPdfPath);
+      return `<td>
+        <a class="pdf-link" href="${escapeHtml(pdfUrl)}" target="_blank" rel="noopener">${escapeHtml(row.title)} ${escapeHtml(lang.toUpperCase())}</a>
+      </td>`;
+    }).join("");
+    return `<tr>${cells}</tr>`;
+  }).join("\n");
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AsiaTravelPlan travel-plan PDFs</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --border: #d8e0dd;
+      --header: #f4f7f4;
+      --text: #15242a;
+      --muted: #60717a;
+      --surface: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background: #eef3ed;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      padding: 18px 24px;
+      background: rgba(255, 255, 255, 0.96);
+      border-bottom: 1px solid var(--border);
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 20px;
+      line-height: 1.2;
+    }
+    .meta {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    main {
+      padding: 18px 24px 32px;
+    }
+    .matrix-wrap {
+      overflow: auto;
+      max-height: calc(100vh - 110px);
+      border: 1px solid var(--border);
+      background: var(--surface);
+    }
+    table {
+      width: max-content;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+    th, td {
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      background: var(--surface);
+      min-width: 220px;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: var(--header);
+      font-size: 13px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .lang-heading {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .lang-flag {
+      display: inline-block;
+      width: 28px;
+      height: 19px;
+      border-radius: 4px;
+      background-color: #ffffff;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      border: 1px solid rgba(20, 37, 43, 0.22);
+      box-shadow: 0 1px 3px rgba(20, 37, 43, 0.16);
+      flex: 0 0 auto;
+      object-fit: cover;
+    }
+    .pdf-link {
+      color: #12616f;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .pdf-link:hover {
+      text-decoration: underline;
+    }
+    .missing {
+      text-align: center;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AsiaTravelPlan travel-plan PDFs</h1>
+    <p class="meta">${rows.length} tours/variants × ${languages.length} languages. Generated ${escapeHtml(generatedAt)}.</p>
+  </header>
+  <main>
+    <div class="matrix-wrap">
+      <table>
+        <thead>
+          <tr>${headerCells}</tr>
+        </thead>
+        <tbody>
+          ${bodyRows}
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>
+`;
+}
+
 async function openGoogleSites() {
   if (process.platform !== "darwin") return;
   await execFile("open", [`${googleSitesBaseUrl}/?authuser=${encodeURIComponent(googleAccount)}`]);
@@ -741,8 +977,12 @@ async function main() {
     await rm(options.outputDir, { recursive: true, force: true });
   }
   await mkdir(path.join(options.outputDir, "pdfs"), { recursive: true });
+  await mkdir(path.join(options.outputDir, "travel-plans"), { recursive: true });
   await mkdir(path.join(options.outputDir, "images"), { recursive: true });
   await mkdir(path.dirname(options.matrixOutputPath), { recursive: true });
+  await mkdir(path.dirname(options.travelPlanMatrixOutputPath), { recursive: true });
+  const onePagerPdfCacheDir = publicTourOnePagerPdfCacheDir(options.pdfCacheDir);
+  const travelPlanPdfCacheDir = publicTourTravelPlanPdfCacheDir(options.pdfCacheDir);
 
   const travelPlanHelpers = createTravelPlanHelpers();
   const tourHelpers = createTourHelpers({
@@ -765,12 +1005,25 @@ async function main() {
     experienceHighlightsManifestPath: options.highlightManifestPath,
     companyProfile: COMPANY_PROFILE
   });
+  const writeTravelPlanPdf = createTravelPlanPdfWriter({
+    resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    resolveTravelPlanServiceImageDiskPath: (storagePath) => resolveTravelPlanServiceImageDiskPath(tourHelpers, storagePath),
+    logoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.png"),
+    marketingTourLogoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.large.transparent.png"),
+    fallbackImagePath: FALLBACK_BOOKING_IMAGE_PATH,
+    boundaryLogisticsImagePaths: {
+      arrival: path.join(repoRoot, "assets", "img", "arrival.png"),
+      departure: path.join(repoRoot, "assets", "img", "departure.png")
+    },
+    companyProfile: COMPANY_PROFILE,
+    composeTravelPlanForPresentation: travelPlanHelpers.composeTravelPlanForPresentation
+  });
   const experienceHighlightCatalog = await readExperienceHighlightCatalog(options.highlightManifestPath);
   if (experienceHighlightCatalog.length < onePagerExperienceHighlightCount) {
     throw new Error(`Expected at least ${onePagerExperienceHighlightCount} experience highlights in ${options.highlightManifestPath}.`);
   }
   const publishedTranslationsByLang = await loadPublishedMarketingTourTranslations(translationsSnapshotDir, options.languages, {
-    manualOverridesPath: translationManualOverridesPath
+    phraseOverridesPath: translationPhraseOverridesPath
   });
 
   const selectedByTourFilter = (id) => !options.tours.size || options.tours.has(id);
@@ -865,6 +1118,8 @@ async function main() {
     generated_at: generatedAt,
     output_dir: options.outputDir,
     matrix_path: options.matrixOutputPath,
+    travel_plan_matrix_path: options.travelPlanMatrixOutputPath,
+    pdf_cache_dir: options.pdfCacheDir,
     languages: options.languages,
     min_one_pager_image_count: minOnePagerImageCount,
     skipped_unpublished_tours: skippedUnpublishedTours,
@@ -874,15 +1129,16 @@ async function main() {
     tours: []
   };
   const matrixRows = [];
-  const total = tours.length * options.languages.length;
+  const travelPlanMatrixRows = [];
+  const total = tours.length * options.languages.length * 2;
   let rendered = 0;
 
   for (const tour of tours) {
     const title = normalizeText(tour.title) || tour.id;
     const row = { id: tour.id, title, artifacts: [] };
+    const travelPlanRow = { id: tour.id, title, artifacts: [] };
     const manifestTour = { id: tour.id, title, artifacts: [] };
     for (const lang of options.languages) {
-      rendered += 1;
       const publishedTranslations = publishedTranslationsByLang.get(normalizeLanguageCode(lang));
       const localizedTour = applyMarketingTourTranslations(tour, lang, publishedTranslations);
       const readModel = tourHelpers.normalizeTourForRead(localizedTour, { lang });
@@ -892,6 +1148,10 @@ async function main() {
         flatLang: lang,
         flatMode: "localized",
         strictReferences: false
+      });
+      const onePagerCacheKey = publicTourOnePagerPdfCacheKey({
+        lang,
+        tour: { ...readModel, travel_plan: localizedTravelPlan }
       });
       const selected = await applyScriptFrameImages(
         { ...readModel, travel_plan: localizedTravelPlan },
@@ -906,21 +1166,51 @@ async function main() {
       );
       const tourDirName = slug(tour.id);
       const pdfDir = path.join(options.outputDir, "pdfs", tourDirName);
+      const travelPlanPdfDir = path.join(options.outputDir, "travel-plans", tourDirName);
       const imageDir = path.join(options.outputDir, "images", tourDirName);
       await mkdir(pdfDir, { recursive: true });
+      await mkdir(travelPlanPdfDir, { recursive: true });
       await mkdir(imageDir, { recursive: true });
       const pdfPath = path.join(pdfDir, `${lang}.pdf`);
+      const travelPlanPdfPath = path.join(travelPlanPdfDir, `${lang}.pdf`);
       const imagePath = path.join(imageDir, `${lang}.jpg`);
-      process.stdout.write(`[${rendered}/${total}] ${tour.id} ${lang}\n`);
+      rendered += 1;
+      process.stdout.write(`[${rendered}/${total}] ${tour.id} ${lang} one-pager\n`);
       await writeOnePagerPdf(highlighted.tour, { lang, outputPath: pdfPath });
+      await copyRenderedPdfToCache(
+        pdfPath,
+        publicTourPdfCachePath(onePagerPdfCacheDir, onePagerCacheKey)
+      );
       await convertPdfToWebJpg(pdfPath, imagePath, {
         dpi: options.imageDpi,
         width: onePagerWebImageWidth
       });
+      const bookingLikeTour = travelPlanPdfBookingLikeTour(tourHelpers, localizedTour, lang);
+      const travelPlanCacheKey = publicTourTravelPlanPdfCacheKey({
+        lang,
+        booking: bookingLikeTour,
+        travelPlan: localizedTravelPlan
+      });
+      rendered += 1;
+      process.stdout.write(`[${rendered}/${total}] ${tour.id} ${lang} travel-plan\n`);
+      await writeTravelPlanPdf(bookingLikeTour, localizedTravelPlan, {
+        lang,
+        outputPath: travelPlanPdfPath,
+        includeMarketingTourBackground: true,
+        includeGuideSection: false,
+        includeEndingSection: false
+      });
+      await copyRenderedPdfToCache(
+        travelPlanPdfPath,
+        publicTourPdfCachePath(travelPlanPdfCacheDir, travelPlanCacheKey)
+      );
       const artifact = {
         lang,
         pdfPath,
+        travelPlanPdfPath,
         imagePath,
+        onePagerCacheKey,
+        travelPlanCacheKey,
         fillerImagesApplied: selected.fillerImagesApplied,
         frameImageCount: selected.frameImageCount,
         selectedImageCount: selected.selectedImageCount,
@@ -929,10 +1219,14 @@ async function main() {
         selectedExperienceHighlightIds: highlighted.selectedExperienceHighlightIds
       };
       row.artifacts.push(artifact);
+      travelPlanRow.artifacts.push(artifact);
       manifestTour.artifacts.push({
         lang,
         pdf: path.relative(options.outputDir, pdfPath),
+        travel_plan_pdf: path.relative(options.outputDir, travelPlanPdfPath),
         image: path.relative(options.outputDir, imagePath),
+        one_pager_cache_key: onePagerCacheKey,
+        travel_plan_cache_key: travelPlanCacheKey,
         filler_images_applied: selected.fillerImagesApplied,
         frame_image_count: selected.frameImageCount,
         selected_image_count: selected.selectedImageCount,
@@ -942,6 +1236,7 @@ async function main() {
       });
     }
     matrixRows.push(row);
+    travelPlanMatrixRows.push(travelPlanRow);
     manifest.tours.push(manifestTour);
   }
 
@@ -954,9 +1249,17 @@ async function main() {
     generatedAt,
     flagDataUrls
   });
+  const travelPlanMatrixHtml = buildTravelPlanMatrixHtml({
+    matrixOutputPath: options.travelPlanMatrixOutputPath,
+    rows: travelPlanMatrixRows,
+    languages: options.languages,
+    generatedAt,
+    flagDataUrls
+  });
   const staleInstructionsPath = path.join(options.outputDir, "google-sites-instructions.html");
   await rm(staleInstructionsPath, { force: true });
   await writeFile(options.matrixOutputPath, matrixHtml, "utf8");
+  await writeFile(options.travelPlanMatrixOutputPath, travelPlanMatrixHtml, "utf8");
   if (options.matrixOutputPath !== outputIndexPath) {
     const outputIndexHtml = buildMatrixHtml({
       matrixOutputPath: outputIndexPath,
@@ -973,7 +1276,8 @@ async function main() {
     await openGoogleSites();
   }
 
-  console.log(`Done. Matrix page: ${options.matrixOutputPath}`);
+  console.log(`Done. One-pager matrix page: ${options.matrixOutputPath}`);
+  console.log(`Done. Travel-plan matrix page: ${options.travelPlanMatrixOutputPath}`);
 }
 
 main().catch((error) => {

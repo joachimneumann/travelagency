@@ -631,7 +631,6 @@ export function createFrontendToursController(ctx) {
   }
 
   function selectedTravelTourCardPictures(item) {
-    const selectedImageId = normalizeText(item?.travel_plan?.tour_card_primary_image_id);
     const selectedImageIds = Array.from(new Set((Array.isArray(item?.travel_plan?.tour_card_image_ids) ? item.travel_plan.tour_card_image_ids : [])
       .map((value) => normalizeText(value))
       .filter(Boolean)));
@@ -651,13 +650,6 @@ export function createFrontendToursController(ctx) {
           if (src) entries.push({ id: normalizeText(image.id), src });
         }
       }
-    }
-    const selectedEntryIndex = selectedImageId
-      ? entries.findIndex((entry) => entry.id === selectedImageId)
-      : -1;
-    if (selectedEntryIndex > 0) {
-      const [selectedEntry] = entries.splice(selectedEntryIndex, 1);
-      entries.unshift(selectedEntry);
     }
     if (selectedImageIds.length) {
       entries.sort((left, right) => {

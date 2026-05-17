@@ -166,7 +166,7 @@ function normalizeTimingKind(value) {
 
 function buildDefaultTravelPlan() {
   return {
-    tour_card_primary_image_id: null,
+    tour_card_image_ids: [],
     boundary_logistics: {},
     days: []
   };
@@ -467,14 +467,7 @@ function normalizeTravelPlanTourCardImageIds(source, days) {
       }
     }
   }
-  if (hasExplicitImageIds) return selectedIds;
-  const selectedImageId = normalizeOptionalText(source?.tour_card_primary_image_id);
-  const selectedIndex = selectedImageId ? legacyIncludedIds.indexOf(selectedImageId) : -1;
-  if (selectedIndex > 0) {
-    const [selectedId] = legacyIncludedIds.splice(selectedIndex, 1);
-    legacyIncludedIds.unshift(selectedId);
-  }
-  return legacyIncludedIds;
+  return hasExplicitImageIds ? selectedIds : legacyIncludedIds;
 }
 
 function normalizeTravelPlanImageIdList(values, days) {
@@ -800,10 +793,8 @@ export function createTravelPlanHelpers() {
       .filter((imageId) => imageId !== one_pager_hero_image_id)
       .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
     const normalizedDays = applyTravelPlanTourCardImageSelection(days, tour_card_image_ids);
-    const tour_card_primary_image_id = tour_card_image_ids[0] || null;
     return normalizeTravelPlanTranslationMeta({
       ...(tour_card_image_ids.length ? { tour_card_image_ids } : {}),
-      ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),
       ...(hasExplicitOnePagerImageIds ? { one_pager_image_ids } : {}),
       ...(Object.keys(boundary_logistics).length ? { boundary_logistics } : {}),
@@ -841,10 +832,8 @@ export function createTravelPlanHelpers() {
       .filter((imageId) => imageId !== one_pager_hero_image_id)
       .slice(0, ONE_PAGER_SMALL_IMAGE_LIMIT);
     const normalizedDays = applyTravelPlanTourCardImageSelection(days, tour_card_image_ids);
-    const tour_card_primary_image_id = tour_card_image_ids[0] || null;
     return normalizeTravelPlanTranslationMeta({
       ...(tour_card_image_ids.length ? { tour_card_image_ids } : {}),
-      ...(tour_card_primary_image_id ? { tour_card_primary_image_id } : {}),
       ...(one_pager_hero_image_id ? { one_pager_hero_image_id } : {}),
       ...(hasExplicitOnePagerImageIds ? { one_pager_image_ids } : {}),
       ...(Object.keys(boundary_logistics).length ? { boundary_logistics } : {}),

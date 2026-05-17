@@ -1286,8 +1286,7 @@ function collectTourImages(tour, lang) {
   const explicitHeroImageId = textOrNull(tour?.travel_plan?.one_pager_hero_image_id);
   const heroImageId = explicitHeroImageId
     || selectedImageIds[0]
-    || webImageIds[0]
-    || textOrNull(tour?.travel_plan?.tour_card_primary_image_id);
+    || webImageIds[0];
   const lastDayIndex = days.length - 1;
   days.forEach((day, dayIndex) => {
     safeArray(day?.services).forEach((service, serviceIndex) => {

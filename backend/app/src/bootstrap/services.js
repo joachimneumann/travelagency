@@ -141,7 +141,7 @@ export function createBackendServices({
     repoRoot,
     translationsSnapshotDir: collections.translationsSnapshotDir,
     protectedTermsPath: collections.translationProtectedTermsPath,
-    manualOverridesPath: collections.translationManualOverridesPath,
+    phraseOverridesPath: collections.translationPhraseOverridesPath,
     readStore: storeUtils.readStore,
     persistStore: storeUtils.persistStore,
     readTours: storeUtils.readTours,

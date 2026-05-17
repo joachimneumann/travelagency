@@ -252,7 +252,7 @@ const services = createBackendServices({
     keycloakUserSnapshotPath: RUNTIME_PATHS.keycloakUserSnapshotPath,
     countryReferenceInfoPath: RUNTIME_PATHS.countryReferenceInfoPath,
     translationProtectedTermsPath: RUNTIME_PATHS.translationProtectedTermsPath,
-    translationManualOverridesPath: RUNTIME_PATHS.translationManualOverridesPath,
+    translationPhraseOverridesPath: RUNTIME_PATHS.translationPhraseOverridesPath,
     translationMemoryPath: RUNTIME_PATHS.translationMemoryPath,
     translationsSnapshotDir: RUNTIME_PATHS.translationsSnapshotDir,
     bookingTravelPlanAttachmentsDir: RUNTIME_PATHS.bookingTravelPlanAttachmentsDir,

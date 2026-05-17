@@ -64,8 +64,8 @@ export const TRANSLATION_POLICY_DIR = resolveConfigPathFromRepoRoot(
 export const TRANSLATION_PROTECTED_TERMS_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRANSLATION_PROTECTED_TERMS_PATH || path.join("config", "i18n", "translation_protected_terms.json"))
 );
-export const TRANSLATION_MANUAL_OVERRIDES_PATH = resolveConfigPathFromRepoRoot(
-  normalizeText(process.env.TRANSLATION_MANUAL_OVERRIDES_PATH || path.join("config", "i18n", "translation_manual_overrides.json"))
+export const TRANSLATION_PHRASE_OVERRIDES_PATH = resolveConfigPathFromRepoRoot(
+  normalizeText(process.env.TRANSLATION_PHRASE_OVERRIDES_PATH || path.join("config", "i18n", "translation_phrase_overrides.json"))
 );
 export const TRANSLATION_MEMORY_PATH = resolveConfigPathFromRepoRoot(
   normalizeText(process.env.TRANSLATION_MEMORY_PATH || path.join("content", "translations", "translation_memory.json"))
@@ -78,6 +78,7 @@ export const TEMP_UPLOAD_DIR = path.join(DATA_ROOT, "tmp");
 export const TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "travel_plan_previews");
 export const PUBLIC_TOUR_PDF_CACHE_DIR = path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-cache");
 export const PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR = path.join(PUBLIC_TOUR_PDF_CACHE_DIR, "one-pagers");
+export const PUBLIC_TOUR_TRAVEL_PLAN_PDF_CACHE_DIR = path.join(PUBLIC_TOUR_PDF_CACHE_DIR, "travel-plans");
 export const PUBLIC_TOUR_PDF_PREVIEW_DIR = path.join(TEMP_UPLOAD_DIR, "public-tour-pdf-previews");
 export const PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR = path.join(PUBLIC_TOUR_PDF_PREVIEW_DIR, "one-pagers");
 export const PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR = path.join(PUBLIC_TOUR_PDF_PREVIEW_DIR, "travel-plans");
@@ -226,6 +227,7 @@ export const TRANSLATION_CLIENT = createTranslationClient({
   organizationId: OPENAI_ORGANIZATION_ID,
   model: OPENAI_TRANSLATION_MODEL,
   protectedTermsPath: TRANSLATION_PROTECTED_TERMS_PATH,
+  phraseOverridesPath: TRANSLATION_PHRASE_OVERRIDES_PATH,
   googleFallbackEnabled: GOOGLE_TRANSLATE_FALLBACK_ENABLED,
   googleConcurrency: GOOGLE_TRANSLATE_CONCURRENCY
 });
@@ -334,7 +336,7 @@ export const RUNTIME_PATHS = Object.freeze({
   legacyTranslationMemoryPath: LEGACY_TRANSLATION_MEMORY_PATH,
   translationPolicyDir: TRANSLATION_POLICY_DIR,
   translationProtectedTermsPath: TRANSLATION_PROTECTED_TERMS_PATH,
-  translationManualOverridesPath: TRANSLATION_MANUAL_OVERRIDES_PATH,
+  translationPhraseOverridesPath: TRANSLATION_PHRASE_OVERRIDES_PATH,
   translationMemoryPath: TRANSLATION_MEMORY_PATH,
   translationsSnapshotDir: TRANSLATIONS_SNAPSHOT_DIR,
   bookingTravelPlanAttachmentsDir: BOOKING_TRAVEL_PLAN_ATTACHMENTS_DIR,
@@ -342,6 +344,7 @@ export const RUNTIME_PATHS = Object.freeze({
   travelPlanPdfPreviewDir: TRAVEL_PLAN_PDF_PREVIEW_DIR,
   publicTourPdfCacheDir: PUBLIC_TOUR_PDF_CACHE_DIR,
   publicTourOnePagerPdfCacheDir: PUBLIC_TOUR_ONE_PAGER_PDF_CACHE_DIR,
+  publicTourTravelPlanPdfCacheDir: PUBLIC_TOUR_TRAVEL_PLAN_PDF_CACHE_DIR,
   publicTourPdfPreviewDir: PUBLIC_TOUR_PDF_PREVIEW_DIR,
   publicTourOnePagerPdfPreviewDir: PUBLIC_TOUR_ONE_PAGER_PDF_PREVIEW_DIR,
   publicTourTravelPlanPdfPreviewDir: PUBLIC_TOUR_TRAVEL_PLAN_PDF_PREVIEW_DIR,

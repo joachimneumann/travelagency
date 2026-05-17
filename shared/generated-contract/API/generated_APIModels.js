@@ -993,7 +993,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"short_description_i18n","required":false,"wireName":"short_description_i18n"}, SHARED_FIELD_DEFS.FIELD_86),
     schemaField({"name":"styles","required":false,"wireName":"styles"}, SHARED_FIELD_DEFS.FIELD_80),
     schemaField({"name":"priority","required":false,"wireName":"priority"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"tour_card_primary_image_id","required":false,"wireName":"tour_card_primary_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"tour_card_image_ids","required":false,"wireName":"tour_card_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"published_on_webpage","required":false,"wireName":"published_on_webpage"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"seasonality_start_month","required":false,"wireName":"seasonality_start_month"}, SHARED_FIELD_DEFS.FIELD_41),
@@ -1425,7 +1424,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.BookingTravelPlan",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"tour_card_primary_image_id","required":false,"wireName":"tour_card_primary_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"tour_card_image_ids","required":false,"wireName":"tour_card_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"one_pager_hero_image_id","required":false,"wireName":"one_pager_hero_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"one_pager_image_ids","required":false,"wireName":"one_pager_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
@@ -1689,7 +1687,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
         sourceType: "openapi.components.schemas.MarketingTourTravelPlan",
         requireOneOf: [],
         fields: [
-    schemaField({"name":"tour_card_primary_image_id","required":false,"wireName":"tour_card_primary_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"tour_card_image_ids","required":false,"wireName":"tour_card_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"one_pager_hero_image_id","required":false,"wireName":"one_pager_hero_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"one_pager_image_ids","required":false,"wireName":"one_pager_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
@@ -1718,7 +1715,6 @@ import { GENERATED_API_ENDPOINTS } from './generated_APIRuntime.js';
     schemaField({"name":"styles","required":false,"wireName":"styles"}, SHARED_FIELD_DEFS.FIELD_80),
     schemaField({"name":"style_codes","required":false,"wireName":"style_codes"}, SHARED_FIELD_DEFS.FIELD_80),
     schemaField({"name":"priority","required":false,"wireName":"priority"}, SHARED_FIELD_DEFS.FIELD_18),
-    schemaField({"name":"tour_card_primary_image_id","required":false,"wireName":"tour_card_primary_image_id"}, SHARED_FIELD_DEFS.FIELD_1),
     schemaField({"name":"tour_card_image_ids","required":false,"wireName":"tour_card_image_ids"}, SHARED_FIELD_DEFS.FIELD_7),
     schemaField({"name":"published_on_webpage","required":false,"wireName":"published_on_webpage"}, SHARED_FIELD_DEFS.FIELD_9),
     schemaField({"name":"seasonality_start_month","required":false,"wireName":"seasonality_start_month"}, SHARED_FIELD_DEFS.FIELD_41),

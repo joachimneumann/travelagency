@@ -23,7 +23,7 @@ const SECTION_CONFIGS = [
   {
     key: "staff",
     title: "For staff (NE/VI)",
-    description: "Manual overrides are read from config/i18n/translation_manual_overrides.json.",
+    description: "Phrase overrides are read from config/i18n/translation_phrase_overrides.json.",
     fixedTargetLang: "vi",
     domains: [
       { domainId: "backend", label: "Staff backend terms" }
@@ -32,7 +32,7 @@ const SECTION_CONFIGS = [
   {
     key: "customers",
     title: "For customers",
-    description: "Manual overrides are read from config/i18n/translation_manual_overrides.json.",
+    description: "Phrase overrides are read from config/i18n/translation_phrase_overrides.json.",
     customer: true,
     domains: CUSTOMER_DOMAIN_CONFIGS
   }
@@ -271,7 +271,7 @@ function loadedSectionMessage(section) {
 function updateSectionEditStatus(section) {
   if (!section?.current) return;
   if (section.dirty.size) {
-    setSectionStatus(section, `${pluralize(section.dirty.size, "unsaved manual override edit")} staged.`);
+    setSectionStatus(section, `${pluralize(section.dirty.size, "unsaved phrase override edit")} staged.`);
     return;
   }
   setSectionStatus(section, loadedSectionMessage(section));
@@ -482,12 +482,12 @@ async function loadTranslationStatus({ updateMessage = false } = {}) {
   }
 }
 
-function manualOverrideEditingEnabled(section) {
+function phraseOverrideEditingEnabled(section) {
   if (!state.permissions.canEditTranslations || !section?.current) return false;
   const domains = Array.isArray(section.current.states)
     ? section.current.states.map((entry) => entry.domain)
     : [section.current.domain];
-  return domains.some((domain) => domain?.manual_overrides_writable === true);
+  return domains.some((domain) => domain?.phrase_overrides_writable === true);
 }
 
 function updateActions() {
@@ -510,21 +510,21 @@ function updateActions() {
 
   for (const section of state.sections.values()) {
     const sectionDirty = section.dirty.size;
-    const canEditManualOverrides = manualOverrideEditingEnabled(section);
+    const canEditPhraseOverrides = phraseOverrideEditingEnabled(section);
     if (section.els.saveBtn) {
-      section.els.saveBtn.disabled = !canEditManualOverrides || !sectionDirty || sectionControlsBusy;
-      section.els.saveBtn.textContent = canEditManualOverrides
-        ? (sectionDirty ? `Save manual overrides (${sectionDirty})` : "Save manual overrides")
-        : "Manual overrides in config";
+      section.els.saveBtn.disabled = !canEditPhraseOverrides || !sectionDirty || sectionControlsBusy;
+      section.els.saveBtn.textContent = canEditPhraseOverrides
+        ? (sectionDirty ? `Save phrase overrides (${sectionDirty})` : "Save phrase overrides")
+        : "Phrase overrides in config";
     }
     if (section.els.exportBtn) {
       section.els.exportBtn.disabled = !state.permissions.canReadTranslations || !section.current || sectionControlsBusy;
     }
     if (section.els.importBtn) {
-      section.els.importBtn.disabled = !canEditManualOverrides || !section.current || sectionControlsBusy;
+      section.els.importBtn.disabled = !canEditPhraseOverrides || !section.current || sectionControlsBusy;
     }
     section.els.table?.querySelectorAll("[data-override-key]").forEach((textarea) => {
-      textarea.disabled = !canEditManualOverrides || sectionControlsBusy;
+      textarea.disabled = !canEditPhraseOverrides || sectionControlsBusy;
     });
     section.els.table?.querySelectorAll("[data-cache-delete-key]").forEach((button) => {
       button.disabled = !state.permissions.canEditTranslations || sectionControlsBusy;
@@ -555,8 +555,8 @@ function sectionTemplate(config) {
     ? "translations-controls translations-controls--customer"
     : "translations-controls translations-controls--staff";
   const searchPlaceholder = isCustomerSectionConfig(config)
-    ? "English source, area, language, cache, manual override"
-    : "English source, cache, manual override";
+    ? "English source, area, language, cache, phrase override"
+    : "English source, cache, phrase override";
 
   return `
     <details class="translations-section" data-translation-section="${escapeHtml(config.key)}">
@@ -574,10 +574,10 @@ function sectionTemplate(config) {
             <p class="micro translations-section__local-status" data-section-local-status></p>
           </div>
           <div class="translations-section__actions">
-            <button class="btn btn-ghost" type="button" data-section-export>Export manual overrides</button>
-            <button class="btn btn-ghost" type="button" data-section-import>Import manual overrides</button>
+            <button class="btn btn-ghost" type="button" data-section-export>Export phrase overrides</button>
+            <button class="btn btn-ghost" type="button" data-section-import>Import phrase overrides</button>
             <input type="file" accept="application/json,.json" hidden data-section-import-input />
-            <button class="btn btn-primary" type="button" disabled data-section-save>Save manual overrides</button>
+            <button class="btn btn-primary" type="button" disabled data-section-save>Save phrase overrides</button>
           </div>
         </div>
 
@@ -856,8 +856,8 @@ function updateFilteredCacheDeleteAction(section) {
     || state.isLoadingSections
     || section.dirty.size > 0;
   button.title = section.dirty.size
-    ? "Save manual override edits before deleting cached translations."
-    : "Delete cached translations for the current search results. Manual overrides stay unchanged.";
+    ? "Save phrase override edits before deleting cached translations."
+    : "Delete cached translations for the current search results. Phrase overrides stay unchanged.";
 }
 
 function rowOverrideValue(section, row) {
@@ -982,7 +982,7 @@ function exportOverrides(section) {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  setSectionStatus(section, `Exported ${Object.keys(overrides).length} manual overrides.`);
+  setSectionStatus(section, `Exported ${Object.keys(overrides).length} phrase overrides.`);
 }
 
 function normalizeImportedOverrideEntries(parsed, section) {
@@ -995,7 +995,7 @@ function normalizeImportedOverrideEntries(parsed, section) {
   const entries = [];
   for (const [key, value] of Object.entries(rawOverrides)) {
     if (!isCustomerSectionConfig(section.config) && value !== null && typeof value === "object") {
-      throw new Error(`Manual override value for ${key} must be text.`);
+      throw new Error(`Phrase override value for ${key} must be text.`);
     }
     const details = value && typeof value === "object" && !Array.isArray(value) ? value : {};
     const override = normalizeText(details.override ?? value);
@@ -1063,14 +1063,14 @@ function stageImportedOverrides(section, importedEntries) {
   renderSummary(section);
   renderTable(section);
   updateActions();
-  setSectionStatus(section, `Imported ${resolvedOverrides.size} manual overrides. Save to persist this replacement set.`);
+  setSectionStatus(section, `Imported ${resolvedOverrides.size} phrase overrides. Save to persist this replacement set.`);
 }
 
 async function importOverridesFile(section, file) {
   if (!file) return;
   try {
-    if (!section.current) throw new Error("Load a translation language before importing manual overrides.");
-    if (section.dirty.size && !window.confirm("Import will replace the currently staged manual override edits in this section. Continue?")) return;
+    if (!section.current) throw new Error("Load a translation language before importing phrase overrides.");
+    if (section.dirty.size && !window.confirm("Import will replace the currently staged phrase override edits in this section. Continue?")) return;
     const parsed = JSON.parse(await file.text());
     stageImportedOverrides(section, normalizeImportedOverrideEntries(parsed, section));
     showError("");
@@ -1088,12 +1088,12 @@ async function deleteCachedTranslation(section, rowId) {
     return;
   }
   if (section.dirty.size) {
-    showError("Save manual override edits before deleting cached translations.");
+    showError("Save phrase override edits before deleting cached translations.");
     return;
   }
   const row = (section.current.rows || []).find((entry) => rowIdentity(entry) === rowId);
   if (!row || !normalizeText(row.cached)) return;
-  if (!window.confirm("Delete the cached translation for this string? Manual overrides will stay unchanged.")) return;
+  if (!window.confirm("Delete the cached translation for this string? Phrase overrides will stay unchanged.")) return;
 
   state.isSaving = true;
   updateActions();
@@ -1111,7 +1111,7 @@ async function deleteCachedTranslation(section, rowId) {
     );
     if (payload) {
       section.dirty.clear();
-      setSectionStatus(section, "Cached translation deleted. Reloading manual override table...");
+      setSectionStatus(section, "Cached translation deleted. Reloading phrase override table...");
       await loadSectionState(section, { preserveLanguage: true });
       setSectionStatus(section, "Cached translation deleted. Updating translation state...");
       showError("");
@@ -1142,12 +1142,12 @@ async function deleteFilteredCachedTranslations(section) {
     return;
   }
   if (section.dirty.size) {
-    showError("Save manual override edits before deleting cached translations.");
+    showError("Save phrase override edits before deleting cached translations.");
     return;
   }
   const rows = filteredCachedRows(section);
   if (!rows.length) return;
-  if (!window.confirm(`Delete cached translations for these ${rows.length} search result${rows.length === 1 ? "" : "s"}? Manual overrides will stay unchanged.`)) return;
+  if (!window.confirm(`Delete cached translations for these ${rows.length} search result${rows.length === 1 ? "" : "s"}? Phrase overrides will stay unchanged.`)) return;
 
   state.isSaving = true;
   updateActions();
@@ -1173,12 +1173,12 @@ async function deleteFilteredCachedTranslations(section) {
       }
     }
     section.dirty.clear();
-    setSectionStatus(section, "Cached translations deleted. Reloading manual override table...");
+    setSectionStatus(section, "Cached translations deleted. Reloading phrase override table...");
     await loadSectionState(section, { preserveLanguage: true });
     setSectionStatus(section, "Cached translations deleted. Updating translation state...");
     showError("");
     await loadTranslationStatus({ updateMessage: true });
-    setSectionStatus(section, `Deleted ${pluralize(deletedCount, "cached translation")}. Manual overrides stayed unchanged.`);
+    setSectionStatus(section, `Deleted ${pluralize(deletedCount, "cached translation")}. Phrase overrides stayed unchanged.`);
   } finally {
     state.isSaving = false;
     updateActions();
@@ -1210,7 +1210,7 @@ function translationsTableHeadHtml(section) {
         ${customerHeaders}
         <th>English source</th>
         <th>Cache (read only)</th>
-        <th>Manual override</th>
+        <th>Phrase override</th>
         <th>State</th>
       </tr>
     </thead>
@@ -1231,7 +1231,7 @@ function renderTable(section) {
   const table = section.els.table;
   if (!table) return;
   const isCustomer = isCustomerSectionConfig(section.config);
-  const canEditManualOverrides = manualOverrideEditingEnabled(section);
+  const canEditPhraseOverrides = phraseOverrideEditingEnabled(section);
   table.classList.toggle("translations-table--customer", isCustomer);
   const rows = filteredRows(section);
   if (!section.current) {
@@ -1285,7 +1285,7 @@ function renderTable(section) {
             </td>
             <td class="translations-table__text translations-table__translation-cell">${renderCachedTranslationCell(row)}</td>
             <td class="translations-table__translation-cell">
-              <textarea id="${escapeHtml(overrideFieldId)}" name="${escapeHtml(overrideFieldId)}" class="translations-table__override" data-override-key="${escapeHtml(id)}" rows="2" ${canEditManualOverrides && !state.isSaving && !state.isJobRunning && !state.isLoadingSections ? "" : "disabled"}>${escapeHtml(overrideValue)}</textarea>
+              <textarea id="${escapeHtml(overrideFieldId)}" name="${escapeHtml(overrideFieldId)}" class="translations-table__override" data-override-key="${escapeHtml(id)}" rows="2" ${canEditPhraseOverrides && !state.isSaving && !state.isJobRunning && !state.isLoadingSections ? "" : "disabled"}>${escapeHtml(overrideValue)}</textarea>
             </td>
             <td class="translations-table__state-cell">
               ${renderStatePills(row)}
@@ -1443,10 +1443,10 @@ function dirtyOverrideGroups(section) {
 }
 
 async function saveOverrides(section) {
-  if (!manualOverrideEditingEnabled(section) || !section.current || !section.dirty.size || state.isSaving) return;
+  if (!phraseOverrideEditingEnabled(section) || !section.current || !section.dirty.size || state.isSaving) return;
   state.isSaving = true;
   updateActions();
-  setSectionStatus(section, "Saving manual overrides...");
+  setSectionStatus(section, "Saving phrase overrides...");
   const groups = dirtyOverrideGroups(section);
   const savedMemoryTargets = new Set();
   try {
@@ -1467,12 +1467,12 @@ async function saveOverrides(section) {
     }
     if (groups.length) {
       section.dirty.clear();
-      setSectionStatus(section, "Manual overrides saved. Reloading manual override table...");
+      setSectionStatus(section, "Phrase overrides saved. Reloading phrase override table...");
       await loadSectionState(section, { preserveLanguage: true });
-      setSectionStatus(section, "Manual overrides saved. Updating translation state...");
+      setSectionStatus(section, "Phrase overrides saved. Updating translation state...");
       showError("");
       await loadTranslationStatus({ updateMessage: true });
-      setSectionStatus(section, "Manual overrides saved.");
+      setSectionStatus(section, "Phrase overrides saved.");
     }
   } finally {
     state.isSaving = false;
@@ -1643,7 +1643,7 @@ async function startJob(path, body = null, overlayText = translationsApplyingOve
     return;
   }
   if (state.isJobRunning) return;
-  if (dirtySections().length && !window.confirm("You have unsaved manual overrides. Continue without saving them?")) return;
+  if (dirtySections().length && !window.confirm("You have unsaved phrase overrides. Continue without saving them?")) return;
   showError("");
   state.isJobRunning = true;
   updateActions();
@@ -1709,7 +1709,7 @@ async function loadCustomerSectionForSelectedLanguage(section) {
   const previousLang = normalizeText(state.customerTargetLang);
   const nextLang = selectedCustomerTargetLang(section);
   if (nextLang !== previousLang && dirtyCustomerSections().length) {
-    if (!window.confirm("Changing customer language will discard unsaved manual override edits in customer sections. Continue?")) {
+    if (!window.confirm("Changing customer language will discard unsaved phrase override edits in customer sections. Continue?")) {
       if (section.els.languageSelect) section.els.languageSelect.value = previousLang;
       return;
     }
@@ -1732,15 +1732,15 @@ async function loadCustomerSectionForSelectedLanguage(section) {
 function bindEvents() {
   els.translateBtn?.addEventListener("click", () => startJob("/api/v1/static-translations/apply", null, translationsTranslateOverlayText()));
   els.retranslateFrontendAllBtn?.addEventListener("click", () => {
-    if (!window.confirm("Retranslate customer UI strings? This can take several minutes. Manual overrides are preserved.")) return;
+    if (!window.confirm("Retranslate customer UI strings? This can take several minutes. Phrase overrides are preserved.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "frontend_all_languages" }, retranslateFrontendAllOverlayText());
   });
   els.clearMarketingTourCacheBtn?.addEventListener("click", () => {
-    if (!window.confirm("Clear cached marketing tour translations? Manual overrides are preserved. Use Translate afterward to rebuild missing machine translations in content/translations.")) return;
+    if (!window.confirm("Clear cached marketing tour translations? Phrase overrides are preserved. Use Translate afterward to rebuild missing machine translations in content/translations.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "marketing_tour_cache" }, clearMarketingTourCacheOverlayText());
   });
   els.retranslateBackendViBtn?.addEventListener("click", () => {
-    if (!window.confirm("Retranslate backend Vietnamese? Manual overrides are preserved.")) return;
+    if (!window.confirm("Retranslate backend Vietnamese? Phrase overrides are preserved.")) return;
     startJob("/api/v1/static-translations/retranslate", { mode: "backend_vi" }, retranslateBackendViOverlayText());
   });
 }
