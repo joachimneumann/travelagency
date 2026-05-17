@@ -4042,6 +4042,14 @@ textarea:focus-visible {
   justify-content: flex-end;
 }
 
+.settings-phrase-overrides__search {
+  margin: 0;
+}
+
+.settings-phrase-overrides__search input {
+  width: min(34rem, 100%);
+}
+
 .settings-phrase-overrides__table-wrap {
   max-height: 18rem;
   overflow: auto;
@@ -5343,6 +5351,10 @@ textarea.english-text-guard--invalid {
 
   .settings-phrase-overrides__form-actions .btn {
     flex: 1 1 10rem;
+  }
+
+  .settings-phrase-overrides__search input {
+    width: 100%;
   }
 
   .settings-translation-policy__buttons {

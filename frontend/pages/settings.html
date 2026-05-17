@@ -100,7 +100,7 @@
             <div class="settings-translation-policy__head">
               <div>
                 <h2 class="section-title u-title-medium">Translation policy</h2>
-                <p class="micro">Edit the phrase override and protected-term JSON files used by translation generation.</p>
+                <p class="micro">Edit phrase overrides and the protected-term JSON used by translation generation.</p>
               </div>
               <div class="settings-translation-policy__actions">
                 <p class="micro settings-translation-policy__status" id="translationPolicyStatus" role="status" aria-live="polite"></p>
@@ -112,7 +112,7 @@
             </div>
             <div class="settings-translation-policy__grid">
               <div class="field full settings-translation-policy__field">
-                <label class="field-label" for="translationPhraseOverridesJson">translation_phrase_overrides.json</label>
+                <span class="field-label">Phrase overrides</span>
                 <div class="settings-phrase-overrides" id="translationPhraseOverridesEditor">
                   <div class="settings-phrase-overrides__form">
                     <div class="field">
@@ -132,6 +132,10 @@
                       <button class="btn btn-ghost" id="translationPhraseOverrideClearBtn" type="button">Clear</button>
                     </div>
                   </div>
+                  <div class="field settings-phrase-overrides__search">
+                    <label class="field-label" for="translationPhraseOverrideSearch">Search phrase overrides</label>
+                    <input id="translationPhraseOverrideSearch" type="search" autocomplete="off" spellcheck="false" placeholder="Search language, source, or target phrase" />
+                  </div>
                   <div class="settings-phrase-overrides__table-wrap">
                     <table class="backend-table settings-phrase-overrides__table">
                       <thead>
@@ -146,7 +150,6 @@
                     </table>
                   </div>
                 </div>
-                <textarea id="translationPhraseOverridesJson" spellcheck="false" autocomplete="off" data-translation-policy-field="phrase_overrides"></textarea>
                 <p class="micro settings-translation-policy__meta" id="translationPhraseOverridesMeta"></p>
               </div>
               <div class="field full settings-translation-policy__field">

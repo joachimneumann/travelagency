@@ -61,13 +61,13 @@ const els = {
   translationPolicyStatus: document.getElementById("translationPolicyStatus"),
   translationPolicyReloadBtn: document.getElementById("translationPolicyReloadBtn"),
   translationPolicySaveBtn: document.getElementById("translationPolicySaveBtn"),
-  translationPhraseOverridesJson: document.getElementById("translationPhraseOverridesJson"),
   translationPhraseOverridesMeta: document.getElementById("translationPhraseOverridesMeta"),
   translationPhraseOverrideLang: document.getElementById("translationPhraseOverrideLang"),
   translationPhraseOverrideSource: document.getElementById("translationPhraseOverrideSource"),
   translationPhraseOverrideTarget: document.getElementById("translationPhraseOverrideTarget"),
   translationPhraseOverrideAddBtn: document.getElementById("translationPhraseOverrideAddBtn"),
   translationPhraseOverrideClearBtn: document.getElementById("translationPhraseOverrideClearBtn"),
+  translationPhraseOverrideSearch: document.getElementById("translationPhraseOverrideSearch"),
   translationPhraseOverridesRows: document.getElementById("translationPhraseOverridesRows"),
   translationProtectedTermsJson: document.getElementById("translationProtectedTermsJson"),
   translationProtectedTermsMeta: document.getElementById("translationProtectedTermsMeta"),
@@ -278,7 +278,8 @@ const state = {
     protectedTermsJson: "",
     phraseOverridesOriginalJson: "",
     protectedTermsOriginalJson: "",
-    phraseOverrideEditIndex: -1
+    phraseOverrideEditIndex: -1,
+    phraseOverrideSearchQuery: ""
   },
   keycloakUsers: [],
   staffProfilesByUsername: {},
@@ -572,6 +573,19 @@ function phraseOverrideLanguageLabel(lang) {
     || normalizedLang.toUpperCase();
 }
 
+function phraseOverrideMatchesSearch(item, query) {
+  const terms = normalizeText(query).toLowerCase().split(/\s+/).filter(Boolean);
+  if (!terms.length) return true;
+  const targetLang = normalizeText(item?.target_lang).toLowerCase();
+  const haystack = [
+    targetLang,
+    phraseOverrideLanguageLabel(targetLang),
+    item?.source_phrase,
+    item?.target_phrase
+  ].map((value) => normalizeText(value).toLowerCase()).join("\n");
+  return terms.every((term) => haystack.includes(term));
+}
+
 function renderPhraseOverrideLanguageOptions(selectedValue = "") {
   if (!(els.translationPhraseOverrideLang instanceof HTMLSelectElement)) return;
   const currentValue = normalizeText(selectedValue || els.translationPhraseOverrideLang.value).toLowerCase();
@@ -629,9 +643,6 @@ function writePhraseOverrideItemsToJson(items) {
   const json = formatTranslationPolicyJson(phraseOverridesPayloadFromItems(normalizedItems));
   state.translationPolicy.phraseOverridesJson = json;
   state.translationPolicy.phraseOverridesItemCount = normalizedItems.length;
-  if (els.translationPhraseOverridesJson instanceof HTMLTextAreaElement) {
-    els.translationPhraseOverridesJson.value = json;
-  }
   renderPhraseOverridesTable();
   updatePhraseOverridesMeta();
 }
@@ -729,6 +740,10 @@ function renderPhraseOverridesTable() {
 
   state.translationPolicy.phraseOverridesItemCount = items.length;
   updatePhraseOverridesMeta();
+  const searchQuery = normalizeText(state.translationPolicy.phraseOverrideSearchQuery);
+  const visibleItems = items
+    .map((item, index) => ({ item, index }))
+    .filter(({ item }) => phraseOverrideMatchesSearch(item, searchQuery));
   const busy = state.translationPolicy.loading || state.translationPolicy.saving;
   const canEdit = state.permissions.canEditTranslationPolicy && state.translationPolicy.canWrite;
   const disabled = !canEdit || busy ? "disabled" : "";
@@ -742,7 +757,16 @@ function renderPhraseOverridesTable() {
     return;
   }
 
-  els.translationPhraseOverridesRows.innerHTML = items.map((item, index) => `
+  if (!visibleItems.length) {
+    els.translationPhraseOverridesRows.innerHTML = `
+      <tr>
+        <td class="settings-phrase-overrides__empty" colspan="4">${escapeHtml(backendT("backend.settings.translation_policy.no_matching_phrases", "No phrase overrides match this search."))}</td>
+      </tr>
+    `;
+    return;
+  }
+
+  els.translationPhraseOverridesRows.innerHTML = visibleItems.map(({ item, index }) => `
     <tr>
       <td class="settings-phrase-overrides__lang">${escapeHtml(phraseOverrideLanguageLabel(item.target_lang))}</td>
       <td class="settings-phrase-overrides__phrase">${escapeHtml(item.source_phrase)}</td>
@@ -775,9 +799,6 @@ function translationPolicyDirty() {
 }
 
 function syncTranslationPolicyStateFromDom() {
-  if (els.translationPhraseOverridesJson) {
-    state.translationPolicy.phraseOverridesJson = String(els.translationPhraseOverridesJson.value || "");
-  }
   if (els.translationProtectedTermsJson) {
     state.translationPolicy.protectedTermsJson = String(els.translationProtectedTermsJson.value || "");
   }
@@ -793,10 +814,13 @@ function updateTranslationPolicyControls() {
   if (els.translationPolicySaveBtn) {
     els.translationPolicySaveBtn.disabled = !canEdit || busy || !translationPolicyDirty();
   }
-  for (const textarea of [els.translationPhraseOverridesJson, els.translationProtectedTermsJson]) {
+  for (const textarea of [els.translationProtectedTermsJson]) {
     if (!(textarea instanceof HTMLTextAreaElement)) continue;
     textarea.disabled = !canRead || state.translationPolicy.loading;
     textarea.readOnly = !canEdit || busy;
+  }
+  if (els.translationPhraseOverrideSearch instanceof HTMLInputElement) {
+    els.translationPhraseOverrideSearch.disabled = !canRead || state.translationPolicy.loading;
   }
   if (els.translationPhraseOverrideLang instanceof HTMLSelectElement) {
     els.translationPhraseOverrideLang.disabled = !canEdit || busy;
@@ -819,8 +843,9 @@ function updateTranslationPolicyControls() {
 
 function renderTranslationPolicyEditor() {
   renderPhraseOverrideLanguageOptions();
-  if (els.translationPhraseOverridesJson && els.translationPhraseOverridesJson.value !== state.translationPolicy.phraseOverridesJson) {
-    els.translationPhraseOverridesJson.value = state.translationPolicy.phraseOverridesJson;
+  if (els.translationPhraseOverrideSearch instanceof HTMLInputElement
+    && els.translationPhraseOverrideSearch.value !== state.translationPolicy.phraseOverrideSearchQuery) {
+    els.translationPhraseOverrideSearch.value = state.translationPolicy.phraseOverrideSearchQuery;
   }
   if (els.translationProtectedTermsJson && els.translationProtectedTermsJson.value !== state.translationPolicy.protectedTermsJson) {
     els.translationProtectedTermsJson.value = state.translationPolicy.protectedTermsJson;
@@ -849,7 +874,8 @@ function applyTranslationPolicyPayload(payload) {
     protectedTermsJson: protectedJson,
     phraseOverridesOriginalJson: phraseJson,
     protectedTermsOriginalJson: protectedJson,
-    phraseOverrideEditIndex: -1
+    phraseOverrideEditIndex: -1,
+    phraseOverrideSearchQuery: state.translationPolicy.phraseOverrideSearchQuery
   };
 }
 
@@ -1183,20 +1209,20 @@ function bindEvents() {
   els.translationPolicySaveBtn?.addEventListener("click", () => {
     void saveTranslationPolicyEditor();
   });
-  for (const textarea of [els.translationPhraseOverridesJson, els.translationProtectedTermsJson]) {
+  for (const textarea of [els.translationProtectedTermsJson]) {
     textarea?.addEventListener("input", () => {
       syncTranslationPolicyStateFromDom();
-      if (textarea === els.translationPhraseOverridesJson) {
-        state.translationPolicy.phraseOverrideEditIndex = -1;
-        renderPhraseOverridesTable();
-        setPhraseOverrideFormMode();
-      }
       showTranslationPolicyStatus(translationPolicyDirty()
         ? backendT("backend.settings.translation_policy.unsaved", "Unsaved changes.")
         : backendT("backend.settings.translation_policy.loaded", "Translation policy loaded."));
       updateTranslationPolicyControls();
     });
   }
+  els.translationPhraseOverrideSearch?.addEventListener("input", () => {
+    state.translationPolicy.phraseOverrideSearchQuery = normalizeText(els.translationPhraseOverrideSearch?.value);
+    renderPhraseOverridesTable();
+    updateTranslationPolicyControls();
+  });
   els.translationPhraseOverrideAddBtn?.addEventListener("click", savePhraseOverrideFromForm);
   els.translationPhraseOverrideClearBtn?.addEventListener("click", () => {
     resetPhraseOverrideForm();
