@@ -539,15 +539,13 @@ function renderService(service, marketingTourHref) {
     ? `<div class="service-images">${service.images.map((image) => renderImage(image, marketingTourHref)).join("")}</div>`
     : `<div class="service-images">${renderEmptyImage(marketingTourHref)}</div>`;
 
-  return `<div class="service">
-          <div class="service-heading">
+  return `<div class="service-heading">
             <span class="service-number">${service.order}</span>
             <span class="service-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(service.title))}</span>
           </div>
           ${metaHtml}
           ${details}
-          ${imageHtml}
-        </div>`;
+          ${imageHtml}`;
 }
 
 function renderDayCell(days, marketingTourHref) {
@@ -794,14 +792,7 @@ ${matrixPageControlStyles}
     }
 
     .services {
-      display: grid;
-      gap: 10px;
       margin-top: 10px;
-    }
-
-    .service {
-      border: 1px solid var(--line);
-      padding: 9px;
     }
 
     .service-heading {
@@ -809,6 +800,11 @@ ${matrixPageControlStyles}
       display: grid;
       gap: 8px;
       grid-template-columns: 24px minmax(0, 1fr);
+      margin-top: 12px;
+    }
+
+    .service-heading:first-child {
+      margin-top: 0;
     }
 
     .service-number {
