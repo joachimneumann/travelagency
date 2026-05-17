@@ -8,7 +8,6 @@ import { createTourCustomizer } from "./tour_customize.js";
 const DEFAULT_TOUR_IMAGE = "/assets/img/marketing_tours.png";
 const TOUR_IMAGE_TRANSITION_MS = 2000;
 const TOUR_PLAN_DAY_DETAILS_TRANSITION_MS = 300;
-const TOUR_CUSTOMIZE_MOBILE_QUERY = "(max-width: 760px)";
 const COUNTRY_TO_TOUR_DESTINATION_CODE = Object.freeze({
   VN: "vietnam",
   TH: "thailand",
@@ -895,13 +894,7 @@ export function createFrontendToursController(ctx) {
   }
 
   function customizeFeatureEnabled() {
-    return state.customizeFeatureEnabled === true && !isCustomizeMobileViewport();
-  }
-
-  function isCustomizeMobileViewport() {
-    return typeof window !== "undefined"
-      && typeof window.matchMedia === "function"
-      && window.matchMedia(TOUR_CUSTOMIZE_MOBILE_QUERY).matches;
+    return state.customizeFeatureEnabled !== false;
   }
 
   function activeTourPlanDays(trip) {

@@ -62,19 +62,6 @@ function resolveFrontendAssetUrl(value) {
   return normalized;
 }
 
-const CUSTOMIZE_FEATURE_KEY = "asiatravelplan_customize_enabled";
-const CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET = 5;
-const CUSTOMIZE_FEATURE_TOGGLE_WINDOW_MS = 3000;
-const CUSTOMIZE_FEATURE_MOBILE_QUERY = "(max-width: 760px)";
-
-function initialCustomizeFeatureEnabled() {
-  try {
-    return window.localStorage.getItem(CUSTOMIZE_FEATURE_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
-
 const state = {
   lang: currentFrontendLang(),
   trips: [],
@@ -106,7 +93,7 @@ const state = {
   websiteAuthenticated: false,
   websiteAuthenticatedUser: "",
   reelsModeOpen: false,
-  customizeFeatureEnabled: initialCustomizeFeatureEnabled()
+  customizeFeatureEnabled: true
 };
 
 let lastBookingModalTrigger = null;
@@ -120,7 +107,6 @@ let teamSectionRevealObserved = false;
 let teamMembersLoadPromise = null;
 let authStatusLoadPromise = null;
 let reelsUnlockTapTimes = [];
-let customizeFeatureToggleTapTimes = [];
 let reelsRuntimePromise = null;
 let reelsRuntimeInstance = null;
 let heroDownArrowLoadReady = false;
@@ -459,7 +445,7 @@ async function init() {
   markHomepageMobileStageReady("heroCopyReady");
   setupMobileNav();
   setupReelsUnlock();
-  setupCustomizeFeatureToggle();
+  syncCustomizeFeatureState();
   setupReelsToggle();
   setupFAQ();
   setupTeamSection();
@@ -786,50 +772,8 @@ function setupReelsUnlock() {
 }
 
 function syncCustomizeFeatureState() {
-  document.documentElement.classList.toggle("tour-customize-feature-disabled", !effectiveCustomizeFeatureEnabled());
-}
-
-function isCustomizeFeatureMobileViewport() {
-  return typeof window === "undefined"
-    || typeof window.matchMedia !== "function"
-    ? false
-    : window.matchMedia(CUSTOMIZE_FEATURE_MOBILE_QUERY).matches;
-}
-
-function effectiveCustomizeFeatureEnabled() {
-  return state.customizeFeatureEnabled === true && !isCustomizeFeatureMobileViewport();
-}
-
-function setCustomizeFeatureEnabled(enabled) {
-  state.customizeFeatureEnabled = Boolean(enabled);
-  try {
-    window.localStorage.setItem(CUSTOMIZE_FEATURE_KEY, state.customizeFeatureEnabled ? "1" : "0");
-  } catch {
-    // Ignore storage failures; the runtime state still updates for this page view.
-  }
-  syncCustomizeFeatureState();
-  if (!effectiveCustomizeFeatureEnabled()) {
-    toursController.closeCustomizer?.();
-  }
-  renderVisibleTrips();
-}
-
-function registerCustomizeFeatureToggleTap() {
-  if (isCustomizeFeatureMobileViewport()) return;
-  const now = Date.now();
-  customizeFeatureToggleTapTimes = customizeFeatureToggleTapTimes
-    .filter((time) => now - time <= CUSTOMIZE_FEATURE_TOGGLE_WINDOW_MS);
-  customizeFeatureToggleTapTimes.push(now);
-  if (customizeFeatureToggleTapTimes.length < CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET) return;
-  customizeFeatureToggleTapTimes = [];
-  setCustomizeFeatureEnabled(!state.customizeFeatureEnabled);
-}
-
-function setupCustomizeFeatureToggle() {
-  syncCustomizeFeatureState();
-  if (!(els.footerLegalTitle instanceof HTMLElement) || els.footerLegalTitle.dataset.customizeToggleBound === "1") return;
-  els.footerLegalTitle.dataset.customizeToggleBound = "1";
-  els.footerLegalTitle.addEventListener("click", registerCustomizeFeatureToggleTap);
+  state.customizeFeatureEnabled = true;
+  document.documentElement.classList.remove("tour-customize-feature-disabled");
 }
 
 function loadReelsRuntime() {

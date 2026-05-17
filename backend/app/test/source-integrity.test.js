@@ -5718,13 +5718,13 @@ test("frontend language switching updates the homepage in place instead of forci
   );
   assert.match(
     mainSource,
-    /function initialCustomizeFeatureEnabled\(\) \{[\s\S]*window\.localStorage\.getItem\(CUSTOMIZE_FEATURE_KEY\) === "1";[\s\S]*return false;/,
-    "Homepage tour customization should be hidden by default until the secret localStorage flag is explicitly enabled"
+    /customizeFeatureEnabled:\s*true[\s\S]*function syncCustomizeFeatureState\(\) \{[\s\S]*state\.customizeFeatureEnabled = true;[\s\S]*classList\.remove\("tour-customize-feature-disabled"\)/,
+    "Homepage tour customization should be enabled by default without a hidden localStorage gate"
   );
-  assert.match(
+  assert.doesNotMatch(
     mainSource,
-    /const CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET = 5;[\s\S]*els\.footerLegalTitle\.addEventListener\("click", registerCustomizeFeatureToggleTap\)/,
-    "Homepage should keep the five-click legal-title gesture as the secret customization toggle"
+    /CUSTOMIZE_FEATURE_TOGGLE_TAP_TARGET|asiatravelplan_customize_enabled|registerCustomizeFeatureToggleTap|footerLegalTitle\.addEventListener\("click"/,
+    "Homepage should not require the old five-click legal-title gesture to enable customization"
   );
   assert.doesNotMatch(
     mainSource,
