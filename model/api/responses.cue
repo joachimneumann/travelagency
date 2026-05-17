@@ -163,6 +163,8 @@ import (
 	styles?: [...enums.#TourStyleCode]
 	style_codes?: [...enums.#TourStyleCode]
 	priority?:                  int
+	tour_card_primary_image_id?: common.#Identifier
+	tour_card_image_ids?: [...common.#Identifier]
 	published_on_webpage?:      bool
 	seasonality_start_month?:   enums.#MonthCode
 	seasonality_end_month?:     enums.#MonthCode

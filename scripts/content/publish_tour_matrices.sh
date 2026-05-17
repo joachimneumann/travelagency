@@ -20,6 +20,8 @@ On staging, run this from /srv/asiatravelplan-staging to refresh:
   https://staging.asiatravelplan.com/photo_matrix.html
   https://staging.asiatravelplan.com/meta_matrix.html
   https://staging.asiatravelplan.com/content_matrix.html
+  https://staging.asiatravelplan.com/content_matrix_vi.html
+  https://staging.asiatravelplan.com/content_matrix_ja.html
   https://staging.asiatravelplan.com/one_pager_matrix.html
 
 Options:
@@ -102,7 +104,13 @@ fi
 export ONE_PAGER_FONT_DIR="${ONE_PAGER_FONT_DIR:-$ROOT_DIR/content/fonts}"
 
 rm -rf "$OUTPUT_DIR/img"
-rm -f "$OUTPUT_DIR/photo_matrix.html" "$OUTPUT_DIR/meta_matrix.html" "$OUTPUT_DIR/content_matrix.html" "$OUTPUT_DIR/one_pager_matrix.html"
+rm -f \
+  "$OUTPUT_DIR/photo_matrix.html" \
+  "$OUTPUT_DIR/meta_matrix.html" \
+  "$OUTPUT_DIR/content_matrix.html" \
+  "$OUTPUT_DIR/content_matrix_vi.html" \
+  "$OUTPUT_DIR/content_matrix_ja.html" \
+  "$OUTPUT_DIR/one_pager_matrix.html"
 
 echo "Generating and publishing tour photo matrix..."
 "$SCRIPT_DIR/create_tour_photo_matrix.sh" \
@@ -116,10 +124,20 @@ echo "Generating and publishing tour metadata matrix..."
   --highlight-manifest "$HIGHLIGHT_MANIFEST_PATH" \
   --output "$OUTPUT_DIR/meta_matrix.html"
 
-echo "Generating and publishing tour content matrix..."
-"$SCRIPT_DIR/create_tour_content_matrix.sh" \
+echo "Generating and publishing tour content matrix (English)..."
+node "$SCRIPT_DIR/create_tour_content_matrix.mjs" english \
   --tours "$TOURS_DIR" \
   --output "$OUTPUT_DIR/content_matrix.html"
+
+echo "Generating and publishing tour content matrix (Vietnamese)..."
+node "$SCRIPT_DIR/create_tour_content_matrix.mjs" vietnamese \
+  --tours "$TOURS_DIR" \
+  --output "$OUTPUT_DIR/content_matrix_vi.html"
+
+echo "Generating and publishing tour content matrix (Japanese)..."
+node "$SCRIPT_DIR/create_tour_content_matrix.mjs" japanese \
+  --tours "$TOURS_DIR" \
+  --output "$OUTPUT_DIR/content_matrix_ja.html"
 
 echo "Generating and publishing one-pager PDF matrix..."
 ONE_PAGER_ARGS=(
@@ -136,4 +154,6 @@ echo "Published tour matrices:"
 echo "  $OUTPUT_DIR/photo_matrix.html"
 echo "  $OUTPUT_DIR/meta_matrix.html"
 echo "  $OUTPUT_DIR/content_matrix.html"
+echo "  $OUTPUT_DIR/content_matrix_vi.html"
+echo "  $OUTPUT_DIR/content_matrix_ja.html"
 echo "  $OUTPUT_DIR/one_pager_matrix.html"

@@ -12,6 +12,7 @@ import {
   FALLBACK_BOOKING_IMAGE_PATH
 } from "../../backend/app/src/config/runtime.js";
 import { createTourHelpers } from "../../backend/app/src/domain/tours_support.js";
+import { createTourVariantHelpers } from "../../backend/app/src/domain/tour_variants.js";
 import { createTravelPlanHelpers } from "../../backend/app/src/domain/travel_plan.js";
 import { selectTourExperienceHighlightIds } from "../../backend/app/src/domain/tour_metadata.js";
 import {
@@ -26,6 +27,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..", "..");
 const defaultToursDir = path.join(repoRoot, "content", "tours");
+const defaultTourVariantsDir = path.join(repoRoot, "content", "tour_variants");
 const translationsSnapshotDir = path.join(repoRoot, "content", "translations");
 const translationManualOverridesPath = path.join(repoRoot, "config", "i18n", "translation_manual_overrides.json");
 const defaultOutputDir = CONTENT_ONE_PAGERS_DIR;
@@ -55,6 +57,7 @@ Examples:
 
 Options:
   --tours DIR               Tours directory. Default: content/tours
+  --tour-variants DIR       Tour variants directory. Default: content/tour_variants
   --output DIR              Output directory. Default: content/one-pagers
   --matrix-output FILE      Extra HTML matrix output path. Default: <output>/index.html
   --languages LIST          Comma-separated language codes. Default: all customer languages, EN and VI first
@@ -89,6 +92,7 @@ function parseLimitArg(value, label) {
 function parseArgs(argv) {
   const options = {
     toursDir: defaultToursDir,
+    tourVariantsDir: "",
     outputDir: defaultOutputDir,
     matrixOutputPath: "",
     languages: [...defaultPdfColumnLanguages],
@@ -124,6 +128,12 @@ function parseArgs(argv) {
       const value = String(argv[++index] || "");
       if (!value) throw new Error("--tours requires a directory.");
       options.toursDir = path.resolve(value);
+      continue;
+    }
+    if (arg === "--tour-variants") {
+      const value = String(argv[++index] || "");
+      if (!value) throw new Error("--tour-variants requires a directory.");
+      options.tourVariantsDir = path.resolve(value);
       continue;
     }
     if (arg === "--languages") {
@@ -181,6 +191,8 @@ function parseArgs(argv) {
   if (!options.matrixOutputPath) {
     options.matrixOutputPath = path.join(options.outputDir, "index.html");
   }
+  options.tourVariantsDir = options.tourVariantsDir
+    || (options.toursDir === defaultToursDir ? defaultTourVariantsDir : path.join(path.dirname(options.toursDir), "tour_variants"));
   return options;
 }
 
@@ -335,6 +347,23 @@ async function readTours(toursDir) {
     }
   }
   return tours;
+}
+
+async function readTourVariants(tourVariantsDir) {
+  if (!(await fileExists(tourVariantsDir))) return [];
+  const entries = await readdir(tourVariantsDir, { withFileTypes: true });
+  const tourVariants = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory() || !entry.name.startsWith("tour_variant_")) continue;
+    const tourVariantPath = path.join(tourVariantsDir, entry.name, "tour_variant.json");
+    try {
+      const tourVariant = JSON.parse(await readFile(tourVariantPath, "utf8"));
+      tourVariants.push({ id: entry.name, ...tourVariant, __dir: entry.name });
+    } catch (error) {
+      if (error?.code !== "ENOENT") throw error;
+    }
+  }
+  return tourVariants;
 }
 
 async function readExperienceHighlightCatalog(experienceHighlightsManifestPath) {
@@ -682,7 +711,7 @@ function buildMatrixHtml({ matrixOutputPath, rows, languages, generatedAt, flagD
 <body>
   <header>
     <h1>AsiaTravelPlan one-pagers</h1>
-    <p class="meta">${rows.length} tours × ${languages.length} languages. Generated ${escapeHtml(generatedAt)}.</p>
+    <p class="meta">${rows.length} tours/variants × ${languages.length} languages. Generated ${escapeHtml(generatedAt)}.</p>
   </header>
   <main>
     <div class="matrix-wrap">
@@ -721,6 +750,14 @@ async function main() {
     safeInt,
     normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan
   });
+  const tourVariantHelpers = createTourVariantHelpers({
+    safeInt,
+    randomUUID: () => "unused",
+    normalizeMarketingTourTravelPlan: travelPlanHelpers.normalizeMarketingTourTravelPlan,
+    normalizeTourForRead: tourHelpers.normalizeTourForRead,
+    normalizeTourForStorage: tourHelpers.normalizeTourForStorage,
+    canPublishTourOnWebpage: tourHelpers.canPublishTourOnWebpage
+  });
   const writeOnePagerPdf = createMarketingTourOnePagerPdfWriter({
     resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
     logoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.png"),
@@ -736,8 +773,42 @@ async function main() {
     manualOverridesPath: translationManualOverridesPath
   });
 
+  const selectedByTourFilter = (id) => !options.tours.size || options.tours.has(id);
   let tours = (await readTours(options.toursDir))
     .map((tour) => tourHelpers.normalizeTourForStorage(tour))
+    .sort((left, right) => tourTitleForSort(tourHelpers, left).localeCompare(tourTitleForSort(tourHelpers, right), "en", { sensitivity: "base" }));
+
+  const skippedUnpublishedTourVariants = [];
+  const skippedInvalidTourVariants = [];
+  const tourVariants = (await readTourVariants(options.tourVariantsDir))
+    .map((tourVariant) => tourVariantHelpers.normalizeTourVariantForStorage(tourVariant));
+  const resolvedTourVariants = [];
+  for (const tourVariant of tourVariants) {
+    if (tourVariant.published_on_webpage !== true) {
+      if (selectedByTourFilter(tourVariant.id)) {
+        skippedUnpublishedTourVariants.push({
+          id: tourVariant.id,
+          title: normalizeText(tourVariant.title) || tourVariant.id
+        });
+      }
+      continue;
+    }
+    const publication = tourVariantHelpers.validateTourVariantPublication(tourVariant, tours);
+    if (!publication.ok) {
+      if (selectedByTourFilter(tourVariant.id)) {
+        skippedInvalidTourVariants.push({
+          id: tourVariant.id,
+          title: normalizeText(tourVariant.title) || tourVariant.id,
+          issues: publication.issues
+        });
+      }
+      continue;
+    }
+    const resolved = tourVariantHelpers.resolveTourVariantToTour(tourVariant, tours, { publicOnly: true });
+    resolvedTourVariants.push(tourHelpers.normalizeTourForStorage(resolved));
+  }
+
+  tours = [...tours, ...resolvedTourVariants]
     .sort((left, right) => tourTitleForSort(tourHelpers, left).localeCompare(tourTitleForSort(tourHelpers, right), "en", { sensitivity: "base" }));
   if (options.tours.size) {
     tours = tours.filter((tour) => options.tours.has(tour.id));
@@ -779,8 +850,14 @@ async function main() {
   if (skippedUnpublishedTours.length) {
     console.log(`Skipped ${skippedUnpublishedTours.length} tours not published on the web page.`);
   }
+  if (skippedUnpublishedTourVariants.length) {
+    console.log(`Skipped ${skippedUnpublishedTourVariants.length} tour variants not published on the web page.`);
+  }
+  if (skippedInvalidTourVariants.length) {
+    console.log(`Skipped ${skippedInvalidTourVariants.length} published tour variants that cannot be rendered.`);
+  }
   if (skippedTours.length) {
-    console.log(`Skipped ${skippedTours.length} tours with fewer than ${minOnePagerImageCount} usable images.`);
+    console.log(`Skipped ${skippedTours.length} tours/variants with fewer than ${minOnePagerImageCount} usable images.`);
   }
 
   const generatedAt = new Date().toISOString();
@@ -791,6 +868,8 @@ async function main() {
     languages: options.languages,
     min_one_pager_image_count: minOnePagerImageCount,
     skipped_unpublished_tours: skippedUnpublishedTours,
+    skipped_unpublished_tour_variants: skippedUnpublishedTourVariants,
+    skipped_invalid_tour_variants: skippedInvalidTourVariants,
     skipped_tours: skippedTours,
     tours: []
   };

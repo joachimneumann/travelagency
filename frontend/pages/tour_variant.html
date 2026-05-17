@@ -134,14 +134,106 @@
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        justify-self: end;
+        justify-self: start;
         margin-top: 0;
-        padding: 0.55rem 0.7rem;
-        border: 1px solid var(--line);
-        border-radius: 8px;
-        background: var(--surface);
         font-weight: 600;
         white-space: nowrap;
+      }
+
+      .tour-card-image-selector {
+        padding: 1rem;
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--surface);
+      }
+
+      .tour-card-image-selector__layout {
+        display: grid;
+        grid-template-columns: calc(104px + 0.85rem) minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .tour-card-image-selector__preview {
+        align-self: center;
+        width: 104px;
+        border-radius: 0.8rem;
+        border: 1px solid var(--line);
+        background: var(--surface-muted);
+        object-fit: cover;
+      }
+
+      .tour-card-image-selector__content {
+        display: grid;
+        gap: 0.85rem;
+        min-width: 0;
+        position: relative;
+      }
+
+      .tour-card-image-selector__clear {
+        position: absolute;
+        inset: 0 0 auto auto;
+        z-index: 2;
+      }
+
+      .tour-card-image-selector__thumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        padding-inline-end: 7.5rem;
+      }
+
+      .tour-card-image-selector__thumb {
+        position: relative;
+        display: block;
+        width: 60px;
+        height: 60px;
+        padding: 0;
+        border: 1px solid var(--line);
+        border-radius: 0.55rem;
+        background: var(--surface-muted);
+        overflow: hidden;
+      }
+
+      button.tour-card-image-selector__thumb:not(:disabled) {
+        cursor: pointer;
+      }
+
+      .tour-card-image-selector__thumb img {
+        width: 100%;
+        height: 100%;
+        display: block;
+        object-fit: cover;
+      }
+
+      .tour-card-image-selector__thumb.is-selected {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px var(--accent-tint);
+      }
+
+      .tour-card-image-selector__order {
+        position: absolute;
+        inset: 4px auto auto 4px;
+        display: grid;
+        place-items: center;
+        width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--surface);
+        font-size: 0.76rem;
+        font-weight: var(--font-weight-bold);
+        line-height: 1;
+        box-shadow: 0 0 0 2px var(--surface);
+      }
+
+      .tour-card-image-selector__order[hidden] {
+        display: none;
+      }
+
+      .tour-card-image-selector__thumb:disabled,
+      .tour-card-image-selector__thumb[aria-disabled="true"] {
+        opacity: 0.58;
       }
 
       .tour-variant-grid {
@@ -343,7 +435,7 @@
 
       .tour-variant-map-row {
         display: grid;
-        grid-template-columns: max-content minmax(16rem, 34rem) max-content;
+        grid-template-columns: max-content minmax(16rem, 34rem);
         align-items: center;
         justify-content: center;
         gap: 0.85rem;
@@ -535,6 +627,14 @@
           white-space: normal;
         }
 
+        .tour-card-image-selector__layout {
+          grid-template-columns: 1fr;
+        }
+
+        .tour-card-image-selector__preview {
+          display: none;
+        }
+
         .tour-variant-day-summary {
           width: min(100%, 22rem);
         }
@@ -591,13 +691,23 @@
               <div id="tourVariantIssues" class="tour-variant-issues" role="status" aria-live="polite"></div>
             </div>
 
+            <div id="tourVariantCardImageSelector" class="tour-card-image-selector">
+              <div class="tour-card-image-selector__layout">
+                <img class="tour-card-image-selector__preview" src="/assets/img/marketing_tour.png" alt="" aria-hidden="true" loading="lazy" />
+                <div class="tour-card-image-selector__content">
+                  <button class="btn btn-ghost tour-card-image-selector__clear" type="button" data-tour-card-clear-images data-i18n-id="tour.card_images.clear">Clear selection</button>
+                  <label class="backend-checkbox-item tour-variant-published-toggle" for="tourVariantPublished">
+                    <input id="tourVariantPublished" type="checkbox" />
+                    <span data-i18n-id="tour.published_on_webpage">Show on web page</span>
+                  </label>
+                  <div class="tour-card-image-selector__thumbs" data-tour-card-image-thumbs></div>
+                </div>
+              </div>
+            </div>
+
             <div class="tour-variant-map-row">
               <div id="tourVariantMapPreview" class="tour-variant-map-preview-mount"></div>
               <div id="tourVariantDaySummary" class="tour-variant-day-summary" aria-label="Tour Variant days" data-i18n-aria-label-id="backend.tour_variant.day_summary"></div>
-              <label class="check-row tour-variant-published-toggle">
-                <input id="tourVariantPublished" type="checkbox" />
-                <span data-i18n-id="backend.tour_variant.published_on_webpage">Publish on web page</span>
-              </label>
             </div>
 
             <div

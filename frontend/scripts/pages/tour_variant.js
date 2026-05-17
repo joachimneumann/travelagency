@@ -39,6 +39,7 @@ const els = {
   seasonStart: document.getElementById("tourVariantSeasonStart"),
   seasonEnd: document.getElementById("tourVariantSeasonEnd"),
   published: document.getElementById("tourVariantPublished"),
+  tourCardImageSelector: document.getElementById("tourVariantCardImageSelector"),
   styles: document.getElementById("tourVariantStyles"),
   issues: document.getElementById("tourVariantIssues"),
   status: document.getElementById("tourVariantStatus"),
@@ -67,6 +68,8 @@ const ROLES = Object.freeze({
   TOUR_EDITOR: GENERATED_ROLE_LOOKUP.TOUR_EDITOR
 });
 
+const TOUR_WEB_PAGE_MIN_IMAGE_COUNT = 2;
+
 const state = {
   id: normalizeText(qs.get("id")),
   isCreateMode: !normalizeText(qs.get("id")),
@@ -80,7 +83,8 @@ const state = {
     base_tours: []
   },
   destinationScopeCatalog: normalizeDestinationScopeCatalog({}),
-  allSourceDays: []
+  allSourceDays: [],
+  sourceDaysLoaded: false
 };
 
 let backendLoginRedirectScheduled = false;
