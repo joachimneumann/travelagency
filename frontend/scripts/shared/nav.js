@@ -131,7 +131,14 @@ function applyNavPermissions(mount, roles) {
   const canReadTourVariants = hasAnyRole(resolvedRoles, "atp_tour_editor");
   const canReadSettings = hasAnyRole(resolvedRoles, "atp_admin");
   const canReadTranslations = hasAnyRole(resolvedRoles, "atp_admin");
-  const canViewPublicSiteDeployment = hasAnyRole(resolvedRoles, "atp_admin", "atp_tour_editor");
+  const canViewPublicSiteDeployment = hasAnyRole(
+    resolvedRoles,
+    "atp_admin",
+    "atp_manager",
+    "atp_accountant",
+    "atp_staff",
+    "atp_tour_editor"
+  );
   mount
     .querySelectorAll(".backend-section-nav__item[data-backend-section]")
     .forEach((button) => {

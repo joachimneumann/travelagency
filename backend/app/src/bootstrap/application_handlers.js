@@ -37,6 +37,7 @@ export function createApplicationRoutes({
     canReadSettings,
     canReadTours,
     canEditTours,
+    canReadPublicSiteDeploymentStatus,
     canReadTourVariants,
     canEditTourVariants,
     canReadCountryReferenceInfo,
@@ -466,7 +467,7 @@ export function createApplicationRoutes({
   const publicSiteDeploymentStatusHandlers = createPublicSiteDeploymentStatusHandlers({
     sendJson: httpHelpers.sendJson,
     getPrincipal,
-    canReadPublicSiteDeploymentStatus: canEditTours,
+    canReadPublicSiteDeploymentStatus,
     publicSiteDeploymentStatusService
   });
 

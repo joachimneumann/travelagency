@@ -38,6 +38,14 @@ export function createAccessHelpers({ auth, appRoles }) {
       hasRole(principal, appRoles.TOUR_EDITOR);
   }
 
+  function canReadPublicSiteDeploymentStatus(principal) {
+    return hasRole(principal, appRoles.ADMIN) ||
+      hasRole(principal, appRoles.MANAGER) ||
+      hasRole(principal, appRoles.ACCOUNTANT) ||
+      hasRole(principal, appRoles.ATP_STAFF) ||
+      hasRole(principal, appRoles.TOUR_EDITOR);
+  }
+
   function canReadTourVariants(principal) {
     return hasRole(principal, appRoles.TOUR_EDITOR);
   }
@@ -64,6 +72,7 @@ export function createAccessHelpers({ auth, appRoles }) {
     canReadSettings,
     canReadTours,
     canEditTours,
+    canReadPublicSiteDeploymentStatus,
     canReadTourVariants,
     canEditTourVariants,
     canReadCountryReferenceInfo,

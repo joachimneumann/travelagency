@@ -5250,7 +5250,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   ]) {
     assert.match(
       source,
-      /frontend\/scripts\/shared\/nav\.js\?v=20260518b/,
+      /frontend\/scripts\/shared\/nav\.js\?v=20260518c/,
       "Backoffice entry pages should version the shared nav module to avoid stale cached imports after deploys"
     );
     assert.match(
