@@ -139,8 +139,7 @@ import (
 }
 
 #BookingTravelPlanDay: #TravelPlanDayBase & {
-	date?:        common.#DateOnly
-	date_string?: string
+	date?: common.#DateOnly
 	services?: [...#BookingTravelPlanService]
 }
 

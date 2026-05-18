@@ -235,9 +235,9 @@ function summarizeDay(day, lang) {
   return service || "";
 }
 
-function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destinationCatalog = null, sourceTourTitle = "" }) {
+function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destinationCatalog = null, sourceTourTitle = "", allowLocationOnly = false }) {
   const sourceDayId = normalizeText(day?.id);
-  const title = resolveLocalizedField(day, "title", lang);
+  const sourceTitle = normalizeText(resolveLocalizedField(day, "title", lang));
   const imageEntries = customerVisibleDayImages(day, lang);
   const imageUrls = imageEntries.map((image) => image.url);
   const thumbnailUrl = imageUrls[0] || "";
@@ -249,11 +249,13 @@ function dayModuleFromDay({ day, sourceTourId, originalTourId, lang, destination
       label: normalizeText(routePoint?.label)
     }))
     .filter((entry) => entry.mapPoint);
-  if (!sourceTourId || !sourceDayId || !title || !thumbnailUrl || !routePoints.length) return null;
+  if (!sourceTourId || !sourceDayId || !routePoints.length) return null;
   const { routePoint, mapPoint } = routePoints[0];
   const locationLabel = normalizeText(routePoint.label)
-    || resolveLocalizedField(day, "title", lang);
-  if (!locationLabel) return null;
+    || sourceTitle;
+  const title = sourceTitle || (allowLocationOnly ? locationLabel || sourceDayId : "");
+  if (!title || !locationLabel) return null;
+  if (!allowLocationOnly && !thumbnailUrl) return null;
   return {
     id: `${sourceTourId}:${sourceDayId}`,
     source: sourceTourId === originalTourId ? "original" : "optional",
@@ -548,7 +550,11 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   --tour-customize-options-gap: 0.56rem;
   --tour-customize-card-border-color: var(--line-focus-strong);
   --tour-customize-line-color: var(--line);
-  --tour-customize-workspace-background: #f7f9f7;
+  --tour-customize-workspace-background: transparent;
+}
+
+.tour-customize-root.tour-customize-runtime-root {
+  background: transparent;
 }
 
 :host([data-tour-configurator-mode="modal"]) {
@@ -620,7 +626,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   --tour-customize-options-gap: 0.56rem;
   --tour-customize-card-border-color: var(--line-focus-strong);
   --tour-customize-line-color: var(--line);
-  --tour-customize-workspace-background: #f7f9f7;
+  --tour-customize-workspace-background: transparent;
 }
 
 .tour-customize-root .btn,
@@ -728,14 +734,14 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   grid-template-rows: minmax(0, 1fr) auto;
   min-height: 0;
   overflow: hidden;
-  background: var(--tour-customize-workspace-background);
+  background: transparent;
 }
 
 .tour-customize-root .tour-customize-embedded {
   overflow: hidden;
-  border: 1px solid var(--tour-customize-line-color);
-  border-radius: 8px;
-  background: var(--tour-customize-workspace-background);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .tour-customize-root .tour-customize-embedded .tour-customize__workspace {
@@ -756,30 +762,39 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 }
 
 .tour-customize-root .tour-customize-embedded--preview {
+  display: grid;
+  place-items: center;
   width: 100%;
   height: 100%;
   min-height: var(--tour-customize-preview-min-height, 0);
   border: 0;
   border-radius: 0;
+  background: transparent;
 }
 
 .tour-customize-root .tour-customize-embedded--preview .tour-customize__workspace {
   display: grid;
+  place-items: center;
   grid-template-columns: minmax(0, 1fr);
   grid-template-rows: minmax(0, 1fr);
   width: 100%;
   height: 100%;
   min-height: var(--tour-customize-preview-min-height, 0);
   max-height: none;
+  overflow: visible;
+  background: transparent;
 }
 
 .tour-customize-root .tour-customize-embedded--preview .tour-customize-map__stage {
   justify-self: center;
+  align-self: center;
+  flex: none;
   width: min(100%, 200px);
   height: auto;
   min-height: 0;
-  max-height: 400px;
+  max-height: none;
   border: 0;
+  aspect-ratio: 1 / 2;
 }
 
 .tour-customize-root .tour-customize-embedded--preview .tour-customize-map__controls,
@@ -808,6 +823,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   max-height: 100%;
   min-height: 0;
   overflow: hidden;
+  border-radius: var(--tour-customize-map-radius, 0);
   background: #e7f5f7;
   container-type: size;
   cursor: zoom-in;
@@ -1854,7 +1870,8 @@ export function createTourCustomizer({
     sourceDayId,
     baseTourId,
     timelineInstanceId = "",
-    rawDay = null
+    rawDay = null,
+    destinationCatalog = null
   } = {}) {
     const sourceId = sourceTourId && sourceDayId ? `${sourceTourId}:${sourceDayId}` : "";
     if (!sourceId) return null;
@@ -1867,6 +1884,20 @@ export function createTourCustomizer({
       || sourceDayId
     );
     const sourceTourTitle = normalizeText(item?.sourceTourTitle || item?.source_tour_title || sourceTourId);
+    const routePoints = rawDay
+      ? resolveRoutePoints(rawDay, currentLang, destinationCatalog, { allowTextFallback: false })
+        .map((routePoint) => ({
+          routePoint,
+          mapPoint: projectLatLng(routePoint, customizerRouteBounds()),
+          label: normalizeText(routePoint?.label)
+        }))
+        .filter((entry) => entry.mapPoint)
+      : [];
+    const primaryRouteEntry = routePoints[0] || null;
+    const locationLabel = normalizeText(primaryRouteEntry?.label)
+      || normalizeText(resolveLocalizedField(rawDay, "title", currentLang))
+      || sourceTourTitle
+      || sourceTourId;
     const day = rawDay && typeof rawDay === "object" && !Array.isArray(rawDay)
       ? cloneJson(rawDay)
       : {
@@ -1887,14 +1918,14 @@ export function createTourCustomizer({
       sourceDayExists: item?.sourceDayExists !== false && item?.source_day_exists !== false,
       sourceTourPublished: item?.sourceTourPublished !== false && item?.source_tour_published_on_webpage !== false,
       title,
-      locationLabel: sourceTourTitle || sourceTourId,
+      locationLabel,
       summary: item?.sourceDayExists === false || item?.source_day_exists === false
         ? t("tour.customize.source_day_unavailable", "Source day unavailable")
         : "",
       thumbnailUrl: "",
-      routePoint: null,
-      routePoints: [],
-      mapPoint: null,
+      routePoint: primaryRouteEntry?.routePoint || null,
+      routePoints,
+      mapPoint: primaryRouteEntry?.mapPoint || null,
       imageEntries: [],
       imageUrls: [],
       day
@@ -2270,7 +2301,15 @@ export function createTourCustomizer({
       const sourceTourId = normalizeText(trip?.id);
       const sourceTourTitle = tourTitleForTimeline(trip);
       return (typeof travelPlanDays === "function" ? travelPlanDays(trip) : [])
-        .map((day) => dayModuleFromDay({ day, sourceTourId, originalTourId: baseTourId, lang: currentLang, destinationCatalog, sourceTourTitle }))
+        .map((day) => dayModuleFromDay({
+          day,
+          sourceTourId,
+          originalTourId: baseTourId,
+          lang: currentLang,
+          destinationCatalog,
+          sourceTourTitle,
+          allowLocationOnly: sourceTourId === baseTourId
+        }))
         .filter(Boolean);
     });
     return sortModulesNorthToSouth(modules);
@@ -2288,7 +2327,8 @@ export function createTourCustomizer({
           originalTourId: baseTourId,
           lang: lang(),
           destinationCatalog,
-          sourceTourTitle: tourTitleForTimeline(baseTrip)
+          sourceTourTitle: tourTitleForTimeline(baseTrip),
+          allowLocationOnly: true
         }))
         .filter(Boolean);
     const originalModules = sortModulesNorthToSouth(sourceModules
@@ -2321,7 +2361,8 @@ export function createTourCustomizer({
             sourceTourId: item.sourceTourId,
             originalTourId: baseTourId,
             lang: lang(),
-            destinationCatalog
+            destinationCatalog,
+            allowLocationOnly: item.sourceTourId === baseTourId
           });
           return timelineItemFromModule(module, item.timelineInstanceId || item.id);
         })
@@ -2353,7 +2394,8 @@ export function createTourCustomizer({
               originalTourId: baseTourId,
               lang: lang(),
               destinationCatalog,
-              sourceTourTitle: normalizeText(item?.sourceTourTitle || item?.source_tour_title)
+              sourceTourTitle: normalizeText(item?.sourceTourTitle || item?.source_tour_title),
+              allowLocationOnly: sourceTourId === baseTourId
             })
           : null);
         const timelineInstanceId = normalizeText(item?.timelineInstanceId || item?.timeline_instance_id || item?.id);
@@ -2363,7 +2405,8 @@ export function createTourCustomizer({
             sourceDayId,
             baseTourId,
             timelineInstanceId,
-            rawDay
+            rawDay,
+            destinationCatalog
           });
         if (!timelineItem) return null;
         timelineItem.variantDayId = normalizeText(item?.variantDayId || item?.variant_day_id || item?.id);

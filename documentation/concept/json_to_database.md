@@ -484,7 +484,6 @@ Notes:
 - `travel_plan_booking_id`
 - `day_number`
 - `date`
-- `date_string`
 - `title`
 - `overnight_location`
 - `notes`

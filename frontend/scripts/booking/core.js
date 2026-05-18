@@ -294,7 +294,7 @@ export function createBookingCoreModule(ctx) {
 
   let heroCopyClipboardPoll = null;
   let heroCopiedValue = "";
-  let titleEditStartValue = "";
+  let titleEditStartValue = null;
 
   function withBackendLang(pathname, params = {}) {
     const url = new URL(pathname, window.location.origin);
@@ -897,11 +897,10 @@ export function createBookingCoreModule(ctx) {
     const title = normalizeText(draft.name) || primaryContact?.name || getSubmittedContact(state.booking)?.name || bookingT("booking.title", "Booking");
     if (els.title) els.title.textContent = title;
     if (els.titleInput && document.activeElement !== els.titleInput) {
-      els.titleInput.value = normalizeText(draft.name) || title;
+      els.titleInput.value = state.dirty.core ? normalizeText(draft.name) : (normalizeText(draft.name) || title);
     }
-    if (els.titleEditBtn) {
-      els.titleEditBtn.hidden = !state.permissions.canEditBooking;
-      els.titleEditBtn.disabled = !state.permissions.canEditBooking;
+    if (els.titleInput) {
+      els.titleInput.readOnly = !state.permissions.canEditBooking;
     }
     if (els.subtitle) {
       const bookingId = normalizeText(state.booking.id);
@@ -1201,8 +1200,7 @@ export function createBookingCoreModule(ctx) {
     if (els.personModal?.hidden === false) return;
     if (els.travelPlanServiceLibraryModal?.hidden === false) return;
     if (els.travelPlanImagePreviewModal?.hidden === false) return;
-    if (!els.titleInput?.hidden) return;
-    if (event.target === els.titleInput) return;
+    if (event.target === els.titleInput || document.activeElement === els.titleInput) return;
     event.preventDefault();
     closeBookingDetailScreen();
   }
@@ -1348,11 +1346,14 @@ export function createBookingCoreModule(ctx) {
   }
 
   function startBookingTitleEdit() {
-    if (!state.permissions.canEditBooking || !els.title || !els.titleInput) return;
-    titleEditStartValue = normalizeText(ensureCoreDraft().name) || normalizeText(state.booking?.name) || "";
-    els.title.hidden = true;
+    if (!state.permissions.canEditBooking || !els.titleInput) return;
+    titleEditStartValue = normalizeText(els.titleInput.value)
+      || normalizeText(ensureCoreDraft().name)
+      || normalizeText(state.booking?.name)
+      || "";
+    if (els.title) els.title.hidden = true;
     els.titleInput.hidden = false;
-    els.titleInput.value = titleEditStartValue || els.title.textContent || "";
+    if (document.activeElement === els.titleInput) return;
     window.requestAnimationFrame(() => {
       els.titleInput.focus();
       const length = els.titleInput.value.length;
@@ -1365,31 +1366,43 @@ export function createBookingCoreModule(ctx) {
   }
 
   function stopBookingTitleEdit() {
-    if (!els.title || !els.titleInput) return;
-    els.title.hidden = false;
-    els.titleInput.hidden = true;
+    if (!els.titleInput) return;
+    if (els.title) {
+      els.title.hidden = false;
+      els.titleInput.hidden = true;
+    }
   }
 
   function commitBookingTitleEdit() {
-    if (!els.titleInput || els.titleInput.hidden) return;
+    if (!state.permissions.canEditBooking || !els.titleInput) return;
     ensureCoreDraft().name = normalizeText(els.titleInput.value) || "";
     updateCoreDirtyState();
+    titleEditStartValue = null;
     stopBookingTitleEdit();
   }
 
   function handleBookingTitleInputKeydown(event) {
     if (!(event.target instanceof HTMLInputElement)) return;
+    if (titleEditStartValue === null && event.key !== "Escape") {
+      titleEditStartValue = normalizeText(event.target.value) || "";
+    }
     if (event.key === "Enter") {
       event.preventDefault();
       commitBookingTitleEdit();
+      event.target.blur();
       return;
     }
     if (event.key === "Escape") {
       event.preventDefault();
-      ensureCoreDraft().name = titleEditStartValue;
-      event.target.value = titleEditStartValue;
+      const revertValue = titleEditStartValue === null
+        ? normalizeText(event.target.value) || ""
+        : titleEditStartValue;
+      ensureCoreDraft().name = revertValue;
+      event.target.value = revertValue;
       updateCoreDirtyState();
+      titleEditStartValue = null;
       stopBookingTitleEdit();
+      event.target.blur();
     }
   }
 

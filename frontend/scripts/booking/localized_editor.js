@@ -101,7 +101,7 @@ function renderLocalizedControl({
   rows = 3,
   placeholder = ""
 }) {
-  if (inputTag === "textarea") {
+  if (inputTag === "textarea" || inputTag === "textregion") {
     return `<textarea class="booking-text-field booking-text-field--customer" id="${escapeHtml(id)}" rows="${escapeHtml(String(rows))}"${data}${attrs}${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""}>${escapeHtml(value)}</textarea>`;
   }
   return `<input class="booking-text-field booking-text-field--customer" id="${escapeHtml(id)}" type="text" value="${escapeHtml(value)}"${data}${attrs}${placeholder ? ` placeholder="${escapeHtml(placeholder)}"` : ""} />`;
@@ -226,7 +226,7 @@ export function renderLocalizedSplitField({
   });
   const rightDisabled = disabled || sameLanguage || localizedReadOnly;
   const showTranslateButton = !sameLanguage && !localizedReadOnly;
-  const inputTag = type === "textarea" ? "textarea" : "input";
+  const inputTag = type === "textarea" || type === "textregion" ? "textarea" : "input";
   const englishId = `${idBase}_${sourceOption.code}`;
   const localizedId = `${idBase}_${targetOption.code}_target`;
   const sourceData = renderDataAttributes({
@@ -350,7 +350,7 @@ export function renderLocalizedStackedField({
     contentLang: normalizedTargetLang,
     sourceLang: normalizedSourceLang
   });
-  const inputTag = type === "textarea" ? "textarea" : "input";
+  const inputTag = type === "textarea" || type === "textregion" ? "textarea" : "input";
   const englishId = `${idBase}_${sourceOption.code}`;
   const localizedId = `${idBase}_${targetOption.code}_target`;
   const sourceData = renderDataAttributes({

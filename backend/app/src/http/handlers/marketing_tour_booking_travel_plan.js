@@ -234,7 +234,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       id: `travel_plan_day_${randomUUID()}`,
       day_number: dayIndex + 1,
       date: null,
-      date_string: null,
       title: title.text,
       title_i18n: title.map,
       primary_location_id: normalizeText(day?.primary_location_id) || null,

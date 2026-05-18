@@ -519,14 +519,13 @@ IR: {
 			module:     "database"
 			sourceType: "database.#BookingTravelPlanDay"
 			fields: [
-				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "day_number", kind: "scalar", typeName: "int", required: true},
-				{name: "date", kind: "scalar", typeName: "DateOnly", required: false},
-				{name: "date_string", kind: "scalar", typeName: "string", required: false},
-				{name: "title", kind: "scalar", typeName: "string", required: false},
-				{name: "services", kind: "entity", typeName: "BookingTravelPlanService", required: false, isArray: true},
-				{name: "notes", kind: "scalar", typeName: "string", required: false},
-			]
+					{name: "id", kind: "scalar", typeName: "Identifier", required: true},
+					{name: "day_number", kind: "scalar", typeName: "int", required: true},
+					{name: "date", kind: "scalar", typeName: "DateOnly", required: false},
+					{name: "title", kind: "scalar", typeName: "string", required: false},
+					{name: "services", kind: "entity", typeName: "BookingTravelPlanService", required: false, isArray: true},
+					{name: "notes", kind: "scalar", typeName: "string", required: false},
+				]
 		},
 		{
 			name:       "BookingTravelPlanAttachment"

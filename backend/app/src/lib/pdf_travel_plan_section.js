@@ -211,18 +211,10 @@ function formatTravelPlanDateTime(rawValue, lang, fallbackDayDate, formatPdfDate
   return raw;
 }
 
-function formatTravelPlanDayDateLabel(day, lang, formatPdfDateOnly, pdfT) {
+function formatTravelPlanDayDateLabel(day, lang, formatPdfDateOnly) {
   const date = formatTravelPlanDate(day?.date, lang, formatPdfDateOnly);
   if (date) return date;
-  const dateString = normalizeText(day?.date_string);
-  if (!dateString) return "";
-  if (dateString === "before_trip") {
-    return pdfT(lang, "travel_plan.date_string.before_trip", "Before the trip");
-  }
-  if (dateString === "after_trip") {
-    return pdfT(lang, "travel_plan.date_string.after_trip", "After the trip");
-  }
-  return dateString;
+  return "";
 }
 
 function formatTravelPlanTiming(item, lang, dayDate, formatPdfDateOnly) {
@@ -732,7 +724,7 @@ function drawTravelPlanItemStack(doc, startY, contentWidth, pageLayout, fonts, l
 
 function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = false, boundaryIcon = null } = {}) {
   const boundaryKind = boundaryPresentationDayKind(day);
-  const dateLabel = boundaryKind ? "" : formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly, deps.pdfT);
+  const dateLabel = boundaryKind ? "" : formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly);
   const separateDayLabel = deps.separateDayLabel === true;
   const isBoundaryStandalone = boundaryKind && day?._presentation_boundary_day === true;
   const titleText = boundaryKind && day?._presentation_boundary_day === true && separateDayLabel

@@ -56,7 +56,6 @@ Important current locations:
    The current `stripBookingFieldsFromTravelPlanDay()` removes service `details` and `details_i18n`. Change it to strip only truly booking-specific fields:
 
    - day `date`
-   - day `date_string`
    - day `copied_from`
    - service `copied_from`
 

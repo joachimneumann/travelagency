@@ -197,25 +197,25 @@
                   <div class="booking-hero__main">
                     <div class="booking-hero__copy">
                       <div class="booking-hero__title-row">
-                        <h1 class="booking-hero__name" id="detail_title" data-i18n-id="booking.title">Booking</h1>
-                        <input class="booking-hero__name-input" id="detail_title_input" type="text" hidden />
-                        <button class="booking-hero__title-edit" id="detail_title_edit_btn" type="button" aria-label="Edit booking title" data-i18n-aria-label-id="booking.edit_title">&#9998;</button>
+                        <input class="booking-hero__name-input" id="detail_title_input" type="text" aria-label="Booking title" data-i18n-aria-label-id="booking.title" />
                       </div>
-                      <div class="booking-hero__id-row">
-                        <p class="booking-hero__id" id="detail_sub_title"><span id="detail_sub_title_id">ID: -</span></p>
-                        <button class="booking-hero__id-copy" id="booking_hero_copy_btn" type="button" data-i18n-id="booking.copy">copy</button>
-                        <p class="booking-hero__id booking-hero__id-updated" id="detail_sub_title_updated"></p>
-                        <span class="booking-hero__id-copy-status" id="booking_hero_copy_status" aria-live="polite"></span>
-                      </div>
-                      <div class="booking-title-control-row" aria-label="Booking assignment and customer language">
-                        <div class="field booking-title-control-row__field booking-title-control-row__field--staff">
-                          <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP Staff</label>
-                          <select id="booking_owner_select"></select>
+                      <div class="booking-hero__below-title-row">
+                        <div class="booking-hero__id-row">
+                          <p class="booking-hero__id" id="detail_sub_title"><span id="detail_sub_title_id">ID: -</span></p>
+                          <button class="booking-hero__id-copy" id="booking_hero_copy_btn" type="button" data-i18n-id="booking.copy">copy</button>
+                          <p class="booking-hero__id booking-hero__id-updated" id="detail_sub_title_updated"></p>
+                          <span class="booking-hero__id-copy-status" id="booking_hero_copy_status" aria-live="polite"></span>
                         </div>
-                        <div class="field booking-content-language-field booking-title-control-row__field" id="booking_content_language_field">
-                          <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
-                          <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
-                          <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                        <div class="booking-title-control-row" aria-label="Booking assignment and customer language">
+                          <div class="field booking-title-control-row__field booking-title-control-row__field--staff">
+                            <label for="booking_owner_select" data-i18n-id="booking.staff_label">ATP Staff</label>
+                            <select id="booking_owner_select"></select>
+                          </div>
+                          <div class="field booking-content-language-field booking-title-control-row__field" id="booking_content_language_field">
+                            <label for="booking_content_language_select" data-i18n-id="booking.content_language">Customer language</label>
+                            <div class="booking-content-language-menu-mount" id="booking_content_language_menu_mount"></div>
+                            <select id="booking_content_language_select" class="visually-hidden" tabindex="-1" aria-hidden="true"></select>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -663,9 +663,7 @@
               <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_panel_summary" type="button"></button>
             </div>
             <div class="booking-section__body">
-              <div class="backend-controls travel-plan-actions">
-                <span id="travel_plan_status" class="micro booking-inline-status"></span>
-              </div>
+              <span id="travel_plan_status" class="micro booking-inline-status"></span>
               <div id="travel_plan_editor"></div>
             </div>
           </article>

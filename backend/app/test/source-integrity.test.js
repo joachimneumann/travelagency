@@ -1062,6 +1062,11 @@ test("booking translation collapsible exposes incomplete state while marketing-t
     "Booking travel-plan translation review should mark incomplete translations in the collapsible title and dirty bar"
   );
   assert.match(
+    bookingTravelPlanSource,
+    /function syncTravelPlanTranslationReviewActions\(summary = null, sourceFields = null\)[\s\S]*const needsTranslation = isTranslationIncompleteStatus\(reviewSummary\.status\)[\s\S]*missingButton\.disabled = !canTranslateMissing[\s\S]*data-translation-review-dirty="\$\{isTranslationIncompleteStatus\(summary\.status\) \? "true" : "false"\}"[\s\S]*syncTravelPlanTranslationReviewActions\(summary, sourceFields\)/,
+    "Booking translation review should disable the primary Translate action once translations are clean"
+  );
+  assert.match(
     bookingScriptSource,
     /function dirtyBarNoticeLabels\(\)[\s\S]*hasIncompleteTravelPlanTranslation[\s\S]*booking\.translation\.section_title_incomplete/,
     "Booking dirty bar should include the incomplete translation notice"
@@ -1656,22 +1661,60 @@ test("payments no longer depend on the old flow-state helper module", async () =
 
 test("booking title control row keeps staff and customer language always visible", async () => {
   const bookingStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking.css");
-  const bookingStyles = await readFile(bookingStylesPath, "utf8");
+  const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const bookingPageScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingCorePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "core.js");
+  const [bookingStyles, bookingPageSource, bookingPageScriptSource, bookingCoreSource] = await Promise.all([
+    readFile(bookingStylesPath, "utf8"),
+    readFile(bookingPagePath, "utf8"),
+    readFile(bookingPageScriptPath, "utf8"),
+    readFile(bookingCorePath, "utf8")
+  ]);
 
   assert.match(
     bookingStyles,
-    /\.booking-title-control-row \{[\s\S]*grid-template-columns: minmax\(180px, 220px\) minmax\(170px, 220px\);[\s\S]*margin-top: 0\.85rem;/,
-    "The booking title area should reserve an always-visible row for staff and customer language"
+    /\.booking-hero__below-title-row \{[\s\S]*display: flex;[\s\S]*align-items: center;[\s\S]*\.booking-hero__below-title-row :is\([\s\S]*\.booking-hero__id,[\s\S]*\.booking-hero__id-copy,[\s\S]*label,[\s\S]*select,[\s\S]*\.lang-menu-trigger[\s\S]*font-size: 16px;/,
+    "The booking title area should keep metadata, staff, and customer language in one 16px row"
   );
   assert.match(
     bookingStyles,
-    /\.booking-title-control-row__field \{[\s\S]*gap: 0\.35rem;/,
-    "The booking customer-language field should use the same label-to-control gap as the neighboring fields"
+    /\.booking-title-control-row \{[\s\S]*display: flex;[\s\S]*align-items: center;[\s\S]*margin-top: 0;/,
+    "The booking title controls should sit inline with the metadata row"
   );
   assert.match(
     bookingStyles,
-    /\.booking-title-control-row \.lang-menu-trigger \{[\s\S]*justify-content: flex-start;[\s\S]*padding: 0\.68rem 0\.9rem;/,
-    "The booking customer-language trigger should match the booking control height scale and align with the staff control"
+    /\.booking-title-control-row__field \{[\s\S]*flex-direction: row;[\s\S]*align-items: center;[\s\S]*\.booking-title-control-row \.lang-menu-trigger \{[\s\S]*padding: 0\.42rem 0\.75rem;/,
+    "The booking staff and language labels should sit beside compact controls"
+  );
+  assert.match(
+    bookingPageSource,
+    /<input class="booking-hero__name-input" id="detail_title_input" type="text" aria-label="Booking title"/,
+    "The booking title should be an inline editable title field"
+  );
+  assert.doesNotMatch(
+    bookingPageSource,
+    /detail_title_edit_btn|booking-hero__title-edit|&#9998;/,
+    "The booking header should not render the old pen edit button"
+  );
+  assert.match(
+    bookingStyles,
+    /\.booking-hero__name-input \{[\s\S]*background: transparent;[\s\S]*border: 2px solid transparent;[\s\S]*\.booking-hero__name-input:focus \{[\s\S]*border-color:/,
+    "The editable booking title should only show a surrounding border while focused"
+  );
+  assert.match(
+    bookingCoreSource,
+    /els\.titleInput\.readOnly = !state\.permissions\.canEditBooking[\s\S]*event\.target === els\.titleInput \|\| document\.activeElement === els\.titleInput[\s\S]*function startBookingTitleEdit\(\)[\s\S]*if \(!state\.permissions\.canEditBooking \|\| !els\.titleInput\) return;/,
+    "The booking title field should stay editable without depending on a separate pen button"
+  );
+  assert.match(
+    bookingCoreSource,
+    /let titleEditStartValue = null;[\s\S]*if \(titleEditStartValue === null && event\.key !== "Escape"\) \{[\s\S]*titleEditStartValue = normalizeText\(event\.target\.value\) \|\| "";[\s\S]*const revertValue = titleEditStartValue === null/,
+    "The booking title field should capture a revert value from keyboard edits even when focus starts outside the old edit button flow"
+  );
+  assert.match(
+    bookingPageScriptSource,
+    /els\.titleInput\.addEventListener\("focus", startBookingTitleEdit\);[\s\S]*els\.titleInput\.addEventListener\("blur", commitBookingTitleEdit\);/,
+    "The booking page should start and commit title edits directly from the title field"
   );
 });
 
@@ -3056,13 +3099,25 @@ test("standalone generated offer controls are removed from the booking page", as
   );
 });
 
-test("persons and travel plan editors no longer autosave from local interactions while service image changes use clean-state mutations", async () => {
+test("persons and travel plan editors no longer autosave from local interactions while booking service image changes save dirty travel plans only", async () => {
   const personsModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "persons.js");
   const travelPlanModulePath = travelPlanEditorCorePath();
   const travelPlanImagesModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_images.js");
-  const personsSource = await readFile(personsModulePath, "utf8");
-  const travelPlanSource = await readFile(travelPlanModulePath, "utf8");
-  const travelPlanImagesSource = await readFile(travelPlanImagesModulePath, "utf8");
+  const bookingPageSourcePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
+  const bookingTravelPlanImageHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan_images.js");
+  const [
+    personsSource,
+    travelPlanSource,
+    travelPlanImagesSource,
+    bookingPageSource,
+    bookingTravelPlanImageHandlerSource
+  ] = await Promise.all([
+    readFile(personsModulePath, "utf8"),
+    readFile(travelPlanModulePath, "utf8"),
+    readFile(travelPlanImagesModulePath, "utf8"),
+    readFile(bookingPageSourcePath, "utf8"),
+    readFile(bookingTravelPlanImageHandlerPath, "utf8")
+  ]);
 
   assert.doesNotMatch(
     personsSource,
@@ -3086,8 +3141,38 @@ test("persons and travel plan editors no longer autosave from local interactions
   );
   assert.match(
     travelPlanImagesSource,
-    /data-travel-plan-remove-image="\$\{escapeHtml\(image\.id\)\}"[\s\S]*data-requires-clean-state/,
-    "Travel plan image removal should be blocked while the page has other unsaved edits"
+    /data-travel-plan-add-image="\$\{escapeHtml\(item\.id\)\}"[\s\S]*data-requires-clean-state[\s\S]*data-clean-state-allow-travel-plan-dirty="true"/,
+    "Travel plan image upload should stay enabled when the only unsaved edits are travel-plan edits"
+  );
+  assert.match(
+    travelPlanImagesSource,
+    /data-travel-plan-remove-image="\$\{escapeHtml\(image\.id\)\}"[\s\S]*data-requires-clean-state[\s\S]*data-clean-state-allow-travel-plan-dirty="true"/,
+    "Travel plan image removal should stay enabled when the only unsaved edits are travel-plan edits"
+  );
+  assert.match(
+    bookingPageSource,
+    /function hasUnsavedBookingChangesExcept\(sectionKey\)[\s\S]*key !== ignoredSectionKey[\s\S]*function isCleanStateActionBlocked\(element\)[\s\S]*cleanStateAllowTravelPlanDirty === "true"[\s\S]*hasUnsavedBookingChangesExcept\("travel_plan"\)/,
+    "Booking clean-state controls should allow selected mutations to prepare a dirty travel-plan draft without unblocking unrelated dirty sections"
+  );
+  assert.match(
+    travelPlanSource,
+    /async function ensureTravelPlanReadyForMutation\(\)[\s\S]*if \(!state\.travelPlanDirty\) return true;[\s\S]*if \(typeof prepareTravelPlanMutation === "function"\)[\s\S]*return await prepareTravelPlanMutation\([\s\S]*return await persistTravelPlan\(\);/,
+    "Booking service image mutations should save dirty travel-plan drafts through the booking travel-plan save path before mutating images"
+  );
+  assert.match(
+    travelPlanSource,
+    /bookingTravelPlanRequest\(\{[\s\S]*content_lang: bookingContentLang\(\),[\s\S]*source_lang: bookingSourceLang\(\)[\s\S]*query: bookingLanguageQuery\(\)/,
+    "Booking travel-plan fallback saves should keep the active content and source languages explicit"
+  );
+  assert.match(
+    bookingTravelPlanImageHandlerSource,
+    /BOOKING_IMAGES_DIR[\s\S]*publicBookingImagePath\(normalizeText, outputRelativePath\)[\s\S]*booking\.travel_plan = check\.travel_plan[\s\S]*await persistStore\(store\)/,
+    "Booking service image uploads should write booking image files and update the booking travel plan in the store"
+  );
+  assert.doesNotMatch(
+    bookingTravelPlanImageHandlerSource,
+    /CONTENT_ROOT|CONTENT_ONE_PAGER|deferredPublicHomepageAssets|homepage_assets|tour-images/,
+    "Booking service image upload/delete must not write marketing content or public homepage assets"
   );
 });
 
@@ -3274,11 +3359,15 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   const travelPlanModulePath = travelPlanEditorCorePath();
   const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
+  const marketingTourPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
+  const travelPlanCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
   const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
-  const [source, helperSource, bookingPageSource] = await Promise.all([
+  const [source, helperSource, bookingPageSource, marketingTourPageSource, cssSource] = await Promise.all([
     readFile(travelPlanModulePath, "utf8"),
     readFile(travelPlanHelpersPath, "utf8"),
-    readFile(bookingPagePath, "utf8")
+    readFile(bookingPagePath, "utf8"),
+    readFile(marketingTourPagePath, "utf8"),
+    readFile(travelPlanCssPath, "utf8")
   ]);
   const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
@@ -3329,10 +3418,75 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
     /data-travel-plan-service-field="end_time_time"/,
     "travel_plan.js should render an end-time selector for range timing mode"
   );
+  assert.doesNotMatch(
+    source,
+    /suggestedNextTravelPlanDayDate|data-travel-plan-apply-next-day|booking\.travel_plan\.next_day/,
+    "travel_plan.js should not render the removed next-day shortcut"
+  );
+  assert.doesNotMatch(
+    source,
+    /data-travel-plan-renumber-days|travel_plan_renumber_days_btn|booking\.travel_plan\.renumber_days|Fix dates/,
+    "travel_plan.js should not render the removed manual Fix dates action"
+  );
+  assert.doesNotMatch(
+    `${bookingPageSource}\n${marketingTourPageSource}\n${cssSource}`,
+    /backend-controls travel-plan-actions|travel-plan-actions__buttons|\.travel-plan-actions/,
+    "travel-plan pages should not render or style the removed backend-controls travel-plan-actions wrapper"
+  );
+  assert.match(
+    `${bookingPageSource}\n${marketingTourPageSource}`,
+    /<span id="travel_plan_status" class="micro booking-inline-status"><\/span>[\s\S]*<div id="travel_plan_editor"><\/div>/,
+    "travel-plan pages should keep the status element directly above the editor"
+  );
   assert.match(
     source,
-    /function suggestedNextTravelPlanDayDate\(dayIndex\)[\s\S]*data-travel-plan-apply-next-day[\s\S]*booking\.travel_plan\.next_day/,
-    "travel_plan.js should offer a next-day suggestion button when a blank day follows a dated day"
+    /function recalculateTravelPlanDayDates\([\s\S]*day\.date = dayDate/,
+    "travel_plan.js should automatically assign sequential day dates from day 1"
+  );
+  assert.match(
+    source,
+    /function addDay\(\)[\s\S]*recalculateTravelPlanDayDates\(\{ anchorDate: firstDayDate \}\)/,
+    "adding a day should automatically recalculate sequential dates"
+  );
+  assert.match(
+    source,
+    /function moveTravelPlanDayNearRouteTarget\(dayId, targetDayId, placement = "before"\)[\s\S]*recalculateTravelPlanDayDates\(\{ anchorDate: firstDayDate \}\)/,
+    "dragging a day in the route list should automatically recalculate sequential dates"
+  );
+  assert.match(
+    source,
+    /travel-plan-route-list__drag-handle[\s\S]*<span><\/span><span><\/span><span><\/span><span><\/span><span><\/span><span><\/span>/,
+    "draggable days in the route list should render a six-square drag handle"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-route-list__item--day \{[\s\S]*grid-template-columns: 14px 34px minmax\(0, 1fr\);[\s\S]*\.travel-plan-route-list__drag-handle span \{[\s\S]*background: #000;/,
+    "route-list day rows should place the black drag handle to the left of the day badge"
+  );
+  assert.match(
+    source,
+    /travel-plan-grid--map-locations\$\{focusedBookingEditor \? " travel-plan-focused-day-grid__map" : ""\}[\s\S]*<div class="travel-plan-focused-day-grid">[\s\S]*travel-plan-focused-day-grid__row--details[\s\S]*travel-plan-focused-day-grid__row--date[\s\S]*\$\{dayMapLocationFields\}/,
+    "focused booking day details should render details, date, and map fields inside one grid"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-focused-day-grid \{[\s\S]*display: grid;[\s\S]*#travel_plan_editor \.travel-plan-focused-day-grid \.localized-pair\.localized-pair--single-language,[\s\S]*\.travel-plan-focused-day-grid \.travel-plan-day__date-field,[\s\S]*\.travel-plan-focused-day-grid \.travel-plan-grid--map-locations > \.field \{[\s\S]*grid-template-columns: var\(--travel-plan-focused-label-width\) minmax\(0, 1fr\);/,
+    "focused booking day details grid should align labels and controls consistently"
+  );
+  assert.match(
+    cssSource,
+    /#travel_plan_editor \.travel-plan-focused-day-grid \.travel-plan-day__date-field \{[\s\S]*grid-template-columns: var\(--travel-plan-focused-label-width\) minmax\(0, 200px\);[\s\S]*#travel_plan_editor \.travel-plan-focused-day-grid \.travel-plan-day__date-field \.travel-plan-date-input \{[\s\S]*justify-self: start;/,
+    "focused booking day date input should align to the same left edge as the other editable fields"
+  );
+  assert.match(
+    source,
+    /labelIconNumber = ""[\s\S]*travel-plan-location-label-number[\s\S]*field: "secondary_location_id"[\s\S]*labelIconSrc: "\/assets\/img\/map%20pin\.png"[\s\S]*labelIconNumber: "2"/,
+    "focused booking day secondary map point should render as the map-pin icon with a 2 label"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-location-label-icon-wrap \{[\s\S]*grid-template-columns: auto auto;[\s\S]*\.travel-plan-location-label-number \{[\s\S]*font-weight: 800;/,
+    "focused booking map labels should support the secondary pin number"
   );
   assert.match(
     source,
@@ -3500,7 +3654,7 @@ test("travel-plan service image text stays wired across model, API, backend, tra
   );
 });
 
-test("travel-plan day date presets stay wired across model, API, backend, and UI", async () => {
+test("travel-plan day date presets stay removed across model, API, backend, and UI", async () => {
   const modelPath = path.resolve(__dirname, "..", "..", "..", "model", "database", "travel_plan.cue");
   const openApiPath = path.resolve(__dirname, "..", "..", "..", "api", "generated", "openapi.yaml");
   const backendPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "domain", "travel_plan.js");
@@ -3524,30 +3678,30 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
     openApiSource.indexOf("    BookingTravelPlanBoundaryLogistics:")
   );
 
-  assert.match(
+  assert.doesNotMatch(
     modelSource,
     /date_string\?:\s+string/,
-    "The travel-plan day model should expose an optional date_string field for preset labels"
+    "The travel-plan day model should not expose date preset labels"
   );
   assert.match(
     modelBoundaryService,
     /#BookingTravelPlanBoundaryService:\s+#TravelPlanBoundaryService/,
     "Booking boundary services should reuse the date-free boundary service model"
   );
-  assert.match(
+  assert.doesNotMatch(
     openApiSource,
     /BookingTravelPlanDay:[\s\S]*date_string:\n\s+type: string\n\s+nullable: true/,
-    "The OpenAPI contract should expose the optional travel-plan day date_string"
+    "The OpenAPI contract should not expose travel-plan day date preset labels"
   );
   assert.doesNotMatch(
     openApiBoundaryService,
     /\bdate(?:_string)?:/,
     "The OpenAPI contract should keep booking boundary services date-free"
   );
-  assert.match(
+  assert.doesNotMatch(
     backendSource,
-    /date_string: normalizedDate \? null : normalizeOptionalText\(day\?\.date_string\)/,
-    "The backend travel-plan normalizer should persist the optional day date_string when no concrete date is set"
+    /before_trip|after_trip|date_string: normalizedDate/,
+    "The backend travel-plan normalizer should not persist travel-plan day date preset labels"
   );
   assert.doesNotMatch(
     backendSource,
@@ -3559,20 +3713,25 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
     /function normalizeBoundaryTimeValue/,
     "The backend boundary normalizer should strip legacy date portions from boundary timing values"
   );
-  assert.match(
+  assert.doesNotMatch(
     helperSource,
-    /date_string: normalizedDate \? "" : normalizeOptionalText\(rawDay\.date_string\)/,
-    "The frontend travel-plan helper should normalize the optional day date_string"
+    /date_string: normalizedDate/,
+    "The frontend travel-plan helper should not normalize travel-plan day date preset labels"
   );
   assert.doesNotMatch(
     helperSource,
     /date_string: normalizedDate \? "" : normalizeOptionalText\(source\.date_string\)/,
     "The frontend travel-plan helper should not normalize boundary date fields"
   );
-  assert.match(
+  assert.doesNotMatch(
     uiSource,
     /data-travel-plan-day-field="date_string"|data-travel-plan-set-date-string/,
-    "The booking travel-plan UI should expose the day date preset controls and hidden date_string field"
+    "The booking travel-plan UI should not expose day date preset controls or hidden fields"
+  );
+  assert.doesNotMatch(
+    uiSource,
+    /booking\.travel_plan\.date_string|Before the trip|After the trip/,
+    "The booking travel-plan UI should not include before/after trip day date labels"
   );
   assert.doesNotMatch(
     uiSource,
@@ -3584,10 +3743,10 @@ test("travel-plan day date presets stay wired across model, API, backend, and UI
     /data-travel-plan-boundary-field="(?:time_point|start_time|end_time)_date"/,
     "The booking travel-plan UI should derive boundary timing dates instead of exposing boundary date inputs"
   );
-  assert.match(
+  assert.doesNotMatch(
     travelPlanStyles,
-    /\.booking-detail-page \.travel-plan-day__date-shortcut\.is-active \{[\s\S]*color: var\(--text-black\);/,
-    "The active travel-plan day date preset should use black text"
+    /travel-plan-day__date-shortcut/,
+    "The booking travel-plan styles should not include the removed next-day shortcut"
   );
   assert.doesNotMatch(
     travelPlanStyles,
@@ -4809,6 +4968,11 @@ test("frontend translation requests send explicit translation profiles outside c
     localizedEditorSource,
     /translationProfile = "customer_travel_plan"[\s\S]*translation_profile: normalizedTranslationProfile/,
     "Booking field translation requests should default to the customer_travel_plan profile"
+  );
+  assert.match(
+    localizedEditorSource,
+    /inputTag === "textarea" \|\| inputTag === "textregion"[\s\S]*type === "textarea" \|\| type === "textregion"/,
+    "Booking localized textregion fields should render textarea controls instead of single-line inputs"
   );
   assert.match(
     travelPlanEditorSource,
@@ -6972,6 +7136,11 @@ test("tour customizer floating drag elements stay inside the active customizer r
     tourCustomizerSource,
     /const TOUR_CUSTOMIZER_COMPONENT_CSS = `[\s\S]*\.tour-customize-root \.tour-customize-embedded--full \{[\s\S]*height: 100%;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \{[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-map__controls,[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-options,[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-timeline \{[\s\S]*display: none;/,
     "Preview/full customizer layout CSS should live in the component stylesheet"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /--tour-customize-workspace-background: transparent;[\s\S]*\.tour-customize-root\.tour-customize-runtime-root \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize__workspace \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded \{[\s\S]*border: 0;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \{[\s\S]*place-items: center;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-map__stage \{[\s\S]*width: min\(100%, 200px\);[\s\S]*aspect-ratio: 1 \/ 2;/,
+    "Preview customizer wrappers should be visually transparent while the map keeps its fixed centered aspect ratio"
   );
   assert.doesNotMatch(
     `${bookingTravelPlanStyles}\n${tourVariantPageSource}`,

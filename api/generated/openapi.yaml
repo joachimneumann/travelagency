@@ -4634,9 +4634,6 @@ components:
           type: string
           format: date
           nullable: true
-        date_string:
-          type: string
-          nullable: true
         title:
           type: string
           nullable: true

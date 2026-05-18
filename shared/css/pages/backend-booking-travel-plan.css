@@ -22,24 +22,8 @@
   --travel-plan-compact-control-height: 2rem;
 }
 
-.booking-detail-page .travel-plan-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  margin: 0 0 0.9rem;
-}
-
-.booking-detail-page .travel-plan-actions__buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.65rem;
-  flex-wrap: nowrap;
-}
-
-.booking-detail-page .travel-plan-actions #travel_plan_status {
+.booking-detail-page #travel_plan_panel > .booking-section__body > #travel_plan_status {
+  margin: 0 0 0.5rem;
   margin-left: 0;
   text-align: center;
   min-height: calc(var(--travel-plan-font-size-sm) * 1.35);
@@ -48,26 +32,20 @@
   justify-content: center;
 }
 
-.booking-detail-page .travel-plan-actions #travel_plan_status:empty {
+.booking-detail-page #travel_plan_panel > .booking-section__body > #travel_plan_status:empty {
   display: inline-flex;
   visibility: hidden;
 }
 
-.booking-detail-page .travel-plan-actions #travel_plan_translate_all_btn,
-.booking-detail-page #travel_plan_panel .travel-plan-renumber-dates-btn,
-.booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut,
+.booking-detail-page #travel_plan_panel .travel-plan-sidebar-add-day-btn,
 .booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction) {
   border-color: var(--travel-plan-accent-border-strong);
   background: var(--travel-plan-service-button-bg);
   box-shadow: none;
 }
 
-.booking-detail-page .travel-plan-actions #travel_plan_translate_all_btn:hover:not([disabled]),
-.booking-detail-page .travel-plan-actions #travel_plan_translate_all_btn:focus-visible:not([disabled]),
-.booking-detail-page #travel_plan_panel .travel-plan-renumber-dates-btn:hover:not([disabled]),
-.booking-detail-page #travel_plan_panel .travel-plan-renumber-dates-btn:focus-visible:not([disabled]),
-.booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut:hover:not([disabled]),
-.booking-detail-page #travel_plan_panel .travel-plan-day__date-shortcut:focus-visible:not([disabled]),
+.booking-detail-page #travel_plan_panel .travel-plan-sidebar-add-day-btn:hover:not([disabled]),
+.booking-detail-page #travel_plan_panel .travel-plan-sidebar-add-day-btn:focus-visible:not([disabled]),
 .booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction):hover:not([disabled]),
 .booking-detail-page #travel_plan_panel :is(.localized-pair__lang-button, .localized-editor__translate-btn--direction):focus-visible:not([disabled]) {
   border-color: var(--travel-plan-accent-border-hover);
@@ -77,7 +55,7 @@
 
 .booking-detail-page :is(
   #travel_plan_translate_all_btn,
-  .travel-plan-renumber-dates-btn,
+  .travel-plan-sidebar-add-day-btn,
   .travel-plan-link-add-btn,
   .travel-plan-link-toggle-btn,
   .travel-plan-day-add-btn,
@@ -87,7 +65,6 @@
 }
 
 .booking-detail-page :is(
-  .travel-plan-actions #travel_plan_status,
   .travel-plan-day__head p,
   .travel-plan-existing-pdfs__empty,
   .travel-plan-attachments__empty,
@@ -472,6 +449,10 @@
   align-items: start;
 }
 
+#travel_plan_editor .localized-pair.localized-pair--single-language {
+  grid-template-columns: minmax(3.5rem, 4.5rem) minmax(0, 1fr);
+}
+
 #travel_plan_editor .localized-pair__header {
   grid-column: 1;
   grid-row: 1;
@@ -665,6 +646,57 @@
   margin: 0;
 }
 
+#travel_plan_editor .travel-plan-day__date-field .travel-plan-date-input {
+  width: 200px;
+}
+
+#travel_plan_editor .travel-plan-day__date-field .travel-plan-date-input > input[type="text"] {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+}
+
+#travel_plan_editor .travel-plan-date-input__picker-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  font-size: 1.12rem;
+}
+
+#travel_plan_editor .travel-plan-grid--map-locations select {
+  width: 200px;
+  max-width: 100%;
+}
+
+.travel-plan-location-label--icon {
+  align-self: center;
+  justify-self: start;
+  line-height: 1;
+}
+
+.travel-plan-location-label-icon-wrap {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 0.16rem;
+  min-width: 0;
+}
+
+.travel-plan-location-label-icon {
+  display: block;
+  width: 1.65rem;
+  height: 1.65rem;
+  object-fit: contain;
+}
+
+.travel-plan-location-label-number {
+  color: #111827;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
 .travel-plan-day {
   position: relative;
   margin: 0;
@@ -755,40 +787,12 @@
   margin: 0;
 }
 
-.travel-plan-day__date-shortcuts {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  flex-wrap: wrap;
-  margin-left: 0.25rem;
-}
-
-.travel-plan-day__date-shortcut {
-  min-height: 0;
-  padding: 0.2rem 0.48rem;
-  border-radius: 7px;
-  font-size: 0.82rem;
-  line-height: 1.15;
-}
-
-.booking-detail-page .travel-plan-day__date-shortcut.is-active {
-  background: var(--travel-plan-service-button-bg);
-  border-color: var(--travel-plan-accent-border-hover);
-  box-shadow: inset 0 0 0 1px var(--travel-plan-accent-border-hover);
-}
-
 .travel-plan-day__head h3 {
   margin: 0;
   color: var(--text-strong);
   font-size: var(--booking-type-section);
   font-weight: var(--booking-font-weight-strong);
   line-height: 1.25;
-}
-
-.travel-plan-day__date-field .booking-person-modal__date-input > input[type="text"] {
-  width: 8.6rem;
-  min-width: 8.6rem;
-  max-width: 8.6rem;
 }
 
 .travel-plan-grid .booking-person-modal__date-input > input[type="text"] {
@@ -1215,33 +1219,15 @@
   display: grid;
   gap: 0;
   min-width: 0;
-  margin-left: var(--travel-plan-content-offset);
-}
-
-.travel-plan-service__rail {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--travel-plan-service-rail-width);
-  border-radius: 14px;
-  background: var(--travelplan_service_color);
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding-top: 0.25rem;
 }
 
 .travel-plan-service__toggle {
-  min-width: 100%;
-  width: 100%;
+  min-width: 2rem;
+  width: 2rem;
+  min-height: 2rem;
   padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
   color: var(--travel-plan-service-button-text);
-  box-shadow: none;
-  font-size: var(--travel-plan-service-plus-size);
+  font-size: 1.2rem;
   font-weight: var(--font-weight-bold);
   line-height: 1;
 }
@@ -1288,11 +1274,6 @@
 
 .travel-plan-service--collapsed {
   min-height: 2rem;
-}
-
-.travel-plan-service--collapsed .travel-plan-service__rail {
-  align-items: center;
-  padding-top: 0;
 }
 
 .travel-plan-service__title {
@@ -2189,15 +2170,6 @@
   gap: 0.75rem;
 }
 
-.booking-detail-page:not(.tour-detail-page) .travel-plan-actions {
-  align-items: flex-end;
-  margin: 0 0 0.5rem;
-}
-
-.booking-detail-page:not(.tour-detail-page) .travel-plan-actions__buttons {
-  justify-content: flex-end;
-}
-
 .travel-plan-booking-workspace {
   display: grid;
   grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
@@ -2213,10 +2185,15 @@
   min-width: 0;
 }
 
-.travel-plan-route-list__item,
-.travel-plan-booking-editor {
+.travel-plan-route-list__item {
   border: 1px solid #dfe5ee;
   border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.travel-plan-booking-editor {
+  border: 0;
   background: #fff;
   box-shadow: none;
 }
@@ -2226,8 +2203,7 @@
   min-height: 196px;
   display: block;
   overflow: hidden;
-  border: 1px solid #cfdae7;
-  border-radius: 7px;
+  border: 0;
   cursor: pointer;
   background: transparent;
 }
@@ -2239,15 +2215,39 @@
 
 .travel-plan-customizer-preview__mount {
   --tour-customize-preview-min-height: 196px;
+  --tour-customize-map-radius: 8px;
   width: 100%;
   height: 100%;
   min-height: var(--tour-customize-preview-min-height);
 }
 
-.travel-plan-renumber-dates-btn {
+.travel-plan-sidebar-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.45rem;
+}
+
+.travel-plan-sidebar-add-day-btn {
   width: 100%;
   justify-content: center;
   border-radius: 7px;
+}
+
+.travel-plan-sidebar-add-day-btn {
+  gap: 0.35rem;
+  min-width: 0;
+  color: var(--text-black);
+  font-weight: 800;
+}
+
+.travel-plan-sidebar-add-day-btn:hover,
+.travel-plan-sidebar-add-day-btn:focus-visible {
+  color: var(--text-black);
+}
+
+.travel-plan-sidebar-add-day-btn__icon {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 .travel-plan-customizer-overlay[hidden] {
@@ -2293,6 +2293,7 @@
 }
 
 .travel-plan-route-list__item {
+  position: relative;
   appearance: none;
   width: 100%;
   min-height: 58px;
@@ -2307,10 +2308,66 @@
   cursor: pointer;
 }
 
+.travel-plan-route-list__item--day {
+  grid-template-columns: 14px 34px minmax(0, 1fr);
+  gap: 0.45rem;
+}
+
+.travel-plan-route-list__item--day[draggable="true"] {
+  cursor: grab;
+}
+
+.travel-plan-route-list__item--day[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.travel-plan-route-list__drag-handle {
+  width: 12px;
+  height: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 3px);
+  grid-auto-rows: 3px;
+  gap: 4px 3px;
+  align-content: center;
+  justify-content: center;
+}
+
+.travel-plan-route-list__drag-handle span {
+  width: 3px;
+  height: 3px;
+  display: block;
+  border-radius: 1px;
+  background: #000;
+}
+
 .travel-plan-route-list__item:hover,
 .travel-plan-route-list__item:focus-visible {
   border-color: #9ab7ff;
   background: #f8fbff;
+}
+
+.travel-plan-route-list__item.is-dragging {
+  opacity: 0.55;
+}
+
+.travel-plan-route-list__item.is-drop-before::before,
+.travel-plan-route-list__item.is-drop-after::after {
+  content: "";
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  height: 3px;
+  border-radius: 999px;
+  background: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+}
+
+.travel-plan-route-list__item.is-drop-before::before {
+  top: -0.28rem;
+}
+
+.travel-plan-route-list__item.is-drop-after::after {
+  bottom: -0.28rem;
 }
 
 .travel-plan-route-list__item.is-selected {
@@ -2334,16 +2391,18 @@
   line-height: 1;
 }
 
-.travel-plan-route-list__badge--image {
+.travel-plan-route-list__badge--image,
+.travel-plan-booking-editor__badge--image {
   width: 34px;
   height: 34px;
   border-radius: 8px;
-  background: #eef7fb;
+  background: transparent;
   color: inherit;
   overflow: hidden;
 }
 
-.travel-plan-route-list__badge--image img {
+.travel-plan-route-list__badge--image img,
+.travel-plan-booking-editor__badge--image img {
   display: block;
   width: 100%;
   height: 100%;
@@ -2374,7 +2433,19 @@
   line-height: 1.25;
 }
 
+.travel-plan-route-list__warnings {
+  color: #dc2626;
+  font-size: 0.74rem;
+  line-height: 1.25;
+  white-space: normal;
+}
+
+.travel-plan-route-list__warnings[hidden] {
+  display: none;
+}
+
 .travel-plan-booking-editor {
+  --travel-plan-focused-label-width: 4rem;
   min-width: 0;
   display: grid;
   gap: 0.85rem;
@@ -2392,9 +2463,18 @@
 
 .travel-plan-booking-editor__title {
   min-width: 0;
-  display: flex;
-  gap: 0.8rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: var(--travel-plan-focused-label-width) minmax(0, 1fr);
+  gap: 0.45rem;
   align-items: flex-start;
+}
+
+.travel-plan-booking-editor__title-copy {
+  min-width: 0;
+  width: 100%;
+  display: grid;
+  gap: 0.12rem;
 }
 
 .travel-plan-booking-editor__title h3,
@@ -2416,22 +2496,31 @@
   line-height: 1.3;
 }
 
-.booking-detail-page .travel-plan-booking-editor__add-day {
-  position: relative;
-  min-height: 34px;
-  min-width: 8.5rem;
-  border-radius: 7px;
-  border-color: #2563eb;
-  color: #2563eb;
-  background: #fff;
+.travel-plan-booking-editor__title-field {
+  width: 100%;
+  min-width: 0;
 }
 
-.booking-detail-page .travel-plan-booking-editor__add-day .travel-plan-add-btn__icon {
-  width: 2rem;
+#travel_plan_editor .travel-plan-booking-editor__title-field .localized-pair {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.32rem;
 }
 
-.booking-detail-page .travel-plan-booking-editor__add-day .travel-plan-add-btn__label {
-  padding: 0 0.8rem 0 2.2rem;
+#travel_plan_editor .travel-plan-booking-editor__title-field .localized-pair__row {
+  grid-column: 1;
+  width: 100%;
+}
+
+#travel_plan_editor .travel-plan-booking-editor__title-field .localized-pair__field {
+  width: 100%;
+  min-width: 0;
+}
+
+#travel_plan_editor .travel-plan-booking-editor__title-field :is(input, .booking-text-field--customer) {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
 }
 
 .travel-plan-booking-editor > .travel-plan-day,
@@ -2466,6 +2555,17 @@
   gap: 0.7rem;
 }
 
+.travel-plan-day--focused-editor {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.travel-plan-focused-day-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
+}
+
 .travel-plan-booking-editor .travel-plan-grid {
   grid-template-columns: repeat(2, minmax(240px, 1fr));
   gap: 0.75rem 1rem;
@@ -2480,6 +2580,66 @@
   gap: 0.32rem;
 }
 
+#travel_plan_editor .travel-plan-focused-day-grid .localized-pair.localized-pair--single-language,
+.travel-plan-focused-day-grid .travel-plan-day__date-field,
+.travel-plan-focused-day-grid .travel-plan-grid--map-locations > .field {
+  display: grid;
+  grid-template-columns: var(--travel-plan-focused-label-width) minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: center;
+}
+
+#travel_plan_editor .travel-plan-focused-day-grid .localized-pair__header {
+  grid-column: 1;
+  grid-row: 1;
+  padding-top: 0;
+}
+
+#travel_plan_editor .travel-plan-focused-day-grid .localized-pair__row {
+  grid-column: 2;
+  width: 100%;
+}
+
+#travel_plan_editor .travel-plan-focused-day-grid .localized-pair__field {
+  width: 100%;
+  min-width: 0;
+}
+
+#travel_plan_editor .travel-plan-focused-day-grid :is(textarea, .booking-text-field--customer) {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.travel-plan-focused-day-grid__map {
+  margin-top: 0;
+}
+
+.travel-plan-booking-editor .travel-plan-focused-day-grid__map {
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 0.75rem 1rem;
+}
+
+#travel_plan_editor .travel-plan-grid--map-locations > .field,
+.travel-plan-booking-editor .travel-plan-grid--map-locations > .field {
+  grid-template-columns: var(--travel-plan-compact-label-width) minmax(0, 200px);
+  align-items: center;
+  gap: 0.45rem;
+}
+
+#travel_plan_editor .travel-plan-focused-day-grid .travel-plan-grid--map-locations > .field,
+.travel-plan-booking-editor .travel-plan-focused-day-grid .travel-plan-grid--map-locations > .field {
+  grid-template-columns: var(--travel-plan-focused-label-width) minmax(0, 200px);
+}
+
+#travel_plan_editor .travel-plan-focused-day-grid .travel-plan-day__date-field {
+  grid-template-columns: var(--travel-plan-focused-label-width) minmax(0, 200px);
+}
+
+#travel_plan_editor .travel-plan-focused-day-grid .travel-plan-day__date-field .travel-plan-date-input {
+  justify-self: start;
+  max-width: 100%;
+}
+
 .travel-plan-booking-editor #travel_plan_editor :is(input, select, textarea, .booking-text-field--customer),
 .travel-plan-booking-editor :is(input, select, textarea, .booking-text-field--customer) {
   min-height: 36px;
@@ -2490,18 +2650,6 @@
   border: 1px solid #e3e8ef !important;
   border-radius: 8px;
   background: #fff !important;
-}
-
-.travel-plan-booking-editor .travel-plan-service__main {
-  margin-left: 2.35rem;
-}
-
-.travel-plan-booking-editor .travel-plan-service__rail {
-  left: 0.8rem;
-  top: 0.8rem;
-  bottom: 0.8rem;
-  border-radius: 7px;
-  background: #e8f1ff;
 }
 
 .travel-plan-booking-editor .travel-plan-service:not(.travel-plan-service--collapsed) .travel-plan-service__head {
@@ -2549,9 +2697,5 @@
 
   .travel-plan-booking-editor__toolbar {
     flex-direction: column;
-  }
-
-  .booking-detail-page .travel-plan-booking-editor__add-day {
-    width: 100%;
   }
 }

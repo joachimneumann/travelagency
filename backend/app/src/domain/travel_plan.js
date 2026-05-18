@@ -411,7 +411,6 @@ function normalizeTravelPlanDays(days, options = {}) {
         id: normalizeText(day.id) || `travel_plan_day_${dayIndex + 1}`,
         day_number: dayIndex + 1,
         date: normalizedDate,
-        date_string: normalizedDate ? null : normalizeOptionalText(day?.date_string),
         title: titleField.text,
         title_i18n: titleField.map,
         primary_location_id: normalizeOptionalText(day?.primary_location_id) || null,
@@ -582,10 +581,7 @@ function shiftIsoCalendarDate(value, dayOffset) {
 
 function normalizedDayDateFields(day) {
   const date = normalizeOptionalText(day?.date);
-  return {
-    date,
-    date_string: date ? null : normalizeOptionalText(day?.date_string)
-  };
+  return { date };
 }
 
 function deriveBoundaryPresentationDateFields(boundaryKind, attachTo, days) {
@@ -604,12 +600,7 @@ function deriveBoundaryPresentationDateFields(boundaryKind, attachTo, days) {
   const shiftedDate = boundaryKind === "departure"
     ? shiftIsoCalendarDate(adjacentDate, 1)
     : shiftIsoCalendarDate(adjacentDate, -1);
-  return shiftedDate
-    ? { date: shiftedDate, date_string: null }
-    : {
-        date: null,
-        date_string: boundaryKind === "departure" ? "after_trip" : "before_trip"
-      };
+  return { date: shiftedDate || null };
 }
 
 function presentationBoundaryDay(boundaryService, boundaryKind, dayNumber, options = {}) {
@@ -757,7 +748,7 @@ export function createTravelPlanHelpers() {
 
   function stripBookingOnlyFieldsFromTravelPlanDay(day) {
     const source = day && typeof day === "object" && !Array.isArray(day) ? day : {};
-    const { date, date_string, ...baseDay } = source;
+    const { date, ...baseDay } = source;
     delete baseDay.copied_from;
     return {
       ...baseDay,

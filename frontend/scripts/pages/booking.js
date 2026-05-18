@@ -257,7 +257,6 @@ const els = {
   userLabel: document.getElementById("backendUserLabel"),
   title: document.getElementById("detail_title"),
   titleInput: document.getElementById("detail_title_input"),
-  titleEditBtn: document.getElementById("detail_title_edit_btn"),
   subtitle: document.getElementById("detail_sub_title"),
   heroCopyBtn: document.getElementById("booking_hero_copy_btn"),
   heroCopyStatus: document.getElementById("booking_hero_copy_status"),
@@ -360,7 +359,6 @@ const els = {
   travel_plan_pdf_workspace: document.getElementById("travel_plan_pdf_workspace"),
   travel_plan_editor: document.getElementById("travel_plan_editor"),
   travel_plan_translate_all_btn: document.getElementById("travel_plan_translate_all_btn"),
-  travel_plan_renumber_days_btn: document.getElementById("travel_plan_renumber_days_btn"),
   travel_plan_status: document.getElementById("travel_plan_status"),
   travel_plan_translate_overlay: document.getElementById("travel_plan_translate_overlay"),
   travel_plan_translate_overlay_text: document.getElementById("travel_plan_translate_overlay_text"),
@@ -568,11 +566,25 @@ function cleanStateBlockMessage() {
   return backendT("booking.action_requires_save", "Save edits to enable.");
 }
 
+function hasUnsavedBookingChangesExcept(sectionKey) {
+  const ignoredSectionKey = normalizeText(sectionKey);
+  return Object.entries(state.dirty).some(([key, isDirty]) => Boolean(isDirty) && key !== ignoredSectionKey);
+}
+
+function isCleanStateActionBlocked(element) {
+  const allowsDirtyTravelPlan = element instanceof HTMLElement
+    && element.dataset.cleanStateAllowTravelPlanDirty === "true";
+  const hasBlockingDirty = allowsDirtyTravelPlan
+    ? hasUnsavedBookingChangesExcept("travel_plan")
+    : hasUnsavedBookingChanges();
+  return hasBlockingDirty || state.pageSaveInFlight || state.pageDiscardInFlight;
+}
+
 function updateCleanStateActionAvailability() {
-  const blocked = hasUnsavedBookingChanges() || state.pageSaveInFlight || state.pageDiscardInFlight;
   const message = cleanStateBlockMessage();
   document.querySelectorAll("[data-requires-clean-state]").forEach((element) => {
     if (!(element instanceof HTMLElement) || !("disabled" in element)) return;
+    const blocked = isCleanStateActionBlocked(element);
     if (!Object.prototype.hasOwnProperty.call(element.dataset, "cleanStateBaseDisabled")) {
       element.dataset.cleanStateBaseDisabled = element.disabled ? "true" : "false";
     }
@@ -698,8 +710,9 @@ async function initBookingPage() {
   updatePageDirtyBar();
 
   if (els.heroCopyBtn) els.heroCopyBtn.addEventListener("click", copyHeroIdToClipboard);
-  if (els.titleEditBtn) els.titleEditBtn.addEventListener("click", startBookingTitleEdit);
   if (els.titleInput) {
+    els.titleInput.addEventListener("focus", startBookingTitleEdit);
+    els.titleInput.addEventListener("blur", commitBookingTitleEdit);
     els.titleInput.addEventListener("input", updateCoreDirtyState);
     els.titleInput.addEventListener("keydown", handleBookingTitleInputKeydown);
   }
@@ -1632,7 +1645,6 @@ function cloneBookingMarketingTourDayForLocalImport({ searchResult, targetDayInd
   return {
     day_number: Math.max(1, Number(targetDayIndex) + 1),
     date: null,
-    date_string: null,
     title: preferredEnglishImportText(sourceDay.title_i18n, sourceDay.title),
     title_i18n: {},
     primary_location_id: normalizeText(sourceDay.primary_location_id),
@@ -1682,7 +1694,8 @@ travelPlanModule = createBookingTravelPlanModule({
     destinationScope: false,
     destinationScopeCreate: false,
     allPrimaryMapPointOptions: true,
-    focusedBookingWorkspace: true
+    focusedBookingWorkspace: true,
+    serviceCollapse: false
   }
 });
 

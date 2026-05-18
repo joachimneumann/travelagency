@@ -214,7 +214,6 @@ test("booking boundary logistics derive presentation dates from itinerary days",
         boundary_kind: "arrival",
         enabled: true,
         date: "2026-06-01",
-        date_string: "ignored when date is present",
         timing_kind: "point",
         time_point: "2026-06-01T09:00",
         kind: "transport",
@@ -228,7 +227,6 @@ test("booking boundary logistics derive presentation dates from itinerary days",
         id: "departure_service",
         boundary_kind: "departure",
         enabled: true,
-        date_string: "After the trip",
         timing_kind: "range",
         start_time: "2026-06-03T14:00",
         end_time: "2026-06-03T15:00",
@@ -264,9 +262,9 @@ test("booking boundary logistics derive presentation dates from itinerary days",
     boundaryLogisticsPlacement: "outside_days"
   });
   assert.equal(presentation.days[0].date, "2026-06-01");
-  assert.equal(presentation.days[0].date_string, null);
+  assert.equal(Object.hasOwn(presentation.days[0], "date_string"), false);
   assert.equal(presentation.days[2].date, "2026-06-03");
-  assert.equal(presentation.days[2].date_string, null);
+  assert.equal(Object.hasOwn(presentation.days[2], "date_string"), false);
 
   const marketingTourPlan = normalizeMarketingTourTravelPlan(source);
   assert.equal(Object.hasOwn(marketingTourPlan.boundary_logistics.arrival, "date"), false);

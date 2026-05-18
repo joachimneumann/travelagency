@@ -84,8 +84,7 @@ The booking plan should refine the base with operational fields:
 }
 
 #BookingTravelPlanDay: #TravelPlanDay & {
-	date?:        common.#DateOnly
-	date_string?: string
+	date?: common.#DateOnly
 	services?: [...#BookingTravelPlanService]
 }
 

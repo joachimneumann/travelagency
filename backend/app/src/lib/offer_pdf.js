@@ -1008,15 +1008,7 @@ function resolveTravelPlanDayItems(day) {
 function resolveOfferDayDateLabel(day, lang) {
   const date = textOrNull(day?.date);
   if (date) return formatFriendlyDateOnly(date, lang);
-  const dateString = textOrNull(day?.date_string);
-  if (!dateString) return "";
-  if (dateString === "before_trip") {
-    return pdfT(lang, "travel_plan.date_string.before_trip", "Before the trip");
-  }
-  if (dateString === "after_trip") {
-    return pdfT(lang, "travel_plan.date_string.after_trip", "After the trip");
-  }
-  return dateString;
+  return "";
 }
 
 function resolveOfferDaySummary(day, lang) {

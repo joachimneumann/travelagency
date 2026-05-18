@@ -130,7 +130,6 @@ function cloneTourMarketingDayForLocalImport({ searchResult, targetDayIndex = 0 
   if (!sourceDay) return null;
   return cloneJson({
     date: sourceDay.date,
-    date_string: sourceDay.date_string,
     title: normalizeText(sourceDay.title),
     primary_location_id: normalizeText(sourceDay.primary_location_id),
     secondary_location_id: normalizeText(sourceDay.secondary_location_id),
@@ -401,7 +400,7 @@ export function createTourTravelPlanAdapter({
         translation: false,
         tourCardImageSelection: true,
         serviceDetails: true,
-        renumberDays: false,
+        sequentialDayDates: false,
         destinationScope: false,
         destinationScopeCreate: false,
         allPrimaryMapPointOptions: true,

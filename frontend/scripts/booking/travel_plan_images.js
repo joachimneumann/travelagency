@@ -127,6 +127,7 @@ export function createBookingTravelPlanImagesModule(deps) {
             data-travel-plan-add-image="${escapeHtml(item.id)}"
             data-travel-plan-day-id="${escapeHtml(day.id)}"
             data-requires-clean-state
+            data-clean-state-allow-travel-plan-dirty="true"
             type="button"
             aria-label="${escapeHtml(changePictureLabel)}"
           >
@@ -144,6 +145,7 @@ export function createBookingTravelPlanImagesModule(deps) {
               data-travel-plan-day-id="${escapeHtml(day.id)}"
               data-travel-plan-service-id="${escapeHtml(item.id)}"
               data-requires-clean-state
+              data-clean-state-allow-travel-plan-dirty="true"
               type="button"
               aria-label="${escapeHtml(bookingT("common.remove", "Remove"))}"
             >${escapeHtml(bookingT("common.remove", "Remove"))}</button>
