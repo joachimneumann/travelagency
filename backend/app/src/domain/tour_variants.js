@@ -104,6 +104,37 @@ function applyTourVariantImageSelection(target, source) {
   delete target.tour_card_image_ids;
 }
 
+function firstTourCardImagePath(tour) {
+  const selectedImageIds = normalizeTourVariantImageIds(tour?.travel_plan?.tour_card_image_ids);
+  const entries = [];
+  for (const day of Array.isArray(tour?.travel_plan?.days) ? tour.travel_plan.days : []) {
+    for (const service of Array.isArray(day?.services) ? day.services : []) {
+      const candidates = [
+        service?.image,
+        ...(Array.isArray(service?.images)
+          ? [...service.images].sort((left, right) => Number(left?.sort_order || 0) - Number(right?.sort_order || 0))
+          : [])
+      ];
+      for (const image of candidates) {
+        if (!image || typeof image !== "object" || Array.isArray(image)) continue;
+        if (image.include_in_travel_tour_card !== true || image.is_customer_visible === false) continue;
+        const storagePath = normalizeText(image.storage_path);
+        if (storagePath) entries.push({ id: normalizeText(image.id), storagePath });
+      }
+    }
+  }
+  if (selectedImageIds.length) {
+    entries.sort((left, right) => {
+      const leftIndex = selectedImageIds.indexOf(left.id);
+      const rightIndex = selectedImageIds.indexOf(right.id);
+      const normalizedLeftIndex = leftIndex >= 0 ? leftIndex : Number.MAX_SAFE_INTEGER;
+      const normalizedRightIndex = rightIndex >= 0 ? rightIndex : Number.MAX_SAFE_INTEGER;
+      return normalizedLeftIndex - normalizedRightIndex;
+    });
+  }
+  return entries[0]?.storagePath || "";
+}
+
 function normalizeBoundaryMode(value, boundaryKind) {
   const normalized = normalizeText(value).toLowerCase();
   const modes = boundaryKind === "departure" ? DEPARTURE_MODES : ARRIVAL_MODES;
@@ -548,6 +579,7 @@ export function createTourVariantHelpers({
     return {
       ...readModel,
       tour_card_image_ids: resolvedTourCardImageIds,
+      thumbnail_url: firstTourCardImagePath(resolvedTour),
       days: dayStatuses,
       publication
     };

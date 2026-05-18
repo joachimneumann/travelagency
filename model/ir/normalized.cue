@@ -1260,6 +1260,7 @@ IR: {
 					{name: "style_codes", kind: "enum", typeName: "TourStyleCode", required: false, isArray: true},
 					{name: "priority", kind: "scalar", typeName: "int", required: false},
 					{name: "tour_card_image_ids", kind: "scalar", typeName: "Identifier", required: false, isArray: true},
+					{name: "thumbnail_url", kind: "scalar", typeName: "string", required: false},
 					{name: "published_on_webpage", kind: "scalar", typeName: "bool", required: false},
 					{name: "seasonality_start_month", kind: "enum", typeName: "MonthCode", required: false},
 					{name: "seasonality_end_month", kind: "enum", typeName: "MonthCode", required: false},

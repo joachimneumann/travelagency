@@ -135,9 +135,11 @@ test("Tour Variant stores explicit web page image order and resolves it into the
   });
 
   const resolvedTour = tourVariantHelpers.resolveTourVariantToTour(variant, [baseTour]);
+  const readModel = tourVariantHelpers.buildTourVariantEditorResponse(variant, [baseTour], { lang: "en" });
 
   assert.deepEqual(variant.tour_card_image_ids, ["image_two", "image_one"]);
   assert.deepEqual(resolvedTour.travel_plan.tour_card_image_ids, ["image_two", "image_one"]);
+  assert.equal(readModel.thumbnail_url, "/public/v1/tour-images/tour_base/two.webp");
 });
 
 test("Tour Variant without stored image ids keeps deriving web page images from source days", () => {
@@ -194,6 +196,7 @@ test("Tour Variant without stored image ids keeps deriving web page images from 
   const resolvedTour = tourVariantHelpers.resolveTourVariantToTour(legacyVariant, [baseTour]);
 
   assert.deepEqual(readModel.tour_card_image_ids, ["legacy_one", "legacy_two"]);
+  assert.equal(readModel.thumbnail_url, "/public/v1/tour-images/tour_base/legacy-one.webp");
   assert.deepEqual(resolvedTour.travel_plan.tour_card_image_ids, ["legacy_one", "legacy_two"]);
 });
 

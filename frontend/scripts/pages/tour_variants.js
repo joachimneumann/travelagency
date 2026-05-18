@@ -2,7 +2,8 @@ import {
   createApiFetcher,
   escapeHtml,
   formatDateTime,
-  normalizeText
+  normalizeText,
+  resolveApiUrl
 } from "../shared/api.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
@@ -140,6 +141,21 @@ function publicationClass(variant) {
   return variant?.published_on_webpage === true ? "tour-variant-status--published" : "tour-variant-status--draft";
 }
 
+function variantInitials(title) {
+  const words = normalizeText(title).split(/\s+/).filter(Boolean);
+  if (!words.length) return "TV";
+  return words.slice(0, 2).map((word) => word[0]?.toUpperCase() || "").join("") || "TV";
+}
+
+function renderVariantThumbnail(variant) {
+  const title = normalizeText(variant?.title || variant?.id);
+  const thumbnailUrl = normalizeText(variant?.thumbnail_url);
+  if (thumbnailUrl) {
+    return `<img class="tour-variant-thumb__image" src="${escapeHtml(resolveApiUrl(apiBase, thumbnailUrl))}" alt="${escapeHtml(title || backendT("tour.picture_label", "Tour picture"))}" loading="lazy" />`;
+  }
+  return `<span class="tour-variant-thumb__initials">${escapeHtml(variantInitials(title))}</span>`;
+}
+
 function issuesText(variant) {
   const issues = Array.isArray(variant?.publication?.issues) ? variant.publication.issues : [];
   if (variant?.published_on_webpage !== true || !issues.length) return "";
@@ -199,13 +215,17 @@ function renderTable() {
       ${state.items.map((variant) => {
         const href = buildTourVariantEditHref(variant.id);
         const issues = issuesText(variant);
+        const title = variant.title || variant.id;
         return `
           <tr class="tour-variant-row" tabindex="0" data-href="${escapeHtml(href)}">
             <td>
               <div class="tour-variant-title-cell">
-                <strong>${escapeHtml(variant.title || variant.id)}</strong>
-                <span class="micro">${escapeHtml(variant.base_marketing_tour_id || "")}</span>
-                ${issues ? `<span class="micro tour-variant-issues">${escapeHtml(issues)}</span>` : ""}
+                <span class="tour-variant-thumb">${renderVariantThumbnail(variant)}</span>
+                <div class="tour-variant-title-copy">
+                  <strong>${escapeHtml(title)}</strong>
+                  <span class="micro">${escapeHtml(variant.base_marketing_tour_id || "")}</span>
+                  ${issues ? `<span class="micro tour-variant-issues">${escapeHtml(issues)}</span>` : ""}
+                </div>
               </div>
             </td>
             <td>${escapeHtml(String(Array.isArray(variant.days) ? variant.days.length : 0))}</td>

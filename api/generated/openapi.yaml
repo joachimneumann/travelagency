@@ -6012,6 +6012,9 @@ components:
           type: array
           items:
             type: string
+        thumbnail_url:
+          type: string
+          nullable: true
         published_on_webpage:
           type: boolean
           nullable: true

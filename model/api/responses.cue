@@ -164,6 +164,7 @@ import (
 	style_codes?: [...enums.#TourStyleCode]
 	priority?:                  int
 	tour_card_image_ids?: [...common.#Identifier]
+	thumbnail_url?:             common.#Url | string
 	published_on_webpage?:      bool
 	seasonality_start_month?:   enums.#MonthCode
 	seasonality_end_month?:     enums.#MonthCode

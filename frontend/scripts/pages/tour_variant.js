@@ -531,9 +531,13 @@ function tourVariantWebPagePublicationEligibility() {
 
 function syncPublishedOnWebpageControl() {
   if (!(els.published instanceof HTMLInputElement)) return;
-  const eligibility = state.sourceDaysLoaded
-    ? tourVariantWebPagePublicationEligibility()
-    : { canPublish: false, message: tourVariantT("loading", "Loading...") };
+  if (!state.sourceDaysLoaded) {
+    els.published.disabled = true;
+    els.published.title = tourVariantT("loading", "Loading...");
+    els.published.setAttribute("aria-disabled", "true");
+    return;
+  }
+  const eligibility = tourVariantWebPagePublicationEligibility();
   if (!eligibility.canPublish) {
     els.published.checked = false;
   }
