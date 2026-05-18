@@ -292,6 +292,10 @@ async function main() {
         domains: options.domains,
         target_langs: options.targetLangs
       });
+      if (!issueEntries.length && !Number(pruneSummary.pruned_count || 0)) {
+        console.log("No static translation work or extra keys were found.");
+        return;
+      }
       console.log(
         [
           "Extra static translation keys pruned.",
