@@ -11,7 +11,7 @@ usage() {
   cat <<'EOF'
 Usage:
   ./scripts/i18n/translate update
-  ./scripts/i18n/translate apply [--domain <id>] [--target <lang>]
+  ./scripts/i18n/translate apply [--domain <id>] [--target <lang>] [--no-prune-extra]
   ./scripts/i18n/translate check
   ./scripts/i18n/translate refresh
   ./scripts/i18n/translate all

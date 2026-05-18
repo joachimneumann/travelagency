@@ -14,17 +14,20 @@ import { normalizeText } from "../../backend/app/src/lib/text.js";
 
 const HELP = `
 Usage:
-  node scripts/i18n/apply_static_translations.mjs [--domain <id>] [--target <lang>]
+  node scripts/i18n/apply_static_translations.mjs [--domain <id>] [--target <lang>] [--no-prune-extra]
 
 Translates missing, stale, legacy, or protected-term static translation
 items using the same static translation service as the backend Translate
-button. This updates content/translations and translation memory only.
+button, and prunes snapshot keys that are no longer in source catalogs.
+This updates content/translations and translation memory only.
 It does not publish runtime i18n files or regenerate public homepage assets.
 
 Options:
-  --domain <id>    Limit to one or more comma-separated domains. Repeatable.
-  --target <lang>  Limit to one or more comma-separated target languages. Repeatable.
-  --help           Show this help.
+  --domain <id>     Limit to one or more comma-separated domains. Repeatable.
+  --target <lang>   Limit to one or more comma-separated target languages. Repeatable.
+  --prune-extra     Prune obsolete snapshot keys. Default.
+  --no-prune-extra  Skip pruning obsolete snapshot keys.
+  --help            Show this help.
 `.trim();
 
 function uniqueNormalized(values) {
@@ -38,6 +41,7 @@ function parseArgs(argv) {
   const options = {
     domains: [],
     targetLangs: [],
+    pruneExtra: true,
     help: false
   };
   const args = Array.isArray(argv) ? [...argv] : [];
@@ -49,6 +53,14 @@ function parseArgs(argv) {
     }
     if (token === "--target") {
       options.targetLangs.push(normalizeText(args.shift()));
+      continue;
+    }
+    if (token === "--prune-extra") {
+      options.pruneExtra = true;
+      continue;
+    }
+    if (token === "--no-prune-extra") {
+      options.pruneExtra = false;
       continue;
     }
     if (token === "-h" || token === "--help" || token === "help") {
@@ -249,29 +261,45 @@ async function main() {
     const service = await createService();
     const status = await service.getStatusSummary();
     const issueEntries = selectedIssueEntries(status, options);
-    if (!issueEntries.length) {
+    if (!issueEntries.length && !options.pruneExtra) {
       console.log("No static translation work was found.");
       return;
     }
 
-    console.log("Static translation work:");
-    for (const entry of issueEntries) {
-      console.log(`- ${formatIssueEntry(entry)}`);
+    if (issueEntries.length) {
+      console.log("Static translation work:");
+      for (const entry of issueEntries) {
+        console.log(`- ${formatIssueEntry(entry)}`);
+      }
+
+      const summary = await service.applyMissingTranslations({
+        ...applyOptionsFromIssueEntries(issueEntries),
+        onProgress: progressLogger()
+      });
+
+      console.log(
+        [
+          "Static translations applied.",
+          `- Requested items: ${summary.requested_count || 0}`,
+          `- Translated items: ${summary.translated_count || 0}`,
+          `- Domain/language pairs: ${summary.domains?.length || 0}`
+        ].join("\n")
+      );
     }
 
-    const summary = await service.applyMissingTranslations({
-      ...applyOptionsFromIssueEntries(issueEntries),
-      onProgress: progressLogger()
-    });
-
-    console.log(
-      [
-        "Static translations applied.",
-        `- Requested items: ${summary.requested_count || 0}`,
-        `- Translated items: ${summary.translated_count || 0}`,
-        `- Domain/language pairs: ${summary.domains?.length || 0}`
-      ].join("\n")
-    );
+    if (options.pruneExtra) {
+      const pruneSummary = await service.pruneExtraTranslations({
+        domains: options.domains,
+        target_langs: options.targetLangs
+      });
+      console.log(
+        [
+          "Extra static translation keys pruned.",
+          `- Pruned keys: ${pruneSummary.pruned_count || 0}`,
+          `- Domain/language pairs: ${pruneSummary.domains?.length || 0}`
+        ].join("\n")
+      );
+    }
   } catch (error) {
     console.error(error?.message || error);
     process.exitCode = 1;

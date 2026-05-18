@@ -713,7 +713,7 @@ export function createStaticTranslationService({
     const timestamp = nowIso();
     const relativeFile = snapshotRelativeFile(config, language.code);
     const items = (Array.isArray(rows) ? rows : [])
-      .filter((row) => normalizeText(row?.source) && normalizeText(row?.key))
+      .filter((row) => normalizeText(row?.source) && normalizeText(row?.key) && row?.status !== "extra")
       .map((row) => snapshotItem(config, language, row, timestamp));
     const sourceSetHash = sourceSetHashForItems(items);
     const sectionPath = translationStorePath(config, language);
@@ -1689,6 +1689,32 @@ export function createStaticTranslationService({
     return summary;
   }
 
+  async function pruneExtraTranslations(options = {}) {
+    assertWritesEnabled();
+    const summary = {
+      pruned_count: 0,
+      domains: []
+    };
+
+    for (const config of normalizeTranslationDomains(options)) {
+      for (const language of publishLanguagesForConfig(config, options)) {
+        const state = await loadState(config.id, language.code);
+        const extraCount = (state.rows || []).filter((row) => row?.status === "extra").length;
+        if (extraCount > 0) {
+          await writeTranslationStoreSection(config, language, state.rows);
+        }
+        summary.pruned_count += extraCount;
+        summary.domains.push({
+          domain: config.id,
+          target_lang: language.code,
+          pruned_count: extraCount
+        });
+      }
+    }
+
+    return summary;
+  }
+
   async function applyProtectedTerms(options = {}) {
     assertWritesEnabled();
     const applyOptions = {
@@ -2123,6 +2149,7 @@ export function createStaticTranslationService({
     patchOverrides,
     deleteCache,
     applyMissingTranslations,
+    pruneExtraTranslations,
     applyProtectedTerms,
     clearMachineTranslations,
     publishTranslations,

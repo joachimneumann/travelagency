@@ -160,6 +160,68 @@ test("static translation service publishes a versioned snapshot for clean target
   }
 });
 
+test("static translation service prunes extra published snapshot keys without translation work", async () => {
+  const repoRoot = await createFixture();
+  try {
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend", "vi.json"), {
+      "hero.title": "Kỳ nghỉ riêng mới",
+      "hero.cta": "Lập kế hoạch chuyến đi"
+    });
+    await writeJson(path.join(repoRoot, "frontend", "data", "i18n", "frontend_meta", "vi.json"), {
+      "hero.title": {
+        source_hash: sha("New private holidays"),
+        origin: "machine",
+        updated_at: "2026-01-03T00:00:00.000Z"
+      },
+      "hero.cta": {
+        source_hash: sha("Plan my trip"),
+        origin: "machine",
+        updated_at: "2026-01-02T00:00:00.000Z"
+      }
+    });
+    const service = createStaticTranslationService({
+      repoRoot,
+      translationsSnapshotDir: path.join(repoRoot, "content", "translations"),
+      nowIso: () => "2026-04-28T04:00:00.000Z"
+    });
+    await service.publishTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+
+    const snapshotPath = path.join(repoRoot, "content", "translations", "customers", "frontend-static.vi.json");
+    const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
+    snapshot.items.push({
+      ...snapshot.items[0],
+      source_ref: "frontend:obsolete.key",
+      key: "obsolete.key",
+      source_text: "Removed source",
+      source_hash: sha("Removed source"),
+      target_text: "Đã xoá",
+      target_hash: sha("Đã xoá"),
+      machine_text: "Đã xoá"
+    });
+    snapshot.item_count = snapshot.items.length;
+    await writeJson(snapshotPath, snapshot);
+
+    const staleState = await service.getLanguageState("frontend", "vi");
+    assert.equal(staleState.rows.find((row) => row.key === "obsolete.key").status, "extra");
+
+    const summary = await service.pruneExtraTranslations({ domains: ["frontend"], target_langs: ["vi"] });
+    assert.equal(summary.pruned_count, 1);
+    assert.deepEqual(summary.domains, [{
+      domain: "frontend",
+      target_lang: "vi",
+      pruned_count: 1
+    }]);
+
+    const pruned = await readTranslationSection(repoRoot, "customers/frontend-static.vi.json");
+    assert.equal(pruned.item_count, 2);
+    assert.equal(pruned.items.some((item) => item.key === "obsolete.key"), false);
+    const manifest = JSON.parse(await readFile(path.join(repoRoot, "content", "translations", "manifest.json"), "utf8"));
+    assert.equal(manifest.total_items, 2);
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test("static translation service marks current rows unpublished when missing from the published snapshot", async () => {
   const repoRoot = await createFixture();
   try {

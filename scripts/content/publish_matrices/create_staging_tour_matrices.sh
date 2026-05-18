@@ -4,11 +4,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 OUTPUT_DIR="${TOUR_MATRIX_OUTPUT_DIR:-$ROOT_DIR/matrix-pages}"
+CREATE_PDFS=false
 
 ARGS=("$@")
 for ((index = 0; index < ${#ARGS[@]}; index += 1)); do
   if [[ "${ARGS[$index]}" == "--output-dir" && -n "${ARGS[$((index + 1))]:-}" ]]; then
     OUTPUT_DIR="${ARGS[$((index + 1))]}"
+  fi
+  if [[ "${ARGS[$index]}" == "pdf" || "${ARGS[$index]}" == "--pdf" ]]; then
+    CREATE_PDFS=true
   fi
 done
 
@@ -31,7 +35,10 @@ if [[ "$OUTPUT_DIR" != "$ROOT_DIR" ]]; then
   ln -sfn "$RELATIVE_OUTPUT_DIR/content_matrix.html" "$ROOT_DIR/content_matrix.html"
   ln -sfn "$RELATIVE_OUTPUT_DIR/content_matrix_vi.html" "$ROOT_DIR/content_matrix_vi.html"
   ln -sfn "$RELATIVE_OUTPUT_DIR/content_matrix_ja.html" "$ROOT_DIR/content_matrix_ja.html"
-  ln -sfn "$RELATIVE_OUTPUT_DIR/one_pager_matrix.html" "$ROOT_DIR/one_pager_matrix.html"
+  if [[ "$CREATE_PDFS" == true ]]; then
+    ln -sfn "$RELATIVE_OUTPUT_DIR/one_pager_matrix.html" "$ROOT_DIR/one_pager_matrix.html"
+    ln -sfn "$RELATIVE_OUTPUT_DIR/travel_plan_matrix.html" "$ROOT_DIR/travel_plan_matrix.html"
+  fi
   rm -rf "$ROOT_DIR/img"
   ln -s "$RELATIVE_OUTPUT_DIR/img" "$ROOT_DIR/img"
 fi
