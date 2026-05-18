@@ -141,5 +141,15 @@
     }
   ],
   "created_at": "2026-05-17T02:25:55.144Z",
-  "updated_at": "2026-05-17T02:31:33.967Z"
+  "updated_at": "2026-05-18T02:43:07.767Z",
+  "tour_card_image_ids": [
+    "travel_plan_service_image_e2e0cd99-f378-4126-a2d7-8563fbbca244",
+    "travel_plan_service_image_124be17a-4cfe-45b6-8bb1-ea9ad7b5f38f",
+    "travel_plan_service_image_6f48eeee-6ee8-4320-868b-6c5b0715ffaa",
+    "travel_plan_service_image_fde6db7a-6735-44bc-b3b8-1fdd1538a79b",
+    "travel_plan_service_image_8e7335cb-2805-4a55-b09d-c722f0d0bd21",
+    "travel_plan_service_image_e17130ec-e6e3-4782-912e-ecaf50b52520",
+    "travel_plan_service_image_961feeff-81da-44e0-ae8e-0a5ffd6055c6",
+    "travel_plan_service_image_26d7a7a4-e025-42d0-b751-6ac3642988ac"
+  ]
 }
