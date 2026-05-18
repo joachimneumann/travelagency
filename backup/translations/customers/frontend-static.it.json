@@ -1,8 +1,8 @@
 {
   "schema": "translation-snapshot/v1",
   "schema_version": 1,
-  "generated_at": "2026-05-17T13:52:43.016Z",
-  "source_set_hash": "339bd05549e5dc393e345a5b517f5675f8b49a83a08bf581781c5771be9998b5",
+  "generated_at": "2026-05-18T00:21:11.446Z",
+  "source_set_hash": "27bbc9a8ff735e48df304c76921726a66f4d02888d372e842b5cf7099c9a07e3",
   "domain": "frontend",
   "label": "Customer-facing UI (legacy key-based)",
   "section": "customers",
@@ -10,7 +10,7 @@
   "audience": "customer",
   "source_lang": "en",
   "target_lang": "it",
-  "item_count": 398,
+  "item_count": 399,
   "items": [
     {
       "source_ref": "frontend:a11y.backend_login",
@@ -32,7 +32,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T03:49:59.575Z",
       "cache_meta": {
         "source_hash": "e42860908f6f05dbfbf0441946fbb7a2947f3b0bffcb3937107d26f1e5fc79c2",
@@ -67,7 +67,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "17b5a297bfaf28aaf7339e09104d885b78cfd8d631a54575e7b8968007bdbd18",
@@ -97,7 +97,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9415b83f952cc2ecbdb91944cceefef9025bda06fe7c5e26586281e2374bb19d",
@@ -127,7 +127,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d2f917ddc07a3746d86f227262c0842d9a8fb511f9aeb28a5b105a07825e38a8",
@@ -157,7 +157,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "00d7d531c8d37a458a529aa9cb4002854e08cf36eebf5060a672853bc5dcf545",
@@ -187,7 +187,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2b10f8ed08588247c13c369f1bf5e88d64fe19c9a5b1abecd6eb3a4c4b60eb1b",
@@ -217,7 +217,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ef871021e5f7a8da59d523b1f09c6a791ced82072cc89e35929ba91d01ff991b",
@@ -247,7 +247,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "758d6c5b15c9d73495521330b9506b7067168028ef5bb2f0d2c2be27f62594f1",
@@ -277,7 +277,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "eb355944b92d10582856f8aea34b3e319ba465b8aa4c294973cf53f665399a2c",
@@ -307,7 +307,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0ed77fd2619ba8ab3e1cce72c8e61d887d551ca1220164b88ab1aa66bba7177d",
@@ -337,7 +337,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "dfc68308045f3195709f39822d6c1498459a97fd994bb56f05551a52efc96b14",
@@ -367,7 +367,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8c8baad14907176f8386eaf1c313afbd8ed656de5a71662257fea7e2c2dfbb4d",
@@ -397,7 +397,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0c484f95728111f67d154e5d0b7a9270e90f888249248f39492153dd1a7f6628",
@@ -427,7 +427,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-03T07:33:23.105Z",
       "cache_meta": {
         "source_hash": "88c4a8d65d1333d262fb95fdcba8603d00d29c6f3c2e69a74f39c41726fbc738",
@@ -462,7 +462,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2fb4019a35e427e8d595c79fe996407a01031a9e00ed0a7d174bfb1a0e455b90",
@@ -492,7 +492,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "da8735194c8e376b1b8d5c689b89b23fbb3ebc46fe0a308c8f4a389c1440bcc2",
@@ -522,7 +522,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "37082e68df858e0ba76442174128811135890ae4c2c5df8b6f31aef5885d0be7",
@@ -552,7 +552,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c877c6ff405ec29ca3d090237af972c34926ffde7088da4839394b48931da888",
@@ -582,7 +582,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9d95a2cf0d7180b5089691163b188a7203b0cde179346b8cfaa8ab6c2c3e6414",
@@ -612,7 +612,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4afe6ea150d532c17693519cac32da104f47073d500d2507272d294d8590d3f8",
@@ -642,7 +642,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8c78fe5b9936488c111733d36f3da4b246a4d206159efe5cd64cdb229c38f069",
@@ -672,7 +672,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d5808c0e0a479813fafc659ded78dcd18372dd71f3d0d5d52efdc940e6a384e8",
@@ -702,7 +702,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e9cf7a1ca4a760843ff30e1fbb125e6a066c63e883c58523bdbe04c9daf5dbae",
@@ -732,7 +732,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a66d8970e569a944234cbee8c414357fa6092c1ab779fbd637433f23e2a8abb8",
@@ -762,7 +762,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "cd559ea0abca085ef144273caaf7266183bba222f39d894e74966fc04b8fff18",
@@ -792,7 +792,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fdd791787b64d22386b9e4fe2fa037792bb86d9b2905f245626eda8e7450c4d4",
@@ -822,7 +822,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9de6fe1d72659daec67e919b0c473a24da5f03d3d096dc44ead1687240975f7c",
@@ -852,7 +852,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8fb204ca460968479407fe3f09b85a7500b2f4a20ca644e5f7822f53161f331a",
@@ -882,7 +882,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "6201111b83a0cb5b0922cb37cc442b9a40e24e3b1ce100a4bb204f4c63fd2ac0",
@@ -912,7 +912,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "cda8e55ef0300751313615563a5d3a8fd0087bcce517bd062dc345e43fb55d1e",
@@ -942,7 +942,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2e4c60bc887139b9a14a85c6cfa0947700fd4a4b30a05a393f89af1aba27556b",
@@ -972,7 +972,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f13877a3a5542680f3f2320d9feb9a75ae5e0f984a0893d428d4f14d4616219f",
@@ -1002,7 +1002,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7c669e05571e9a608de92c0f718d08a1ae84d9f58e65676c88a323a185ab1692",
@@ -1032,7 +1032,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "284ebcd1f34261804c0bcf1d98f5b9c5cdefaccd36289012d5c0d02293f9ba1f",
@@ -1062,7 +1062,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "82b61a590e4e8bb474fd9d5722387e118fa7204f3c2940243c222be69040ca2a",
@@ -1092,7 +1092,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e99d1410846bc78e8d2220f5697cf5805a59c7a3379d70c9ce70bc8187c0603e",
@@ -1122,7 +1122,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "553ded954076af72b303c929f290fd0cff00b627b18773c9a4326ed5616e1cbe",
@@ -1152,7 +1152,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "14633e2cfbea694cc5030724894bd61dacfc282a6a1b499032e83dd630b8fe73",
@@ -1182,7 +1182,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "97959c552b17e731a9c1054ccd33beb2de3344128a4f894e0beda70077c221e1",
@@ -1202,24 +1202,29 @@
       "required": true,
       "source_lang": "en",
       "target_lang": "it",
-      "source_text": "Response within 24 hours on email or WhatsApp.",
-      "source_hash": "704c00c566160ed4262a498056fa40baac6c43831efac63287a0c66c2df1da1a",
-      "target_text": "Risposta entro 24 ore tramite email o WhatsApp.",
-      "target_hash": "77048190caaa2e23b5b25261489b51427e69735f1fd40aec7ec29191ae9a5965",
-      "machine_text": "Risposta entro 24 ore tramite email o WhatsApp.",
+      "source_text": "Response within 24 hours by email.",
+      "source_hash": "b422e30675076640a21d3b23732833ed4bc825d73046979d60b6c30d651b7806",
+      "target_text": "Risposta entro 24 ore via e-mail.",
+      "target_hash": "4c338f9e80ea0d949ba61bda5a42354e386264dc9736d25211bd147ddebe52af",
+      "machine_text": "Risposta entro 24 ore via e-mail.",
       "origin": "machine",
       "freshness_state": "current",
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-18T00:21:11.445Z",
       "cache_meta": {
-        "source_hash": "704c00c566160ed4262a498056fa40baac6c43831efac63287a0c66c2df1da1a",
+        "source_hash": "b422e30675076640a21d3b23732833ed4bc825d73046979d60b6c30d651b7806",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "77048190caaa2e23b5b25261489b51427e69735f1fd40aec7ec29191ae9a5965",
-        "provider": null
+        "provider": {
+          "kind": "google",
+          "label": "Google Translate",
+          "model": "",
+          "display": "google"
+        }
       }
     },
     {
@@ -1242,7 +1247,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "89387d0352945ab63b6ac7eb03862f747b557380634fac71a3df240edff66693",
@@ -1272,7 +1277,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bba5b86f0b42da5502c22994627d61b425d2cfa089307ca17901a762930e4105",
@@ -1302,7 +1307,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2c250fb1e3bb4bb9545b0eefb8593d045e73262dc06a6a4ab7183d5dbf81f3fc",
@@ -1332,7 +1337,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ee8dcfc33edbc48ceb81b45ebe1b24e6a486376af4821e48df6d1cea6d906bfd",
@@ -1362,7 +1367,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "708b198de148d9374fb8d63b62cef2798a72af091d1a9cdafc8e7dd003fd54a8",
@@ -1392,7 +1397,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a6cf556c69a126d5310ab24360d88305dae534e139d5e2e2d69d6090ad562588",
@@ -1422,7 +1427,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "428f0057a890126f87905313b529e23bf293d6da172e7ecdf8631b1fb7ccd69a",
@@ -1452,7 +1457,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2145e8f929282414bef715bc95aa2056ce9803e77f7b856e75b50025fdc9816b",
@@ -1482,7 +1487,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1bbbffb734205a34c4ea6c1302e777bea37a5bd74a79a34343bfd629db8955cc",
@@ -1512,7 +1517,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "615ba1c05667e300ff8fb15507038a32619b28495d8ca75e3c90427da786d3fc",
@@ -1542,7 +1547,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a868ae4a21f931b2f2fe8524a97478e024c3e229bca240dd8092e619d14c2985",
@@ -1572,7 +1577,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "71c8f5ae2b6ced046f5af348ec313eb575b6ab9488de59e00d14f267878663dc",
@@ -1602,7 +1607,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c75f5af9ed0206da7cdc609693fd6cb2d17552cfcd33be3d27a93e5f75d8de18",
@@ -1632,7 +1637,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fa2f71f7fce39954612b076494fcc228ec824b5aaaaed90e40c3a99babed9e4c",
@@ -1662,7 +1667,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "74bdb3ca4c961ad2926f5ad212fbe49dc83daa967ca224f22b7eafe2ff5e9f32",
@@ -1692,7 +1697,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "976c80e96da22c3a4417ce279448d91c85394cae39e8dc6fef37cc1f9f675854",
@@ -1722,7 +1727,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e956a9404b467e6b372e082d28cb9d4710af764c2fa5e56a415211e12166be0e",
@@ -1752,7 +1757,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3700c52618fc204ced084115165f3cc5ab26452d21ee3c87e595a68b768c27ac",
@@ -1782,7 +1787,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "376b65684e64089b6f4c1c50d73d00b929f5a37eb73920d8579e14b439101cd7",
@@ -1812,7 +1817,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "49935b37fa2b8fb0729c873238f37e6cb1a80c2f58b23e325ac8db71eedee3c0",
@@ -1842,7 +1847,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "11f7eed90a13097ca9369b63504e6cf92660cf7c245b895bedc832a58e034c7c",
@@ -1872,7 +1877,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ab6a5cfb0dd39c5e666be5fb49fed8d29a2d27a38452e1759485b24df431d813",
@@ -1902,7 +1907,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0f0b22c99adfc4cec3bacaf935b8a67419a8c044348313dacc7449710e0652ca",
@@ -1932,7 +1937,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "42e82f3791811681c02797c98565cf00f67a569ab5c612bf312293576237929d",
@@ -1962,7 +1967,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fa2f71f7fce39954612b076494fcc228ec824b5aaaaed90e40c3a99babed9e4c",
@@ -1992,7 +1997,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "42e82f3791811681c02797c98565cf00f67a569ab5c612bf312293576237929d",
@@ -2012,24 +2017,29 @@
       "required": true,
       "source_lang": "en",
       "target_lang": "it",
-      "source_text": "Click on &ldquo;Plan this trip&rdquo; or contact us directly via <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> or <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. We will design your itinerary, confirm details, and guide you through the booking process. Fast response within 2 hours.",
-      "source_hash": "6dc7e99ba79513c2d2c11c6931c7162a702feac99c2390e26a1ec307ab3aef21",
-      "target_text": "Fai clic su \"Pianifica questo viaggio\" o contattaci direttamente tramite <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> o <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. Progetteremo il tuo itinerario, confermeremo i dettagli e ti guideremo attraverso il processo di prenotazione. Risposta rapida entro 2 ore.",
-      "target_hash": "e4996aff96e7d66d34fc5c7adc80edd98cc40bce6b5d1f980db9bf8d3c80dc12",
-      "machine_text": "Fai clic su \"Pianifica questo viaggio\" o contattaci direttamente tramite <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> o <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. Progetteremo il tuo itinerario, confermeremo i dettagli e ti guideremo attraverso il processo di prenotazione. Risposta rapida entro 2 ore.",
+      "source_text": "Click on &ldquo;Plan this trip&rdquo; or email us directly at <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. We will design your itinerary, confirm details, and guide you through the booking process. Fast response within 2 hours.",
+      "source_hash": "6fc9f85f51bb80b2821825fd43a66367b2809a8e3ebda15bf00e1b749bab0732",
+      "target_text": "Fai clic su \"Pianifica questo viaggio\" o inviaci un'e-mail direttamente a <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. Progetteremo il tuo itinerario, confermeremo i dettagli e ti guideremo attraverso il processo di prenotazione. Risposta rapida entro 2 ore.",
+      "target_hash": "eb890263945a3cbf3f25aef706d5c83ec1704ae5b7863ec3715d28714612ebcd",
+      "machine_text": "Fai clic su \"Pianifica questo viaggio\" o inviaci un'e-mail direttamente a <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a>. Progetteremo il tuo itinerario, confermeremo i dettagli e ti guideremo attraverso il processo di prenotazione. Risposta rapida entro 2 ore.",
       "origin": "machine",
       "freshness_state": "current",
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-18T00:21:11.445Z",
       "cache_meta": {
-        "source_hash": "6dc7e99ba79513c2d2c11c6931c7162a702feac99c2390e26a1ec307ab3aef21",
+        "source_hash": "6fc9f85f51bb80b2821825fd43a66367b2809a8e3ebda15bf00e1b749bab0732",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "e4996aff96e7d66d34fc5c7adc80edd98cc40bce6b5d1f980db9bf8d3c80dc12",
-        "provider": null
+        "provider": {
+          "kind": "google",
+          "label": "Google Translate",
+          "model": "",
+          "display": "google"
+        }
       }
     },
     {
@@ -2052,7 +2062,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8044e98f5adf60a6a4987a2d217827098daae78a93732bc4067301f3614a5feb",
@@ -2082,7 +2092,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "514a199a47c5ffb2fb860da87b7c06cd03ddcd13daf8deb20796f5448ecdcc3a",
@@ -2112,7 +2122,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6fc9657cfc55abc312c42f2ec073d9d6a688c28e3871dfb3d8c8409791d7bec2",
@@ -2142,7 +2152,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "80433591ae24dc336bb62984edde8a227d607c2e0942e8440553caa5a11fccd4",
@@ -2172,7 +2182,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a82de8d97e1f54c2b6f8d9bd6fdc057225864da2312795c3590bc16aad638f95",
@@ -2202,7 +2212,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4b92a8d9d64c0c3ea97e39c35c08d8905befb9e25d4ed5a8c0ed47483c41560c",
@@ -2232,7 +2242,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "886f96d977f12221665c016c57e58f4832db23e5cd60406ddcaed2cab64e2590",
@@ -2262,7 +2272,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9940868890541df2a373c52af745d99c60876224fe0ccf7d17f9781c9ba99419",
@@ -2292,7 +2302,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2efb27f91deeeb4a1fac20cdf553065cfc0ece50e92f13da5b042f574c721e2d",
@@ -2322,7 +2332,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8dc612687bf3029305e2dad20b646686d0843375705624e63b6fa7447ee47787",
@@ -2352,7 +2362,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "38e8967eadc737a91d319471948905083ec4c8d2067863688c7335288eb1e7de",
@@ -2382,7 +2392,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "863825f2de0c930059b4494e594d07ca54ea6790dafdf60f2dcb0b57ba24998c",
@@ -2412,7 +2422,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c65de5adfea840c065a039d9494de7858e0f4292ba2b799bf7981d74cc8e6015",
@@ -2432,24 +2442,29 @@
       "required": true,
       "source_lang": "en",
       "target_lang": "it",
-      "source_text": "For first-time travelers, Hanoi, Halong Bay, Hoi An, Ho Chi Minh City, and the Mekong Delta are strong options. Not sure where to start? Contact us via <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> or <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a> and we&rsquo;ll design your perfect Vietnam trip.",
-      "source_hash": "2cee069364c835049fb9a9a937e6b520d90ca12304a9a25af124a1d26d91b1a5",
-      "target_text": "Per chi viaggia per la prima volta, Hanoi, Halong Bay, Hoi An, Ho Chi Minh City e il delta del Mekong sono opzioni valide. Non sai da dove cominciare? Contattaci tramite <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> o <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a> e progetteremo il tuo viaggio perfetto in Vietnam.",
-      "target_hash": "120430dfb574717dcfe701e228e9579cc2565a60259d7ef6cf6e7eb85b418714",
-      "machine_text": "Per chi viaggia per la prima volta, Hanoi, Halong Bay, Hoi An, Ho Chi Minh City e il delta del Mekong sono opzioni valide. Non sai da dove cominciare? Contattaci tramite <a href=\"https://wa.me/84354999192\">WhatsApp (+84 354999192)</a> o <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a> e progetteremo il tuo viaggio perfetto in Vietnam.",
+      "source_text": "For first-time travelers, Hanoi, Halong Bay, Hoi An, Ho Chi Minh City, and the Mekong Delta are strong options. Not sure where to start? Email us at <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a> and we&rsquo;ll design your perfect Vietnam trip.",
+      "source_hash": "b03ad0b94a854a6b456e02437e99cbd7d19221349aa7ec0c55d1c5ff0c28456e",
+      "target_text": "Per chi viaggia per la prima volta, Hanoi, Halong Bay, Hoi An, Ho Chi Minh City e il delta del Mekong sono opzioni valide. Non sai da dove cominciare? Scrivici a <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a> e progetteremo il tuo viaggio perfetto in Vietnam.",
+      "target_hash": "5f21583e5cbcdf05d773b175cc2ae7ab0c11253a9e86fcc480f63cee709764bb",
+      "machine_text": "Per chi viaggia per la prima volta, Hanoi, Halong Bay, Hoi An, Ho Chi Minh City e il delta del Mekong sono opzioni valide. Non sai da dove cominciare? Scrivici a <a href=\"mailto:info@asiatravelplan.com\">info@asiatravelplan.com</a> e progetteremo il tuo viaggio perfetto in Vietnam.",
       "origin": "machine",
       "freshness_state": "current",
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-18T00:21:11.445Z",
       "cache_meta": {
-        "source_hash": "2cee069364c835049fb9a9a937e6b520d90ca12304a9a25af124a1d26d91b1a5",
+        "source_hash": "b03ad0b94a854a6b456e02437e99cbd7d19221349aa7ec0c55d1c5ff0c28456e",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "120430dfb574717dcfe701e228e9579cc2565a60259d7ef6cf6e7eb85b418714",
-        "provider": null
+        "provider": {
+          "kind": "google",
+          "label": "Google Translate",
+          "model": "",
+          "display": "google"
+        }
       }
     },
     {
@@ -2472,7 +2487,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ea3d9d85581cf83c2ffc44fcdad8752d0fd25b4f471248f5cd3133659dd916dd",
@@ -2502,7 +2517,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bcd7f99817adba62cbf495a31ba0c17942716d34c232d52b1fa8e52dfcd59537",
@@ -2532,7 +2547,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "11fdb2fcacf733ab778dd5f5ab8fef0d08b54084fed935fc3586d5aa6f362985",
@@ -2562,7 +2577,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-10T15:10:54.176Z",
       "cache_meta": {
         "source_hash": "d314f805b78596a89457016a7275866baa57dbbd5e4a38d60ccc2685f522e5e7",
@@ -2597,7 +2612,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a75dec80721513b154971f605207ced13980bfa76a8a58aef7cd316674fbf98e",
@@ -2627,7 +2642,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "60aaabb1b4a1f2bcdf49ce98a041e9d2b0c3ae7bee14ade22e4dfb1e7ddfa5b7",
@@ -2657,7 +2672,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8ad55d09051c35d7c5740ee141db2444c42a41d912295acc08d3835a6e84d74d",
@@ -2687,7 +2702,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0fc7d71eb828a862691b7273d6c7f34344de1aa2276b842d65ece2911df0961f",
@@ -2717,7 +2732,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "088fc5e6c45b68af927d653f60a1bafe07566ca2e4218b8db140eb15566e634b",
@@ -2747,7 +2762,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2518cea1cef7ed11c4921a033ff1aa725d466a550e740c6b442b4bac67e72ff7",
@@ -2777,7 +2792,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bc8c8a4685c8d0fd099f686f79fe698fac7fe28f1243cb92914d1c13315b330e",
@@ -2807,7 +2822,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e07d7aaa89df1684d50db583a52169dc4282f27145c5f5800d37aac6a167dd16",
@@ -2837,7 +2852,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1db67917e49be4d56484631d0bccfa721ea989fa313eeacf82cfcfa2f0e8f48b",
@@ -2867,7 +2882,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "061ba9282d59897b8c7ebab332450e88bb44171401f9bef33666eeaf04590c8e",
@@ -2897,7 +2912,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "293d404a500f5f9a149916d810ff4f4231bd5d6ecd25eb0f55a867e2095eca48",
@@ -2927,7 +2942,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a892187e1f61e663bfefaa916f244f1c5efff3233b5407e6d88e30f948173eaa",
@@ -2957,7 +2972,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "94f3584dc9df9ffa594a7971c08f3d6364a1976a74adf30d18e225f8498e8055",
@@ -2987,7 +3002,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fba63a0399549368e88b8fa5e27138d486356354983fbd8dad3ec036a07b3dae",
@@ -3017,7 +3032,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2b5c3d26721ae9c350cf3009318b626f0fc8a90b4a2ac0ca8099c05aa849282e",
@@ -3047,7 +3062,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3ddc526e22d45bbab3f82a5add667b764c2eabfaca5807e96f0bb1b32ef7328d",
@@ -3077,7 +3092,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d41f5b4977ee05c6b61b3b5f054784628f5cd1cbe06a82a5484d1e6de6eefe85",
@@ -3107,7 +3122,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a8ac53ac41f58847a40b91916d03777329f048f783647083a339e045d81c9966",
@@ -3137,7 +3152,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9c747373dce687b9db277bd9cecd5dfa9f01efc394e407afc86e3b892f8c5877",
@@ -3167,7 +3182,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bad57ef7837c8e6bf99c2a5935cc9d6fe5324a53d88744ad5551db0e46b03cd6",
@@ -3197,7 +3212,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4787eaf7c938045fd5285fe6a2cd72558caf7bd5faeb93fd1ad490a502e0e37b",
@@ -3227,7 +3242,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fdb4f5e7dc667276e4197180f38e2e45b8de6f96c8d11fa0491ddc92928adb4e",
@@ -3257,7 +3272,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "dd84425b72da12c6c828339ce814342daceac705b50d42e377e1acebf8f2320b",
@@ -3265,6 +3280,34 @@
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "dd84425b72da12c6c828339ce814342daceac705b50d42e377e1acebf8f2320b",
         "provider": null
+      }
+    },
+    {
+      "source_ref": "frontend:footer.phone",
+      "key": "footer.phone",
+      "domain": "frontend",
+      "section": "customers",
+      "subsection": "frontend-static",
+      "audience": "customer",
+      "required": true,
+      "source_lang": "en",
+      "target_lang": "it",
+      "source_text": "Phone: +84 354999192",
+      "source_hash": "f689fb31203087c632738bdc2156f309da36f3f53addcced55584ade30fcc39a",
+      "target_text": "Telefono: +84 354999192",
+      "target_hash": "e1c1ec68450dca588d4ba2fca936e48144f328b2696ce93a8ffa94e3bc151899",
+      "machine_text": "Telefono: +84 354999192",
+      "origin": "machine",
+      "freshness_state": "current",
+      "job_state": "idle",
+      "publish_state": "published",
+      "review_state": "reviewed",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-17T16:24:30.014Z",
+      "cache_meta": {
+        "source_hash": "f689fb31203087c632738bdc2156f309da36f3f53addcced55584ade30fcc39a",
+        "origin": "machine",
+        "updated_at": "2026-05-17T16:24:30.014Z"
       }
     },
     {
@@ -3287,7 +3330,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-03T09:50:47.543Z",
       "cache_meta": {
         "source_hash": "506ff394621596dd88138642eddfc1e41833b3ae92d95e5c77c94327098abd9a",
@@ -3322,43 +3365,13 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f1b7505afa5c9e2bd6d68ae814b3582cf38632d56a67913e75e7d8cb10b5a8a3",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "b99cfedf8190c9c6bf7974ad8cf060c761406d0a4bc9c8464e22b253bf4cd8dc",
-        "provider": null
-      }
-    },
-    {
-      "source_ref": "frontend:footer.whatsapp",
-      "key": "footer.whatsapp",
-      "domain": "frontend",
-      "section": "customers",
-      "subsection": "frontend-static",
-      "audience": "customer",
-      "required": true,
-      "source_lang": "en",
-      "target_lang": "it",
-      "source_text": "WhatsApp: +84 354999192",
-      "source_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
-      "target_text": "WhatsApp: +84 354999192",
-      "target_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
-      "machine_text": "WhatsApp: +84 354999192",
-      "origin": "machine",
-      "freshness_state": "current",
-      "job_state": "idle",
-      "publish_state": "published",
-      "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
-      "cache_meta": {
-        "source_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
-        "origin": "machine",
-        "updated_at": "2026-05-02T12:43:24.198Z",
-        "target_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
         "provider": null
       }
     },
@@ -3382,7 +3395,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fb7accfff8c6f8ea9b03c91ee5576d0d08080e9ba35918d801aaeb6020dbc88c",
@@ -3412,7 +3425,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "dbe863dce5f4241e38997182cc5103851814ddccf56d8341a0445516f966e980",
@@ -3442,7 +3455,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7ea1252a585bacaed9e59b417cee7ab44d68a0703fb9d3054cdda72b9c4af950",
@@ -3472,7 +3485,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f779d26e03db2a2a56772b588537c65abb3e4a79f0d40b49f454dfa52304a3ba",
@@ -3502,7 +3515,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7f2a3d80d40f916a2287662f4fd53afbef31f2f618d3b6817c50e182a463b46f",
@@ -3532,7 +3545,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "883005b07ad4d625c3963caab16dbdeba60e596df4edb553007ab95c7ea6953f",
@@ -3562,7 +3575,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bba08f6f79d55775dd0e52c763ffb434eb25d9aa419a9425c39c43f89b9a689f",
@@ -3592,7 +3605,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a2b8215cf1aea28fb1267958a7b4df9a6dce81193b9cb1eca14da492f28fb400",
@@ -3622,7 +3635,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4d8c950db24e203837f150e65e028d7c55abb5c74fbd94c51a12a341bf34a8de",
@@ -3652,7 +3665,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d3f369684482f3ba0169d6bd1b9dec7f266f627b1709343946cccd862f79cd48",
@@ -3682,7 +3695,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c9ab5cf403d8ebe4a60d051eaafab3b5f70c053b2a8ba87a379b200b15d254f3",
@@ -3712,7 +3725,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "81e1750e86058491544c346997e2e839701eded19b4a38b5c9d9ed298a2b1e1a",
@@ -3742,7 +3755,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6e9deb75201e52ada0d69662997f9b5bf153aaa2a2109fe8a9352700b3039af6",
@@ -3772,7 +3785,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "71a202e247217cea345210f334794edc727449c48507b5234ab73099284c4ba5",
@@ -3802,7 +3815,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d274159863057eb5c633116c3b54e4f8659167f0b73fabbee256e881fa1ac8c8",
@@ -3832,7 +3845,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fe4338ad620c8d7c4905e0b4b350ca7d8b9d84cc9fc9055574f2d16362fdbc6a",
@@ -3862,7 +3875,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "45f16144c18cb09894ec3e2410e50711f7edcd915b80bf7c7151701dda0ee98a",
@@ -3892,7 +3905,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ba118bf7fc9c1aedc1edb28a0aa86e0b43b681f222af6616e13c43be87815b06",
@@ -3922,7 +3935,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7458199fe97a184002bfd3c42bae81371f0ae2229b5c0a257a9bae77e4f4eda8",
@@ -3952,7 +3965,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a659b60d246dce8d4865d45673963de83d0e49a57e8559da98581c2bc5d7d97f",
@@ -3982,7 +3995,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fe1d9c7db3762da63c17852f7652e3d4a73154f90bcd90474550c7a552d3d0bf",
@@ -4012,7 +4025,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7b6e9ac25cb9aba8b1cddb7607cc1e4b781c09f899998184fb0c5ccab695aee4",
@@ -4042,7 +4055,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8185c1c3d5d44f32cd560d18267a279a641092926514331329dfcac443bdd0c0",
@@ -4072,7 +4085,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "71f4cf5c7a2308d0b3c0ac33bdfe309476c0cf67ceed521bf67d9f2f653f65fe",
@@ -4102,7 +4115,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "770341d6e89e04e8bb79afe2847b082492c9750dbe8f43725bbc5ee4afbffab5",
@@ -4132,7 +4145,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "5bcc40adf6e0a2a9c9317f9ac01481271b45ffdd5850d96b562752eee8167b85",
@@ -4162,7 +4175,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3411059cb8e0660e29dd7a3737e65a28b08eb01524a8ebc3d4168932649f23e6",
@@ -4192,7 +4205,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a89a9329d3d41ad2a7a622a7018bb94175d5e9003ada3a903b124e859c27c9bd",
@@ -4222,7 +4235,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f25499e9df5c322564c105324652ae38d3d90c30c57d63d51b4cc7618d40d997",
@@ -4252,7 +4265,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fe0c8d9d82d5b4805ac26f3842ee806df273ebf545507b6df85dc0bc553550f1",
@@ -4282,7 +4295,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3efddcc99bd47ccd94f7c0b0505b2a6630797a13ddc61863a3eae81ac34ecb75",
@@ -4312,7 +4325,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "80ae0d0ba346bf55a29d04a5acdcfba7a702d79e9a21bbd0c9640a97e5198e09",
@@ -4342,7 +4355,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4a8249333bb0431d6a76f1865a836fd98f92d9a66933e3bbb0774de82c477084",
@@ -4372,7 +4385,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ad2abd627cc31004500efa2c748ead2d77e8abcba8d6bfc996e2a76d1427e8df",
@@ -4402,7 +4415,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "25b054d82fd0bac1fa652c0e29ec0038560f8951d6f622e695ac9daebaa31195",
@@ -4432,7 +4445,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "affa75e07ef53129f5b5b4d95daf7b3b6b952b8c70d872f9c4be91ccf9237b17",
@@ -4462,7 +4475,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ed626719b44506e773ed5659cf5006567c76cc53a58963c67fe0be3bb82b15ca",
@@ -4492,7 +4505,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c5a9a20a5732b546368365640557d45862e39ebb11ce46d01fbccd20245635b3",
@@ -4522,7 +4535,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4787c0aeb472b362ae7164e283af334f91d30e7d20c545e60e67d87da728cfe8",
@@ -4552,7 +4565,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6056d7ff0d98766a64adf6fb67bb43c1b26e62a33b009deccaaee49c6675cc84",
@@ -4582,7 +4595,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "74bab5432582587bd79fe9b6df28dedde8b165afbf17a4ff9cd9805e9c65d824",
@@ -4612,7 +4625,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "77b36a74cfa29739facb3b7d5a28d9bd306b781721d1d58769583491aa02c3fa",
@@ -4642,7 +4655,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "45f24ca8b9bf67da2d430f037f48d8deb132016e1c64e7424556570f5c3c2785",
@@ -4672,7 +4685,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ed7f0967c6102a16d22f6c5f74016d530d152053e40ed430fddf7346873e09b0",
@@ -4702,7 +4715,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "754dedb5330e23b1b6132d9fba7412deab9d26f57141360fcb7f848663a286d2",
@@ -4732,7 +4745,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6f0afad1dbf690016ac0758ba705564161f2114309dfa3d9127b2464553ea381",
@@ -4762,7 +4775,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "041075d1c0f5e1a458ec446e4b3e6fbd76a44afdd86822c62fa6deb0971a498c",
@@ -4792,7 +4805,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d47d7cb0e4f8fd2be5ee07826694c18917d83ca77d0a01698582d05f432db996",
@@ -4822,7 +4835,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f9b561ae22951d847bf6bfb31ae3ce223e0fed9cbb49c50ad86cc3e075007f01",
@@ -4852,7 +4865,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3193c68989d85d4d30aeda27b295fa34e2bc35234d7fcd4cf3ea1aa43c6fe11a",
@@ -4882,7 +4895,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "59c204c77107014ccac62ac8a6bea4b7530d9888d469051c1feb54c7b96a8dae",
@@ -4912,7 +4925,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "951506a9c49fc8f91f84cd8878c9ac7b7b25d2c08dc738e9561fd8043520234b",
@@ -4942,7 +4955,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "98ae3260a381ac4befea0f29fffea24551124b1f766ece4274334649591a751b",
@@ -4972,7 +4985,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "989286ecb4992b89e2144961227d6a67edc4400950e1aab79a3a2e55dc77ee74",
@@ -5002,7 +5015,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d1bb04d36fe2201f4b9076d5e0f483ecabbbaf0bd0999e24694ba9996095127f",
@@ -5032,7 +5045,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "76900f1bfd16c8d4dd3d25e6f46638d7165aee23883ccea6bfe071c514421769",
@@ -5062,7 +5075,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7d9eb7acb13e24625c404401d8e88b2350e32162455885f18276cf802f7701ed",
@@ -5092,7 +5105,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1ff57a29d7c9d11bdf61c1b80f2b289b44c1ea844824d4b94a0d52b6ba5fc858",
@@ -5122,7 +5135,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "917e144e4bc3da892c26e48f68adff6709a776043ee44fac85c270bcd08eef0a",
@@ -5152,7 +5165,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7cd8f70b6508d8d5cb60df35edd84c447d3a4dada4532f7bc61388086d263783",
@@ -5182,7 +5195,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "b6108ed9c336927ede177d3df89d9279aa2947fe45126352646f85d86b3387b8",
@@ -5212,7 +5225,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "268d1203168117d98ec79acd3d979b991986646a92b7abcefe12bf478ce40be7",
@@ -5242,7 +5255,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8ba9feadb2c8643b0a5199164826a313f57170637c19d8af381b3cfd05ef3539",
@@ -5272,7 +5285,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3a732672216dd8157f3afd73f95223bf0da75f57f3170fde8c338649bbfde67a",
@@ -5302,7 +5315,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "969ccbd3cf6300ecd5c880459d81ae9027df7517563184a1b8b15282db230621",
@@ -5332,7 +5345,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "140071feea59fe87b44a9926688d77c2c3b810328cb9cdbc064c826cafaf2205",
@@ -5362,7 +5375,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f13a64ba2fea87ef6360c1f2e9bcd3286cc1551a90cb62a8d9345ebf97fbc29f",
@@ -5382,24 +5395,29 @@
       "required": true,
       "source_lang": "en",
       "target_lang": "it",
-      "source_text": "WhatsApp or phone",
-      "source_hash": "30e056bc0a0a6591a7432b896ac985d778297d5cefc0ddec098b65cdd8d2cc92",
-      "target_text": "WhatsApp o telefono",
-      "target_hash": "658dd2d72b3ef4541d5564acf26813413108e40a968b2170f5f539f8dc079eb3",
-      "machine_text": "WhatsApp o telefono",
+      "source_text": "Phone",
+      "source_hash": "63dceb8800b2dd4af9567a1f54f03b7c3dbdc27fac4799091ebfcc4928899ee5",
+      "target_text": "Telefono",
+      "target_hash": "e85e0086c7aba5474659d6ff4abccd87ab7c761d91f759c8a73517662884c0ac",
+      "machine_text": "Telefono",
       "origin": "machine",
       "freshness_state": "current",
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-18T00:21:11.446Z",
       "cache_meta": {
-        "source_hash": "30e056bc0a0a6591a7432b896ac985d778297d5cefc0ddec098b65cdd8d2cc92",
+        "source_hash": "63dceb8800b2dd4af9567a1f54f03b7c3dbdc27fac4799091ebfcc4928899ee5",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "658dd2d72b3ef4541d5564acf26813413108e40a968b2170f5f539f8dc079eb3",
-        "provider": null
+        "provider": {
+          "kind": "google",
+          "label": "Google Translate",
+          "model": "",
+          "display": "google"
+        }
       }
     },
     {
@@ -5422,7 +5440,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fd9831a3458e8b5df780975c77ca6b2327ade3729c171749137dadb9cb297356",
@@ -5452,7 +5470,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "72eb63f032e47e349e8901353e08ba91cfb9d1f78d08d070c60bae0e9b4e038d",
@@ -5482,7 +5500,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6dbc6956cc397a49e54a0a43f1610f27258f91e3eff894dbcda6c9c7770e40a7",
@@ -5512,7 +5530,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3ecdf2f0cfaaebf1bf54f069ea6e32f0711fd9197abafd96b8a5ee2207c8f8d1",
@@ -5542,7 +5560,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8b17ac94d9e6e6f4bd8af62be67f43ca597ea9394fc3f0fb4648aa753324c593",
@@ -5572,7 +5590,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e1c459300879b24d7692630d90ad848d6a3f8c17531c4714e8e3affd3f99420a",
@@ -5602,7 +5620,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "006bfcd2be3be13ebddb487839d3ff3b9fb965f42b0dfe8c0d9d23a340bc99b5",
@@ -5622,24 +5640,29 @@
       "required": true,
       "source_lang": "en",
       "target_lang": "it",
-      "source_text": "We will contact you on WhatsApp/email.",
-      "source_hash": "79028c0d1810644fcdb1e8ed3d0cea40f08909979d8a2df9ad7928d5270f211a",
-      "target_text": "Ti contatteremo su WhatsApp/e-mail.",
-      "target_hash": "8241689c79d41bb5d50d66bd2af08dc36ea07fd1a93d94d3826e6d9ba666b4f7",
-      "machine_text": "Ti contatteremo su WhatsApp/e-mail.",
+      "source_text": "We will contact you by email or phone.",
+      "source_hash": "95accb27eb1a46c04a8794c77df52f7ab59c0a71823ee53e5d0b964a0336b79b",
+      "target_text": "Ti contatteremo via email o telefono.",
+      "target_hash": "12af36ac41ae9cc539c485b0a2a278f9ad1963ee82ce0c087955607cf57168f5",
+      "machine_text": "Ti contatteremo via email o telefono.",
       "origin": "machine",
       "freshness_state": "current",
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-18T00:21:11.446Z",
       "cache_meta": {
-        "source_hash": "79028c0d1810644fcdb1e8ed3d0cea40f08909979d8a2df9ad7928d5270f211a",
+        "source_hash": "95accb27eb1a46c04a8794c77df52f7ab59c0a71823ee53e5d0b964a0336b79b",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "8241689c79d41bb5d50d66bd2af08dc36ea07fd1a93d94d3826e6d9ba666b4f7",
-        "provider": null
+        "provider": {
+          "kind": "google",
+          "label": "Google Translate",
+          "model": "",
+          "display": "google"
+        }
       }
     },
     {
@@ -5662,7 +5685,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8569efc4ed5a6273140c2b6ec0ab8d99f4398210808fbb7c0cbbae4fbcc21350",
@@ -5692,7 +5715,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3a550cbddb2019b798009bec17cbff0b1dee942425b2247d05b9ee162d290ce9",
@@ -5722,7 +5745,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8790aab9c41f954650346c6aafce0150ee29fb80723ef166812de7bf69c0c3da",
@@ -5752,7 +5775,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "497c05f77360452738ec1ef15572981656fb1352a1c4539e371d69d13b0b3947",
@@ -5782,7 +5805,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "18df75708a0603e2fa001b89caa9f9cda70d5109e81d0c0969643041ee15bc47",
@@ -5812,7 +5835,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e34ad891c633e4debc33ce55e0b74316df81f6944f58a36bc4a2eae10f8d14e7",
@@ -5842,7 +5865,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "2b5c3d26721ae9c350cf3009318b626f0fc8a90b4a2ac0ca8099c05aa849282e",
@@ -5872,7 +5895,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "dbc468a14b601d5d9240aeb72b9fcd2f8aed2f4e30932876edf8d16ec313846b",
@@ -5902,7 +5925,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "b4b580a9ad8c344fbfad26db08c76c22171cdf481ed3f7871b65bc2f5cc82dea",
@@ -5932,7 +5955,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "067e5adcb2083ed6d868863753f8ecd7a3b60e34f6f10f820c71457cef8f3d2e",
@@ -5962,7 +5985,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ac576a66d4563e600314a2ce6e731725e9826fd88baf2399e05f60bfb177dbc0",
@@ -5992,7 +6015,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fdb3f784bfe7f7f662e63dc97b3e875336d22129d29a4a20fe9998a76024cf31",
@@ -6022,7 +6045,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a2246fbc2542d1ddb5c288802c6fce65eebc13133146095660431f4728077ff8",
@@ -6052,7 +6075,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-13T01:12:20.093Z",
       "cache_meta": {
         "source_hash": "3b73900b8d29f963dece78edd4bd9529d855e50f2a3fcc39b3d66cd657630905",
@@ -6087,7 +6110,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "174fc8f831e3b4486836e4e797e4fe5a418b429dddd821b032f8cd4f3a366e95",
@@ -6117,7 +6140,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "df33df10ef9b7d9a855b8809ae5aa01d7fe051eb5c995f7fe7a3f74733bed508",
@@ -6147,7 +6170,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "617fb6d609b8d8f45f0ceba76aa114e5c8055338fc46af806d36a73c5ad38c47",
@@ -6177,7 +6200,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "49969c2f9f1345b0432f81906ec35e45cc04e06204058181d67c597e9c50b241",
@@ -6207,7 +6230,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "187897ce0afcf20b50ba2b37dca84a951b7046f29ed5ab94f010619f69d6e189",
@@ -6237,7 +6260,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7a6d0accc99909231d031ce04ad1572484127e100ce8ea3697b15ecfb1d96bc1",
@@ -6267,7 +6290,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T16:36:40.241Z",
       "cache_meta": {
         "source_hash": "7354f8b7534d7bee970922beb723a423e0e3b9f53c798b68f274d98c5221fd03",
@@ -6300,7 +6323,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "94ea9b1d33a02975ea6b71d6cf87d461a48de07869c047b5daeb1654e9d539f8",
@@ -6330,7 +6353,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f5c9bd131486e793ee105bd81f001fc25cdc2dac9c1d9f636ac7d43a10efc7e6",
@@ -6360,7 +6383,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "7d9eb7acb13e24625c404401d8e88b2350e32162455885f18276cf802f7701ed",
@@ -6390,7 +6413,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "3b6ece419b78231338d78a60dbf7ae2489a6eea758ec8f61570f7e6db59ebd11",
@@ -6420,7 +6443,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-16T09:43:10.938Z",
       "cache_meta": {
         "source_hash": "c1651940e1ccbd1259ff04b24532f10696f4e2ac571d966562949c3d09ca152f",
@@ -6453,7 +6476,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "562e5b929d75143be2bbc825c3f4438d02c929d8daf79a1fa0d979e70cf896fb",
@@ -6483,7 +6506,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T04:52:55.842Z",
       "cache_meta": {
         "source_hash": "cb025342656afafafab8d29899f3acc5bae5d021f0ebed13c7c710f52735ce85",
@@ -6513,7 +6536,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "dcff9506f5d519930a1a9dfa5bbbad5f893be1d27d83021704de3b0977afbfd1",
@@ -6543,7 +6566,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "183512e36d4f6bb86819baa59b789583ac8026f160242cb78ed3ca9b5c651509",
@@ -6573,7 +6596,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "74281aadee60d13dd7e6f708fb8e28d4a2000d3e6284a0e3f81a3da62cb0d685",
@@ -6603,7 +6626,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "ae2a3275411502bfa74eafac034ed759cbfc8caa3bfd89b30b49e8f796831b47",
@@ -6633,7 +6656,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "29599701de14bcea325b2228f4c7ea897c59a4547e4306e32a91edfe2c62a0ee",
@@ -6663,7 +6686,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T04:52:55.842Z",
       "cache_meta": {
         "source_hash": "80ebe470e0e4d5154164a1afcff88d12eb4e040b3dfd83510d245317965739fa",
@@ -6693,7 +6716,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "026678a84abc4bc0a23827ce3a66fd71be6dbae0d07acb8888eaddbd476a2d57",
@@ -6723,7 +6746,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "protected",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-14T00:00:00.000Z",
       "cache_meta": {
         "source_hash": "aa5f530acb509a3547fc2a5cc3f1c92da93af2f5b466417527e59d0f50f00c7b",
@@ -6755,7 +6778,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "be81a5c5f112cd67d08480e214c98b09e7d92e7a3cfbd4c275caa138fbb3dc5f",
@@ -6785,7 +6808,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "7d6a1dce7d1e83a4867c4298879d448f1ffa4e3454258984ae9525d1b8982094",
@@ -6815,7 +6838,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "8a800013e1064532c2b725368008f54217475d0f13f1f566fe03568dde86a982",
@@ -6845,7 +6868,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "dbd09299bd9fdbcfc34abd8840e1c2c1491710743b820f16e7394b55716f3185",
@@ -6875,7 +6898,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "fe40d0dd82257e936d58cd92459371669d397d92fad2cb83eedbf520950a4904",
@@ -6905,7 +6928,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-13T04:28:25.407Z",
       "cache_meta": {
         "source_hash": "6cb3c6a2071b03381f544e28be0c24e0186ba31285cf9c8e394d18911614c39e",
@@ -6935,7 +6958,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-13T04:28:25.407Z",
       "cache_meta": {
         "source_hash": "635ed9b3d86450b8a94506dced0b6afc9c11f021052e630e2b9f1a40ca0947ac",
@@ -6965,7 +6988,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "1084eb51be25d2dbf8b18803cbbee57a6f994945456517ffc46af6466485346e",
@@ -6995,7 +7018,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "6e2cd45219248d7391b705bf31282ba9815b0e8067bc8592b49b5ccd821ba2f2",
@@ -7025,7 +7048,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "8282562a4e16d309b400e9af106f7d44bd1a5d946fc679ef264a2f64d4c36cce",
@@ -7055,7 +7078,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "aa4c4ae208f04b4d137cc22a230ef079a59ae32157782b1e4899080df3aea30d",
@@ -7085,7 +7108,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T01:51:48.291Z",
       "cache_meta": {
         "source_hash": "bc7b631a689b45ca5c51923515d31eb3597b2d9b129d88d0dbee066ee5c35453",
@@ -7115,7 +7138,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "8282562a4e16d309b400e9af106f7d44bd1a5d946fc679ef264a2f64d4c36cce",
@@ -7145,7 +7168,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "bd79b6f14e71a74be8f8753480771492126528b4b3d6aab204df25ecd515dc1b",
@@ -7175,7 +7198,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "562e5b929d75143be2bbc825c3f4438d02c929d8daf79a1fa0d979e70cf896fb",
@@ -7205,7 +7228,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T16:36:40.241Z",
       "cache_meta": {
         "source_hash": "719dc9205035033f883932f6dbbb4966df1b22cd3dd9017233952b40641bb112",
@@ -7238,7 +7261,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "72d19b16167101dee67e4edc12e6f65531151b686868a49683eed7b6f68fa8b8",
@@ -7268,7 +7291,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T16:36:40.241Z",
       "cache_meta": {
         "source_hash": "4fc52a3c4c558b517c463b22d86d0e3b9cfd4255c98fe3510f9075b37ab419c9",
@@ -7301,7 +7324,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T16:36:40.241Z",
       "cache_meta": {
         "source_hash": "770dd86bad64ad6ae9a598a412671702b6389fbfc49af3de499ddf426b0ba8b3",
@@ -7334,7 +7357,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0017096a9d4e4aa6f2f4a089fcdae27e0788da7a218a2389da656076a8e52a0c",
@@ -7364,7 +7387,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1886d8a38f95325307b6717aaa9cafcb6800b3f215f154731a309fdb10f58657",
@@ -7394,7 +7417,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "952d97e34491ee864ac282e26c3ff56cd6dac7e9340e76553349cd72d132be61",
@@ -7424,7 +7447,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8d5834ab9f5f9f75214b1922ea0321a1ae1aa9d187cc7d2735b449edd3878322",
@@ -7454,7 +7477,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T06:54:05.429Z",
       "cache_meta": {
         "source_hash": "f6fd9a406576b55e240558483da1fcf708ca3c1a35f2f4479faf0895c1a03c08",
@@ -7487,7 +7510,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "161d7551ca45c490804e6cf256a5dfa1fe11eece10d4fdbcd5781775375c1ca2",
@@ -7517,7 +7540,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "26e03a66b7cd2716aa518c341f60dc65029845b538d1245ca5e72bd1aa1b54a4",
@@ -7547,7 +7570,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T16:36:40.241Z",
       "cache_meta": {
         "source_hash": "820cd45ebda76484c77d336e9fdac76825930fabe5c39bdf70fd2315c2f24557",
@@ -7580,7 +7603,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T16:36:40.241Z",
       "cache_meta": {
         "source_hash": "da9fd4b0fe96448352e8be94aa687d1b02fd70c7f1ce631034d7113764e3e1e2",
@@ -7613,7 +7636,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "e3fb98c087cd1e2d61dd79ba75c503a6ba3543d7de2adb34346c8982babe3d40",
@@ -7643,7 +7666,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "b46e9b68e469800aaf9101a5445cdd4099f3dc6fa66a293cbcf91f48781ce8d9",
@@ -7673,7 +7696,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T06:54:05.429Z",
       "cache_meta": {
         "source_hash": "0bde90763cf3837265f584c2a0a4eb05aa1da77b72259cec715979dbdaef2952",
@@ -7706,7 +7729,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T06:54:05.429Z",
       "cache_meta": {
         "source_hash": "45989de49fb7f66dfe17a8fc26f3a02c7abcd74f7e8e6cf9f39fa0e3775780df",
@@ -7739,7 +7762,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d677190e0a9990e7d5fa9e4c1bbde44271fb8959c4acb6d43e02ed991128b4bf",
@@ -7769,7 +7792,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9d7154e95f378052cea6285f3771f804d7c8f9473bdacea2c46caba505e8be6c",
@@ -7799,7 +7822,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T06:54:05.429Z",
       "cache_meta": {
         "source_hash": "64401a1fb5f95f1087c83339808b7601880e42e1bb083cf8040364ba888cce9a",
@@ -7832,7 +7855,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T06:54:05.429Z",
       "cache_meta": {
         "source_hash": "8f2364e11b8be3ff008f32b3dedb54e659362429bcc9e3eb6acb6070de4ffbff",
@@ -7865,7 +7888,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T06:54:05.429Z",
       "cache_meta": {
         "source_hash": "9437ee43a781df578540a801222c623e272740ce9c6710d9238f1280822b2631",
@@ -7898,7 +7921,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-04T06:54:05.429Z",
       "cache_meta": {
         "source_hash": "02227ac84a9f3ed055e9705a08ef749ad5a21c891ae94bc00edf3f1cb878adc7",
@@ -7931,7 +7954,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-11T00:42:18.449Z",
       "cache_meta": {
         "source_hash": "d65fe279dcbbc81186b58314982d111e1f1a4c22df269a37a16fd36281c78895",
@@ -7961,7 +7984,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bbc6976b8024f73da511d20381045caf3b8ae897afbca06c0bb26dcfba056a1c",
@@ -7991,7 +8014,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ae6dfbda0fa3db7024c955dd057982e0a7487608ebfab204d99494790c704dce",
@@ -8021,7 +8044,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9d802a0c162a6b093f19333aae6f8f393805019566626d2a8e9de550944caff4",
@@ -8051,7 +8074,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8ceb806f016395f13a8fc9b3c19510d7aa48910e92beba0b8c96f2b6365922a5",
@@ -8081,7 +8104,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "5aa2e9d35260fa5d883acb85caecf84d08889a7c438a188938366b6ad4b96f30",
@@ -8111,7 +8134,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0bef7a1d0d1aeae00a3495c987e592da08fddac6bb22fd932a17774371155c39",
@@ -8141,7 +8164,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4a8249333bb0431d6a76f1865a836fd98f92d9a66933e3bbb0774de82c477084",
@@ -8171,7 +8194,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a9a2dabe043fb346309fec7e539c79b03fca3161a6a6665732203f06342a8a97",
@@ -8201,7 +8224,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fb3a9da39be5841fc4dff534078c0e77db1b200e3db8fc00d28e65885bddef1b",
@@ -8231,7 +8254,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "282339888612523ae6bd66aed6d59a1b8d0ee3680d3194314bc2adc0149f1585",
@@ -8261,7 +8284,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "eb9350e729e300e725ccbfec8d93321d1474ac3f192d7ff08389f9235b553da7",
@@ -8291,7 +8314,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3efddcc99bd47ccd94f7c0b0505b2a6630797a13ddc61863a3eae81ac34ecb75",
@@ -8321,7 +8344,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9f9e4ced8f67c0503ff2f4a8fb1a03d81214f0c20422cba3c8de3b9fd625031b",
@@ -8351,7 +8374,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e8cbc90bb83ea07ae77ae34fc339a71f526125e04fb485f3c49cc2047d6e22c0",
@@ -8381,7 +8404,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1aa8d430b4a102432967442607f26aca59227d37d817122d2b9d9584f30fc07e",
@@ -8411,7 +8434,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "eb5cf23bafd2435c1540cbaf1b7ce4c36b73d00f6785faa90cf810dedf95ede3",
@@ -8441,7 +8464,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-07T07:09:48.951Z",
       "cache_meta": {
         "source_hash": "77a0271f1fe11eb934e6755e08ccbd617dd89de9f101bc50ddbcb15bc63c57dd",
@@ -8474,7 +8497,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3d9906334a814a6df2559cb7d0ea0dbe411723170ecc36e863d039d5695b49df",
@@ -8504,7 +8527,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "5137f4e249114f9bc399bb812ef4094c40d5586eebbcaad47230c231d7c9282a",
@@ -8534,7 +8557,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e8c252006191b0757fbe125a33bfbe831f47cfbdb337e740276261962a127a82",
@@ -8564,7 +8587,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4d61e1176bbc8c4bd92cddc7dff1b661167fa595cd64d3169388342f56165ca3",
@@ -8594,7 +8617,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "54abf2c202648fa1479962a85a7733c3445b4e7ed20a73bfcd8f3ebd8148d7c5",
@@ -8624,7 +8647,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "323602be094c433222d53ea14e74e26e30b30c0a8bfc51d5331a07f326383a09",
@@ -8654,7 +8677,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fb856c399c5f45937c82423ebdfcd21c8e485ca654037065df559ff9d03ddf63",
@@ -8684,7 +8707,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "82681211e98d7bb7236327c6e03b80b36ecfc0f8fa4e4662971547acd4917cff",
@@ -8714,7 +8737,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e1cf35f575c51c55a6f50fdb3347e9c1669358ecc3efbaf0177b22384af0d21a",
@@ -8744,7 +8767,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ee760b6e81b981e281c2da3d92275df98277feab4c98b7549fb0f40fb07d9ad9",
@@ -8774,7 +8797,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "350b2b85c4af17248574a3d55d07aee1489588a78eea78cdaf6610dfdd0d153d",
@@ -8804,7 +8827,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c21b6d2a61441b9ae0aa5bf7b839f80441e4afbc47b962db7ee4d0e0ae894401",
@@ -8834,7 +8857,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9084c274a505c9229b9ab5322d08bc490fd1f29681b7b3b10f7bcbcdfba177ee",
@@ -8864,7 +8887,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fc33f73246f48295702f404001e74d56f14d2f82689b2816422dc1a4c2ec4fb2",
@@ -8894,7 +8917,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "380959bbe21c7e1a01fb0b9b5a6eda228a95497bc44d4909ed2e7ad6fb5b949d",
@@ -8924,73 +8947,13 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a906b453a3c92e997301a435b223a4adeae5cdf2745a6ad18a918906b51d5c23",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "71128ab27ba17aada8a3ca706fd9aaf6feb501c5be16f933f84461d97eec1eaf",
-        "provider": null
-      }
-    },
-    {
-      "source_ref": "frontend:traveler_details.consent_marketing_whatsapp",
-      "key": "traveler_details.consent_marketing_whatsapp",
-      "domain": "frontend",
-      "section": "customers",
-      "subsection": "frontend-static",
-      "audience": "customer",
-      "required": true,
-      "source_lang": "en",
-      "target_lang": "it",
-      "source_text": "Marketing WhatsApp",
-      "source_hash": "2d2aa1917b2b5d9adfe7926909d7bf03fecbad2cb01162c8126ef9a8aa239e5c",
-      "target_text": "Commercializzare WhatsApp",
-      "target_hash": "9739ad4634016af135fe8a463519ef2ac43f6768d56232db3b721fb4bcc25077",
-      "machine_text": "Commercializzare WhatsApp",
-      "origin": "machine",
-      "freshness_state": "current",
-      "job_state": "idle",
-      "publish_state": "published",
-      "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
-      "cache_meta": {
-        "source_hash": "2d2aa1917b2b5d9adfe7926909d7bf03fecbad2cb01162c8126ef9a8aa239e5c",
-        "origin": "machine",
-        "updated_at": "2026-05-02T12:43:24.198Z",
-        "target_hash": "9739ad4634016af135fe8a463519ef2ac43f6768d56232db3b721fb4bcc25077",
-        "provider": null
-      }
-    },
-    {
-      "source_ref": "frontend:traveler_details.consent_marketing_whatsapp_hint",
-      "key": "traveler_details.consent_marketing_whatsapp_hint",
-      "domain": "frontend",
-      "section": "customers",
-      "subsection": "frontend-static",
-      "audience": "customer",
-      "required": true,
-      "source_lang": "en",
-      "target_lang": "it",
-      "source_text": "Permission to send future offers and updates via WhatsApp.",
-      "source_hash": "64fd779c5a9643d6a04009134392f23922e17a43cdbb9179adac3609eea33667",
-      "target_text": "Autorizzazione a inviare offerte e aggiornamenti futuri tramite WhatsApp.",
-      "target_hash": "8a614ec8a2f4a7a50eda13ff8436eeae9cc8ec2e49630c67dfb5860445a41899",
-      "machine_text": "Autorizzazione a inviare offerte e aggiornamenti futuri tramite WhatsApp.",
-      "origin": "machine",
-      "freshness_state": "current",
-      "job_state": "idle",
-      "publish_state": "published",
-      "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
-      "updated_at": "2026-05-02T12:43:24.198Z",
-      "cache_meta": {
-        "source_hash": "64fd779c5a9643d6a04009134392f23922e17a43cdbb9179adac3609eea33667",
-        "origin": "machine",
-        "updated_at": "2026-05-02T12:43:24.198Z",
-        "target_hash": "8a614ec8a2f4a7a50eda13ff8436eeae9cc8ec2e49630c67dfb5860445a41899",
         "provider": null
       }
     },
@@ -9014,7 +8977,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-03T09:50:47.543Z",
       "cache_meta": {
         "source_hash": "ba445cff3898a3f24f415f90fbef1c8169ea21949a40680c5e1c5975843d1b5e",
@@ -9049,7 +9012,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "66a4adbb2854ec499dac6c1ad931a9fe2a7c612d5001ad678440abd5b8aba90c",
@@ -9079,7 +9042,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f4e08fefef74dc824feb50edc480b6eb746be855416a3a53882ca29800e683f5",
@@ -9109,7 +9072,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "b66311577e7de2bf1b43d5ac49aae1d266f932d025a30e2e81ee39eb3ceffea0",
@@ -9139,7 +9102,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4850b174b713d88cfc63de107830d5388929020e78abc91fc19bba7a6821625f",
@@ -9169,7 +9132,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-03T09:50:47.543Z",
       "cache_meta": {
         "source_hash": "8b91caee352f32a1f4d871abfe36ca710628427223f7f7ab1d59d52f942d0013",
@@ -9204,7 +9167,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c341f78cfffc98dc0b3f4abbb93a7b60ef878ea516b4a2c24467e7fe1f80a9d9",
@@ -9234,7 +9197,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fe905d993f29f0d7f442b361fa5a64e0e675f7e4bb5f27bc38ce53133b570bf6",
@@ -9264,7 +9227,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f013f78bc026afedee8473b131ba68b198b65de5b3986e898e7bca411eece48f",
@@ -9294,7 +9257,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "83be1327a1f54b2d90ee49851de357817133e0dc4b5b8874b4baca9e5dffa463",
@@ -9324,7 +9287,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4e10e9c903124990bce95ade16fc48667de0879bbf542f98b3d8a5d1fd95b8e4",
@@ -9354,7 +9317,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c28f2f096992c8789f637e9f931de6612eaef56a5f5a35bebe8b184dcf877817",
@@ -9384,7 +9347,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "eb4c4e239122d42d1ca7a7af175d6fe393926cb14aaab56b7ab7fc056b2ccb86",
@@ -9414,7 +9377,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "40de52c175ddc42b95691f216dedd6360036b19c8a3b96ef7005c76e8e96f89a",
@@ -9444,7 +9407,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6c06bd3c4f79548745c9f3c2228a5ca052cbbeb8d80ed3f152181584c46cc9fe",
@@ -9474,7 +9437,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9ce697bd8cfa152a72575dd8662363d329ce50052aa690d3458ca3fb98d1ea7a",
@@ -9504,7 +9467,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "de807679d33753fe3cf58b2ac1cfc1764153c714a30391ddb3ad71eae876dbe0",
@@ -9534,7 +9497,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d7dd3314871dbf3a01013ee9c2f4c925a6ff3a6b5920e0f6c64cab6d97072935",
@@ -9564,7 +9527,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "5c69221e2779869be85ac6f42b205e1a91c6437becc38a38b8ba95399ac18ee1",
@@ -9594,7 +9557,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "969ccbd3cf6300ecd5c880459d81ae9027df7517563184a1b8b15282db230621",
@@ -9624,7 +9587,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "71712ec2f7ba4ba8cd78deb147ebfb7dc96ce8a0944890095047ae7d2161f9ef",
@@ -9654,7 +9617,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "48469aa7fd8942852f9b93fad2dea50779d27cddd5b956d8fc8ed8afa6d47b92",
@@ -9684,7 +9647,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "680ad04f5c52cddc0373db27fbfa6c68c9f3df5ce1e0edf2a155d9c1326ae51f",
@@ -9714,7 +9677,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f13a64ba2fea87ef6360c1f2e9bcd3286cc1551a90cb62a8d9345ebf97fbc29f",
@@ -9744,7 +9707,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a04630ef8bc3da8c864af0161fde9d42cc9c801a27228b3cf7c07237dec5a612",
@@ -9774,7 +9737,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e8cca808ae5aaa03a7fc3060856e6d4ad776fb1cb8cfe441a9bd240988cde151",
@@ -9804,7 +9767,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "03f8c1273e3da99bb315fe7b71c8e45159c826e6d3f42eecd4612078248f73a1",
@@ -9834,7 +9797,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f97e9da0e3b879f0a9df979ae260a5f7e1371edb127c1862d4f861981166cdc1",
@@ -9864,7 +9827,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "148f37edb635db59a6733d7ead71af65d7c3643029e78e5a245f72c7fc9b7182",
@@ -9894,7 +9857,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "51fcc57e9bf9e07daec711378ec1eed588eadb2d0dc0fbaf4b06ff9e019024f8",
@@ -9924,7 +9887,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1476afd9f3c87b5a3055fb4daa06da24f0fdd25a5cce12b91fcd7c808b9dd571",
@@ -9954,7 +9917,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "d5f95b079a7044a8ba7e7a9491f21119386fbfdb8ee522ac087b7194c41eb7b4",
@@ -9984,7 +9947,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "38e05f35e32244815d83abf671eb5091ce2057f640cb722b03f95a65fa3797a9",
@@ -10014,7 +9977,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a9b67b281d22cef04052f2a47222b9f562a141a17c84ae028e1bbf07d9d9545e",
@@ -10044,7 +10007,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "49e3e87eaf95b9019a05f549239ecea64f3241fe951d8081f651a0ecfbf10ee8",
@@ -10074,7 +10037,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0167aecc6b5ec82d2ce3b5e4c6eb12bed1a522e40cfa29fb4f8723f4c01967a3",
@@ -10104,7 +10067,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "b195b09894d5fb5c3985eb843d71205fccd464cef035c00da6cc3d813b1ac245",
@@ -10134,7 +10097,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "eb0f71a8763ca0e5cf3bf7d0e12ea505e6b0ff08f245ce82d65b9fdcffafc1fb",
@@ -10164,7 +10127,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4d298211cedc01ea1aa9f2bda2d03a525bf14a128a03ec55524f0f692b05ced7",
@@ -10194,7 +10157,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e6fba0548824a61a43322a46087022df7841a85354aff8a8c485294e62a573fa",
@@ -10224,7 +10187,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8fb1b6a148c218138d7ce8a6c9babf02e3b63fdff61ab066107299ea212d338e",
@@ -10254,7 +10217,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "5305ab836dd296365fd549aeb09c9287caee6bc32fb7f5d1587e1b9f0032591a",
@@ -10284,7 +10247,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4bfc9bd364f5ce038cb34e25a25fd73461ca477164b31144a8af71b43c0c7cbb",
@@ -10314,7 +10277,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "30fd634a388761beb47c1ffce69642b148a88e133ddb5e8054a7ffa89d6a8b3e",
@@ -10344,7 +10307,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "653537a2707953191149be7c6a7faa3447072c93c3665a614666b26f828dba50",
@@ -10374,7 +10337,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "188bdbc254e49044d336e3953b242d17b6ce45fecc572846ff7a5702624e0053",
@@ -10404,7 +10367,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "99e952bf1d98989aa756921e86873f24eb06ed9eb0118a257e893b595b4fa30c",
@@ -10434,7 +10397,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3173c1c8cfe02e326ce2f6de5471b2011f5ebb6324d5433503a7a9d66f35bb21",
@@ -10464,7 +10427,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "306f1bb20677a622fc38185239e89a940f6c1727e440a2b359d7d0e1bf600644",
@@ -10494,7 +10457,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ae53cea8228bcfc350fef961189a32a592e06ccffa52a8b991f88841cbac8de4",
@@ -10524,7 +10487,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "140071feea59fe87b44a9926688d77c2c3b810328cb9cdbc064c826cafaf2205",
@@ -10554,7 +10517,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "71a202e247217cea345210f334794edc727449c48507b5234ab73099284c4ba5",
@@ -10584,7 +10547,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3a77fa0988c044a6c414b24e9833825e13c57fdda4a48c0825bb8f82d055de0f",
@@ -10614,7 +10577,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "809f300a2e027987f1ba46605c5f5e12aa27eb7178cd09c3aeda18f6ecb314b3",
@@ -10644,7 +10607,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6c6077ed8c53bfd92c8292b5374acfc760bc52d187d167907a6fc6855631626d",
@@ -10674,7 +10637,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "119096d2823dd87da52f1eae54e26da827bb364824589cd216fd9191d363d2ff",
@@ -10704,7 +10667,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9f284f6ca4252dcd128ac0a3e86d321efe4669a5bebb367ba3db707a4fb331b9",
@@ -10734,7 +10697,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "eaa008405cbd303a62ff911c0ee18ad44fec109df701fc3d8de5a7382a8ae41e",
@@ -10764,7 +10727,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "dd44722184c9cd21c75dda59b3bda9e7f41c7585c5972ad93dead179c2a2e6a8",
@@ -10794,7 +10757,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "6127bd3a024bab6e3a864ceb45fcfaff4e9dfd4e7abf1b012bc09c8e02f828be",
@@ -10824,7 +10787,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "13524d4330fd801dfbc621e4520a8bdfa9796bcbd10462ee64eeacc6aa6da666",
@@ -10854,7 +10817,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "907776ef502bfd17b52c89ce29869bcfccfa0857782dfb6f3428243f9b0151f3",
@@ -10884,7 +10847,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e5cfe5043e7b6f5f5ddfec66546234d7ee3390bfb2699da40053139de697bb80",
@@ -10914,7 +10877,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e138f67732b0ea50093c6e2be0d96beb0f42e978858420d23d89dc14cb4a62c4",
@@ -10944,7 +10907,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ca4650e6979ac158e0e80ea5488eedfa19befffdc2982e99e7ff31740deae37c",
@@ -10974,7 +10937,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e677a70008bb164e9568dcbf06d0b3b0b155cd1b46fe4ba8cbd7f20eeff46645",
@@ -11004,7 +10967,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8d9ffc5cda5ec15160ea63e821507c85d33e90aadefd8fdd301efa40dd713cff",
@@ -11034,7 +10997,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "198001962a141b539af1ec8b405b7ac61a1e98463e57ef8566c142a0064a79bc",
@@ -11064,7 +11027,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e3d97ee432b7c2e6ad7d5b839f45dca1eefa75daa5823d2edd59ed89953e610d",
@@ -11094,7 +11057,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3c64dfc2027cc414a3cab0fe786ef858e78933e87e52ae4aae076ea9e8364724",
@@ -11124,7 +11087,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "a0052e63514f7265c3aafcb3544ddf3f65dbff2c400ae4dded48e4516b978106",
@@ -11154,7 +11117,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3dbb13c5e36e95da826518f4aed4db7ae677f765ac5563ee9ce2d3db9ed85d79",
@@ -11184,7 +11147,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "4e518f14232d1b28ca7b8078f38bc3e38efdef0bd39b0df399eb951bbf1c1461",
@@ -11214,7 +11177,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "5d8c71abc527284cd463aa58f3f48098af5ab2f4225a744aa930a4b0e27d7395",
@@ -11244,7 +11207,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "b165608dcbca957429446425aad7739aa86d453cf469a368ef76a0960bfa1199",
@@ -11274,7 +11237,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "c644730c28f24a946035631d9e50e13cba2a572b5dae84c5ab8e8c25278c9b4a",
@@ -11304,7 +11267,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "fc323057949664e3108834228a56f8e342a80c68b0ed5e48071610926ef8f868",
@@ -11334,7 +11297,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "0b509e6d4c97d169f054897e72a9d70905e12c89ef711215e5f1f66f529a719d",
@@ -11364,7 +11327,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1c035d156b131d5de3a84ee342e1fea8d5c72bf37420f8aa3c9b051721d3ea2c",
@@ -11394,7 +11357,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8be6871a215d214e7a30b2944cf4dcdd97f5a3bf4d72853f2029c51e48c4aac3",
@@ -11424,7 +11387,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "8252f838001b848ed712a4042eef2dc5911579f3da5f9fc76969ff19161a00eb",
@@ -11454,7 +11417,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "97bbf548e10d564d1170632a428c58157557ef07e1abb0d7d2827314d2805d30",
@@ -11484,7 +11447,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "7d9aa18cea42c603482d6c21fb6190f61958b232f9b709974fc3a79bb134ec56",
@@ -11514,7 +11477,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "ef480607b4909a7f61440080a35b4b541f7c410d37e50c123ecf736438f6f04f",
@@ -11544,7 +11507,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "e624d8b957c4701e6bb1a828bf1985444d7daeb0012e3955e17f5c5628377b56",
@@ -11574,7 +11537,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "95973844b10dd3f1c38ef5f83d53cf10838f9174f5455fb2787ccc4a4c3f92e5",
@@ -11604,7 +11567,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "58742c39318e2834a1cb530e07339874d14d82f57b0399ce770ec6ef7cb95bea",
@@ -11634,7 +11597,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bc5490f00268dd28257db283e5d13e0d87bd4e32bc18cdf95fba11d90c37a88f",
@@ -11664,7 +11627,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f2bb3dee07337dcff612448b036a437809757cb85e0f5f85cce083cec9229c2d",
@@ -11694,7 +11657,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9bfd13650697fb45b37c83c952d53e4304f55e1e2883b7ceec33ed8a77c98cad",
@@ -11724,7 +11687,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "3b50849854e09ac7318f8d912d14a41102e2a5c14aa8debcbe3e7df609268376",
@@ -11754,7 +11717,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "568e5bf6b874ec8a3dd9605c79522a9c148dc64b2cb93fe71b825549d4024be4",
@@ -11784,7 +11747,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "bf5eddc2626ca6b33e1f816b81c547f0d8c8ddb93a8006abfd19c67f502cfae0",
@@ -11814,7 +11777,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "00b4d855eb89359235f95b351079918b0e3d697a8fb99fa594046aba960bcb41",
@@ -11844,7 +11807,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "5783929e049ca66ca27501734ae6619c7b7ad135be8847e443150e23c0ed808e",
@@ -11874,7 +11837,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f2413ee79f72e5bfdd74801317958621a4f11f8b9588c5f17589a3c921954dde",
@@ -11904,7 +11867,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "f8c57444c81fd97de453e37d0745201c64b2d2b398e51f55d7844452ba0d069f",
@@ -11934,7 +11897,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "eca4c47570a1958b138158dbb3b8853e345fa99b37f5f1b0da896df6ae94ca7e",
@@ -11964,7 +11927,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "1398d90cc2d041c22708f2d87e762f7e8e1535ec38f45fb23f9a5c4ec82fe223",
@@ -11994,7 +11957,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "9032ce288b27671c7c82b2c19ae2025b254c9e1343e8c42466609d20c610c62f",
@@ -12024,13 +11987,103 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.016Z",
+      "generated_at": "2026-05-18T00:21:11.446Z",
       "updated_at": "2026-05-02T12:43:24.198Z",
       "cache_meta": {
         "source_hash": "331e3fb630ee5baa6351dc24c570ce4c6034024dd01307c8cc8ca06431a27a3e",
         "origin": "machine",
         "updated_at": "2026-05-02T12:43:24.198Z",
         "target_hash": "4ee106b7ec8f27a9b0847823826518b9d22054e3351ebaaa7bfa3b54e3139c5a",
+        "provider": null
+      }
+    },
+    {
+      "source_ref": "frontend:footer.whatsapp",
+      "key": "footer.whatsapp",
+      "domain": "frontend",
+      "section": "customers",
+      "subsection": "frontend-static",
+      "audience": "customer",
+      "required": false,
+      "source_lang": "en",
+      "target_lang": "it",
+      "source_text": "WhatsApp: +84 354999192",
+      "source_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
+      "target_text": "WhatsApp: +84 354999192",
+      "target_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
+      "machine_text": "WhatsApp: +84 354999192",
+      "origin": "machine",
+      "freshness_state": "current",
+      "job_state": "idle",
+      "publish_state": "published",
+      "review_state": "reviewed",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-02T12:43:24.198Z",
+      "cache_meta": {
+        "source_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
+        "origin": "machine",
+        "updated_at": "2026-05-02T12:43:24.198Z",
+        "target_hash": "22c52a991bc44aa91cbfa63457f4d7abe26f8971458c9f08021a283850730a67",
+        "provider": null
+      }
+    },
+    {
+      "source_ref": "frontend:traveler_details.consent_marketing_whatsapp",
+      "key": "traveler_details.consent_marketing_whatsapp",
+      "domain": "frontend",
+      "section": "customers",
+      "subsection": "frontend-static",
+      "audience": "customer",
+      "required": false,
+      "source_lang": "en",
+      "target_lang": "it",
+      "source_text": "Marketing WhatsApp",
+      "source_hash": "2d2aa1917b2b5d9adfe7926909d7bf03fecbad2cb01162c8126ef9a8aa239e5c",
+      "target_text": "Commercializzare WhatsApp",
+      "target_hash": "9739ad4634016af135fe8a463519ef2ac43f6768d56232db3b721fb4bcc25077",
+      "machine_text": "Commercializzare WhatsApp",
+      "origin": "machine",
+      "freshness_state": "current",
+      "job_state": "idle",
+      "publish_state": "published",
+      "review_state": "reviewed",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-02T12:43:24.198Z",
+      "cache_meta": {
+        "source_hash": "2d2aa1917b2b5d9adfe7926909d7bf03fecbad2cb01162c8126ef9a8aa239e5c",
+        "origin": "machine",
+        "updated_at": "2026-05-02T12:43:24.198Z",
+        "target_hash": "9739ad4634016af135fe8a463519ef2ac43f6768d56232db3b721fb4bcc25077",
+        "provider": null
+      }
+    },
+    {
+      "source_ref": "frontend:traveler_details.consent_marketing_whatsapp_hint",
+      "key": "traveler_details.consent_marketing_whatsapp_hint",
+      "domain": "frontend",
+      "section": "customers",
+      "subsection": "frontend-static",
+      "audience": "customer",
+      "required": false,
+      "source_lang": "en",
+      "target_lang": "it",
+      "source_text": "Permission to send future offers and updates via WhatsApp.",
+      "source_hash": "64fd779c5a9643d6a04009134392f23922e17a43cdbb9179adac3609eea33667",
+      "target_text": "Autorizzazione a inviare offerte e aggiornamenti futuri tramite WhatsApp.",
+      "target_hash": "8a614ec8a2f4a7a50eda13ff8436eeae9cc8ec2e49630c67dfb5860445a41899",
+      "machine_text": "Autorizzazione a inviare offerte e aggiornamenti futuri tramite WhatsApp.",
+      "origin": "machine",
+      "freshness_state": "current",
+      "job_state": "idle",
+      "publish_state": "published",
+      "review_state": "reviewed",
+      "generated_at": "2026-05-18T00:21:11.446Z",
+      "updated_at": "2026-05-02T12:43:24.198Z",
+      "cache_meta": {
+        "source_hash": "64fd779c5a9643d6a04009134392f23922e17a43cdbb9179adac3609eea33667",
+        "origin": "machine",
+        "updated_at": "2026-05-02T12:43:24.198Z",
+        "target_hash": "8a614ec8a2f4a7a50eda13ff8436eeae9cc8ec2e49630c67dfb5860445a41899",
         "provider": null
       }
     }

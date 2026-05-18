@@ -1,8 +1,8 @@
 {
   "schema": "translation-snapshot/v1",
   "schema_version": 1,
-  "generated_at": "2026-05-17T13:52:43.528Z",
-  "source_set_hash": "f3eef4fc39925240bdea3f3a9f7ea7570ab0c023031a5754e77360166ce8260b",
+  "generated_at": "2026-05-18T00:21:56.945Z",
+  "source_set_hash": "0ecc490fc97ddbb9e0527c5e5e215f403bcd832afe3813c7393d532f5903d79c",
   "domain": "destination-scope-catalog",
   "label": "Tour destinations",
   "section": "customers",
@@ -10,8 +10,44 @@
   "audience": "customer",
   "source_lang": "en",
   "target_lang": "de",
-  "item_count": 29,
+  "item_count": 30,
   "items": [
+    {
+      "source_ref": "destination-scope-catalog:place.place_b04aa655-f838-47cc-8929-0ef1a508407e.name",
+      "key": "place.place_b04aa655-f838-47cc-8929-0ef1a508407e.name",
+      "domain": "destination-scope-catalog",
+      "section": "customers",
+      "subsection": "tour-destinations",
+      "audience": "customer",
+      "required": true,
+      "source_lang": "en",
+      "target_lang": "de",
+      "source_text": "Ba Be",
+      "source_hash": "683acfe28ebf634c4e9ca4bc4251e4e51ba783d62ac6a044fe60aadefc4a15b5",
+      "target_text": "Ba Be",
+      "target_hash": "683acfe28ebf634c4e9ca4bc4251e4e51ba783d62ac6a044fe60aadefc4a15b5",
+      "machine_text": "Ba Be",
+      "origin": "machine",
+      "freshness_state": "current",
+      "job_state": "idle",
+      "publish_state": "published",
+      "review_state": "reviewed",
+      "generated_at": "2026-05-18T00:21:56.945Z",
+      "updated_at": "2026-05-18T00:21:56.945Z",
+      "cache_meta": {
+        "source_hash": "683acfe28ebf634c4e9ca4bc4251e4e51ba783d62ac6a044fe60aadefc4a15b5",
+        "catalog_kind": "place",
+        "legacy_map_field": "name_i18n",
+        "direct_target": null,
+        "legacy_inline_target": false,
+        "provider": {
+          "kind": "google",
+          "label": "Google Translate",
+          "model": "",
+          "display": "google"
+        }
+      }
+    },
     {
       "source_ref": "destination-scope-catalog:place.place_0612b13f-6f41-4bbc-9bf7-5e361bf9a4aa.name",
       "key": "place.place_0612b13f-6f41-4bbc-9bf7-5e361bf9a4aa.name",
@@ -32,7 +68,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "89c36ea519c1d3c73b97a47e70cdd01dfd79ab08eef8feb856cac719f0d0eac4",
@@ -69,7 +105,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-07T07:10:35.432Z",
       "cache_meta": {
         "source_hash": "8ed31de3c30fa734b7b669c1af874c7491d7f5ac859b1beff20068d60a2b8aec",
@@ -106,7 +142,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "f0208e97fa9cfe90cc938c6040a4e0ec1bd5fe603b88eb75f3967befd09df70d",
@@ -143,7 +179,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "d9f95caadd01f3dedc8e5a13fda78c69a0db3a715d8e4c41627bee87ebf99f37",
@@ -180,7 +216,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "0200f0d078fcfa701ae188a25bfb1809c9488d72ad1bfdeba59b85c6935690fa",
@@ -217,7 +253,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "b549302b61e000e32e95cda638a08faa741f0ae531012edb2dfd58d3e9064885",
@@ -254,7 +290,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "f54024ced1a1ca9f96213a018b17456a5d5a7e12dad2efba6057847da134727a",
@@ -291,7 +327,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "f9a1f9ec8ed3ce3b8d5dca153124cab40f59b6a817395ceaced8c99938f10cd4",
@@ -328,7 +364,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-13T01:12:27.089Z",
       "cache_meta": {
         "source_hash": "aa59ea31131ab8e4651a316281ccb25b7d993a698b98f9ac5abe17e29a955fe6",
@@ -365,7 +401,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-17T05:21:00.706Z",
       "cache_meta": {
         "source_hash": "bfd1c69ba48859045bc10c036f6c93a3c48758c5cabf59ae4aca28db37a3b71a",
@@ -402,7 +438,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-07T07:10:35.432Z",
       "cache_meta": {
         "source_hash": "d732827998e0bc43e1c304ffb21c10cebfb4cba1833a6c1c9a75521a303f842d",
@@ -439,7 +475,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-07T07:10:35.432Z",
       "cache_meta": {
         "source_hash": "381ec4b8406e52032d92d707416ca98eb6812916bd580f1040670f0749685361",
@@ -476,7 +512,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "ca0623f59e01d6d09b50f10fb5c66105196fa4ad365119687134cbab08b86498",
@@ -513,7 +549,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "21105aa384581072b9965129b4b3714b85d82ea2aed7cc0ababd5bf69a5c8e44",
@@ -550,7 +586,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "4d7056f0e9bef4870b289d7b77634cead0e646a63708a1eb500c6eab11c1328e",
@@ -587,7 +623,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "58e5a0aba9d47498d70a9e95b3fc124e825728015eef2b8bc831ffe0d5fc9299",
@@ -624,7 +660,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "e76c02f17ef2443bc1aa2f29e8123d87db7ff7405cb8802b05037b0e4de12346",
@@ -661,7 +697,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "d650065b53c2284b98e575d37e1be820599bf33baff5e147770547a984975d2f",
@@ -698,7 +734,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "43f853bbb592860098a76140c1770ee2add66f4720453d64dcf225178e238e57",
@@ -735,7 +771,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-07T07:10:35.432Z",
       "cache_meta": {
         "source_hash": "862ebbd880830f4267f3a4bed7e6f72e6fb63c71ae959fa9f1be72a3cf214b84",
@@ -772,7 +808,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-13T01:12:27.089Z",
       "cache_meta": {
         "source_hash": "3aefc56a863f84c9b308eccd347ffeabcb6ec0d485eb25dc40a2ee7b4d10cf57",
@@ -809,7 +845,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-01T17:53:46.854Z",
       "cache_meta": {
         "source_hash": "9756a29332de1774aa0f2ab9cd6afafc1b88d101a233d2059a2eece65452e4c0",
@@ -841,7 +877,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "e8efd43b2d131217dd0aaa7a45208130834983d3ecd3295fab69623f8e07a89e",
@@ -878,7 +914,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "0dd2dae4dd83ae3085cd80ac1bfc28e8d76ba51ddfd972c269fe9f98a85c099a",
@@ -915,7 +951,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "3a767fe59ea67ea4c468605a984a9fb2e675aa29e7cdaedc209ea8ba90449e1e",
@@ -952,7 +988,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-10T05:19:48.978Z",
       "cache_meta": {
         "source_hash": "cbd105e175843b071c0dbd7f8e39d2ded465ebb3ee312e72562a7c40d0105c62",
@@ -989,7 +1025,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-01T17:53:46.854Z",
       "cache_meta": {
         "source_hash": "2e5e81066a29cd66b1d941286656b7b28db1b542ec3de23eabde2c45f38a1248",
@@ -1021,7 +1057,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-13T01:12:27.089Z",
       "cache_meta": {
         "source_hash": "ceaa415e653c8a63ac8c177d919c728621d4023c457633f88a1d4c17f8636b6b",
@@ -1058,7 +1094,7 @@
       "job_state": "idle",
       "publish_state": "published",
       "review_state": "reviewed",
-      "generated_at": "2026-05-17T13:52:43.528Z",
+      "generated_at": "2026-05-18T00:21:56.945Z",
       "updated_at": "2026-05-17T05:21:00.707Z",
       "cache_meta": {
         "source_hash": "1cc153aa5c338b05e6a85dbd91d7fd4615596868d2aafbf485b92ab494583262",
