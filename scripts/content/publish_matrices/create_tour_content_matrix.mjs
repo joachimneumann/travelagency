@@ -325,15 +325,21 @@ function serviceTiming(service, translations, language) {
 
 function collectServices(day, tourId, toursDir, translations, language) {
   return (Array.isArray(day?.services) ? day.services : [])
-    .map((service, index) => ({
-      id: normalizeText(service?.id),
-      order: index + 1,
-      title: localizedText(service, "title", translations, language) || `Service ${index + 1}`,
-      details: localizedText(service, "details", translations, language),
-      timing: serviceTiming(service, translations, language),
-      imageSubtitle: localizedText(service, "image_subtitle", translations, language),
-      images: collectServiceImages(service, tourId, toursDir, translations, language)
-    }));
+    .map((service, index) => {
+      const title = localizedText(service, "title", translations, language);
+      const details = localizedText(service, "details", translations, language);
+      return {
+        id: normalizeText(service?.id),
+        order: index + 1,
+        title: title || `Service ${index + 1}`,
+        details,
+        missingTitle: !title,
+        missingDetails: !details,
+        timing: serviceTiming(service, translations, language),
+        imageSubtitle: localizedText(service, "image_subtitle", translations, language),
+        images: collectServiceImages(service, tourId, toursDir, translations, language)
+      };
+    });
 }
 
 function normalizeDayNumber(day, index) {
@@ -344,11 +350,17 @@ function normalizeDayNumber(day, index) {
 
 function collectDay(day, tourId, toursDir, translations, language, index) {
   const dayNumber = normalizeDayNumber(day, index);
+  const title = localizedText(day, "title", translations, language);
+  const details = localizedText(day, "notes", translations, language)
+    || localizedText(day, "details", translations, language)
+    || localizedText(day, "description", translations, language);
   return {
     id: normalizeText(day?.id),
     dayNumber,
-    title: localizedText(day, "title", translations, language) || `Day ${dayNumber}`,
-    details: localizedText(day, "notes", translations, language) || localizedText(day, "details", translations, language) || localizedText(day, "description", translations, language),
+    title: title || `Day ${dayNumber}`,
+    details,
+    missingTitle: !title,
+    missingDetails: !details,
     services: collectServices(day, tourId, toursDir, translations, language)
   };
 }
@@ -527,9 +539,16 @@ function renderEmptyImage(marketingTourHref) {
   return matrixMarketingTourAnchor(marketingTourHref, "<span>No picture</span>", "service-image is-empty matrix-marketing-tour-click");
 }
 
+function renderContentWarning(marketingTourHref, message) {
+  return `<div class="content-warning">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(message))}</div>`;
+}
+
 function renderService(service, marketingTourHref) {
-  const details = service.details
+  const details = !service.missingDetails
     ? `<div class="service-details">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(service.details))}</div>`
+    : renderContentWarning(marketingTourHref, "Missing service detail");
+  const titleWarning = service.missingTitle
+    ? renderContentWarning(marketingTourHref, "Missing service title")
     : "";
   const meta = [service.timing, service.imageSubtitle].filter(Boolean);
   const metaHtml = meta.length
@@ -543,6 +562,7 @@ function renderService(service, marketingTourHref) {
             <span class="service-number">${service.order}</span>
             <span class="service-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(service.title))}</span>
           </div>
+          ${titleWarning}
           ${metaHtml}
           ${details}
           ${imageHtml}`;
@@ -553,13 +573,19 @@ function renderDayCell(days, marketingTourHref) {
 
   return `<td class="day-cell">
         ${days.map((day) => {
-          const details = day.details ? `<div class="day-details">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.details))}</div>` : "";
+          const titleWarning = day.missingTitle
+            ? renderContentWarning(marketingTourHref, "Missing day title")
+            : "";
+          const details = !day.missingDetails
+            ? `<div class="day-details">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.details))}</div>`
+            : renderContentWarning(marketingTourHref, "Missing day detail");
           const services = day.services.length
             ? day.services.map((service) => renderService(service, marketingTourHref)).join("")
             : `<div class="no-services">${matrixMarketingTourAnchor(marketingTourHref, "No services")}</div>`;
 
           return `<section class="day-section">
             <div class="day-title">${matrixMarketingTourAnchor(marketingTourHref, escapeHtml(day.title))}</div>
+            ${titleWarning}
             ${details}
             <div class="services">${services}</div>
           </section>`;
@@ -740,6 +766,13 @@ ${matrixPageControlStyles}
     .day-title,
     .service-title {
       font-weight: 700;
+    }
+
+    .content-warning {
+      color: #991b1b;
+      font-weight: 700;
+      margin-top: 6px;
+      overflow-wrap: anywhere;
     }
 
     .tour-title {
