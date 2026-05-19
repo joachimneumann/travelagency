@@ -3462,6 +3462,11 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
     /\.travel-plan-route-list__item--day \{[\s\S]*grid-template-columns: 14px 34px minmax\(0, 1fr\);[\s\S]*\.travel-plan-route-list__drag-handle span \{[\s\S]*background: #000;/,
     "route-list day rows should place the black drag handle to the left of the day badge"
   );
+  assert.doesNotMatch(
+    source,
+    /travel-plan-route-list__drop-placeholder[\s\S]*<span>\+<\/span>/,
+    "route-list drop placeholder should not render a plus icon"
+  );
   assert.match(
     source,
     /function renderTravelPlanMapPanel\(\) \{[\s\S]*<aside class="travel-plan-booking-map"[\s\S]*renderTravelPlanCustomizerLauncher\(\)[\s\S]*<div class="travel-plan-booking-workspace">[\s\S]*\$\{renderTravelPlanMapPanel\(\)\}[\s\S]*\$\{renderTravelPlanSidebar\(selection\)\}[\s\S]*\$\{renderTravelPlanFocusedEditor\(selection\)\}/,

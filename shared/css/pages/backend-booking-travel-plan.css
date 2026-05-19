@@ -134,6 +134,10 @@
   font-weight: inherit;
 }
 
+#travel_plan_editor :is(.field label, .field .field-label, .localized-pair__label, .travel-plan-boundary__placement-label) {
+  font-weight: var(--font-weight-regular);
+}
+
 .booking-detail-page #travel_plan_panel .btn {
   font-weight: var(--font-weight-regular);
 }
@@ -404,6 +408,8 @@
 .travel-plan-boundary {
   --travel-plan-boundary-label-width: 4.25rem;
   --travel-plan-boundary-label-gap: 0.2rem;
+  --travel-plan-boundary-field-column-gap: 1.25rem;
+  --travel-plan-boundary-secondary-label-width: 3.5rem;
   display: grid;
   gap: 0.55rem;
   min-width: min(100%, 500px);
@@ -430,6 +436,7 @@
 
 .travel-plan-boundary__head--with-time {
   grid-template-columns: minmax(180px, 0.85fr) minmax(240px, 1.15fr);
+  column-gap: var(--travel-plan-boundary-field-column-gap);
   align-items: center;
 }
 
@@ -501,11 +508,15 @@
 
 .travel-plan-boundary__first-row {
   grid-template-columns: minmax(180px, 0.85fr) minmax(240px, 1.15fr);
+  column-gap: var(--travel-plan-boundary-field-column-gap);
+  align-items: center;
 }
 
 #travel_plan_editor .travel-plan-boundary .travel-plan-boundary__first-row > .field,
 #travel_plan_editor .travel-plan-boundary__details-field .localized-pair,
 #travel_plan_editor .travel-plan-boundary__details-field .localized-pair.localized-pair--single-language,
+#travel_plan_editor .travel-plan-boundary__head--compact .travel-plan-timing-field .localized-pair,
+#travel_plan_editor .travel-plan-boundary__head--compact .travel-plan-timing-field .localized-pair.localized-pair--single-language,
 #travel_plan_editor .travel-plan-boundary__title-field .localized-pair,
 #travel_plan_editor .travel-plan-boundary__title-field .localized-pair.localized-pair--single-language {
   grid-template-columns: var(--travel-plan-boundary-label-width) minmax(0, 1fr);
@@ -516,7 +527,7 @@
 #travel_plan_editor .travel-plan-boundary__title-field .localized-pair.localized-pair--single-language,
 #travel_plan_editor .travel-plan-boundary__head--compact .travel-plan-timing-field .localized-pair,
 #travel_plan_editor .travel-plan-boundary__head--compact .travel-plan-timing-field .localized-pair.localized-pair--single-language {
-  grid-template-columns: max-content minmax(0, 1fr);
+  grid-template-columns: var(--travel-plan-boundary-secondary-label-width) minmax(0, 1fr);
 }
 
 #travel_plan_editor .travel-plan-boundary__first-row > .field > label,
@@ -786,8 +797,10 @@
 }
 
 .travel-plan-location-label--icon {
+  display: inline-flex;
   align-self: center;
-  justify-self: start;
+  justify-content: center;
+  justify-self: stretch;
   line-height: 1;
 }
 
@@ -2499,7 +2512,7 @@
   z-index: 1;
   min-height: 58px;
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.65rem;
   align-items: center;
   padding: 0.55rem 0.65rem;
@@ -2568,6 +2581,7 @@
   box-shadow: inset 0 0 0 1px rgba(10, 143, 85, 0.22);
 }
 
+.travel-plan-route-list__item--boundary.is-inactive .travel-plan-route-list__badge--image img,
 .travel-plan-route-list__item--arrival.is-inactive .travel-plan-route-list__badge--image img {
   opacity: 0.38;
   filter: grayscale(1);
@@ -2604,6 +2618,18 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.travel-plan-booking-editor__badge:not(.travel-plan-booking-editor__badge--image) {
+  justify-content: flex-start;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-ink);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.25;
 }
 
 .travel-plan-route-list__copy {
@@ -2779,6 +2805,8 @@
 
 .travel-plan-booking-editor--boundary-card .travel-plan-boundary__first-row {
   grid-template-columns: minmax(180px, 0.85fr) minmax(240px, 1.15fr);
+  column-gap: var(--travel-plan-boundary-field-column-gap);
+  align-items: center;
 }
 
 .travel-plan-booking-editor .travel-plan-day__date-field,

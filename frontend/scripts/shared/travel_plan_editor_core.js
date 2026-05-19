@@ -1608,7 +1608,7 @@ export function createBookingTravelPlanModule(ctx) {
             <div class="travel-plan-service__overview-main">
               <div class="field">
                 ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.item_numbered_title", "Service {item} Title", { item: serviceNumber }),
+                  label: bookingT("booking.travel_plan.item_numbered_title", "Service {item}", { item: serviceNumber }),
                   idBase: `travel_plan_title_${item.id}`,
                   dataScope: "travel-plan-service-field",
                   dayId: day.id,
@@ -1622,7 +1622,7 @@ export function createBookingTravelPlanModule(ctx) {
               ${allowServiceDetails
                 ? `<div class="field">
                     ${renderTravelPlanLocalizedField({
-                      label: bookingT("booking.travel_plan.item_notes", "Service Details"),
+                      label: bookingT("booking.travel_plan.item_notes", "Detail"),
                       idBase: `travel_plan_details_${item.id}`,
                       dataScope: "travel-plan-service-field",
                       dayId: day.id,
@@ -1964,7 +1964,7 @@ export function createBookingTravelPlanModule(ctx) {
     return `
       <div class="travel-plan-booking-editor__toolbar">
         <div class="travel-plan-booking-editor__title">
-          <span class="travel-plan-booking-editor__badge">${escapeHtml(String(dayIndex + 1))}</span>
+          <span class="travel-plan-booking-editor__badge">${escapeHtml(formatTravelPlanDayHeading(dayIndex))}</span>
           <div class="travel-plan-booking-editor__title-copy">
             ${renderTravelPlanDayInlineTitleField(day, dayIndex)}
           </div>
@@ -2225,20 +2225,25 @@ export function createBookingTravelPlanModule(ctx) {
 
   function refreshTravelPlanRouteBoundaryRow(boundaryKind) {
     const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
-    if (normalizedBoundaryKind !== "arrival" || !(els.travel_plan_editor instanceof HTMLElement)) return;
-    const row = els.travel_plan_editor.querySelector('[data-travel-plan-select-boundary="arrival"]');
+    if (!(els.travel_plan_editor instanceof HTMLElement)) return;
+    const row = els.travel_plan_editor.querySelector(`[data-travel-plan-select-boundary="${escapeSelectorValue(normalizedBoundaryKind)}"]`);
     if (!(row instanceof HTMLElement)) return;
-    const display = travelPlanArrivalRouteCardDisplay();
+    const display = travelPlanBoundaryRouteCardDisplay(normalizedBoundaryKind);
     row.classList.toggle("is-inactive", !display.enabled);
-    const titleNode = row.querySelector('[data-travel-plan-route-boundary-title="arrival"]');
+    const titleNode = row.querySelector(`[data-travel-plan-route-boundary-title="${escapeSelectorValue(normalizedBoundaryKind)}"]`);
     if (titleNode instanceof HTMLElement) {
       titleNode.textContent = display.title;
     }
-    const subtitleNode = row.querySelector('[data-travel-plan-route-boundary-subtitle="arrival"]');
+    const subtitleNode = row.querySelector(`[data-travel-plan-route-boundary-subtitle="${escapeSelectorValue(normalizedBoundaryKind)}"]`);
     if (subtitleNode instanceof HTMLElement) {
       subtitleNode.textContent = display.subtitle;
       subtitleNode.hidden = !display.subtitle;
     }
+  }
+
+  function refreshTravelPlanRouteBoundaryRows() {
+    refreshTravelPlanRouteBoundaryRow("arrival");
+    refreshTravelPlanRouteBoundaryRow("departure");
   }
 
   function travelPlanBoundaryDisplay(boundaryKind, { titleOnly = false } = {}) {
@@ -2251,22 +2256,47 @@ export function createBookingTravelPlanModule(ctx) {
     return [title || fallback, airport].filter(Boolean).join(" · ") || "None";
   }
 
-  function travelPlanArrivalRouteCardDisplay() {
-    const source = state.travelPlanDraft?.boundary_logistics?.arrival || createEmptyTravelPlanBoundaryService("arrival");
-    const item = normalizeTravelPlanBoundaryDraft(source, "arrival");
+  function travelPlanBoundaryDateLabel(boundaryKind, item) {
+    const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    const days = travelPlanDays();
+    if (!days.length || !item?.enabled) return "";
+    const placement = travelPlanBoundarySelectionValue(item, normalizedBoundaryKind);
+    if (normalizedBoundaryKind === "departure") {
+      const date = String(days[days.length - 1]?.date || "").trim();
+      if (!isValidIsoCalendarDate(date)) return "";
+      return placement === "after_last_day" ? shiftIsoDate(date, 1) : date;
+    }
+    const date = String(days[0]?.date || "").trim();
+    if (!isValidIsoCalendarDate(date)) return "";
+    return placement === "before_first_day" ? shiftIsoDate(date, -1) : date;
+  }
+
+  function travelPlanBoundaryRouteCardDisplay(boundaryKind) {
+    const normalizedBoundaryKind = normalizeTravelPlanBoundaryKind(boundaryKind);
+    const source = state.travelPlanDraft?.boundary_logistics?.[normalizedBoundaryKind] || createEmptyTravelPlanBoundaryService(normalizedBoundaryKind);
+    const item = normalizeTravelPlanBoundaryDraft(source, normalizedBoundaryKind);
     if (!item.enabled) {
       return {
         enabled: false,
-        title: bookingT("booking.travel_plan.arrival_none", "No arrival"),
+        title: normalizedBoundaryKind === "departure"
+          ? bookingT("booking.travel_plan.departure_none", "No departure")
+          : bookingT("booking.travel_plan.arrival_none", "No arrival"),
         subtitle: ""
       };
     }
     const title = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), "").trim();
     const time = resolveLocalizedDraftBranchText(item.time_i18n ?? item.time, bookingSourceLang(), "").trim();
+    const dateLabel = travelPlanBoundaryDateLabel(normalizedBoundaryKind, item);
+    const placement = travelPlanBoundarySelectionValue(item, normalizedBoundaryKind);
+    const fallbackTitle = normalizedBoundaryKind === "departure"
+      ? boundaryLabel("departure")
+      : normalizedBoundaryKind === "arrival" && placement === "first_day"
+        ? boundaryLabel("arrival")
+        : "None";
     return {
       enabled: true,
-      title: title || "None",
-      subtitle: time
+      title: title || fallbackTitle,
+      subtitle: [dateLabel, time].filter(Boolean).join(" · ")
     };
   }
 
@@ -2730,12 +2760,13 @@ export function createBookingTravelPlanModule(ctx) {
     const optionMap = travelPlanLocationOptionMap();
     const arrivalSelected = selection.type === "boundary" && selection.boundaryKind === "arrival";
     const departureSelected = selection.type === "boundary" && selection.boundaryKind === "departure";
-    const arrivalDisplay = travelPlanArrivalRouteCardDisplay();
+    const arrivalDisplay = travelPlanBoundaryRouteCardDisplay("arrival");
+    const departureDisplay = travelPlanBoundaryRouteCardDisplay("departure");
     return `
       <aside class="travel-plan-booking-sidebar" aria-label="Travel plan navigation">
         ${renderTravelPlanSidebarDateActions()}
         <div class="travel-plan-route-list">
-          <button class="travel-plan-route-list__item travel-plan-route-list__item--arrival${arrivalSelected ? " is-selected" : ""}${arrivalDisplay.enabled ? "" : " is-inactive"}" data-travel-plan-select-boundary="arrival" type="button">
+          <button class="travel-plan-route-list__item travel-plan-route-list__item--boundary travel-plan-route-list__item--arrival${arrivalSelected ? " is-selected" : ""}${arrivalDisplay.enabled ? "" : " is-inactive"}" data-travel-plan-select-boundary="arrival" type="button">
             <span class="travel-plan-route-list__badge travel-plan-route-list__badge--image" aria-hidden="true">
               <img src="/assets/img/arrival.png" alt="" loading="lazy" decoding="async" />
             </span>
@@ -2770,13 +2801,13 @@ export function createBookingTravelPlanModule(ctx) {
               </button>
             `;
           }).join("")}
-          <button class="travel-plan-route-list__item${departureSelected ? " is-selected" : ""}" data-travel-plan-select-boundary="departure" type="button">
+          <button class="travel-plan-route-list__item travel-plan-route-list__item--boundary travel-plan-route-list__item--departure${departureSelected ? " is-selected" : ""}${departureDisplay.enabled ? "" : " is-inactive"}" data-travel-plan-select-boundary="departure" type="button">
             <span class="travel-plan-route-list__badge travel-plan-route-list__badge--image" aria-hidden="true">
               <img src="/assets/img/departure.png" alt="" loading="lazy" decoding="async" />
             </span>
             <span class="travel-plan-route-list__copy">
-              <strong>${escapeHtml(boundaryLabel("departure"))}</strong>
-              <small>${escapeHtml(travelPlanBoundaryDisplay("departure"))}</small>
+              <strong data-travel-plan-route-boundary-title="departure">${escapeHtml(departureDisplay.title)}</strong>
+              <small data-travel-plan-route-boundary-subtitle="departure" ${departureDisplay.subtitle ? "" : "hidden"}>${escapeHtml(departureDisplay.subtitle)}</small>
             </span>
           </button>
         </div>
@@ -2968,7 +2999,10 @@ export function createBookingTravelPlanModule(ctx) {
       day.title = dayTitle.text;
       day.title_i18n = dayTitle.map;
       if (allowDates) {
-        day.date = String(dayNode.querySelector('[data-travel-plan-day-field="date"]')?.value || "").trim();
+        const dateInput = dayNode.querySelector('[data-travel-plan-day-field="date"]');
+        day.date = dateInput
+          ? String(dateInput.value || "").trim()
+          : String(previousDay?.date || "").trim();
       } else {
         delete day.date;
       }
@@ -3284,7 +3318,6 @@ export function createBookingTravelPlanModule(ctx) {
       placeholder.setAttribute("data-travel-plan-route-placeholder", "");
       placeholder.setAttribute("aria-hidden", "true");
       placeholder.innerHTML = `
-        <span>+</span>
         <strong>${escapeHtml(travelPlanCustomizerLabels.moveHere)}</strong>
       `;
     }
@@ -4164,7 +4197,7 @@ export function createBookingTravelPlanModule(ctx) {
             mapField: "details_i18n",
             plainField: "details",
             key: `travel_plan.${dayId}.${serviceId}.details`,
-            label: `${serviceLabel} · ${bookingT("booking.travel_plan.item_notes", "Service Details")}`
+            label: `${serviceLabel} · ${bookingT("booking.travel_plan.item_notes", "Detail")}`
           });
         }
         addField({
@@ -4701,9 +4734,12 @@ export function createBookingTravelPlanModule(ctx) {
         } else if (isTravelPlanDayDateInput && !hasValidFirstDayDate && clearTravelPlanDerivedDayDates()) {
           refreshTravelPlanRouteDayRows();
         }
+        if (isTravelPlanDayDateInput) {
+          refreshTravelPlanRouteBoundaryRows();
+        }
         refreshTravelPlanRouteDayRowForTarget(target);
         if (target?.matches?.('[data-travel-plan-boundary-field="title"], [data-travel-plan-boundary-field="time"]')) {
-          refreshTravelPlanRouteBoundaryRow("arrival");
+          refreshTravelPlanRouteBoundaryRow(target.closest("[data-travel-plan-boundary]")?.getAttribute("data-travel-plan-boundary"));
         }
         refreshTravelPlanVisibleHeadCopy(target);
         updateTravelPlanDirtyState();
@@ -5067,6 +5103,7 @@ export function createBookingTravelPlanModule(ctx) {
   function renderTravelPlanPanel() {
     if (!els.travel_plan_panel || !els.travel_plan_editor || !state.booking) return;
     state.travelPlanDraft = normalizeTravelPlanState(state.travelPlanDraft || state.booking.travel_plan);
+    if (!recalculateTravelPlanDayDates()) clearTravelPlanDerivedDayDates();
     if ((allowDestinationScope || allowAllPrimaryMapPointOptions) && !state.destinationScopeCatalog) {
       void loadDestinationScopeCatalog().then(() => renderTravelPlanPanel());
     }
