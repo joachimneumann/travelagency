@@ -1690,6 +1690,7 @@ travelPlanModule = createBookingTravelPlanModule({
     destinationScope: false,
     destinationScopeCreate: false,
     allPrimaryMapPointOptions: true,
+    airportSelect: true,
     focusedBookingWorkspace: true,
     serviceCollapse: false
   }

@@ -401,6 +401,8 @@ export function createTourTravelPlanAdapter({
         destinationScope: false,
         destinationScopeCreate: false,
         allPrimaryMapPointOptions: true,
+        airportSelect: true,
+        departureBoundaryAfterDays: true,
         dayDetailsAfterTitle: true,
         pruneEmptyTravelPlanContentOnCollect: true
       }

@@ -632,6 +632,7 @@ export function createStaticTranslationService({
   }
 
   function applyPhraseOverridePolicy(config, language, row, phraseOverrideIndex) {
+    if (row?.status === "extra") return row;
     if (!row?.source) return row;
     const item = resolveTranslationPhraseOverride(phraseOverrideIndex, {
       target_lang: language.code,

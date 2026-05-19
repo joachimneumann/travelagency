@@ -1,0 +1,90 @@
+[
+  {
+    "name": "Tan Son Nhat International Airport",
+    "code": "SGN"
+  },
+  {
+    "name": "Noi Bai International Airport",
+    "code": "HAN"
+  },
+  {
+    "name": "Da Nang International Airport",
+    "code": "DAD"
+  },
+  {
+    "name": "Cam Ranh International Airport",
+    "code": "CXR"
+  },
+  {
+    "name": "Phu Quoc International Airport",
+    "code": "PQC"
+  },
+  {
+    "name": "Cat Bi International Airport",
+    "code": "HPH"
+  },
+  {
+    "name": "Vinh International Airport",
+    "code": "VII"
+  },
+  {
+    "name": "Phu Bai International Airport",
+    "code": "HUI"
+  },
+  {
+    "name": "Lien Khuong International Airport",
+    "code": "DLI"
+  },
+  {
+    "name": "Buon Ma Thuot Airport",
+    "code": "BMV"
+  },
+  {
+    "name": "Phu Cat Airport",
+    "code": "UIH"
+  },
+  {
+    "name": "Can Tho International Airport",
+    "code": "VCA"
+  },
+  {
+    "name": "Pleiku Airport",
+    "code": "PXU"
+  },
+  {
+    "name": "Con Dao Airport",
+    "code": "VCS"
+  },
+  {
+    "name": "Tho Xuan Airport",
+    "code": "THD"
+  },
+  {
+    "name": "Dong Hoi Airport",
+    "code": "VDH"
+  },
+  {
+    "name": "Dien Bien Airport",
+    "code": "DIN"
+  },
+  {
+    "name": "Tuy Hoa Airport",
+    "code": "TBB"
+  },
+  {
+    "name": "Chu Lai Airport",
+    "code": "VCL"
+  },
+  {
+    "name": "Rach Gia Airport",
+    "code": "VKG"
+  },
+  {
+    "name": "Van Don International Airport",
+    "code": "VDO"
+  },
+  {
+    "name": "Ca Mau Airport",
+    "code": "CAH"
+  }
+]

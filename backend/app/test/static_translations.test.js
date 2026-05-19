@@ -200,6 +200,16 @@ test("static translation service prunes extra published snapshot keys without tr
     });
     snapshot.item_count = snapshot.items.length;
     await writeJson(snapshotPath, snapshot);
+    await writePhraseOverrides(repoRoot, [
+      phraseOverrideItem({
+        sourcePhrase: "Plan my trip",
+        targetPhrase: "Tạo chuyến đi riêng"
+      }),
+      phraseOverrideItem({
+        sourcePhrase: "Removed source",
+        targetPhrase: "Không được giữ lại"
+      })
+    ]);
 
     const staleState = await service.getLanguageState("frontend", "vi");
     assert.equal(staleState.rows.find((row) => row.key === "obsolete.key").status, "extra");

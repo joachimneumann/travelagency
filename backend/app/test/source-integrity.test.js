@@ -5707,7 +5707,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@staging_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/generated\/\* \/shared\/js\/\*[\s\S]*header @staging_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@staging_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/shared\/css\/\* \/site\.webmanifest[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
+    /@staging_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/generated\/\* \/shared\/js\/\*[\s\S]*header @staging_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@staging_static \{[\s\S]*path \/assets\/\* \/config\/airports\.json \/frontend\/data\/\* \/shared\/css\/\* \/site\.webmanifest[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*/,
     "Staging should revalidate app modules while caching shared CSS, static frontend data, and assets"
   );
   assert.match(
@@ -5717,7 +5717,7 @@ test("backend list pages have dedicated entrypoints and are served by caddy", as
   );
   assert.match(
     stagingCaddy,
-    /@production_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/generated\/\* \/shared\/js\/\*[\s\S]*header @production_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@production_static \{[\s\S]*path \/assets\/\* \/frontend\/data\/\* \/shared\/css\/\* \/content\/one-pagers\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
+    /@production_app_modules path \/frontend\/scripts\/\* \/frontend\/Generated\/\* \/shared\/generated\/\* \/shared\/js\/\*[\s\S]*header @production_app_modules Cache-Control "no-cache, must-revalidate"[\s\S]*@production_static \{[\s\S]*path \/assets\/\* \/config\/airports\.json \/frontend\/data\/\* \/shared\/css\/\* \/content\/one-pagers\/\* \/site\.webmanifest \/robots\.txt \/sitemap\.xml[\s\S]*not path \/frontend\/data\/generated\/homepage\/\*[\s\S]*not path \/assets\/fonts\/\* \/assets\/generated\/homepage\/\* \/assets\/generated\/reels\/\*/,
     "Production should revalidate app modules while caching shared CSS, static frontend data, and assets"
   );
   assert.match(
