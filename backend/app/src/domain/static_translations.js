@@ -954,7 +954,7 @@ export function createStaticTranslationService({
       : {};
     for (const service of [boundaryLogistics.arrival, boundaryLogistics.departure]) {
       if (!service || typeof service !== "object" || Array.isArray(service)) continue;
-      addSourceText(targetSet, service?.time_label);
+      addSourceText(targetSet, service?.time);
       addSourceText(targetSet, service?.title);
       addSourceText(targetSet, service?.details);
       addSourceText(targetSet, service?.image_subtitle);
@@ -965,7 +965,7 @@ export function createStaticTranslationService({
       addSourceText(targetSet, day?.notes);
       const services = Array.isArray(day?.services) ? day.services : [];
       for (const service of services) {
-        addSourceText(targetSet, service?.time_label);
+        addSourceText(targetSet, service?.time);
         addSourceText(targetSet, service?.title);
         addSourceText(targetSet, service?.details);
         addSourceText(targetSet, service?.image_subtitle);

@@ -1,7 +1,6 @@
 import { normalizeText } from "../lib/text.js";
 import {
-  TRAVEL_PLAN_SERVICE_KIND_VALUES,
-  TRAVEL_PLAN_TIMING_KIND_VALUES
+  TRAVEL_PLAN_SERVICE_KIND_VALUES
 } from "../lib/generated_catalogs.js";
 import { normalizeExperienceHighlightIds } from "./tour_metadata.js";
 import { normalizeTravelPlanTranslationMeta } from "./booking_translation.js";
@@ -11,7 +10,6 @@ import {
 } from "./booking_content_i18n.js";
 
 const TRAVEL_PLAN_SERVICE_KINDS = new Set(TRAVEL_PLAN_SERVICE_KIND_VALUES);
-const TRAVEL_PLAN_TIMING_KINDS = new Set(TRAVEL_PLAN_TIMING_KIND_VALUES);
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
 const TRAVEL_PLAN_BOUNDARY_KINDS = new Set(["arrival", "departure"]);
 
@@ -159,11 +157,6 @@ function normalizeItemKind(value) {
   return TRAVEL_PLAN_SERVICE_KINDS.has(normalized) ? normalized : "other";
 }
 
-function normalizeTimingKind(value) {
-  const normalized = normalizeText(value).toLowerCase();
-  return TRAVEL_PLAN_TIMING_KINDS.has(normalized) ? normalized : "label";
-}
-
 function buildDefaultTravelPlan() {
   return {
     tour_card_image_ids: [],
@@ -176,49 +169,6 @@ function buildDefaultBookingTravelPlan() {
   return {
     ...buildDefaultTravelPlan(),
     attachments: []
-  };
-}
-
-function normalizeItemTiming(rawItem) {
-  const timing_kind = normalizeTimingKind(rawItem?.timing_kind);
-  const time_label = normalizeOptionalText(rawItem?.time_label);
-  const time_point = normalizeOptionalText(rawItem?.time_point);
-  const start_time = normalizeOptionalText(rawItem?.start_time);
-  const end_time = normalizeOptionalText(rawItem?.end_time);
-
-  if (timing_kind === "point") {
-    return {
-      timing_kind,
-      time_label: null,
-      time_point,
-      start_time: null,
-      end_time: null
-    };
-  }
-  if (timing_kind === "range") {
-    return {
-      timing_kind,
-      time_label: null,
-      time_point: null,
-      start_time,
-      end_time
-    };
-  }
-  if (timing_kind === "not_applicable") {
-    return {
-      timing_kind,
-      time_label: null,
-      time_point: null,
-      start_time: null,
-      end_time: null
-    };
-  }
-  return {
-    timing_kind,
-    time_label,
-    time_point: null,
-    start_time: null,
-    end_time: null
   };
 }
 
@@ -247,7 +197,6 @@ function normalizeTravelPlanService(rawItem, {
   hydrateSourceIntoLocalizedMaps = false
 } = {}) {
   const item = rawItem && typeof rawItem === "object" && !Array.isArray(rawItem) ? rawItem : {};
-  const timing = normalizeItemTiming(item);
   const fieldOptions = {
     contentLang,
     flatLang,
@@ -255,16 +204,14 @@ function normalizeTravelPlanService(rawItem, {
     flatMode,
     hydrateSourceIntoLocalizedMaps
   };
-  const timeLabelField = normalizeTravelPlanLocalizedField(item?.time_label_i18n, timing.time_label, fieldOptions);
+  const timeField = normalizeTravelPlanLocalizedField(item?.time_i18n, item?.time, fieldOptions);
   const titleField = normalizeTravelPlanLocalizedField(item?.title_i18n, item?.title, fieldOptions);
   const detailsField = normalizeTravelPlanLocalizedField(item?.details_i18n, item?.details, fieldOptions);
   const imageSubtitleField = normalizeTravelPlanLocalizedField(rawItem?.image_subtitle_i18n, rawItem?.image_subtitle, fieldOptions);
   return {
     id: normalizeText(item.id) || normalizeText(defaultId) || `travel_plan_service_${dayIndex + 1}_${itemIndex + 1}`,
-    timing_kind: timing.timing_kind,
-    time_label: timing.timing_kind === "label" ? (timeLabelField.text || null) : null,
-    time_label_i18n: timeLabelField.map,
-    time_point: timing.time_point,
+    time: timeField.text || null,
+    time_i18n: timeField.map,
     kind: normalizeItemKind(item.kind),
     title: titleField.text,
     title_i18n: titleField.map,
@@ -272,8 +219,6 @@ function normalizeTravelPlanService(rawItem, {
     details_i18n: detailsField.map,
     image_subtitle: imageSubtitleField.text || null,
     image_subtitle_i18n: imageSubtitleField.map,
-    start_time: timing.start_time,
-    end_time: timing.end_time,
     image: normalizeTravelPlanServiceImage(item.image ?? item.images, dayIndex, itemIndex, fieldOptions)
   };
 }
@@ -311,12 +256,6 @@ function normalizeTravelPlanBoundaryPresentation(value, boundaryKind) {
   };
 }
 
-function normalizeBoundaryTimeValue(value) {
-  const raw = normalizeOptionalText(value);
-  const dateTimeMatch = raw.match(/^\d{4}-\d{2}-\d{2}[T ](\d{2}:\d{2})/);
-  return dateTimeMatch ? dateTimeMatch[1] : raw;
-}
-
 function normalizeTravelPlanBoundaryService(rawService, boundaryKind, options = {}) {
   const source = rawService && typeof rawService === "object" && !Array.isArray(rawService)
     ? rawService
@@ -336,9 +275,6 @@ function normalizeTravelPlanBoundaryService(rawService, boundaryKind, options = 
     ...service,
     boundary_kind: normalizedBoundaryKind,
     enabled: source.enabled === false ? false : true,
-    time_point: service.timing_kind === "point" ? normalizeBoundaryTimeValue(service.time_point) : null,
-    start_time: service.timing_kind === "range" ? normalizeBoundaryTimeValue(service.start_time) : null,
-    end_time: service.timing_kind === "range" ? normalizeBoundaryTimeValue(service.end_time) : null,
     kind: normalizeItemKind(source.kind || "transport"),
     airport_code: normalizeOptionalText(source.airport_code),
     from_label: normalizeOptionalText(source.from_label),
@@ -505,10 +441,7 @@ function applyTravelPlanTourCardImageSelection(days, selectedIds) {
 function boundaryServiceHasPresentationContent(service) {
   if (!service || typeof service !== "object" || Array.isArray(service)) return false;
   return [
-    service.time_label,
-    service.time_point,
-    service.start_time,
-    service.end_time,
+    service.time,
     service.title,
     service.details,
     service.image_subtitle,
@@ -518,7 +451,7 @@ function boundaryServiceHasPresentationContent(service) {
   ].some((value) => Boolean(normalizeText(value)))
     || Object.values(service.title_i18n || {}).some((value) => Boolean(normalizeText(value)))
     || Object.values(service.details_i18n || {}).some((value) => Boolean(normalizeText(value)))
-    || Object.values(service.time_label_i18n || {}).some((value) => Boolean(normalizeText(value)))
+    || Object.values(service.time_i18n || {}).some((value) => Boolean(normalizeText(value)))
     || Boolean(service.image && typeof service.image === "object" && normalizeText(service.image.storage_path));
 }
 
@@ -857,17 +790,8 @@ export function createTravelPlanHelpers() {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Service id is duplicated.` };
         }
         itemIds.add(item.id);
-        if (!TRAVEL_PLAN_TIMING_KINDS.has(item.timing_kind)) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Time information is invalid.` };
-        }
         if (!TRAVEL_PLAN_SERVICE_KINDS.has(item.kind)) {
           return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Kind is invalid.` };
-        }
-        if (item.timing_kind === "point" && !normalizeText(item.time_point)) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Time point is required.` };
-        }
-        if (item.timing_kind === "range" && (!normalizeText(item.start_time) || !normalizeText(item.end_time))) {
-          return { ok: false, error: `Day ${day.day_number}, Service ${itemNumber}: Start and end time are required.` };
         }
         const image = item.image && typeof item.image === "object" && !Array.isArray(item.image)
           ? item.image
@@ -902,17 +826,8 @@ export function createTravelPlanHelpers() {
         return { ok: false, error: `Travel-plan ${boundaryKind} service id ${boundaryService.id} is duplicated.` };
       }
       itemIds.add(boundaryService.id);
-      if (!TRAVEL_PLAN_TIMING_KINDS.has(boundaryService.timing_kind)) {
-        return { ok: false, error: `Travel-plan ${boundaryKind} time information is invalid.` };
-      }
       if (!TRAVEL_PLAN_SERVICE_KINDS.has(boundaryService.kind)) {
         return { ok: false, error: `Travel-plan ${boundaryKind} kind is invalid.` };
-      }
-      if (boundaryService.timing_kind === "point" && !normalizeText(boundaryService.time_point)) {
-        return { ok: false, error: `Travel-plan ${boundaryKind}: Time point is required.` };
-      }
-      if (boundaryService.timing_kind === "range" && (!normalizeText(boundaryService.start_time) || !normalizeText(boundaryService.end_time))) {
-        return { ok: false, error: `Travel-plan ${boundaryKind}: Start and end time are required.` };
       }
       const image = boundaryService.image && typeof boundaryService.image === "object" && !Array.isArray(boundaryService.image)
         ? boundaryService.image

@@ -135,19 +135,20 @@ export function createBookingTravelPlanHandlers(deps) {
       contentLang: normalizedLang,
       flatLang: normalizedLang,
       sourceLang: normalizedSourceLang,
+      hydrateSourceIntoLocalizedMaps: true,
       strictReferences: false
     });
     const existingDaysById = new Map(
       (Array.isArray(existingNormalized?.days) ? existingNormalized.days : []).map((day) => [day.id, day])
     );
     function mergeTravelPlanServiceLocalizedFields(item, existingItem) {
-      const timeLabelField = mergeEditableLocalizedTextField(
-        existingItem?.time_label_i18n,
-        item.time_label,
-        item.time_label_i18n,
+      const timeField = mergeEditableLocalizedTextField(
+        existingItem?.time_i18n,
+        item.time,
+        item.time_i18n,
         normalizedLang,
         {
-          existingText: existingItem?.time_label,
+          existingText: existingItem?.time,
           sourceLang: normalizedSourceLang,
           defaultLang: normalizedSourceLang,
           pruneExtraTranslationsOnSourceChange: true
@@ -179,8 +180,8 @@ export function createBookingTravelPlanHandlers(deps) {
       );
       return {
         ...item,
-        time_label: item.timing_kind === "label" ? (timeLabelField.text || null) : null,
-        time_label_i18n: timeLabelField.map,
+        time: timeField.text || null,
+        time_i18n: timeField.map,
         title: titleItemField.text,
         title_i18n: titleItemField.map,
         details: detailsField.text || null,

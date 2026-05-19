@@ -154,10 +154,8 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
 
     return {
       id: nextServiceId,
-      timing_kind: "not_applicable",
-      time_label: null,
-      time_label_i18n: {},
-      time_point: null,
+      time: null,
+      time_i18n: {},
       kind: normalizeText(service?.kind) || "other",
       title: title.text,
       title_i18n: title.map,
@@ -165,8 +163,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       details_i18n: details.map,
       image_subtitle: imageSubtitle.text || null,
       image_subtitle_i18n: imageSubtitle.map,
-      start_time: null,
-      end_time: null,
       image: nextImage
     };
   }
@@ -179,7 +175,7 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
     const normalizedBoundaryKind = normalizeText(service?.boundary_kind) || normalizeText(boundaryKind);
     if (!normalizedBoundaryKind) return null;
     const nextServiceId = `travel_plan_boundary_${normalizedBoundaryKind}_${randomUUID()}`;
-    const timeLabel = cloneLocalizedTextField(service, "time_label", "time_label_i18n", normalizeText);
+    const time = cloneLocalizedTextField(service, "time", "time_i18n", normalizeText);
     const title = cloneLocalizedTextField(service, "title", "title_i18n", normalizeText);
     const details = cloneLocalizedTextField(service, "details", "details_i18n", normalizeText);
     const imageSubtitle = cloneLocalizedTextField(
@@ -199,10 +195,8 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       id: nextServiceId,
       boundary_kind: normalizedBoundaryKind,
       enabled: service?.enabled === false ? false : true,
-      timing_kind: normalizeText(service?.timing_kind) || "label",
-      time_label: timeLabel.text || null,
-      time_label_i18n: timeLabel.map,
-      time_point: normalizeText(service?.time_point) || null,
+      time: time.text || null,
+      time_i18n: time.map,
       kind: normalizeText(service?.kind) || "transport",
       title: title.text,
       title_i18n: title.map,
@@ -210,8 +204,6 @@ export function createMarketingTourBookingTravelPlanCloner(deps) {
       details_i18n: details.map,
       image_subtitle: imageSubtitle.text || null,
       image_subtitle_i18n: imageSubtitle.map,
-      start_time: normalizeText(service?.start_time) || null,
-      end_time: normalizeText(service?.end_time) || null,
       image: nextImage,
       airport_code: normalizeText(service?.airport_code) || null,
       from_label: normalizeText(service?.from_label) || null,

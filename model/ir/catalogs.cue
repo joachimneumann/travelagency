@@ -11,7 +11,6 @@ IR: {
 		bookingReferralKinds: [for kind in enumModel.BookingReferralKindCatalog {{code: kind}}]
 		bookingPersonRoles: [for role in enumModel.BookingPersonRoleCatalog {{code: role}}]
 		bookingPersonGenders: [for gender in enumModel.BookingPersonGenderCatalog {{code: gender}}]
-		travelPlanTimingKinds: [for kind in enumModel.TravelPlanTimingKindCatalog {{code: kind}}]
 		travelPlanServiceKinds: [for kind in enumModel.TravelPlanServiceKindCatalog {{code: kind}}]
 		travelPlanBoundaryKinds: [for kind in enumModel.TravelPlanBoundaryKindCatalog {{code: kind}}]
 		travelPlanBoundaryPlacementKinds: [for kind in enumModel.TravelPlanBoundaryPlacementKindCatalog {{code: kind}}]

@@ -104,14 +104,13 @@ export function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
     const boundaryLabel = `travel_plan.boundary.${boundaryKind}`;
     return [
       createFieldDescriptor({
-        key: `${boundaryLabel}.time_label`,
+        key: `${boundaryLabel}.time`,
         holder: service,
-        mapField: "time_label_i18n",
-        plainField: "time_label",
+        mapField: "time_i18n",
+        plainField: "time",
         sourceLang: normalizedSourceLang,
         targetLang: normalizedTargetLang,
-        emptyValue: null,
-        enabled: String(service?.timing_kind || "label") === "label"
+        emptyValue: null
       }),
       createFieldDescriptor({
         key: `${boundaryLabel}.title`,
@@ -164,14 +163,13 @@ export function collectTravelPlanFieldDescriptors(travelPlan, options = {}) {
       const itemId = normalizeText(item?.id) || `item_${dayIndex + 1}_${itemIndex + 1}`;
       return [
         createFieldDescriptor({
-          key: `travel_plan.${dayId}.${itemId}.time_label`,
+          key: `travel_plan.${dayId}.${itemId}.time`,
           holder: item,
-          mapField: "time_label_i18n",
-          plainField: "time_label",
+          mapField: "time_i18n",
+          plainField: "time",
           sourceLang: normalizedSourceLang,
           targetLang: normalizedTargetLang,
-          emptyValue: null,
-          enabled: String(item?.timing_kind || "label") === "label"
+          emptyValue: null
         }),
         createFieldDescriptor({
           key: `travel_plan.${dayId}.${itemId}.title`,

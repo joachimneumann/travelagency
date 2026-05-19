@@ -54,9 +54,8 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
         services: [
           {
             id: "service_1",
-            timing_kind: "label",
-            time_label: "Morning",
-            time_label_i18n: {
+            time: "Morning",
+            time_i18n: {
               vi: "Buoi sang"
             },
             kind: "other",
@@ -118,8 +117,8 @@ test("normalizeTravelPlanDraft preserves localized maps while keeping flat sourc
     vi: "Ghi chu",
     en: "English notes"
   });
-  assert.equal(service.time_label, "Morning");
-  assert.deepEqual(service.time_label_i18n, {
+  assert.equal(service.time, "Morning");
+  assert.deepEqual(service.time_i18n, {
     vi: "Buoi sang",
     en: "Morning"
   });
@@ -173,7 +172,6 @@ test("normalizeTravelPlanDraft does not restore a cleared source field from tran
         services: [
           {
             id: "service_1",
-            timing_kind: "label",
             kind: "other",
             title: "",
             title_i18n: {
@@ -195,6 +193,42 @@ test("normalizeTravelPlanDraft does not restore a cleared source field from tran
   assert.equal(normalized.days[0].services[0].title, "");
   assert.deepEqual(normalized.days[0].services[0].title_i18n, {
     vi: "Dich vu"
+  });
+});
+
+test("normalizeTravelPlanDraft keeps hydrated source text from localized booking read models", async () => {
+  const { normalizeTravelPlanDraft } = await loadHelpers();
+
+  const normalized = normalizeTravelPlanDraft({
+    days: [
+      {
+        id: "day_1",
+        title: "Den noi",
+        title_i18n: {
+          en: "Arrival updated from booking",
+          vi: "Den noi"
+        },
+        notes: "Chi tiet ngay da cap nhat",
+        notes_i18n: {
+          en: "Updated day details from booking",
+          vi: "Chi tiet ngay da cap nhat"
+        }
+      }
+    ]
+  }, {
+    sourceLang: "en",
+    targetLang: "vi"
+  });
+
+  assert.equal(normalized.days[0].title, "Arrival updated from booking");
+  assert.equal(normalized.days[0].notes, "Updated day details from booking");
+  assert.deepEqual(normalized.days[0].title_i18n, {
+    en: "Arrival updated from booking",
+    vi: "Den noi"
+  });
+  assert.deepEqual(normalized.days[0].notes_i18n, {
+    en: "Updated day details from booking",
+    vi: "Chi tiet ngay da cap nhat"
   });
 });
 
@@ -229,7 +263,6 @@ test("normalizeTravelPlanDraft preserves boundary placement choices", async () =
         id: "arrival_service",
         boundary_kind: "arrival",
         enabled: true,
-        timing_kind: "label",
         kind: "transport",
         title: "Airport pickup",
         presentation: {
@@ -241,7 +274,6 @@ test("normalizeTravelPlanDraft preserves boundary placement choices", async () =
         id: "departure_service",
         boundary_kind: "departure",
         enabled: true,
-        timing_kind: "label",
         kind: "transport",
         title: "Airport drop-off",
         presentation: {

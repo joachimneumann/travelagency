@@ -58,8 +58,7 @@ function createSampleTour() {
         services: [{
           id: "service_1",
           kind: "other",
-          timing_kind: "label",
-          time_label: "Morning",
+          time: "Morning",
           title: "English service title",
           title_i18n: {
             fr: "Embedded French service title"

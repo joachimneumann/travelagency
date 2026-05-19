@@ -793,7 +793,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   height: auto;
   min-height: 0;
   max-height: none;
-  border: 0;
+  border: 2px solid var(--tour-customize-card-border-color);
   aspect-ratio: 1 / 2;
 }
 

@@ -44,6 +44,5 @@ export const OFFER_PAYMENT_AMOUNT_MODE_VALUES = enumValuesFor("OfferPaymentAmoun
 export const OFFER_PAYMENT_DUE_TYPE_VALUES = enumValuesFor("OfferPaymentDueType");
 export const TOUR_STYLE_CODE_VALUES = enumValuesFor("TourStyleCode");
 export const TRAVEL_PLAN_SERVICE_KIND_VALUES = enumValuesFor("TravelPlanServiceKind");
-export const TRAVEL_PLAN_TIMING_KIND_VALUES = enumValuesFor("TravelPlanTimingKind");
 export const TRAVEL_PLAN_OFFER_COVERAGE_TYPE_VALUES = enumValuesFor("TravelPlanOfferCoverageType");
 export const TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_VALUES = enumValuesFor("TravelPlanFinancialCoverageStatus");

@@ -196,21 +196,6 @@ function formatTravelPlanDate(rawValue, lang, formatPdfDateOnly) {
   });
 }
 
-function formatTravelPlanDateTime(rawValue, lang, fallbackDayDate, formatPdfDateOnly) {
-  const raw = normalizeText(rawValue);
-  if (!raw) return "";
-  const dateTimeMatch = raw.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
-  if (dateTimeMatch) {
-    const [, datePart, timePart] = dateTimeMatch;
-    if (fallbackDayDate && datePart === fallbackDayDate) return timePart;
-    const formattedDate = formatTravelPlanDate(datePart, lang, formatPdfDateOnly);
-    return formattedDate ? `${formattedDate} ${timePart}` : timePart;
-  }
-  const timeOnlyMatch = raw.match(/^(\d{2}:\d{2})$/);
-  if (timeOnlyMatch) return timeOnlyMatch[1];
-  return raw;
-}
-
 function formatTravelPlanDayDateLabel(day, lang, formatPdfDateOnly) {
   const date = formatTravelPlanDate(day?.date, lang, formatPdfDateOnly);
   if (date) return date;
@@ -218,17 +203,7 @@ function formatTravelPlanDayDateLabel(day, lang, formatPdfDateOnly) {
 }
 
 function formatTravelPlanTiming(item, lang, dayDate, formatPdfDateOnly) {
-  const timingKind = normalizeText(item?.timing_kind) || "label";
-  if (timingKind === "point") {
-    return formatTravelPlanDateTime(item?.time_point, lang, dayDate, formatPdfDateOnly);
-  }
-  if (timingKind === "range") {
-    const start = formatTravelPlanDateTime(item?.start_time, lang, dayDate, formatPdfDateOnly);
-    const end = formatTravelPlanDateTime(item?.end_time, lang, dayDate, formatPdfDateOnly);
-    if (start && end) return `${start} - ${end}`;
-    return start || end || "";
-  }
-  return normalizeText(item?.time_label);
+  return normalizeText(item?.time);
 }
 
 function resolveDayAccommodationTitle(day) {
@@ -381,7 +356,7 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
     doc
       .font(deps.pdfFontName("regular", fonts))
       .fontSize(9.2)
-      .fillColor(deps.colors.textMutedStrong)
+      .fillColor(TRAVEL_PLAN_TRIP_LABEL_COLOR)
       .text(metaParts.join(" · "), x, innerY, deps.pdfTextOptions(lang, {
         width,
         lineGap: 1

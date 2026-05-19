@@ -769,10 +769,7 @@ export function createFrontendToursController(ctx) {
   function boundaryServiceHasPresentationContent(service) {
     if (!service || typeof service !== "object" || Array.isArray(service)) return false;
     return [
-      service.time_label,
-      service.time_point,
-      service.start_time,
-      service.end_time,
+      service.time,
       service.title,
       service.details,
       service.image_subtitle,
@@ -782,7 +779,7 @@ export function createFrontendToursController(ctx) {
     ].some((value) => Boolean(normalizeText(value)))
       || Object.values(service.title_i18n || {}).some((value) => Boolean(normalizeText(value)))
       || Object.values(service.details_i18n || {}).some((value) => Boolean(normalizeText(value)))
-      || Object.values(service.time_label_i18n || {}).some((value) => Boolean(normalizeText(value)))
+      || Object.values(service.time_i18n || {}).some((value) => Boolean(normalizeText(value)))
       || Boolean(service.image && typeof service.image === "object" && normalizeText(service.image.storage_path || service.image.url || service.image.src));
   }
 

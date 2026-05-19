@@ -43,10 +43,8 @@ import (
 
 #TravelPlanService: {
 	id:              common.#Identifier
-	timing_kind:     *"label" | enums.#TravelPlanTimingKind
-	time_label?:     string
-	time_label_i18n?: [string]: string
-	time_point?:     string
+	time?:           string
+	time_i18n?:      [string]: string
 	kind:            enums.#TravelPlanServiceKind
 	title?:          string
 	title_i18n?:     [string]: string
@@ -54,8 +52,6 @@ import (
 	details_i18n?:   [string]: string
 	image_subtitle?: string
 	image_subtitle_i18n?: [string]: string
-	start_time?:     string
-	end_time?:       string
 	image?:          #TravelPlanServiceImage
 	...
 }

@@ -738,15 +738,11 @@ export function createTourHandlers(deps) {
       : null;
     return {
       id: `travel_plan_service_${randomUUID()}`,
-      timing_kind: normalizeText(sourceItem?.timing_kind) || "label",
-      time_label: normalizeText(sourceItem?.time_label),
-      time_point: normalizeText(sourceItem?.time_point),
+      time: normalizeText(sourceItem?.time),
       kind: normalizeText(sourceItem?.kind) || "other",
       title: normalizeText(sourceItem?.title),
       details: normalizeText(sourceItem?.details),
       image_subtitle: normalizeText(sourceItem?.image_subtitle),
-      start_time: normalizeText(sourceItem?.start_time),
-      end_time: normalizeText(sourceItem?.end_time),
       image
     };
   }

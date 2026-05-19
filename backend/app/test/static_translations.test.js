@@ -677,7 +677,6 @@ test("static translation service exposes marketing tour memory and saves manual 
               services: [
                 {
                   id: "service_one",
-                  timing_kind: "label",
                   title: "Basket boat tour"
                 }
               ]

@@ -104,15 +104,12 @@ function cloneTourMarketingServiceForLocalImport({ searchResult }) {
     : null;
   if (!sourceService) return null;
   return cloneJson({
-    timing_kind: sourceService.timing_kind,
-    time_label: normalizeText(sourceService.time_label) || null,
-    time_point: sourceService.time_point,
+    time: normalizeText(sourceService.time) || null,
+    time_i18n: cloneJson(sourceService.time_i18n || {}),
     kind: sourceService.kind,
     title: normalizeText(sourceService.title),
     details: normalizeText(sourceService.details) || null,
     image_subtitle: normalizeText(sourceService.image_subtitle) || null,
-    start_time: sourceService.start_time,
-    end_time: sourceService.end_time,
     id: undefined,
     image: sourceService.image && typeof sourceService.image === "object" && !Array.isArray(sourceService.image)
       ? {

@@ -46,7 +46,6 @@ IR: {
 		BookingReferralKind: {catalog: "bookingReferralKinds"}
 		BookingPersonRole: {catalog: "bookingPersonRoles"}
 		BookingPersonGender: {catalog: "bookingPersonGenders"}
-		TravelPlanTimingKind: {catalog: "travelPlanTimingKinds"}
 		TravelPlanServiceKind: {catalog: "travelPlanServiceKinds"}
 		TravelPlanBoundaryKind: {catalog: "travelPlanBoundaryKinds"}
 		TravelPlanBoundaryPlacementKind: {catalog: "travelPlanBoundaryPlacementKinds"}
@@ -198,10 +197,8 @@ IR: {
 			sourceType: "database.#TravelPlanService"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
-				{name: "time_label", kind: "scalar", typeName: "string", required: false},
-				{name: "time_label_i18n", kind: "map", typeName: "string", required: false},
-				{name: "time_point", kind: "scalar", typeName: "string", required: false},
+				{name: "time", kind: "scalar", typeName: "string", required: false},
+				{name: "time_i18n", kind: "map", typeName: "string", required: false},
 					{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
 					{name: "title", kind: "scalar", typeName: "string", required: false},
 					{name: "title_i18n", kind: "map", typeName: "string", required: false},
@@ -209,8 +206,6 @@ IR: {
 					{name: "details_i18n", kind: "map", typeName: "string", required: false},
 					{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
 					{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
-				{name: "start_time", kind: "scalar", typeName: "string", required: false},
-				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "entity", typeName: "TravelPlanServiceImage", required: false},
 			]
 		},
@@ -248,10 +243,8 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "boundary_kind", kind: "enum", typeName: "TravelPlanBoundaryKind", required: true},
 				{name: "enabled", kind: "scalar", typeName: "bool", required: false},
-				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
-				{name: "time_label", kind: "scalar", typeName: "string", required: false},
-				{name: "time_label_i18n", kind: "map", typeName: "string", required: false},
-				{name: "time_point", kind: "scalar", typeName: "string", required: false},
+				{name: "time", kind: "scalar", typeName: "string", required: false},
+				{name: "time_i18n", kind: "map", typeName: "string", required: false},
 				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "title_i18n", kind: "map", typeName: "string", required: false},
@@ -259,8 +252,6 @@ IR: {
 				{name: "details_i18n", kind: "map", typeName: "string", required: false},
 				{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
 				{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
-				{name: "start_time", kind: "scalar", typeName: "string", required: false},
-				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "entity", typeName: "TravelPlanServiceImage", required: false},
 				{name: "airport_code", kind: "scalar", typeName: "string", required: false},
 				{name: "from_label", kind: "scalar", typeName: "string", required: false},
@@ -287,10 +278,8 @@ IR: {
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
 				{name: "boundary_kind", kind: "enum", typeName: "TravelPlanBoundaryKind", required: true},
 				{name: "enabled", kind: "scalar", typeName: "bool", required: false},
-				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
-				{name: "time_label", kind: "scalar", typeName: "string", required: false},
-				{name: "time_label_i18n", kind: "map", typeName: "string", required: false},
-				{name: "time_point", kind: "scalar", typeName: "string", required: false},
+				{name: "time", kind: "scalar", typeName: "string", required: false},
+				{name: "time_i18n", kind: "map", typeName: "string", required: false},
 				{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
 				{name: "title", kind: "scalar", typeName: "string", required: false},
 				{name: "title_i18n", kind: "map", typeName: "string", required: false},
@@ -298,8 +287,6 @@ IR: {
 				{name: "details_i18n", kind: "map", typeName: "string", required: false},
 				{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
 				{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
-				{name: "start_time", kind: "scalar", typeName: "string", required: false},
-				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "entity", typeName: "TravelPlanServiceImage", required: false},
 				{name: "airport_code", kind: "scalar", typeName: "string", required: false},
 				{name: "from_label", kind: "scalar", typeName: "string", required: false},
@@ -499,17 +486,14 @@ IR: {
 			sourceType: "database.#BookingTravelPlanService"
 			fields: [
 				{name: "id", kind: "scalar", typeName: "Identifier", required: true},
-				{name: "timing_kind", kind: "enum", typeName: "TravelPlanTimingKind", required: true},
-				{name: "time_label", kind: "scalar", typeName: "string", required: false},
-				{name: "time_point", kind: "scalar", typeName: "string", required: false},
+				{name: "time", kind: "scalar", typeName: "string", required: false},
+				{name: "time_i18n", kind: "map", typeName: "string", required: false},
 					{name: "kind", kind: "enum", typeName: "TravelPlanServiceKind", required: true},
 					{name: "title", kind: "scalar", typeName: "string", required: false},
 					{name: "details", kind: "scalar", typeName: "string", required: false},
 					{name: "details_i18n", kind: "map", typeName: "string", required: false},
 					{name: "image_subtitle", kind: "scalar", typeName: "string", required: false},
 				{name: "image_subtitle_i18n", kind: "map", typeName: "string", required: false},
-				{name: "start_time", kind: "scalar", typeName: "string", required: false},
-				{name: "end_time", kind: "scalar", typeName: "string", required: false},
 				{name: "image", kind: "entity", typeName: "BookingTravelPlanServiceImage", required: false},
 			]
 		},

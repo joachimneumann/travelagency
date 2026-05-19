@@ -153,7 +153,7 @@ function applyTranslationsToTravelPlan(travelPlan, lang, translations) {
   for (const boundaryKind of ["arrival", "departure"]) {
     const service = boundaryLogistics[boundaryKind];
     if (!service || typeof service !== "object" || Array.isArray(service)) continue;
-    changed = applyTranslationToLocalizedPair(service, "time_label", "time_label_i18n", lang, translations) || changed;
+    changed = applyTranslationToLocalizedPair(service, "time", "time_i18n", lang, translations) || changed;
     changed = applyTranslationToLocalizedPair(service, "title", "title_i18n", lang, translations) || changed;
     changed = applyTranslationToLocalizedPair(service, "details", "details_i18n", lang, translations) || changed;
   }
@@ -163,7 +163,7 @@ function applyTranslationsToTravelPlan(travelPlan, lang, translations) {
     changed = applyTranslationToLocalizedPair(day, "notes", "notes_i18n", lang, translations) || changed;
     for (const service of Array.isArray(day.services) ? day.services : []) {
       if (!service || typeof service !== "object" || Array.isArray(service)) continue;
-      changed = applyTranslationToLocalizedPair(service, "time_label", "time_label_i18n", lang, translations) || changed;
+      changed = applyTranslationToLocalizedPair(service, "time", "time_i18n", lang, translations) || changed;
       changed = applyTranslationToLocalizedPair(service, "title", "title_i18n", lang, translations) || changed;
       changed = applyTranslationToLocalizedPair(service, "details", "details_i18n", lang, translations) || changed;
       changed = applyTranslationToLocalizedPair(service, "image_subtitle", "image_subtitle_i18n", lang, translations) || changed;
@@ -233,14 +233,12 @@ export function collectMarketingTourTranslationDescriptors(tour) {
   ["arrival", "departure"].forEach((boundaryKind) => {
     const service = boundaryLogistics[boundaryKind];
     if (!service || typeof service !== "object" || Array.isArray(service)) return;
-    if (normalizeText(service?.timing_kind || "label") === "label") {
-      addTourTranslationDescriptor(descriptors, {
-        holder: service,
-        mapField: "time_label_i18n",
-        plainField: "time_label",
-        key: `travel_plan.boundary.${boundaryKind}.time_label`
-      });
-    }
+    addTourTranslationDescriptor(descriptors, {
+      holder: service,
+      mapField: "time_i18n",
+      plainField: "time",
+      key: `travel_plan.boundary.${boundaryKind}.time`
+    });
     addTourTranslationDescriptor(descriptors, {
       holder: service,
       mapField: "title_i18n",
@@ -271,14 +269,12 @@ export function collectMarketingTourTranslationDescriptors(tour) {
     const services = Array.isArray(day?.services) ? day.services : [];
     services.forEach((service, serviceIndex) => {
       const serviceId = normalizeText(service?.id) || `service_${dayIndex + 1}_${serviceIndex + 1}`;
-      if (normalizeText(service?.timing_kind || "label") === "label") {
-        addTourTranslationDescriptor(descriptors, {
-          holder: service,
-          mapField: "time_label_i18n",
-          plainField: "time_label",
-          key: `travel_plan.${dayId}.${serviceId}.time_label`
-        });
-      }
+      addTourTranslationDescriptor(descriptors, {
+        holder: service,
+        mapField: "time_i18n",
+        plainField: "time",
+        key: `travel_plan.${dayId}.${serviceId}.time`
+      });
       addTourTranslationDescriptor(descriptors, {
         holder: service,
         mapField: "title_i18n",

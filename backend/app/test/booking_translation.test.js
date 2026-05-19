@@ -23,9 +23,8 @@ test("travel plan translation status counts customer-facing fields only", () => 
         services: [
           {
             id: "seg_1",
-            timing_kind: "label",
-            time_label: "Morning",
-            time_label_i18n: {},
+            time: "Morning",
+            time_i18n: {},
             title: "Airport transfer",
             title_i18n: {},
             image_subtitle: "Driver at arrival hall",
@@ -68,7 +67,6 @@ test("travel plan manual target edits are tracked per field", () => {
         services: [
           {
             id: "seg_1",
-            timing_kind: "label",
             title: "Airport transfer",
             title_i18n: {
               fr: "Transfert aeroport"
@@ -107,9 +105,8 @@ test("travel plan manual field locks survive future auto-translation", async () 
         services: [
           {
             id: "seg_1",
-            timing_kind: "label",
-            time_label: "Morning",
-            time_label_i18n: {
+            time: "Morning",
+            time_i18n: {
               fr: "Matin"
             },
             title: "Airport transfer",
@@ -157,7 +154,7 @@ test("travel plan manual field locks survive future auto-translation", async () 
     async () => ({
       "travel_plan.day_1.title": "Titre machine",
       "travel_plan.day_1.notes": "Notes machine",
-      "travel_plan.day_1.seg_1.time_label": "Matinee machine",
+      "travel_plan.day_1.seg_1.time": "Matinee machine",
       "travel_plan.day_1.seg_1.title": "Transfert machine",
       "travel_plan.day_1.seg_1.details": "Details machine",
       "travel_plan.day_1.seg_1.image_subtitle": "Sous-titre machine",
@@ -196,9 +193,8 @@ test("travel plan storage keeps English in plain fields while read models hydrat
         services: [
           {
             id: "seg_1",
-            timing_kind: "label",
-            time_label: "Morning",
-            time_label_i18n: {
+            time: "Morning",
+            time_i18n: {
               en: "Morning",
               ms: "Pagi"
             },
@@ -237,8 +233,8 @@ test("travel plan storage keeps English in plain fields while read models hydrat
   assert.deepEqual(stored.days[0].title_i18n, {
     ms: "Terokai Bandar Purba Hoi An"
   });
-  assert.equal(stored.days[0].services[0].time_label, "Morning");
-  assert.deepEqual(stored.days[0].services[0].time_label_i18n, {
+  assert.equal(stored.days[0].services[0].time, "Morning");
+  assert.deepEqual(stored.days[0].services[0].time_i18n, {
     ms: "Pagi"
   });
   assert.equal(stored.days[0].services[0].image_subtitle, "Guide at the riverside");
@@ -260,8 +256,8 @@ test("travel plan storage keeps English in plain fields while read models hydrat
     en: "Explore Hoi An Ancient Town",
     ms: "Terokai Bandar Purba Hoi An"
   });
-  assert.equal(readModel.days[0].services[0].time_label, "Pagi");
-  assert.deepEqual(readModel.days[0].services[0].time_label_i18n, {
+  assert.equal(readModel.days[0].services[0].time, "Pagi");
+  assert.deepEqual(readModel.days[0].services[0].time_i18n, {
     en: "Morning",
     ms: "Pagi"
   });

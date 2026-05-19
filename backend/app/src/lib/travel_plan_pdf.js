@@ -942,10 +942,6 @@ export function createTravelPlanPdfWriter({
         textOrNull(day?.date),
         textOrNull(day?.notes),
         ...safeArray(day?.services || day?.items).flatMap((item) => [
-          textOrNull(item?.time_label),
-          textOrNull(item?.time_point),
-          textOrNull(item?.start_time),
-          textOrNull(item?.end_time),
           textOrNull(item?.title),
           textOrNull(item?.details)
         ])

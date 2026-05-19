@@ -536,7 +536,7 @@
 }
 
 .travel-plan-grid--item-timing {
-  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.35rem 0.75rem;
 }
 
@@ -586,7 +586,9 @@
 }
 
 .travel-plan-timing-field--label {
-  grid-area: label;
+  grid-area: auto;
+  justify-self: stretch;
+  width: 100%;
 }
 
 .travel-plan-grid--item-timing .booking-person-modal__date-input {
@@ -2172,12 +2174,21 @@
 
 .travel-plan-booking-workspace {
   display: grid;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
-  gap: 1.75em;
+  grid-template-areas: "map nav details";
+  grid-template-columns: minmax(200px, 220px) minmax(240px, 310px) minmax(0, 1fr);
+  gap: 1.25rem;
   align-items: start;
 }
 
+.travel-plan-booking-map {
+  grid-area: map;
+  position: sticky;
+  top: 0.75rem;
+  min-width: 0;
+}
+
 .travel-plan-booking-sidebar {
+  grid-area: nav;
   position: sticky;
   top: 0.75rem;
   display: grid;
@@ -2193,6 +2204,7 @@
 }
 
 .travel-plan-booking-editor {
+  grid-area: details;
   border: 0;
   background: #fff;
   box-shadow: none;
@@ -2672,7 +2684,15 @@
 
 @media (max-width: 1180px) {
   .travel-plan-booking-workspace {
-    grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+    grid-template-areas:
+      "map details"
+      "nav details";
+    grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
+  }
+
+  .travel-plan-booking-map,
+  .travel-plan-booking-sidebar {
+    position: static;
   }
 
   .travel-plan-booking-editor .travel-plan-grid {
@@ -2682,6 +2702,10 @@
 
 @media (max-width: 860px) {
   .travel-plan-booking-workspace {
+    grid-template-areas:
+      "map"
+      "nav"
+      "details";
     grid-template-columns: 1fr;
   }
 

@@ -7,9 +7,7 @@ function travelPlanBoundaryLabel(boundaryKind) {
 }
 
 export function validateTravelPlanDraft(plan, {
-  validTimingKinds,
   validItemKinds,
-  splitDateTimeValue,
   isValidIsoCalendarDate
 }) {
   const normalizedPlan = plan && typeof plan === "object" ? plan : {};
@@ -36,30 +34,11 @@ export function validateTravelPlanDraft(plan, {
       };
     }
     itemIds.add(itemId);
-    const timingKind = String(service?.timing_kind || "").trim();
-    if (!validTimingKinds.has(timingKind)) {
-      return {
-        ok: false,
-        error: bookingT("booking.travel_plan.validation.boundary_timing_invalid", "{kind}: Time information is invalid.", { kind: boundaryLabel })
-      };
-    }
     const itemKind = String(service?.kind || "").trim();
     if (!validItemKinds.has(itemKind)) {
       return {
         ok: false,
         error: bookingT("booking.travel_plan.validation.boundary_kind_invalid", "{kind}: Kind is invalid.", { kind: boundaryLabel })
-      };
-    }
-    if (timingKind === "point" && !String(service?.time_point || "").trim()) {
-      return {
-        ok: false,
-        error: bookingT("booking.travel_plan.validation.boundary_time_point_required", "{kind}: Time point is required.", { kind: boundaryLabel })
-      };
-    }
-    if (timingKind === "range" && (!String(service?.start_time || "").trim() || !String(service?.end_time || "").trim())) {
-      return {
-        ok: false,
-        error: bookingT("booking.travel_plan.validation.boundary_time_range_required", "{kind}: Start and end time are required.", { kind: boundaryLabel })
       };
     }
   }
@@ -122,18 +101,6 @@ export function validateTravelPlanDraft(plan, {
       }
       itemIds.add(itemId);
 
-      const timingKind = String(item?.timing_kind || "").trim();
-      if (!validTimingKinds.has(timingKind)) {
-        return {
-          ok: false,
-          error: bookingT(
-            "booking.travel_plan.validation.item_timing_invalid",
-            "Day {day}, service {item}: Time information is invalid.",
-            { day: dayNumber, item: itemNumber }
-          )
-        };
-      }
-
       const itemKind = String(item?.kind || "").trim();
       if (!validItemKinds.has(itemKind)) {
         return {
@@ -146,56 +113,6 @@ export function validateTravelPlanDraft(plan, {
         };
       }
 
-      if (timingKind === "point" && !String(item?.time_point || "").trim()) {
-        return {
-          ok: false,
-          error: bookingT(
-            "booking.travel_plan.validation.item_time_point_required",
-            "Day {day}, service {item}: Time point is required.",
-            { day: dayNumber, item: itemNumber }
-          )
-        };
-      }
-
-      if (timingKind === "point" && String(item?.time_point || "").trim()) {
-        const pointParts = splitDateTimeValue(day?.date, item.time_point);
-        if (!isValidIsoCalendarDate(pointParts.date)) {
-          return {
-            ok: false,
-            error: bookingT(
-              "booking.travel_plan.validation.item_time_point_date_invalid",
-              "Day {day}, service {item}: Date must use YYYY-MM-DD.",
-              { day: dayNumber, item: itemNumber }
-            )
-          };
-        }
-      }
-
-      if (timingKind === "range" && (!String(item?.start_time || "").trim() || !String(item?.end_time || "").trim())) {
-        return {
-          ok: false,
-          error: bookingT(
-            "booking.travel_plan.validation.item_time_range_required",
-            "Day {day}, service {item}: Start and end time are required.",
-            { day: dayNumber, item: itemNumber }
-          )
-        };
-      }
-
-      if (timingKind === "range") {
-        const startParts = splitDateTimeValue(day?.date, item.start_time);
-        const endParts = splitDateTimeValue(day?.date, item.end_time);
-        if (!isValidIsoCalendarDate(startParts.date) || !isValidIsoCalendarDate(endParts.date)) {
-          return {
-            ok: false,
-            error: bookingT(
-              "booking.travel_plan.validation.item_time_range_date_invalid",
-              "Day {day}, service {item}: Dates must use YYYY-MM-DD.",
-              { day: dayNumber, item: itemNumber }
-            )
-          };
-        }
-      }
     }
   }
 

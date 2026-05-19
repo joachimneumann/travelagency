@@ -1,7 +1,4 @@
-import {
-  TRAVEL_PLAN_SERVICE_KIND_OPTIONS,
-  TRAVEL_PLAN_TIMING_KIND_OPTIONS as GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
-} from "../shared/generated_catalogs.js";
+import { TRAVEL_PLAN_SERVICE_KIND_OPTIONS } from "../shared/generated_catalogs.js";
 import {
   bookingSourceLang,
   bookingT,
@@ -10,29 +7,12 @@ import {
 } from "./i18n.js";
 import {
   mergeDualLocalizedPayload,
+  normalizeLocalizedEditorMap,
   resolveLocalizedEditorBranchText,
   resolveLocalizedEditorText
 } from "./localized_editor.js";
 
 const ONE_PAGER_SMALL_IMAGE_LIMIT = 4;
-
-export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze(
-  GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => ({
-    ...option,
-    label: bookingT(
-      `booking.travel_plan.timing_kind.${option.value}`,
-      option.value === "label"
-        ? "Human readable"
-        : option.value === "not_applicable"
-          ? "Not applicable"
-        : option.value === "point"
-          ? "Point of time"
-          : option.value === "range"
-            ? "Time range"
-            : option.label
-    )
-  }))
-);
 
 function travelPlanId(prefix) {
   const safePrefix = String(prefix || "travel_plan").replace(/[^a-z0-9_]+/gi, "_").toLowerCase();
@@ -91,8 +71,17 @@ function normalizeDraftLocalizedPayload(source, field, sourceLang, targetLang) {
   const hasPlainValue = hasOwnProperty(rawSource, field);
   const plainValue = hasPlainValue ? normalizeOptionalText(rawSource[field]) : "";
   const existingValue = mapValue ?? (hasPlainValue ? plainValue : "");
+  const normalizedMap = normalizeLocalizedEditorMap(mapValue, sourceLang);
+  const sourceBranchValue = resolveLocalizedEditorBranchText(normalizedMap, sourceLang, "");
+  const targetBranchValue = targetLang === sourceLang
+    ? ""
+    : resolveLocalizedEditorBranchText(normalizedMap, targetLang, "");
+  const plainValueIsLocalizedReadModelText = targetLang !== sourceLang
+    && !sourceBranchValue
+    && Boolean(plainValue)
+    && plainValue === targetBranchValue;
   const sourceValue = hasPlainValue
-    ? plainValue
+    ? (sourceBranchValue || (plainValueIsLocalizedReadModelText ? "" : plainValue))
     : resolveLocalizedEditorText(existingValue, sourceLang, "");
   const localizedValue = targetLang === sourceLang
     ? sourceValue
@@ -109,56 +98,6 @@ function normalizeItemKind(value) {
   return TRAVEL_PLAN_SERVICE_KIND_OPTIONS.some((option) => option.value === normalized)
     ? normalized
     : "other";
-}
-
-function normalizeTimingKind(value) {
-  const normalized = normalizeOptionalText(value).toLowerCase();
-  return TRAVEL_PLAN_TIMING_KIND_OPTIONS.some((option) => option.value === normalized)
-    ? normalized
-    : "label";
-}
-
-function normalizeItemTiming(rawItem) {
-  const timing_kind = normalizeTimingKind(rawItem?.timing_kind);
-  const time_label = normalizeOptionalText(rawItem?.time_label);
-  const time_point = normalizeOptionalText(rawItem?.time_point);
-  const start_time = normalizeOptionalText(rawItem?.start_time);
-  const end_time = normalizeOptionalText(rawItem?.end_time);
-
-  if (timing_kind === "point") {
-    return {
-      timing_kind,
-      time_label: "",
-      time_point,
-      start_time: "",
-      end_time: ""
-    };
-  }
-  if (timing_kind === "range") {
-    return {
-      timing_kind,
-      time_label: "",
-      time_point: "",
-      start_time,
-      end_time
-    };
-  }
-  if (timing_kind === "not_applicable") {
-    return {
-      timing_kind,
-      time_label: "",
-      time_point: "",
-      start_time: "",
-      end_time: ""
-    };
-  }
-  return {
-    timing_kind,
-    time_label,
-    time_point: "",
-    start_time: "",
-    end_time: ""
-  };
 }
 
 function resolveRawItemImage(rawImageOrImages) {
@@ -248,10 +187,8 @@ function normalizeTravelPlanAttachments(attachments) {
 export function createEmptyTravelPlanService() {
   return {
     id: travelPlanId("travel_plan_service"),
-    timing_kind: "label",
-    time_label: "",
-    time_label_i18n: {},
-    time_point: "",
+    time: "",
+    time_i18n: {},
     kind: "other",
     title: "",
     title_i18n: {},
@@ -259,8 +196,6 @@ export function createEmptyTravelPlanService() {
     details_i18n: {},
     image_subtitle: "",
     image_subtitle_i18n: {},
-    start_time: "",
-    end_time: "",
     image: null
   };
 }
@@ -413,17 +348,14 @@ function normalizeTravelPlanServiceDraft(rawItem, sourceLang, targetLang, {
   fallbackKind = "other"
 } = {}) {
   const rawItemSource = rawItem && typeof rawItem === "object" ? rawItem : {};
-  const timing = normalizeItemTiming(rawItemSource);
-  const timeLabelField = normalizeDraftLocalizedPayload(rawItemSource, "time_label", sourceLang, targetLang);
+  const timeField = normalizeDraftLocalizedPayload(rawItemSource, "time", sourceLang, targetLang);
   const titleField = normalizeDraftLocalizedPayload(rawItemSource, "title", sourceLang, targetLang);
   const detailsField = normalizeDraftLocalizedPayload(rawItemSource, "details", sourceLang, targetLang);
   const imageSubtitleField = normalizeDraftLocalizedPayload(rawItem, "image_subtitle", sourceLang, targetLang);
   return {
     id: String(rawItemSource.id || travelPlanId(fallbackIdPrefix)),
-    timing_kind: timing.timing_kind,
-    time_label: timeLabelField.text,
-    time_label_i18n: timeLabelField.map,
-    time_point: timing.time_point,
+    time: timeField.text,
+    time_i18n: timeField.map,
     kind: normalizeItemKind(rawItemSource.kind || fallbackKind),
     title: titleField.text,
     title_i18n: titleField.map,
@@ -431,8 +363,6 @@ function normalizeTravelPlanServiceDraft(rawItem, sourceLang, targetLang, {
     details_i18n: detailsField.map,
     image_subtitle: imageSubtitleField.text,
     image_subtitle_i18n: imageSubtitleField.map,
-    start_time: timing.start_time,
-    end_time: timing.end_time,
     image: normalizeItemImage(rawItemSource.image ?? rawItemSource.images, sourceLang, targetLang)
   };
 }

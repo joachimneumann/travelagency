@@ -1620,10 +1620,8 @@ function cloneBookingMarketingTourServiceForLocalImport({ searchResult }) {
     : null;
   if (!sourceService) return null;
   return {
-    timing_kind: "not_applicable",
-    time_label: null,
-    time_label_i18n: {},
-    time_point: null,
+    time: null,
+    time_i18n: {},
     kind: normalizeText(sourceService.kind) || "other",
     title: preferredEnglishImportText(sourceService.title_i18n, sourceService.title),
     title_i18n: {},
@@ -1631,8 +1629,6 @@ function cloneBookingMarketingTourServiceForLocalImport({ searchResult }) {
     details_i18n: {},
     image_subtitle: preferredEnglishImportText(sourceService.image_subtitle_i18n, sourceService.image_subtitle) || null,
     image_subtitle_i18n: {},
-    start_time: null,
-    end_time: null,
     image: cloneMarketingTourSourceImageForLocalBookingInsert(sourceService.image)
   };
 }

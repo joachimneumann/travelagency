@@ -611,8 +611,7 @@ test("public booking request inherits the selected marketing tour travel plan wi
                 services: [
                   {
                     id: "public_booking_source_service_1",
-                    timing_kind: "label",
-                    time_label: "Morning",
+                    time: "Morning",
                     kind: "activity",
                     title: "English service title",
                     title_i18n: {
@@ -702,9 +701,8 @@ test("public booking request inherits the selected marketing tour travel plan wi
     assert.deepEqual(service.details_i18n, {
       en: "This service detail should reach the booking"
     });
-    assert.equal(service.timing_kind, "not_applicable");
-    assert.equal(service.time_label, null);
-    assert.deepEqual(service.time_label_i18n, {});
+    assert.equal(service.time, null);
+    assert.deepEqual(service.time_i18n, {});
     assert.notEqual(service.id, "public_booking_source_service_1");
     if (uploadedImage) {
       assert.ok(service.image);
@@ -749,8 +747,7 @@ test("public booking request materializes submitted custom tour day selections",
                 services: [
                   {
                     id: "custom_booking_base_service_1",
-                    timing_kind: "label",
-                    time_label: "Morning",
+                    time: "Morning",
                     kind: "activity",
                     title: "Base service one"
                   }
@@ -764,8 +761,7 @@ test("public booking request materializes submitted custom tour day selections",
                 services: [
                   {
                     id: "custom_booking_base_service_2",
-                    timing_kind: "label",
-                    time_label: "Afternoon",
+                    time: "Afternoon",
                     kind: "meal",
                     title: "Base service two selected"
                   }
@@ -801,8 +797,7 @@ test("public booking request materializes submitted custom tour day selections",
                 services: [
                   {
                     id: "custom_booking_optional_service",
-                    timing_kind: "label",
-                    time_label: "Evening",
+                    time: "Evening",
                     kind: "activity",
                     title: "Optional service selected first"
                   }
@@ -1531,30 +1526,25 @@ test("booking travel plan patch persists days and services", async () => {
               services: [
                 {
                   id: "travel_plan_service_1",
-                  timing_kind: "point",
-                  time_point: "19:00",
+                  time: "19:00",
                   kind: "transport",
                   title: "Airport transfer"
                 },
                 {
                   id: "travel_plan_service_2",
-                  timing_kind: "range",
-                  start_time: "14:00",
-                  end_time: "15:00",
+                  time: "14:00 - 15:00",
                   kind: "accommodation",
                   title: "Hotel check-in"
                 },
                 {
                   id: "travel_plan_service_3",
-                  timing_kind: "label",
-                  time_label: "Evening",
+                  time: "Evening",
                   kind: "free_time",
                   title: "Explore the old town"
                 },
                 {
                   id: "travel_plan_service_4",
-                  timing_kind: "label",
-                  time_label: "2 days",
+                  time: "2 days",
                   kind: "activity",
                   title: "Mountain hiking"
                 }
@@ -1568,21 +1558,68 @@ test("booking travel plan patch persists days and services", async () => {
   assert.equal(travelPlanPatchResult.status, 200);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan_revision, 1);
   assert.equal(travelPlanPatchResult.body.booking.travel_plan.days.length, 1);
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].timing_kind, "point");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].time_label, null);
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].timing_kind, "range");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].start_time, "14:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].end_time, "15:00");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].timing_kind, "label");
-  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].time_label, "Evening");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[0].time, "19:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[1].time, "14:00 - 15:00");
+  assert.equal(travelPlanPatchResult.body.booking.travel_plan.days[0].services[2].time, "Evening");
   const detailAfter = await requestJson(
     endpointPath("booking_detail").replace("{booking_id}", bookingId),
     apiHeaders()
   );
   assert.equal(detailAfter.status, 200);
   assert.equal(detailAfter.body.booking.travel_plan.days[0].title, "Arrival");
-  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].time_point, "19:00");
+  assert.equal(detailAfter.body.booking.travel_plan.days[0].services[0].time, "19:00");
+
+  const localizedSourceEditResult = await requestJson(
+    `${endpointPath("booking_travel_plan").replace("{booking_id}", bookingId)}?content_lang=vi&source_lang=en`,
+    apiHeaders(),
+    {
+      method: "PATCH",
+      body: {
+        expected_travel_plan_revision: travelPlanPatchResult.body.booking.travel_plan_revision,
+        content_lang: "vi",
+        source_lang: "en",
+        travel_plan: {
+          days: [
+            {
+              id: "travel_plan_day_1",
+              day_number: 1,
+              title: "Arrival updated from booking",
+              title_i18n: {
+                vi: "Den noi"
+              },
+              notes: "Updated day details from booking",
+              notes_i18n: {
+                vi: "Chi tiet ngay da cap nhat"
+              },
+              services: [
+                {
+                  id: "travel_plan_service_1",
+                  time: "19:00",
+                  kind: "transport",
+                  title: "Airport transfer"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  );
+  assert.equal(localizedSourceEditResult.status, 200);
+  assert.equal(localizedSourceEditResult.body.booking.travel_plan.days[0].title, "Den noi");
+  assert.equal(localizedSourceEditResult.body.booking.travel_plan.days[0].notes, "Chi tiet ngay da cap nhat");
+  assert.equal(localizedSourceEditResult.body.booking.travel_plan.days[0].title_i18n.en, "Arrival updated from booking");
+  assert.equal(localizedSourceEditResult.body.booking.travel_plan.days[0].notes_i18n.en, "Updated day details from booking");
+  assert.equal(localizedSourceEditResult.body.booking.travel_plan.days[0].title_i18n.vi, "Den noi");
+  assert.equal(localizedSourceEditResult.body.booking.travel_plan.days[0].notes_i18n.vi, "Chi tiet ngay da cap nhat");
+
+  const sourceDetailAfterLocalizedEdit = await requestJson(
+    `${endpointPath("booking_detail").replace("{booking_id}", bookingId)}?content_lang=en&source_lang=en`,
+    apiHeaders()
+  );
+  assert.equal(sourceDetailAfterLocalizedEdit.status, 200);
+  assert.equal(sourceDetailAfterLocalizedEdit.body.booking.travel_plan.days[0].title, "Arrival updated from booking");
+  assert.equal(sourceDetailAfterLocalizedEdit.body.booking.travel_plan.days[0].notes, "Updated day details from booking");
 
   const activitiesAfter = await requestJson(
     endpointPath("booking_activities").replace("{booking_id}", bookingId),
@@ -1679,7 +1716,7 @@ test("booking travel plan patch allows blank service titles and still rejects in
   assert.equal(missingTitleResult.body.booking.travel_plan.days[0].services[0].title, "");
   const nextTravelPlanRevision = missingTitleResult.body.booking.travel_plan_revision;
 
-  const missingPointTimeResult = await requestJson(
+  const duplicateServiceResult = await requestJson(
     endpointPath("booking_travel_plan").replace("{booking_id}", bookingId),
     apiHeaders(),
     {
@@ -1695,9 +1732,14 @@ test("booking travel plan patch allows blank service titles and still rejects in
               services: [
                 {
                   id: "travel_plan_service_1",
-                  timing_kind: "point",
+                  time: "19:00",
                   kind: "transport",
                   title: "Airport transfer"
+                },
+                {
+                  id: "travel_plan_service_1",
+                  kind: "activity",
+                  title: "Duplicate service"
                 }
               ]
             }
@@ -1706,8 +1748,8 @@ test("booking travel plan patch allows blank service titles and still rejects in
       }
     }
   );
-  assert.equal(missingPointTimeResult.status, 422);
-  assert.match(String(missingPointTimeResult.body.error || ""), /time point/i);
+  assert.equal(duplicateServiceResult.status, 422);
+  assert.match(String(duplicateServiceResult.body.error || ""), /duplicated/i);
 
 });
 
@@ -1767,7 +1809,6 @@ test("marketing tour apply copies the marketing travel plan into a booking trave
                 services: [
                   {
                     id: "marketing_tour_source_service_1",
-                    timing_kind: "label",
                     kind: "activity",
                     title: "Marketing tour service marker",
                     details: "Marketing tour service detail marker",
@@ -1847,7 +1888,6 @@ test("marketing tour editor can import days and services from other marketing to
                 services: [
                   {
                     id: "marketing_library_source_service_1",
-                    timing_kind: "label",
 	                    kind: "activity",
 	                    title: "Library lantern service",
 	                    details: "Library lantern service details",
@@ -1955,7 +1995,6 @@ test("marketing tour editor can import days and services from other marketing to
             draft.days[0].services = [
               {
                 id: "marketing_library_target_existing_service_1",
-                timing_kind: "not_applicable",
                 kind: "activity",
                 title: "Existing draft service"
               }
@@ -2044,7 +2083,6 @@ test("booking editor can import days and services from marketing tours", async (
                 services: [
                   {
                     id: "booking_marketing_source_service_1",
-                    timing_kind: "label",
 	                    kind: "activity",
 	                    title: "Reusable booking service",
 	                    details: "Reusable booking service details",
@@ -2104,7 +2142,6 @@ test("booking editor can import days and services from marketing tours", async (
                 services: [
                   {
                     id: "booking_marketing_target_existing_service_1",
-                    timing_kind: "not_applicable",
                     kind: "activity",
                     title: "Existing draft booking service"
                   }
@@ -2127,7 +2164,6 @@ test("booking editor can import days and services from marketing tours", async (
     assert.equal(importedService.details_i18n?.en, "Reusable booking service details");
     assert.equal(importedService.details_i18n?.de, undefined);
     assert.notEqual(importedService.id, "booking_marketing_source_service_1");
-    assert.equal(importedService.timing_kind, "not_applicable");
 
     const dayImportResult = await requestJson(
       endpointPath("booking_travel_plan_day_import").replace("{booking_id}", targetBooking.id),
@@ -2239,7 +2275,6 @@ test("booking travel plan save preserves locally inserted tour-backed service im
                 services: [
                   {
                     id: "booking_local_insert_service_1",
-                    timing_kind: "not_applicable",
                     kind: "activity",
                     title: "Locally inserted booking service",
                     image: {
@@ -2294,8 +2329,7 @@ test("service image can be deleted", async () => {
         services: [
           {
             id: "travel_item_1",
-            timing_kind: "label",
-            time_label: "Morning",
+            time: "Morning",
             kind: "activity",
             title: "Citadel visit",
             details: "Guided walk",
@@ -2347,8 +2381,7 @@ test("service image upload keeps exactly one image", { skip: !HAS_MAGICK }, asyn
         services: [
           {
             id: "travel_item_upload_1",
-            timing_kind: "label",
-            time_label: "Anytime",
+            time: "Anytime",
             kind: "activity",
             title: "Photo item",
             details: "",
@@ -2410,8 +2443,7 @@ test("travel plan PDF attachments normalize non-A4 uploads and append to travel-
               services: [
                 {
                   id: "travel_plan_service_attachment_1",
-                  timing_kind: "label",
-                  time_label: "Afternoon",
+                  time: "Afternoon",
                   kind: "accommodation",
                   title: "Riverside hotel check-in",
                   details: "Private transfer and hotel arrival.",
@@ -2792,16 +2824,14 @@ test("booking generated offers store immutable snapshots", async () => {
               services: [
                 {
                   id: "travel_plan_service_1",
-                  timing_kind: "point",
-                  time_point: "2026-04-10T19:00",
+                  time: "19:00",
                   kind: "transport",
                   title: "Airport transfer",
                   details: "Private transfer from Da Nang airport to the hotel in Hoi An."
                 },
                 {
                   id: "travel_plan_service_2",
-                  timing_kind: "label",
-                  time_label: "Evening",
+                  time: "Evening",
                   kind: "accommodation",
                   title: "Hotel check-in",
                 }
@@ -2870,8 +2900,7 @@ test("booking generated offers store immutable snapshots", async () => {
               services: [
                 {
                   id: "travel_plan_service_1",
-                  timing_kind: "point",
-                  time_point: "2026-04-10T20:00",
+                  time: "20:00",
                   kind: "transport",
                   title: "Updated airport transfer"
                 }
@@ -3048,8 +3077,7 @@ test("booking travel plan pdf endpoint returns itinerary content without travele
       notes: "PublicDayNote731",
       services: [{
         id: "travel_plan_service_pdf_marker",
-        timing_kind: "point",
-        time_point: "2026-03-20T14:00",
+        time: "14:00",
         kind: "activity",
         title: "PublicItemMarker731",
         details: "PublicDetailsMarker731",
@@ -3795,16 +3823,14 @@ test("deposit receipt freezes the accepted customer record and keeps it stable a
               services: [
                 {
                   id: "travel_plan_service_frozen_1",
-                  timing_kind: "point",
-                  time_point: "2026-04-10T18:30",
+                  time: "18:30",
                   kind: "transport",
                   title: "Airport pickup",
                   details: "Private airport pickup."
                 },
                 {
                   id: "travel_plan_service_frozen_2",
-                  timing_kind: "label",
-                  time_label: "Evening",
+                  time: "Evening",
                   kind: "accommodation",
                   title: "Resort check-in",
                 }
@@ -5122,8 +5148,7 @@ test("first payment request freezes the accepted commercial snapshot before a re
               services: [
                 {
                   id: "travel_plan_service_first_request",
-                  timing_kind: "point",
-                  time_point: "19:00",
+                  time: "19:00",
                   kind: "transport",
                   title: "Original airport pickup"
                 }
@@ -5792,7 +5817,6 @@ test("public tours only expose destinations published on webpage and hide unpubl
                 services: [
                   {
                     id: "visible_public_tour_service_1",
-                    timing_kind: "label",
                     kind: "activity",
                     title: "Visible Vietnam service 1",
                     image: {
@@ -5805,7 +5829,6 @@ test("public tours only expose destinations published on webpage and hide unpubl
                   },
                   {
                     id: "visible_public_tour_service_2",
-                    timing_kind: "label",
                     kind: "activity",
                     title: "Visible Vietnam service 2",
                     image: {

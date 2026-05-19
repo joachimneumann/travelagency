@@ -237,7 +237,7 @@ export function createBookingOfferModule(ctx) {
         ? day.services
         : (Array.isArray(day?.items) ? day.items : []);
       services.forEach((item) => {
-        considerField(item?.time_label_i18n);
+        considerField(item?.time_i18n);
         considerField(item?.title_i18n);
         considerField(item?.details_i18n);
       });

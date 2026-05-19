@@ -3105,18 +3105,21 @@ test("persons and travel plan editors no longer autosave from local interactions
   const travelPlanImagesModulePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_images.js");
   const bookingPageSourcePath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "booking.js");
   const bookingTravelPlanImageHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan_images.js");
+  const bookingTravelPlanHandlerPath = path.resolve(__dirname, "..", "src", "http", "handlers", "booking_travel_plan.js");
   const [
     personsSource,
     travelPlanSource,
     travelPlanImagesSource,
     bookingPageSource,
-    bookingTravelPlanImageHandlerSource
+    bookingTravelPlanImageHandlerSource,
+    bookingTravelPlanHandlerSource
   ] = await Promise.all([
     readFile(personsModulePath, "utf8"),
     readFile(travelPlanModulePath, "utf8"),
     readFile(travelPlanImagesModulePath, "utf8"),
     readFile(bookingPageSourcePath, "utf8"),
-    readFile(bookingTravelPlanImageHandlerPath, "utf8")
+    readFile(bookingTravelPlanImageHandlerPath, "utf8"),
+    readFile(bookingTravelPlanHandlerPath, "utf8")
   ]);
 
   assert.doesNotMatch(
@@ -3163,6 +3166,24 @@ test("persons and travel plan editors no longer autosave from local interactions
     travelPlanSource,
     /bookingTravelPlanRequest\(\{[\s\S]*content_lang: bookingContentLang\(\),[\s\S]*source_lang: bookingSourceLang\(\)[\s\S]*query: bookingLanguageQuery\(\)/,
     "Booking travel-plan fallback saves should keep the active content and source languages explicit"
+  );
+  assert.match(
+    bookingTravelPlanHandlerSource,
+    /const nextNormalized = normalizeBookingTravelPlan\(nextTravelPlan, offer, \{[\s\S]*contentLang: normalizedLang,[\s\S]*flatLang: normalizedLang,[\s\S]*sourceLang: normalizedSourceLang,[\s\S]*hydrateSourceIntoLocalizedMaps: true,[\s\S]*strictReferences: false/,
+    "Booking travel-plan saves should keep submitted English source title/details hydrated while merging non-English booking pages"
+  );
+  const bookingTravelPlanPatchHandlerSource = bookingTravelPlanHandlerSource.match(
+    /async function handlePatchBookingTravelPlan\(req, res, \[bookingId\]\) \{[\s\S]*?\n  async function handleTranslateBookingTravelPlanFromEnglish/
+  )?.[0] || "";
+  assert.match(
+    bookingTravelPlanPatchHandlerSource,
+    /const store = await readStore\(\);[\s\S]*booking\.travel_plan = persistedTravelPlan;[\s\S]*await persistStore\(store\);/,
+    "Booking travel-plan PATCH should stay behind the store read/persist boundary so it can move to a database repository"
+  );
+  assert.doesNotMatch(
+    bookingTravelPlanPatchHandlerSource,
+    /CONTENT_ROOT|CONTENT_ONE_PAGER|content\/|readTours\(|normalizeTourForStorage|writeFile\(|rm\(|homepage_assets|tour-images/,
+    "Booking travel-plan PATCH should not couple booking persistence to content-folder or marketing-tour filesystem writes"
   );
   assert.match(
     bookingTravelPlanImageHandlerSource,
@@ -3361,7 +3382,6 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   const bookingPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "booking.html");
   const marketingTourPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "marketing_tour.html");
   const travelPlanCssPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
-  const generatedCatalogsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "generated_catalogs.js");
   const [source, helperSource, bookingPageSource, marketingTourPageSource, cssSource] = await Promise.all([
     readFile(travelPlanModulePath, "utf8"),
     readFile(travelPlanHelpersPath, "utf8"),
@@ -3369,7 +3389,6 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
     readFile(marketingTourPagePath, "utf8"),
     readFile(travelPlanCssPath, "utf8")
   ]);
-  const generatedCatalogs = await import(`${pathToFileURL(generatedCatalogsPath).href}?test=${Date.now()}`);
 
   for (const helperName of ["addDay", "removeDay", "addItem", "removeItem", "moveItem"]) {
     assert.match(
@@ -3380,43 +3399,23 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   }
   assert.match(
     source,
-    /TRAVEL_PLAN_TIMING_KIND_OPTIONS/,
-    "travel_plan.js should render timing kinds from the shared helper constant"
+    /field: "time"[\s\S]*sourceValue: resolveLocalizedDraftBranchText\(item\.time_i18n \?\? item\.time/,
+    "travel_plan.js should render one localized Time field for each item"
   );
-  assert.match(
+  assert.doesNotMatch(
     source,
-    /data-travel-plan-service-field="timing_kind"/,
-    "travel_plan.js should render a timing mode selector for each item"
+    new RegExp(`data-travel-plan-service-field="(?:timing_${"kind"}|time_${"point"}_date|time_${"point"}_time|start_${"time"}_date|start_${"time"}_time|end_${"time"}_date|end_${"time"}_time)"`),
+    "travel_plan.js should not render removed timing mode/date/time controls"
   );
-  assert.match(
-    source,
-    /data-travel-plan-service-field="time_point_date"/,
-    "travel_plan.js should render a date input for point timing mode"
+  assert.doesNotMatch(
+    helperSource,
+    new RegExp(`TRAVEL_PLAN_${"TIMING"}_KIND_OPTIONS|timing_${"kind"}|time_${"point"}|start_${"time"}|end_${"time"}`),
+    "travel_plan helper should not expose the removed timing mode fields"
   );
-  assert.match(
+  assert.doesNotMatch(
     source,
-    /data-travel-plan-service-field="time_point_time"/,
-    "travel_plan.js should render a 5-minute time selector for point timing mode"
-  );
-  assert.match(
-    source,
-    /data-travel-plan-service-field="start_time_date"/,
-    "travel_plan.js should render a start-date input for range timing mode"
-  );
-  assert.match(
-    source,
-    /data-travel-plan-service-field="start_time_time"/,
-    "travel_plan.js should render a start-time selector for range timing mode"
-  );
-  assert.match(
-    source,
-    /data-travel-plan-service-field="end_time_date"/,
-    "travel_plan.js should render an end-date input for range timing mode"
-  );
-  assert.match(
-    source,
-    /data-travel-plan-service-field="end_time_time"/,
-    "travel_plan.js should render an end-time selector for range timing mode"
+    new RegExp(`TRAVEL_PLAN_${"TIMING"}_KIND_OPTIONS|timing_${"kind"}|time_${"point"}|start_${"time"}|end_${"time"}`),
+    "travel_plan.js should not expose the removed timing mode fields"
   );
   assert.doesNotMatch(
     source,
@@ -3465,6 +3464,21 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     source,
+    /function renderTravelPlanMapPanel\(\) \{[\s\S]*<aside class="travel-plan-booking-map"[\s\S]*renderTravelPlanCustomizerLauncher\(\)[\s\S]*<div class="travel-plan-booking-workspace">[\s\S]*\$\{renderTravelPlanMapPanel\(\)\}[\s\S]*\$\{renderTravelPlanSidebar\(selection\)\}[\s\S]*\$\{renderTravelPlanFocusedEditor\(selection\)\}/,
+    "focused booking travel-plan workspace should render map, day list, and day details as separate columns"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-booking-workspace \{[\s\S]*grid-template-areas: "map nav details";[\s\S]*grid-template-columns: minmax\(200px, 220px\) minmax\(240px, 310px\) minmax\(0, 1fr\);[\s\S]*\.travel-plan-booking-map \{[\s\S]*grid-area: map;[\s\S]*\.travel-plan-booking-sidebar \{[\s\S]*grid-area: nav;[\s\S]*\.travel-plan-booking-editor \{[\s\S]*grid-area: details;/,
+    "focused booking travel-plan CSS should place the map left, day list center, and details right on wide screens"
+  );
+  assert.match(
+    cssSource,
+    /@media \(max-width: 1180px\) \{[\s\S]*\.travel-plan-booking-workspace \{[\s\S]*grid-template-areas:[\s\S]*"map details"[\s\S]*"nav details";[\s\S]*@media \(max-width: 860px\) \{[\s\S]*\.travel-plan-booking-workspace \{[\s\S]*grid-template-areas:[\s\S]*"map"[\s\S]*"nav"[\s\S]*"details";/,
+    "focused booking travel-plan layout should collapse responsively below desktop widths"
+  );
+  assert.match(
+    source,
     /travel-plan-grid--map-locations\$\{focusedBookingEditor \? " travel-plan-focused-day-grid__map" : ""\}[\s\S]*<div class="travel-plan-focused-day-grid">[\s\S]*travel-plan-focused-day-grid__row--details[\s\S]*travel-plan-focused-day-grid__row--date[\s\S]*\$\{dayMapLocationFields\}/,
     "focused booking day details should render details, date, and map fields inside one grid"
   );
@@ -3490,11 +3504,6 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     source,
-    /for \(let minute = 0; minute < 60; minute \+= 5\)/,
-    "travel_plan.js should offer 5-minute time increments instead of free one-minute entry"
-  );
-  assert.match(
-    source,
     /function renderTravelPlanLocalizedField\(\{[\s\S]*sourceValue = ""[\s\S]*renderLocalizedStackedField\(\{[\s\S]*targetLang: bookingSourceLang\(\),[\s\S]*translateEnabled: false,[\s\S]*sourceValue,/,
     "booking travel-plan editor fields should render only the English source fields without inline translation controls"
   );
@@ -3512,25 +3521,6 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
     source,
     /type="datetime-local"/,
     "travel_plan.js should no longer rely on datetime-local inputs for timing mode selection"
-  );
-  assert.equal(
-    generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.length,
-    4,
-    "Generated Travel plan timing options should stay populated from the schema runtime"
-  );
-  assert.deepEqual(
-    generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value),
-    ["label", "not_applicable", "point", "range"]
-  );
-  assert.match(
-    helperSource,
-    /option\.value === "not_applicable"[\s\S]*"Not applicable"/,
-    "Travel-plan timing helper labels should localize the not_applicable timing mode"
-  );
-  assert.match(
-    source,
-    /timingKind === "not_applicable"[\s\S]*booking\.travel_plan\.timing_kind\.not_applicable/,
-    "travel_plan.js should render and summarize the not_applicable timing mode"
   );
 });
 
@@ -3708,10 +3698,10 @@ test("travel-plan day date presets stay removed across model, API, backend, and 
     /includeBoundaryDates/,
     "The backend booking travel-plan normalizer should derive boundary dates instead of storing them"
   );
-  assert.match(
+  assert.doesNotMatch(
     backendSource,
     /function normalizeBoundaryTimeValue/,
-    "The backend boundary normalizer should strip legacy date portions from boundary timing values"
+    "The backend boundary normalizer should not keep legacy boundary timing cleanup"
   );
   assert.doesNotMatch(
     helperSource,
@@ -3740,8 +3730,8 @@ test("travel-plan day date presets stay removed across model, API, backend, and 
   );
   assert.doesNotMatch(
     uiSource,
-    /data-travel-plan-boundary-field="(?:time_point|start_time|end_time)_date"/,
-    "The booking travel-plan UI should derive boundary timing dates instead of exposing boundary date inputs"
+    /data-travel-plan-boundary-field="[^"]+_date"/,
+    "The booking travel-plan UI should not expose boundary date inputs"
   );
   assert.doesNotMatch(
     travelPlanStyles,
@@ -7139,7 +7129,7 @@ test("tour customizer floating drag elements stay inside the active customizer r
   );
   assert.match(
     tourCustomizerSource,
-    /--tour-customize-workspace-background: transparent;[\s\S]*\.tour-customize-root\.tour-customize-runtime-root \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize__workspace \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded \{[\s\S]*border: 0;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \{[\s\S]*place-items: center;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-map__stage \{[\s\S]*width: min\(100%, 200px\);[\s\S]*aspect-ratio: 1 \/ 2;/,
+    /--tour-customize-workspace-background: transparent;[\s\S]*\.tour-customize-root\.tour-customize-runtime-root \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize__workspace \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded \{[\s\S]*border: 0;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \{[\s\S]*place-items: center;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-map__stage \{[\s\S]*width: min\(100%, 200px\);[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);[\s\S]*aspect-ratio: 1 \/ 2;/,
     "Preview customizer wrappers should be visually transparent while the map keeps its fixed centered aspect ratio"
   );
   assert.doesNotMatch(

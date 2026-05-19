@@ -1,5 +1,5 @@
 # Generated from model/ (CUE) via tools/generator. Do not edit by hand.
-# 2026-05-17T16:04:28Z
+# 2026-05-18T10:45:45Z
 
 ---
 openapi: 3.1.0
@@ -448,27 +448,6 @@ components:
         label: other
       - value: prefer_not_to_say
         label: prefer_not_to_say
-    TravelPlanTimingKind:
-      type: string
-      enum:
-      - label
-      - not_applicable
-      - point
-      - range
-      x-enum-catalog:
-      - code: label
-      - code: not_applicable
-      - code: point
-      - code: range
-      x-enum-options:
-      - value: label
-        label: label
-      - value: not_applicable
-        label: not_applicable
-      - value: point
-        label: point
-      - value: range
-        label: range
     TravelPlanServiceKind:
       type: string
       enum:
@@ -3995,23 +3974,17 @@ components:
       type: object
       required:
       - id
-      - timing_kind
       - kind
       properties:
         id:
           type: string
-        timing_kind:
-          "$ref": "#/components/schemas/TravelPlanTimingKind"
-        time_label:
+        time:
           type: string
           nullable: true
-        time_label_i18n:
+        time_i18n:
           type: object
           additionalProperties:
             type: string
-          nullable: true
-        time_point:
-          type: string
           nullable: true
         kind:
           "$ref": "#/components/schemas/TravelPlanServiceKind"
@@ -4038,12 +4011,6 @@ components:
           type: object
           additionalProperties:
             type: string
-          nullable: true
-        start_time:
-          type: string
-          nullable: true
-        end_time:
-          type: string
           nullable: true
         image:
           "$ref": "#/components/schemas/TravelPlanServiceImage"
@@ -4093,7 +4060,6 @@ components:
       required:
       - id
       - boundary_kind
-      - timing_kind
       - kind
       properties:
         id:
@@ -4103,18 +4069,13 @@ components:
         enabled:
           type: boolean
           nullable: true
-        timing_kind:
-          "$ref": "#/components/schemas/TravelPlanTimingKind"
-        time_label:
+        time:
           type: string
           nullable: true
-        time_label_i18n:
+        time_i18n:
           type: object
           additionalProperties:
             type: string
-          nullable: true
-        time_point:
-          type: string
           nullable: true
         kind:
           "$ref": "#/components/schemas/TravelPlanServiceKind"
@@ -4141,12 +4102,6 @@ components:
           type: object
           additionalProperties:
             type: string
-          nullable: true
-        start_time:
-          type: string
-          nullable: true
-        end_time:
-          type: string
           nullable: true
         image:
           "$ref": "#/components/schemas/TravelPlanServiceImage"
@@ -4178,7 +4133,6 @@ components:
       required:
       - id
       - boundary_kind
-      - timing_kind
       - kind
       properties:
         id:
@@ -4188,18 +4142,13 @@ components:
         enabled:
           type: boolean
           nullable: true
-        timing_kind:
-          "$ref": "#/components/schemas/TravelPlanTimingKind"
-        time_label:
+        time:
           type: string
           nullable: true
-        time_label_i18n:
+        time_i18n:
           type: object
           additionalProperties:
             type: string
-          nullable: true
-        time_point:
-          type: string
           nullable: true
         kind:
           "$ref": "#/components/schemas/TravelPlanServiceKind"
@@ -4226,12 +4175,6 @@ components:
           type: object
           additionalProperties:
             type: string
-          nullable: true
-        start_time:
-          type: string
-          nullable: true
-        end_time:
-          type: string
           nullable: true
         image:
           "$ref": "#/components/schemas/TravelPlanServiceImage"
@@ -4577,18 +4520,17 @@ components:
       type: object
       required:
       - id
-      - timing_kind
       - kind
       properties:
         id:
           type: string
-        timing_kind:
-          "$ref": "#/components/schemas/TravelPlanTimingKind"
-        time_label:
+        time:
           type: string
           nullable: true
-        time_point:
-          type: string
+        time_i18n:
+          type: object
+          additionalProperties:
+            type: string
           nullable: true
         kind:
           "$ref": "#/components/schemas/TravelPlanServiceKind"
@@ -4610,12 +4552,6 @@ components:
           type: object
           additionalProperties:
             type: string
-          nullable: true
-        start_time:
-          type: string
-          nullable: true
-        end_time:
-          type: string
           nullable: true
         image:
           "$ref": "#/components/schemas/BookingTravelPlanServiceImage"

@@ -60,7 +60,6 @@ import (
 		BookingReferralKind:                          enumModel.#BookingReferralKind
 		BookingPersonRole:                            enumModel.#BookingPersonRole
 		BookingPersonGender:                          enumModel.#BookingPersonGender
-		TravelPlanTimingKind:                         enumModel.#TravelPlanTimingKind
 		TravelPlanServiceKind:                        enumModel.#TravelPlanServiceKind
 		TravelPlanBoundaryKind:                       enumModel.#TravelPlanBoundaryKind
 		TravelPlanBoundaryPlacementKind:              enumModel.#TravelPlanBoundaryPlacementKind
