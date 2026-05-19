@@ -1069,6 +1069,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   border-radius: 8px;
   background: #fff;
   box-shadow: 0 2px 8px rgba(17, 27, 33, 0.08);
+  font-size: 0.9rem;
   text-align: center;
   cursor: grab;
   touch-action: none;
@@ -1388,9 +1389,9 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 .tour-customize-root .tour-customize-option h4 {
   display: -webkit-box;
   overflow: hidden;
-  font-size: 0.78rem;
-  font-weight: var(--font-weight-regular);
-  line-height: 1.12;
+  font-size: inherit;
+  font-weight: normal;
+  line-height: 1.1;
   text-align: center;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -1398,14 +1399,13 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 
 .tour-customize-root .tour-customize-option p {
   overflow: hidden;
-  font-size: 0.72rem;
+  font-size: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .tour-customize-root .tour-customize-option__location {
   color: var(--accent);
-  font-weight: var(--font-weight-bold);
 }
 
 .tour-customize-root .tour-customize-option__body p:not(.tour-customize-option__location) {
@@ -1448,7 +1448,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   width: 100%;
   max-width: 100%;
   color: var(--accent);
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: var(--font-weight-bold);
   overflow: hidden;
   text-align: center;
