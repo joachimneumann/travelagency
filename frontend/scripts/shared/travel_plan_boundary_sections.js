@@ -125,6 +125,7 @@ export function createTravelPlanBoundarySectionsRenderer({
   allowServiceDetails = true,
   allowTiming = false,
   airportCatalog = [],
+  airportLabelIconSrc = "/assets/img/arrival.png",
   resolvePlacementValue = null,
   renderLocalizedField = null,
   renderTimingFields = null
@@ -172,8 +173,8 @@ export function createTravelPlanBoundarySectionsRenderer({
     const disabled = canEdit && !forceDisabled ? "" : "disabled";
     if (allowAirportSelect) {
       const airportLabel = translate(t, "booking.travel_plan.airport", "Airport");
-      const airportLabelMarkup = normalizedBoundaryKind === "arrival"
-        ? `<span class="travel-plan-boundary__airport-label-icon" aria-hidden="true"><img src="/assets/img/arrival.png" alt="" loading="lazy" decoding="async" /></span><span class="visually-hidden">${escapeHtml(airportLabel)}</span>`
+      const airportLabelMarkup = normalizedBoundaryKind === "arrival" && normalizeText(airportLabelIconSrc)
+        ? `<span class="travel-plan-boundary__airport-label-icon" aria-hidden="true"><img src="${escapeHtml(airportLabelIconSrc)}" alt="" loading="lazy" decoding="async" /></span><span class="visually-hidden">${escapeHtml(airportLabel)}</span>`
         : escapeHtml(airportLabel);
       return `
         <div class="field travel-plan-boundary__airport-field">

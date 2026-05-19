@@ -22,10 +22,21 @@ const FLUID_TEXT_IMAGE_SERVICE_LIMIT = 2;
 const TRAVEL_PLAN_IMAGE_FRAME_INSET = 8;
 const TRAVEL_PLAN_IMAGE_FRAME_SHAPE_INTENSITY = 0.38;
 const TRAVEL_PLAN_TRIP_LABEL_COLOR = "#F27A1A";
-const BOUNDARY_ICON_COLOR = Object.freeze({ r: 242, g: 122, b: 26 });
+const BOUNDARY_ICON_COLOR = Object.freeze({ r: 0, g: 0, b: 0 });
 const BOUNDARY_INLINE_ICON_WIDTH = 18;
 const BOUNDARY_INLINE_ICON_HEIGHT = 10;
 const BOUNDARY_INLINE_ICON_GAP = 6;
+const BOUNDARY_LOGISTICS_CARD_MIN_HEIGHT = 44;
+const BOUNDARY_LOGISTICS_CARD_PADDING_X = 12;
+const BOUNDARY_LOGISTICS_CARD_PADDING_Y = 8;
+const BOUNDARY_LOGISTICS_CARD_RADIUS = 7;
+const BOUNDARY_LOGISTICS_CARD_MAX_WIDTH = 390;
+const BOUNDARY_LOGISTICS_CARD_ICON_WIDTH = 34;
+const BOUNDARY_LOGISTICS_CARD_ICON_HEIGHT = 24;
+const BOUNDARY_LOGISTICS_CARD_ICON_GAP = 12;
+const BOUNDARY_LOGISTICS_CARD_TITLE_SIZE = 12.7;
+const BOUNDARY_LOGISTICS_CARD_SUBTITLE_SIZE = 10.6;
+const BOUNDARY_LOGISTICS_CARD_DETAILS_SIZE = 9.8;
 const BOUNDARY_INLINE_ICON_Y_OFFSET = Object.freeze({
   arrival: -3.2,
   departure: -1.7
@@ -189,9 +200,21 @@ async function mapWithConcurrency(items, concurrency, worker) {
 function formatTravelPlanDate(rawValue, lang, formatPdfDateOnly) {
   const raw = normalizeText(rawValue);
   if (!raw) return "";
+  const isoDate = raw.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/);
+  if (isoDate) {
+    return `${isoDate[3]}/${isoDate[2]}/${isoDate[1]}`;
+  }
+  const parsedDate = new Date(raw);
+  if (!Number.isNaN(parsedDate.getTime())) {
+    return [
+      String(parsedDate.getUTCDate()).padStart(2, "0"),
+      String(parsedDate.getUTCMonth() + 1).padStart(2, "0"),
+      String(parsedDate.getUTCFullYear())
+    ].join("/");
+  }
   return formatPdfDateOnly(raw, lang, {
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
     year: "numeric"
   });
 }
@@ -231,6 +254,15 @@ function boundaryPresentationDayKind(day) {
   return boundaryKind === "arrival" || boundaryKind === "departure" ? boundaryKind : "";
 }
 
+function boundaryKindFromItem(item) {
+  const boundaryKind = normalizeText(item?.boundary_kind).toLowerCase();
+  return boundaryKind === "arrival" || boundaryKind === "departure" ? boundaryKind : "";
+}
+
+function isBoundaryLogisticsEntry(entry) {
+  return entry?.kind === "service" && Boolean(boundaryKindFromItem(entry?.item));
+}
+
 export function dayHeading(day, lang, pdfT) {
   const label = dayLabelText(day, lang, pdfT);
   const title = textOrNull(day?.title);
@@ -258,6 +290,42 @@ function boundaryInlineIcon(entry) {
     : null;
 }
 
+function boundaryLogisticsFallbackTitle(boundaryKind, lang, deps) {
+  return deps.pdfT(
+    lang,
+    `booking.travel_plan.${boundaryKind}`,
+    boundaryKind === "departure" ? "Departure" : "Arrival"
+  );
+}
+
+function boundaryLogisticsTitle(item, boundaryKind, lang, deps) {
+  return textOrNull(item?.title) || boundaryLogisticsFallbackTitle(boundaryKind, lang, deps);
+}
+
+function formatBoundaryLogisticsDate(rawValue, lang, formatPdfDateOnly) {
+  const raw = normalizeText(rawValue);
+  if (!raw) return "";
+  return formatTravelPlanDate(raw, lang, formatPdfDateOnly);
+}
+
+function boundaryLogisticsSubtitle(dayDate, item, lang, deps) {
+  const dateLabel = formatBoundaryLogisticsDate(dayDate, lang, deps.formatPdfDateOnly);
+  const timeLabel = normalizeText(item?.time);
+  return [dateLabel, timeLabel].filter(Boolean).join(" · ");
+}
+
+function boundaryLogisticsCardWidth(availableWidth) {
+  return Math.max(1, Math.min(Number(availableWidth) || 1, BOUNDARY_LOGISTICS_CARD_MAX_WIDTH));
+}
+
+function boundaryLogisticsCardBox(x, availableWidth) {
+  const width = boundaryLogisticsCardWidth(availableWidth);
+  return {
+    x,
+    width
+  };
+}
+
 function serviceTextLayout(entry, contentWidth) {
   return {
     icon: null,
@@ -282,6 +350,9 @@ function imageBoxHeight(doc, entry, contentWidth, fonts, deps) {
 }
 
 function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps, entry = null) {
+  if (isBoundaryLogisticsEntry(entry)) {
+    return boundaryLogisticsCardHeight(doc, entry, fonts, lang, dayDate, contentWidth, deps);
+  }
   const { icon, textWidth } = serviceTextLayout(entry, contentWidth);
   const metaParts = [formatTravelPlanTiming(item, lang, dayDate, deps.formatPdfDateOnly)].filter(Boolean);
   const title = textOrNull(item?.title) || deps.pdfT(lang, "offer.item_fallback", "Planned service");
@@ -295,6 +366,134 @@ function itemBoxHeight(doc, item, fonts, lang, dayDate, contentWidth, deps, entr
     textHeight += 4 + measureTextHeight(doc, details, { width: textWidth, fontSize: 10.2, fonts, lineGap: 2, pdfFontName: deps.pdfFontName });
   }
   return Math.max(1, textHeight, icon ? BOUNDARY_INLINE_ICON_HEIGHT : 0);
+}
+
+function boundaryLogisticsCardLayout(doc, x, y, width, entry, fonts, lang, dayDate, deps) {
+  const item = entry?.item || entry;
+  const boundaryKind = boundaryKindFromItem(item);
+  const icon = boundaryInlineIcon(entry);
+  const hasIcon = Boolean(icon?.buffer);
+  const cardBox = boundaryLogisticsCardBox(x, width);
+  const textXOffset = hasIcon
+    ? BOUNDARY_LOGISTICS_CARD_ICON_WIDTH + BOUNDARY_LOGISTICS_CARD_ICON_GAP
+    : 0;
+  const textX = cardBox.x + BOUNDARY_LOGISTICS_CARD_PADDING_X + textXOffset;
+  const textWidth = Math.max(
+    1,
+    cardBox.width - BOUNDARY_LOGISTICS_CARD_PADDING_X * 2 - textXOffset
+  );
+  const title = boundaryLogisticsTitle(item, boundaryKind, lang, deps);
+  const subtitle = boundaryLogisticsSubtitle(dayDate, item, lang, deps);
+  const details = textOrNull(item?.details);
+  const titleHeight = measureTextHeight(doc, title, {
+    width: textWidth,
+    fontSize: BOUNDARY_LOGISTICS_CARD_TITLE_SIZE,
+    fonts,
+    weight: "bold",
+    lineGap: 1,
+    pdfFontName: deps.pdfFontName
+  });
+  const subtitleHeight = subtitle
+    ? measureTextHeight(doc, subtitle, {
+      width: textWidth,
+      fontSize: BOUNDARY_LOGISTICS_CARD_SUBTITLE_SIZE,
+      fonts,
+      lineGap: 1,
+      pdfFontName: deps.pdfFontName
+    })
+    : 0;
+  const detailsHeight = details
+    ? measureTextHeight(doc, details, {
+      width: textWidth,
+      fontSize: BOUNDARY_LOGISTICS_CARD_DETAILS_SIZE,
+      fonts,
+      lineGap: 1.4,
+      pdfFontName: deps.pdfFontName
+    })
+    : 0;
+  const textHeight = titleHeight
+    + (subtitle ? 2 + subtitleHeight : 0)
+    + (details ? 6 + detailsHeight : 0);
+  const contentHeight = Math.max(
+    hasIcon ? BOUNDARY_LOGISTICS_CARD_ICON_HEIGHT : 0,
+    textHeight
+  );
+  const cardHeight = Math.max(
+    BOUNDARY_LOGISTICS_CARD_MIN_HEIGHT,
+    BOUNDARY_LOGISTICS_CARD_PADDING_Y * 2 + contentHeight
+  );
+  return {
+    cardBox,
+    cardHeight,
+    details,
+    hasIcon,
+    icon,
+    subtitle,
+    textWidth,
+    textX,
+    textY: y + (cardHeight - textHeight) / 2 - 0.6,
+    title
+  };
+}
+
+function boundaryLogisticsCardHeight(doc, entry, fonts, lang, dayDate, width, deps) {
+  return boundaryLogisticsCardLayout(doc, 0, 0, width, entry, fonts, lang, dayDate, deps).cardHeight;
+}
+
+function drawBoundaryLogisticsCard(doc, x, y, width, entry, fonts, lang, dayDate, deps) {
+  const layout = boundaryLogisticsCardLayout(doc, x, y, width, entry, fonts, lang, dayDate, deps);
+
+  doc
+    .save()
+    .roundedRect(layout.cardBox.x, y, layout.cardBox.width, layout.cardHeight, BOUNDARY_LOGISTICS_CARD_RADIUS)
+    .fillAndStroke("#FFFFFF", deps.colors.line)
+    .restore();
+
+  if (layout.hasIcon) {
+    doc.image(
+      layout.icon.buffer,
+      layout.cardBox.x + BOUNDARY_LOGISTICS_CARD_PADDING_X,
+      y + (layout.cardHeight - BOUNDARY_LOGISTICS_CARD_ICON_HEIGHT) / 2,
+      {
+        fit: [BOUNDARY_LOGISTICS_CARD_ICON_WIDTH, BOUNDARY_LOGISTICS_CARD_ICON_HEIGHT],
+        align: "center",
+        valign: "center"
+      }
+    );
+  }
+
+  doc
+    .font(deps.pdfFontName("bold", fonts))
+    .fontSize(BOUNDARY_LOGISTICS_CARD_TITLE_SIZE)
+    .fillColor(deps.colors.textStrong)
+    .text(layout.title, layout.textX, layout.textY, deps.pdfTextOptions(lang, {
+      width: layout.textWidth,
+      lineGap: 1
+    }));
+
+  if (layout.subtitle) {
+    doc
+      .font(deps.pdfFontName("regular", fonts))
+      .fontSize(BOUNDARY_LOGISTICS_CARD_SUBTITLE_SIZE)
+      .fillColor(deps.colors.textMutedStrong)
+      .text(layout.subtitle, layout.textX, doc.y + 2, deps.pdfTextOptions(lang, {
+        width: layout.textWidth,
+        lineGap: 1
+      }));
+  }
+
+  if (layout.details) {
+    doc
+      .font(deps.pdfFontName("regular", fonts))
+      .fontSize(BOUNDARY_LOGISTICS_CARD_DETAILS_SIZE)
+      .fillColor(deps.colors.text)
+      .text(layout.details, layout.textX, doc.y + 6, deps.pdfTextOptions(lang, {
+        width: layout.textWidth,
+        lineGap: 1.4
+      }));
+  }
+
+  return layout.cardHeight;
 }
 
 function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, deps) {
@@ -343,6 +542,10 @@ function drawTravelPlanItemCard(doc, x, y, width, entry, fonts, lang, dayDate, d
     }
 
     return itemHeight;
+  }
+
+  if (isBoundaryLogisticsEntry(entry)) {
+    return drawBoundaryLogisticsCard(doc, x, y, width, entry, fonts, lang, dayDate, deps);
   }
 
   const item = entry?.item || entry;
@@ -701,6 +904,8 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
   const boundaryKind = boundaryPresentationDayKind(day);
   const dateLabel = boundaryKind ? "" : formatTravelPlanDayDateLabel(day, lang, deps.formatPdfDateOnly);
   const separateDayLabel = deps.separateDayLabel === true;
+  const inlineDateLabel = separateDayLabel ? dateLabel : "";
+  const standaloneDateLabel = separateDayLabel ? "" : dateLabel;
   const isBoundaryStandalone = boundaryKind && day?._presentation_boundary_day === true;
   const titleText = boundaryKind && day?._presentation_boundary_day === true && separateDayLabel
     ? ""
@@ -716,8 +921,8 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
     weight: "bold",
     pdfFontName: deps.pdfFontName
   });
-  const dateHeight = dateLabel
-    ? measureTextHeight(doc, dateLabel, {
+  const dateHeight = standaloneDateLabel
+    ? measureTextHeight(doc, standaloneDateLabel, {
       width: 140,
       fontSize: 10,
       fonts,
@@ -726,7 +931,8 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
     : 0;
 
   if (separateDayLabel) {
-    const dayLabel = dayLabelText(day, lang, deps.pdfT).toUpperCase();
+    const baseDayLabel = dayLabelText(day, lang, deps.pdfT).toUpperCase();
+    const dayLabel = inlineDateLabel ? `${baseDayLabel}: ${inlineDateLabel}` : baseDayLabel;
     const hasBoundaryIcon = isBoundaryStandalone && boundaryIcon?.buffer;
     const iconTrailsLabel = hasBoundaryIcon && boundaryKind === "departure";
     const labelOffset = hasBoundaryIcon && !iconTrailsLabel
@@ -782,12 +988,12 @@ function drawTravelPlanDayHeader(doc, y, day, fonts, lang, deps, { compact = fal
         width: titleWidth
       }));
   }
-  if (dateLabel) {
+  if (standaloneDateLabel) {
     doc
       .font(deps.pdfFontName("regular", fonts))
       .fontSize(10)
       .fillColor(deps.colors.textMutedStrong)
-      .text(dateLabel, doc.page.width - deps.pageMargin - 140, titleY + 2, {
+      .text(standaloneDateLabel, doc.page.width - deps.pageMargin - 140, titleY + 2, {
         width: 140,
         align: "right"
       });
@@ -939,6 +1145,20 @@ export function drawTravelPlanDaysSection({
       : previousWasBoundaryDay
         ? BOUNDARY_DAY_BEFORE_REGULAR_DAY_GAP
         : DAY_HEADER_TOP_GAP;
+
+    if (isBoundaryDay && day?._presentation_boundary_day === true) {
+      const boundaryEntry = safeArray(remainingItems?.services)[0] || null;
+      const boundaryCardHeight = boundaryEntry
+        ? boundaryLogisticsCardHeight(doc, boundaryEntry, fonts, lang, day?.date, contentWidth, deps)
+        : 0;
+      y = ensureSpace(y + headerTopGap, Math.max(BOUNDARY_LOGISTICS_CARD_MIN_HEIGHT, boundaryCardHeight) + BOUNDARY_DAY_AFTER_GAP);
+      y += headerTopGap;
+      if (boundaryEntry) {
+        y += drawBoundaryLogisticsCard(doc, pageMargin, y, contentWidth, boundaryEntry, fonts, lang, day?.date, deps) + BOUNDARY_DAY_AFTER_GAP;
+      }
+      previousWasBoundaryDay = true;
+      continue;
+    }
 
     y = ensureSpace(y + headerTopGap, 90);
     y += headerTopGap;

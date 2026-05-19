@@ -1735,7 +1735,7 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanSource,
-    /booking\.travel_plan\.item_numbered_title[\s\S]*booking\.travel_plan\.item_notes[\s\S]*renderTravelPlanTimingFields\(day, item\)/,
+    /booking\.travel_plan\.item_numbered_title[\s\S]*booking\.travel_plan\.item_notes[\s\S]*renderTravelPlanServiceTimingSection\(day, item/,
     "Service editing should keep title and details in the service overview ahead of the timing fields"
   );
   assert.match(
@@ -1948,8 +1948,8 @@ test("travel plan footer exposes clean-state-gated preview and create actions ba
   );
   assert.match(
     travelPlanSource,
-    /function previewTravelPlanPdf\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*bookingLanguageQuery\(\)/,
-    "Previewing a travel-plan PDF should use the preview GET request with explicit booking content/source language query parameters"
+    /fetchAndShowPdfPreview[\s\S]*function previewBookingTravelPlanPdf\([\s\S]*bookingLanguageQuery\(\)[\s\S]*bookingTravelPlanPdfRequest\([\s\S]*query:\s*requestQuery[\s\S]*previewUrl\.searchParams\.set\("preview", "1"\)[\s\S]*previewUrl\.searchParams\.set\("_", `\$\{Date\.now\(\)\}-\$\{Math\.random\(\)\.toString\(36\)\.slice\(2\)\}`\)[\s\S]*url: previewUrl\.toString\(\)[\s\S]*onError:[\s\S]*travelPlanStatus[\s\S]*function previewTravelPlanPdf\(\)[\s\S]*pdfType: "travel-plan"/,
+    "Previewing a travel-plan PDF should fetch a cache-busted preview URL with explicit language query parameters and surface failures in the editor"
   );
   assert.match(
     bookingTravelPlanStyles,
@@ -3469,13 +3469,43 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     source,
+    /TRAVEL_PLAN_ROUTE_DELETE_DISTANCE_PX[\s\S]*function updateTravelPlanRouteDeleteTarget\(event\)[\s\S]*travelPlanRouteDeleteDistance\(event, routeList\) >= TRAVEL_PLAN_ROUTE_DELETE_DISTANCE_PX[\s\S]*sourceRow\.classList\.remove\("is-delete-target"\)[\s\S]*travelPlanRouteDragGhost\?\.classList\?\.toggle\("is-delete-target", isDeleteTarget\)[\s\S]*function deleteDraggedTravelPlanRouteDay\(dayId\)[\s\S]*row\.classList\.add\("is-delete-pending"\)[\s\S]*removeDay\(normalizedDayId, \{ confirm: false \}\)[\s\S]*animateTravelPlanRouteDaySmokeDissolve\(ghost, commitDelete, \{ removeAfter: true \}\)/,
+    "dragging a booking route-list day far enough outside the list should show the trash target on the floating ghost while the source row stays pale"
+  );
+  assert.match(
+    source,
+    /function createTravelPlanRouteDragGhost\(row, event\)[\s\S]*travel-plan-route-list__drag-ghost[\s\S]*ghost\.style\.left = `\$\{Number\.isFinite\(clientX\)[\s\S]*function hideNativeTravelPlanRouteDragImage\(event, row\)[\s\S]*dragImage\.style\.left = "-10000px"[\s\S]*travelPlanRouteNativeDragImage = dragImage[\s\S]*event\.dataTransfer\.setDragImage\(dragImage, 0, 0\)[\s\S]*function handleTravelPlanRouteDragStart\(event\)[\s\S]*createTravelPlanRouteDragGhost\(row, event\)[\s\S]*hideNativeTravelPlanRouteDragImage\(event, row\)/,
+    "route-list day dragging should use a pre-positioned fixed custom ghost and an offscreen native drag image"
+  );
+  assert.match(
+    source,
+    /travelPlanRouteDocumentListeners[\s\S]*travelPlanEditorDocument\.addEventListener\("dragover", handleTravelPlanRouteDocumentDragOver, eventOptions\)[\s\S]*clearTravelPlanRouteDocumentListeners/,
+    "route-list day deletion should track out-of-editor drops and expose cleanup for document listeners"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-route-list__item--day\.is-delete-pending \{[\s\S]*opacity: 0\.46;[\s\S]*\.travel-plan-route-list__drag-ghost \{[\s\S]*position: fixed;[\s\S]*transition: none;[\s\S]*\.travel-plan-route-list__drag-ghost\.is-delete-target \{[\s\S]*box-shadow:[\s\S]*rgba\(158, 42, 43, 0\.24\)[\s\S]*\.travel-plan-route-list__drag-ghost\.is-delete-target::after \{[\s\S]*mask: url\("data:image\/svg\+xml,[\s\S]*\.travel-plan-route-list__item--day\.is-smoke-dissolving[\s\S]*\.travel-plan-route-smoke-puff[\s\S]*@keyframes travel-plan-route-smoke-puff/,
+    "route-list day deletion should keep the source row pale while the floating ghost owns the red glow, trash icon mask, and smoke-puff animation"
+  );
+  assert.match(
+    source,
     /function renderTravelPlanMapPanel\(\) \{[\s\S]*<aside class="travel-plan-booking-map"[\s\S]*renderTravelPlanCustomizerLauncher\(\)[\s\S]*<div class="travel-plan-booking-workspace">[\s\S]*\$\{renderTravelPlanMapPanel\(\)\}[\s\S]*\$\{renderTravelPlanSidebar\(selection\)\}[\s\S]*\$\{renderTravelPlanFocusedEditor\(selection\)\}/,
     "focused booking travel-plan workspace should render map, day list, and day details as separate columns"
+  );
+  assert.match(
+    source,
+    /function renderTravelPlanMapPdfActions\(\) \{[\s\S]*data-travel-plan-preview-one-pager-pdf[\s\S]*Preview one-pager PDF[\s\S]*data-travel-plan-preview-pdf[\s\S]*Preview Travel Plan PDF[\s\S]*function renderTravelPlanMapPanel\(\) \{[\s\S]*renderTravelPlanMapPdfActions\(\)[\s\S]*data-travel-plan-preview-one-pager-pdf[\s\S]*previewOnePagerPdf\(\)/,
+    "focused booking map panel should expose shared preview actions for the booking one-pager and travel-plan PDFs"
   );
   assert.match(
     cssSource,
     /\.travel-plan-booking-workspace \{[\s\S]*grid-template-areas: "map nav details";[\s\S]*grid-template-columns: minmax\(200px, 220px\) minmax\(240px, 310px\) minmax\(0, 1fr\);[\s\S]*\.travel-plan-booking-map \{[\s\S]*grid-area: map;[\s\S]*\.travel-plan-booking-sidebar \{[\s\S]*grid-area: nav;[\s\S]*\.travel-plan-booking-editor \{[\s\S]*grid-area: details;/,
     "focused booking travel-plan CSS should place the map left, day list center, and details right on wide screens"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-booking-map \{[\s\S]*display: grid;[\s\S]*\.travel-plan-map-pdf-actions \{[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*\.travel-plan-map-pdf-actions__btn \{[\s\S]*width: fit-content;[\s\S]*max-width: 100%;/,
+    "focused booking map panel should stack compact centered PDF preview buttons below the map"
   );
   assert.match(
     cssSource,
@@ -3488,9 +3518,39 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
     "focused booking day details should render details, date, and map fields inside one grid"
   );
   assert.match(
+    source,
+    /function renderTravelPlanServiceActions\(item, collapsed\)[\s\S]*function renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor = false \} = \{\}\)[\s\S]*const showTitleRowActions = focusedBookingEditor && !collapsed;[\s\S]*\$\{showTitleRowActions \? "" : serviceActions\}[\s\S]*travel-plan-service__title-row[\s\S]*travel-plan-service__title-field[\s\S]*\$\{showTitleRowActions \? serviceActions : ""\}[\s\S]*renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor \}\)/,
+    "focused booking service details should render move and remove actions in the title row while collapsed services keep header actions"
+  );
+  assert.match(
+    source,
+    /function renderTravelPlanServiceTimingSection\(day, item, \{ aligned = false \} = \{\}\)[\s\S]*travel-plan-service__timing-row[\s\S]*travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing[\s\S]*function renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor = false \} = \{\}\)[\s\S]*\$\{focusedBookingEditor \? renderTravelPlanServiceTimingSection\(day, item, \{ aligned: true \}\) : ""\}[\s\S]*\$\{focusedBookingEditor \? "" : renderTravelPlanServiceTimingSection\(day, item\)\}/,
+    "focused booking service time fields should align with the Detail label and text field inside the service overview column"
+  );
+  assert.match(
     cssSource,
     /\.travel-plan-focused-day-grid \{[\s\S]*display: grid;[\s\S]*#travel_plan_editor \.travel-plan-focused-day-grid \.localized-pair\.localized-pair--single-language,[\s\S]*\.travel-plan-focused-day-grid \.travel-plan-day__date-field,[\s\S]*\.travel-plan-focused-day-grid \.travel-plan-grid--map-locations > \.field \{[\s\S]*grid-template-columns: var\(--travel-plan-focused-label-width\) minmax\(0, 1fr\);/,
     "focused booking day details grid should align labels and controls consistently"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-service__title-row \{[\s\S]*grid-template-columns: minmax\(0, 1fr\);[\s\S]*\.travel-plan-booking-editor \.travel-plan-service:not\(\.travel-plan-service--collapsed\) \.travel-plan-service__head \{[\s\S]*display: none;[\s\S]*\.travel-plan-booking-editor \.travel-plan-service__title-row \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto;/,
+    "focused booking service title rows should shorten the title field and place actions beside it"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-service__timing-row \{[\s\S]*display: grid;[\s\S]*min-width: 0;/,
+    "focused booking service time rows should keep the same flexible service overview column alignment as Detail"
+  );
+  assert.match(
+    cssSource,
+    /\.travel-plan-booking-editor \.travel-plan-day__services \{[\s\S]*gap: 15px;/,
+    "focused booking day detail services should keep 15px of vertical spacing between service cards"
+  );
+  assert.match(
+    cssSource,
+    /--travel-plan-service-detail-bg: rgba\(12, 99, 180, 0\.045\);[\s\S]*\.travel-plan-booking-editor \.travel-plan-service \{[\s\S]*background: var\(--travel-plan-service-detail-bg\) !important;/,
+    "focused booking day detail services should use a soft pale service background"
   );
   assert.match(
     cssSource,
@@ -4723,7 +4783,7 @@ test("shared travel-plan PDF headers reserve height for wrapped day titles befor
 
   assert.match(
     source,
-    /const titleHeight = measureTextHeight\(doc, titleText,[\s\S]*const dateHeight = dateLabel[\s\S]*const titleBlockGap = separateDayLabel \? 8 : 4;[\s\S]*let nextY = titleY \+ Math\.max\(titleHeight, dateHeight\) \+ titleBlockGap;/,
+    /const inlineDateLabel = separateDayLabel \? dateLabel : "";[\s\S]*const standaloneDateLabel = separateDayLabel \? "" : dateLabel;[\s\S]*const titleHeight = measureTextHeight\(doc, titleText,[\s\S]*const dateHeight = standaloneDateLabel[\s\S]*const dayLabel = inlineDateLabel \? `\$\{baseDayLabel\}: \$\{inlineDateLabel\}` : baseDayLabel;[\s\S]*const titleBlockGap = separateDayLabel \? 8 : 4;[\s\S]*let nextY = titleY \+ Math\.max\(titleHeight, dateHeight\) \+ titleBlockGap;/,
     "The shared travel-plan PDF day header should reserve space for wrapped titles before rendering overnight or accommodation rows"
   );
 });
@@ -4820,6 +4880,43 @@ test("shared travel-plan PDF uses text-only service cards with interleaved stand
     source,
     /let remainingItems = buildTravelPlanDayLayoutEntries\(day, itemThumbnailMap\);/,
     "The shared travel-plan PDF renderer should interleave image cards directly into each day's page flow"
+  );
+});
+
+test("shared travel-plan PDF renders standalone arrival and departure as logistics cards", async () => {
+  const travelPlanSectionPath = path.resolve(__dirname, "..", "..", "..", "backend", "app", "src", "lib", "pdf_travel_plan_section.js");
+  const source = await readFile(travelPlanSectionPath, "utf8");
+  const standaloneBoundaryBlock = source.match(/if \(isBoundaryDay && day\?\._presentation_boundary_day === true\) \{[\s\S]*?continue;\n    \}/)?.[0] || "";
+
+  assert.match(
+    source,
+    /const BOUNDARY_LOGISTICS_CARD_MIN_HEIGHT = 44;[\s\S]*const BOUNDARY_LOGISTICS_CARD_PADDING_X = 12;[\s\S]*const BOUNDARY_LOGISTICS_CARD_PADDING_Y = 8;[\s\S]*const BOUNDARY_LOGISTICS_CARD_ICON_GAP = 12;/,
+    "Standalone arrival/departure PDF cards should keep compact internal padding"
+  );
+  assert.match(
+    source,
+    /const BOUNDARY_LOGISTICS_CARD_MAX_WIDTH = 390;[\s\S]*function boundaryLogisticsCardWidth\(availableWidth\)[\s\S]*Math\.min\(Number\(availableWidth\) \|\| 1, BOUNDARY_LOGISTICS_CARD_MAX_WIDTH\)[\s\S]*function boundaryLogisticsCardBox\(x, availableWidth\) \{[\s\S]*return \{[\s\S]*x,[\s\S]*width/,
+    "Standalone arrival/departure PDF cards should cap their width while staying left-aligned in the page flow"
+  );
+  assert.match(
+    source,
+    /function boundaryLogisticsSubtitle\(dayDate, item, lang, deps\)[\s\S]*return \[dateLabel, timeLabel\]\.filter\(Boolean\)\.join\(" · "\);/,
+    "Standalone arrival/departure PDF cards should show the derived date and time as the subtitle"
+  );
+  assert.match(
+    source,
+    /function boundaryLogisticsCardLayout\([\s\S]*const details = textOrNull\(item\?\.details\)[\s\S]*BOUNDARY_LOGISTICS_CARD_DETAILS_SIZE[\s\S]*cardHeight[\s\S]*textX[\s\S]*textY[\s\S]*function boundaryLogisticsCardHeight\([\s\S]*boundaryLogisticsCardLayout[\s\S]*function drawBoundaryLogisticsCard\([\s\S]*const layout = boundaryLogisticsCardLayout[\s\S]*roundedRect\(layout\.cardBox\.x, y, layout\.cardBox\.width, layout\.cardHeight, BOUNDARY_LOGISTICS_CARD_RADIUS\)[\s\S]*\.text\(layout\.details, layout\.textX, doc\.y \+ 6/,
+    "Standalone arrival/departure PDF cards should share one measured layout for height and drawing"
+  );
+  assert.match(
+    standaloneBoundaryBlock,
+    /drawBoundaryLogisticsCard\(doc, pageMargin, y, contentWidth, boundaryEntry, fonts, lang, day\?\.date, deps\)/,
+    "Standalone arrival/departure PDF days should draw a logistics card inside the page content flow"
+  );
+  assert.doesNotMatch(
+    standaloneBoundaryBlock,
+    /drawTravelPlanDayHeader/,
+    "Standalone arrival/departure PDF days should not draw the old orange boundary day header"
   );
 });
 
@@ -6235,7 +6332,7 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourHandlersSource,
-    /overviewFrameImages: collectRandomOverviewFrameImages\(previewCheck\.tour\)[\s\S]*writeMarketingTourOnePagerPdf\(tourWithOverviewFrameImages\(result\.tour, entry\.overviewFrameImages\)/,
+    /overviewFrameImages: collectRandomOverviewFrameImages\(previewCheck\.tour\)[\s\S]*writeTourDetailsOnePagerPdf\(\{[\s\S]*tour: tourWithOverviewFrameImages\(result\.tour, entry\.overviewFrameImages\)/,
     "Customized Overview PDF tokens should keep the random service-image selection stable for the rendered PDF"
   );
   assert.match(
@@ -6250,8 +6347,8 @@ test("public tour configurator exposes a current-draft Tour PDF action", async (
   );
   assert.match(
     tourHandlersSource,
-    /handlePostPublicTourTravelPlanPreview[\s\S]*customizedPreviewTourFromTokenEntry[\s\S]*\/public\/v1\/tour-preview\/\$\{encodeURIComponent\(token\)\}\/travel-plan\.pdf[\s\S]*handleGetPublicTourTravelPlanPreviewPdf[\s\S]*writeTravelPlanPdf\([\s\S]*result\.tour\.travel_plan,[\s\S]*includeMarketingTourBackground: true,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false/,
-    "Public customized Tour PDF should reuse selected-day assembly and render the full travel-plan PDF with the overview background and without guide or closing sections"
+    /handlePostPublicTourTravelPlanPreview[\s\S]*customizedPreviewTourFromTokenEntry[\s\S]*\/public\/v1\/tour-preview\/\$\{encodeURIComponent\(token\)\}\/travel-plan\.pdf[\s\S]*handleGetPublicTourTravelPlanPreviewPdf[\s\S]*writeTourDetailsTravelPlanPdf\(\{[\s\S]*tour: result\.tour,[\s\S]*travelPlan: result\.tour\.travel_plan/,
+    "Public customized Tour PDF should reuse selected-day assembly and render through the shared tour-details travel-plan PDF helper"
   );
 });
 
@@ -6937,6 +7034,7 @@ test("marketing tour travel-plan PDF endpoint stays backend-only without an edit
   const tourHandlersPath = path.resolve(__dirname, "..", "src", "http", "handlers", "tours.js");
   const travelPlanPdfPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf.js");
   const travelPlanSectionPath = path.resolve(__dirname, "..", "src", "lib", "pdf_travel_plan_section.js");
+  const travelPlanPdfPreviewAdapterPath = path.resolve(__dirname, "..", "src", "lib", "travel_plan_pdf_preview_adapter.js");
   const servicesPath = path.resolve(__dirname, "..", "src", "bootstrap", "services.js");
   const [
     tourAdapterSource,
@@ -6944,6 +7042,7 @@ test("marketing tour travel-plan PDF endpoint stays backend-only without an edit
     tourHandlersSource,
     travelPlanPdfSource,
     travelPlanSectionSource,
+    travelPlanPdfPreviewAdapterSource,
     servicesSource
   ] = await Promise.all([
     readFile(tourAdapterPath, "utf8"),
@@ -6951,6 +7050,7 @@ test("marketing tour travel-plan PDF endpoint stays backend-only without an edit
     readFile(tourHandlersPath, "utf8"),
     readFile(travelPlanPdfPath, "utf8"),
     readFile(travelPlanSectionPath, "utf8"),
+    readFile(travelPlanPdfPreviewAdapterPath, "utf8"),
     readFile(servicesPath, "utf8")
   ]);
 
@@ -6958,7 +7058,8 @@ test("marketing tour travel-plan PDF endpoint stays backend-only without an edit
   assert.doesNotMatch(tourAdapterSource, /\/api\/v1\/tours\/\$\{encodeURIComponent\(tourId\)\}\/travel-plan\.pdf/, "Marketing tour editor should not open the private tour travel-plan PDF endpoint directly");
   assert.doesNotMatch(tourAdapterSource, /saveCurrentTravelPlanBeforePdf|openTourTravelPlanPdf/, "Marketing tour editor should not wire a save-before-open full PDF action");
   assert.match(routesSource, /\/api\\\/v1\\\/tours\\\/\(\[\^\/\]\+\)\\\/travel-plan\\\.pdf[\s\S]*handleGetTourTravelPlanPdf/, "Routes should expose a private marketing tour travel-plan PDF endpoint");
-  assert.match(tourHandlersSource, /async function renderTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*publicTourTravelPlanPdfCacheKey[\s\S]*cachedPublicTravelPlanPdf[\s\S]*writeTravelPlanPdf\(bookingLikeTour, travelPlan,[\s\S]*includeMarketingTourBackground: true,[\s\S]*includeGuideSection: false,[\s\S]*includeEndingSection: false[\s\S]*handleGetTourTravelPlanPdf[\s\S]*await renderTourTravelPlanPdf\(req, res, tour, lang\)/, "Marketing tour PDF handler should reuse the shared travel-plan PDF writer through the public-tour cache, use the overview background, and disable guide and closing sections");
+  assert.match(tourHandlersSource, /async function renderTourTravelPlanPdf[\s\S]*normalizeMarketingTourTravelPlan\(localizedTour\.travel_plan,[\s\S]*flatMode: "localized"[\s\S]*publicTourTravelPlanPdfCacheKey[\s\S]*cachedPublicTravelPlanPdf[\s\S]*writeTourDetailsTravelPlanPdf\(\{[\s\S]*writeTravelPlanPdf,[\s\S]*tour: localizedTour,[\s\S]*travelPlan,[\s\S]*handleGetTourTravelPlanPdf[\s\S]*await renderTourTravelPlanPdf\(req, res, tour, lang\)/, "Marketing tour PDF handler should reuse the tour-details travel-plan renderer through the public-tour cache");
+  assert.match(travelPlanPdfPreviewAdapterSource, /TOUR_DETAILS_TRAVEL_PLAN_PDF_OPTIONS[\s\S]*includeMarketingTourBackground: true[\s\S]*includeGuideSection: false[\s\S]*includeEndingSection: false[\s\S]*buildTourDetailsTravelPlanPdfBooking[\s\S]*buildBookingTravelPlanPreviewTour[\s\S]*writeTourDetailsTravelPlanPdf\(\{[\s\S]*writeTravelPlanPdf[\s\S]*buildTourDetailsTravelPlanPdfBooking\(tour, lang\)/, "Travel-plan PDF preview adapter should centralize tour-to-booking and booking-to-tour preview conversions");
   assert.match(travelPlanPdfSource, /includeGuideSection = options\?\.includeGuideSection !== false[\s\S]*includeEndingSection = options\?\.includeEndingSection !== false[\s\S]*if \(includeGuideSection\) \{[\s\S]*drawGuideSection[\s\S]*if \(includeEndingSection\) \{[\s\S]*drawClosing/, "Shared travel-plan PDF writer should allow callers to omit guide and closing sections");
   assert.match(travelPlanPdfSource, /drawMarketingTourOnePagerLogo,[\s\S]*drawMarketingTourOnePagerTripTitle,[\s\S]*marketingTourLogoPath = ""[\s\S]*drawPageBackground\(\{ includeHeroImage: true \}\)[\s\S]*drawMarketingTourOnePagerLogo\(doc, marketingTourLogoPath\)/, "Marketing tour travel-plan PDFs should reuse the one-page transparent brand logo at the top left of the first page");
   assert.match(travelPlanPdfSource, /resolveMarketingTourOnePagerCoverFonts[\s\S]*marketingCoverFonts[\s\S]*includeMarketingTourBackground[\s\S]*drawMarketingTourOnePagerTripTitle\(doc, heroTitle, marketingCoverFonts, lang\)[\s\S]*drawTravelPlanHero\(/, "Marketing tour travel-plan PDFs should reuse the one-page Trip to and title treatment instead of the booking-style header card");
@@ -6968,6 +7069,7 @@ test("marketing tour travel-plan PDF endpoint stays backend-only without an edit
   assert.match(travelPlanPdfSource, /drawPageBackground = \(\{ includeHeroImage = false \} = \{\}\)[\s\S]*drawMarketingTourPdfBackground\(doc, marketingTourBackgroundImage, \{ includeHeroImage \}\)[\s\S]*drawPageBackground\(\{ includeHeroImage: true \}\)/, "Marketing tour travel-plan PDFs should only draw the hero-image background on the first page");
   assert.match(travelPlanSectionSource, /resolveTravelPlanServiceThumbnailPath\(item, bookingImagesDir, options = \{\}\)[\s\S]*options\.resolveServiceImageDiskPath\(storagePath, item\)[\s\S]*buildTravelPlanItemThumbnailMap\(plan, bookingImagesDir, options = \{\}\)/, "Shared travel-plan PDF thumbnails should support non-booking image resolvers");
   assert.match(servicesSource, /resolveTravelPlanServiceImageDiskPath:[\s\S]*public\/v1\/tour-images\/[\s\S]*resolveTourImageDiskPath/, "Bootstrap should resolve marketing tour service images for the shared travel-plan PDF writer");
+  assert.match(servicesSource, /function createBackendServices[\s\S]*resolveOnePagerImageDiskPath[\s\S]*public\/v1\/booking-images\/[\s\S]*collections\.bookingImagesDir[\s\S]*createMarketingTourOnePagerPdfWriter\(\{[\s\S]*resolveTourImageDiskPath: resolveOnePagerImageDiskPath/, "Shared one-pager PDF writer should resolve booking travel-plan images as well as tour images");
   assert.match(servicesSource, /createTravelPlanPdfWriter\(\{[\s\S]*marketingTourLogoPath: path\.join\(repoRoot, "assets", "img", "logo-asiatravelplan\.large\.transparent\.png"\)[\s\S]*createMarketingTourOnePagerPdfWriter\(\{[\s\S]*logoPath: path\.join\(repoRoot, "assets", "img", "logo-asiatravelplan\.large\.transparent\.png"\)/, "Bootstrap should pass the transparent logo to marketing tour PDFs");
 });
 
@@ -7012,8 +7114,9 @@ test("booking travel plan copies days and services from marketing tours only", a
   assert.match(bookingImportHandlersSource, /validateTravelPlanDayImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*assertOptionalPlainObject\(value\.target_travel_plan[\s\S]*validateTravelPlanServiceImportPayload[\s\S]*assertRequiredIdentifier\(value\.source_tour_id[\s\S]*assertOptionalPlainObject\(value\.target_travel_plan/, "Booking import handlers should require marketing-tour import sources and accept optional draft travel plans");
   assert.doesNotMatch(bookingImportHandlersSource, /source_booking_id/, "Booking import handlers should not accept booking import sources");
   assert.match(bookingImportHandlersSource, /resolveTargetBookingTravelPlan[\s\S]*cloneMarketingTourServiceForBooking[\s\S]*Service imported from marketing tour[\s\S]*cloneMarketingTourDayForBooking[\s\S]*Day imported from marketing tour/, "Booking import handlers should apply imports onto either the persisted or provided draft travel plan");
+  assert.match(bookingHandlersSource, /buildBookingTravelPlanPreviewTour[\s\S]*writeTourDetailsOnePagerPdf[\s\S]*writeTourDetailsTravelPlanPdf[\s\S]*function requestTravelPlanPdfType\(req\)[\s\S]*one-pager[\s\S]*buildBookingTravelPlanPreviewTour\(booking, travelPlanSnapshot\)[\s\S]*pdfType === "one-pager"[\s\S]*writeTourDetailsOnePagerPdf\(\{[\s\S]*writeTourDetailsTravelPlanPdf\(\{/, "Booking travel-plan PDF preview endpoint should reuse the shared preview adapter for one-pager and travel-plan previews");
   assert.match(bookingHandlersSource, /marketingTourBookingTravelPlanCloner[\s\S]*materializeBookingTravelPlanTourImages/, "Booking travel-plan handlers should use the marketing-tour cloner for both imports and save-time image materialization");
-  assert.match(bookingsSource, /marketingTourBookingTravelPlanCloner[\s\S]*createBookingTravelPlanHandlers/, "Booking handlers should construct and provide the marketing-tour cloner");
+  assert.match(bookingsSource, /writeMarketingTourOnePagerPdf[\s\S]*marketingTourBookingTravelPlanCloner[\s\S]*createBookingTravelPlanHandlers[\s\S]*writeMarketingTourOnePagerPdf/, "Booking handlers should provide the marketing-tour cloner and shared one-pager PDF writer to travel-plan handlers");
   assert.match(clonerSource, /cloneMarketingTourDayForBooking[\s\S]*cloneMarketingTourServiceForBooking[\s\S]*cloneMarketingTourTravelPlanForBooking[\s\S]*materializeBookingTravelPlanTourImages/, "Marketing-tour booking cloner should expose single day and service clone helpers plus save-time image materialization");
   assert.match(apiModelsSource, /TRAVEL_PLAN_DAY_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_day_id","required":true[\s\S]*target_travel_plan","required":false/, "Generated day import contract should require marketing-tour sources and allow optional draft payloads");
   assert.match(apiModelsSource, /TRAVEL_PLAN_SERVICE_IMPORT_REQUEST_SCHEMA[\s\S]*source_tour_id","required":true[\s\S]*source_service_id","required":true[\s\S]*target_travel_plan","required":false/, "Generated service import contract should require marketing-tour sources and allow optional draft payloads");
@@ -7137,6 +7240,16 @@ test("tour customizer floating drag elements stay inside the active customizer r
     /--tour-customize-workspace-background: transparent;[\s\S]*\.tour-customize-root\.tour-customize-runtime-root \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize__workspace \{[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded \{[\s\S]*border: 0;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \{[\s\S]*place-items: center;[\s\S]*background: transparent;[\s\S]*\.tour-customize-root \.tour-customize-embedded--preview \.tour-customize-map__stage \{[\s\S]*width: min\(100%, 200px\);[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);[\s\S]*aspect-ratio: 1 \/ 2;/,
     "Preview customizer wrappers should be visually transparent while the map keeps its fixed centered aspect ratio"
   );
+  assert.match(
+    tourCustomizerSource,
+    /\.tour-customize-root \.tour-customize-map__slot \{[\s\S]*container-type: size;[\s\S]*\.tour-customize-root \.tour-customize-map__stage \{[\s\S]*width: min\(100%, 400px\);[\s\S]*height: auto;[\s\S]*aspect-ratio: 1 \/ 2;[\s\S]*@supports \(width: 1cqw\) \{[\s\S]*\.tour-customize-root \.tour-customize-map__slot \.tour-customize-map__stage \{[\s\S]*width: min\(100cqw, 400px, 50cqh\);/,
+    "Customizer map sizing should use a container-query slot and auto height so the map never stretches away from its 1:2 artwork ratio"
+  );
+  assert.match(
+    tourCustomizerSource,
+    /<div class="tour-customize-map__slot">[\s\S]*\$\{renderMap\(\)\}[\s\S]*<\/div>/,
+    "Customizer map markup should mount inside the sizing slot that owns map aspect-ratio constraints"
+  );
   assert.doesNotMatch(
     `${bookingTravelPlanStyles}\n${tourVariantPageSource}`,
     /(?:travel-plan-customizer-preview__mount|travel-plan-customizer-overlay__mount|tour-variant-customizer-mount|tour-variant-map-preview-mount)\s+\.tour-customize|body\.travel-plan-customizer-open\s+\.tour-customize/,
@@ -7168,9 +7281,19 @@ test("booking customizer opens as a body-level layer above the dirty booking wor
     "The portaled customizer should keep close and Escape handling scoped to the overlay element"
   );
   assert.match(
+    travelPlanEditorSource,
+    /data-travel-plan-close-customizer[\s\S]*>Use<\/button>/,
+    "The booking customizer overlay action should be labeled Use"
+  );
+  assert.match(
     travelPlanStyles,
     /\.travel-plan-customizer-overlay \{[\s\S]*--travel-plan-customizer-layer: 10000;[\s\S]*position: fixed;[\s\S]*top: 0;[\s\S]*right: 0;[\s\S]*bottom: 0;[\s\S]*left: 0;[\s\S]*z-index: var\(--travel-plan-customizer-layer\);[\s\S]*background: #f7f9f7;/,
     "Opening the customizer should cover the booking page with a body-level fixed overlay"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-customizer-overlay__close \{[\s\S]*top: 28px;[\s\S]*right: 42px;/,
+    "The booking customizer overlay action should keep the requested top-right spacing"
   );
   assert.doesNotMatch(
     `${travelPlanEditorSource}\n${travelPlanStyles}`,

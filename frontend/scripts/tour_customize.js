@@ -785,6 +785,21 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   background: transparent;
 }
 
+.tour-customize-root .tour-customize-map__slot {
+  grid-column: 1;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
 .tour-customize-root .tour-customize-embedded--preview .tour-customize-map__stage {
   justify-self: center;
   align-self: center;
@@ -811,16 +826,14 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 
 .tour-customize-root .tour-customize-map__stage {
   position: relative;
-  grid-column: 1;
-  grid-row: 1;
   display: grid;
   place-items: center;
-  align-self: stretch;
+  align-self: center;
   justify-self: center;
   width: min(100%, 400px);
-  height: 100%;
+  height: auto;
   max-width: 400px;
-  max-height: 100%;
+  max-height: none;
   min-height: 0;
   overflow: hidden;
   border-radius: var(--tour-customize-map-radius, 0);
@@ -833,9 +846,12 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 }
 
 @supports (width: 1cqw) {
-  .tour-customize-root .tour-customize-map__stage {
-    width: min(100%, 400px, 50cqh);
-    height: min(100cqh, 200cqw);
+  .tour-customize-root .tour-customize-map__slot .tour-customize-map__stage {
+    width: min(100cqw, 400px, 50cqh);
+  }
+
+  .tour-customize-root .tour-customize-embedded--preview .tour-customize-map__stage {
+    width: min(100cqw, 200px, 50cqh);
   }
 }
 
@@ -1591,9 +1607,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
     max-height: none;
   }
 
-  .tour-customize-root .tour-customize-map__stage {
-    grid-column: 1;
-    grid-row: 1;
+  .tour-customize-root .tour-customize-map__slot {
     min-height: 7rem;
   }
 
@@ -2729,7 +2743,9 @@ export function createTourCustomizer({
       const timelineTitle = draftTimelineTitle();
       return `
         <div class="tour-customize__workspace">
-          ${renderMap()}
+          <div class="tour-customize-map__slot">
+            ${renderMap()}
+          </div>
           <section class="tour-customize-options" aria-label="${escapeAttr(t("tour.customize.optional_days", "Optional days"))}">
             <h3>${escapeHTML(t("tour.customize.optional_days", "Optional days"))}</h3>
             <div class="tour-customize-options__list">

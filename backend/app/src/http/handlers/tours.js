@@ -33,6 +33,11 @@ import {
   publicTourTravelPlanPdfCacheDir as defaultPublicTourTravelPlanPdfCacheDir,
   publicTourTravelPlanPdfCacheKey
 } from "../../lib/public_tour_pdf_cache.js";
+import {
+  buildTourDetailsTravelPlanPdfBooking,
+  writeTourDetailsOnePagerPdf,
+  writeTourDetailsTravelPlanPdf
+} from "../../lib/travel_plan_pdf_preview_adapter.js";
 
 export function createTourHandlers(deps) {
   const {
@@ -965,7 +970,9 @@ export function createTourHandlers(deps) {
     };
     const cacheKey = publicTourOnePagerPdfCacheKey({ lang, tour: renderTour });
     try {
-      const result = await cachedPublicOnePagerPdf(cacheKey, (outputPath) => writeMarketingTourOnePagerPdf(renderTour, {
+      const result = await cachedPublicOnePagerPdf(cacheKey, (outputPath) => writeTourDetailsOnePagerPdf({
+        writeMarketingTourOnePagerPdf,
+        tour: renderTour,
         lang,
         outputPath
       }));
@@ -1000,7 +1007,7 @@ export function createTourHandlers(deps) {
       flatMode: "localized",
       strictReferences: false
     });
-    const bookingLikeTour = travelPlanPdfBookingLikeTour(localizedTour, lang);
+    const bookingLikeTour = buildTourDetailsTravelPlanPdfBooking(localizedTour, lang);
     const tourId = normalizeText(tour?.id) || "tour";
     const cacheKey = publicTourTravelPlanPdfCacheKey({
       lang,
@@ -1008,12 +1015,12 @@ export function createTourHandlers(deps) {
       travelPlan
     });
     try {
-      const result = await cachedPublicTravelPlanPdf(cacheKey, (outputPath) => writeTravelPlanPdf(bookingLikeTour, travelPlan, {
+      const result = await cachedPublicTravelPlanPdf(cacheKey, (outputPath) => writeTourDetailsTravelPlanPdf({
+        writeTravelPlanPdf,
+        tour: localizedTour,
+        travelPlan,
         lang,
-        outputPath,
-        includeMarketingTourBackground: true,
-        includeGuideSection: false,
-        includeEndingSection: false
+        outputPath
       }));
       await sendFileWithCache(req, res, result.outputPath, "private, max-age=0, no-store", {
         "Content-Disposition": `inline; filename="${tourTravelPlanFilename(tour).replace(/"/g, "")}"`
@@ -1296,38 +1303,6 @@ export function createTourHandlers(deps) {
     };
   }
 
-  function travelPlanPdfBookingLikeTour(tour, lang) {
-    const tourId = normalizeText(tour?.id) || "tour";
-    const tourTitle = normalizeText(
-      resolveLocalizedText(tour?.title, lang)
-        || resolveLocalizedText(tour?.title, "en")
-        || tour?.title
-        || tourId
-    );
-    return {
-      id: tourId,
-      name: tourTitle || tourId || "Travel plan overview",
-      destinations: Array.isArray(tour?.destinations) ? tour.destinations : [],
-      travel_styles: Array.isArray(tour?.styles)
-        ? tour.styles
-        : (Array.isArray(tour?.travel_styles) ? tour.travel_styles : []),
-      customer_language: lang,
-      web_form_submission: {
-        tour_id: tourId
-      },
-      pdf_personalization: {
-        travel_plan: {
-          include_subtitle: true,
-          include_welcome: true,
-          include_closing: false,
-          include_children_policy: false,
-          include_whats_not_included: false,
-          include_who_is_traveling: false
-        }
-      }
-    };
-  }
-
   async function handlePostPublicTourOnePagerPreview(req, res, [tourId]) {
     cleanupCustomOnePagerPreviewTokens();
     const baseTourId = normalizeText(tourId);
@@ -1437,7 +1412,9 @@ export function createTourHandlers(deps) {
     let renderedPath = previewPath;
     try {
       await mkdir(path.dirname(previewPath), { recursive: true });
-      const pdfResult = await writeMarketingTourOnePagerPdf(tourWithOverviewFrameImages(result.tour, entry.overviewFrameImages), {
+      const pdfResult = await writeTourDetailsOnePagerPdf({
+        writeMarketingTourOnePagerPdf,
+        tour: tourWithOverviewFrameImages(result.tour, entry.overviewFrameImages),
         lang: normalizeTourLang(entry.lang),
         outputPath: previewPath
       });
@@ -1488,17 +1465,13 @@ export function createTourHandlers(deps) {
     const lang = normalizeTourLang(entry.lang);
     try {
       await mkdir(path.dirname(previewPath), { recursive: true });
-      const pdfResult = await writeTravelPlanPdf(
-        travelPlanPdfBookingLikeTour(result.tour, lang),
-        result.tour.travel_plan,
-        {
-          lang,
-          outputPath: previewPath,
-          includeMarketingTourBackground: true,
-          includeGuideSection: false,
-          includeEndingSection: false
-        }
-      );
+      const pdfResult = await writeTourDetailsTravelPlanPdf({
+        writeTravelPlanPdf,
+        tour: result.tour,
+        travelPlan: result.tour.travel_plan,
+        lang,
+        outputPath: previewPath
+      });
       renderedPath = normalizeText(pdfResult?.outputPath) || previewPath;
       await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
         "Content-Disposition": `inline; filename="${tourTravelPlanFilename(result.tour).replace(/"/g, "")}"`

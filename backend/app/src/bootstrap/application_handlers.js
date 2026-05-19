@@ -248,6 +248,7 @@ export function createApplicationRoutes({
     writePaymentDocumentPdf,
     writeGeneratedOfferPdf,
     writeTravelPlanPdf,
+    writeMarketingTourOnePagerPdf,
     listBookingTravelPlanPdfs: travelPlanPdfArtifacts.listBookingTravelPlanPdfs,
     persistBookingTravelPlanPdfArtifact: travelPlanPdfArtifacts.persistBookingTravelPlanPdfArtifact,
     resolveBookingTravelPlanPdfArtifact: travelPlanPdfArtifacts.resolveBookingTravelPlanPdfArtifact,

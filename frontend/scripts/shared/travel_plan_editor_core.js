@@ -59,6 +59,12 @@ import {
   travelPlanBoundaryLabel,
   travelPlanBoundaryTitleLabel
 } from "./travel_plan_boundary_sections.js";
+import { fetchAndShowPdfPreview } from "./pdf_preview_window.js";
+import {
+  appendTravelPlanRouteSmokePuffs,
+  TRAVEL_PLAN_ROUTE_DELETE_DISTANCE_PX,
+  TRAVEL_PLAN_ROUTE_SMOKE_ANIMATION_MS
+} from "./travel_plan_route_drag_effects.js";
 import { createTourCustomizerWorkspace } from "../tour_customize.js";
 
 export function resolveTravelPlanExperienceHighlightTitle(item, {
@@ -154,6 +160,12 @@ export function createBookingTravelPlanModule(ctx) {
   let travelPlanCustomizerSourceRowsPromise = null;
   let travelPlanCustomizerOverlayOpen = false;
   let draggedTravelPlanRouteDayId = "";
+  let travelPlanRouteDeleteActive = false;
+  let travelPlanRouteDragGhost = null;
+  let travelPlanRouteNativeDragImage = null;
+  let travelPlanRouteDragOffset = { x: 0, y: 0 };
+  let travelPlanRouteDocumentListeners = null;
+  let travelPlanEventController = null;
   let suppressTravelPlanRouteClickUntil = 0;
 
   const travelPlanCustomizerLabels = {
@@ -1566,12 +1578,47 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
-  function renderTravelPlanService(day, item, itemIndex) {
+  function renderTravelPlanServiceTimingSection(day, item, { aligned = false } = {}) {
+    if (!allowTiming) return "";
+    const timingFields = renderTravelPlanTimingFields(day, item);
+    return aligned
+      ? `<div class="travel-plan-service__timing-row">
+          ${timingFields}
+        </div>`
+      : `<div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing">
+          ${timingFields}
+        </div>`;
+  }
+
+  function renderTravelPlanServiceActions(item, collapsed) {
+    return `
+      <div class="travel-plan-service__actions">
+        ${allowServiceCollapse
+          ? `<button
+              class="btn btn-ghost travel-plan-service__toggle"
+              data-travel-plan-toggle-item="${escapeHtml(item.id)}"
+              type="button"
+              aria-label="${escapeHtml(collapsed
+                ? bookingT("booking.travel_plan.expand_item", "Expand service")
+                : bookingT("booking.travel_plan.collapse_item", "Collapse service"))}"
+              aria-expanded="${collapsed ? "false" : "true"}"
+            >${collapsed ? "+" : "−"}</button>`
+          : ""}
+        <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-up="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_up", "Move service up"))}">&#8593;</button>
+        <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-down="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_down", "Move service down"))}">&#8595;</button>
+        <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove service"))}">&times;</button>
+      </div>
+    `;
+  }
+
+  function renderTravelPlanService(day, item, itemIndex, { focusedBookingEditor = false } = {}) {
     const serviceNumber = itemIndex + 1;
     const collapsed = allowServiceCollapse && isTravelPlanServiceCollapsed(item.id);
     const sourceTitle = resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), "").trim();
     const collapsedTitle = sourceTitle || bookingT("booking.travel_plan.item_heading", "Service {item}", { item: serviceNumber });
     const timingSummary = travelPlanTimingSummary(day, item).trim();
+    const serviceActions = renderTravelPlanServiceActions(item, collapsed);
+    const showTitleRowActions = focusedBookingEditor && !collapsed;
     return `
       <div class="travel-plan-service${collapsed ? " travel-plan-service--collapsed" : ""}" data-travel-plan-service="${escapeHtml(item.id)}">
         <div class="travel-plan-service__main">
@@ -1580,22 +1627,7 @@ export function createBookingTravelPlanModule(ctx) {
               <span class="travel-plan-service__collapsed-title">${escapeHtml(collapsedTitle)}</span>
               <span class="travel-plan-service__collapsed-timing"${timingSummary ? "" : " hidden"}>${escapeHtml(timingSummary)}</span>
             </div>
-            <div class="travel-plan-service__actions">
-              ${allowServiceCollapse
-                ? `<button
-                    class="btn btn-ghost travel-plan-service__toggle"
-                    data-travel-plan-toggle-item="${escapeHtml(item.id)}"
-                    type="button"
-                    aria-label="${escapeHtml(collapsed
-                      ? bookingT("booking.travel_plan.expand_item", "Expand service")
-                      : bookingT("booking.travel_plan.collapse_item", "Collapse service"))}"
-                    aria-expanded="${collapsed ? "false" : "true"}"
-                  >${collapsed ? "+" : "−"}</button>`
-                : ""}
-              <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-up="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_up", "Move service up"))}">&#8593;</button>
-              <button class="btn btn-ghost travel-plan-move-btn" data-travel-plan-move-item-down="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.move_item_down", "Move service down"))}">&#8595;</button>
-              <button class="btn btn-ghost offer-remove-btn" data-travel-plan-remove-item="${escapeHtml(item.id)}" type="button" aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_item", "Remove service"))}">&times;</button>
-            </div>
+            ${showTitleRowActions ? "" : serviceActions}
           </div>
           <div class="travel-plan-service__body">
           <div class="travel-plan-service__overview">
@@ -1606,18 +1638,21 @@ export function createBookingTravelPlanModule(ctx) {
               })}
             </div>
             <div class="travel-plan-service__overview-main">
-              <div class="field">
-                ${renderTravelPlanLocalizedField({
-                  label: bookingT("booking.travel_plan.item_numbered_title", "Service {item}", { item: serviceNumber }),
-                  idBase: `travel_plan_title_${item.id}`,
-                  dataScope: "travel-plan-service-field",
-                  dayId: day.id,
-                  itemId: item.id,
-                  field: "title",
-                  type: "input",
-                  sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), ""),
-                  localizedValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingContentLang(), "")
-                })}
+              <div class="travel-plan-service__title-row">
+                <div class="field travel-plan-service__title-field">
+                  ${renderTravelPlanLocalizedField({
+                    label: bookingT("booking.travel_plan.item_numbered_title", "Service {item}", { item: serviceNumber }),
+                    idBase: `travel_plan_title_${item.id}`,
+                    dataScope: "travel-plan-service-field",
+                    dayId: day.id,
+                    itemId: item.id,
+                    field: "title",
+                    type: "input",
+                    sourceValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingSourceLang(), ""),
+                    localizedValue: resolveLocalizedDraftBranchText(item.title_i18n ?? item.title, bookingContentLang(), "")
+                  })}
+                </div>
+                ${showTitleRowActions ? serviceActions : ""}
               </div>
               ${allowServiceDetails
                 ? `<div class="field">
@@ -1635,13 +1670,10 @@ export function createBookingTravelPlanModule(ctx) {
                     })}
                   </div>`
                 : ""}
+              ${focusedBookingEditor ? renderTravelPlanServiceTimingSection(day, item, { aligned: true }) : ""}
             </div>
           </div>
-          ${allowTiming
-            ? `<div class="travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing">
-                ${renderTravelPlanTimingFields(day, item)}
-              </div>`
-            : ""}
+          ${focusedBookingEditor ? "" : renderTravelPlanServiceTimingSection(day, item)}
           </div>
           </div>
         </div>
@@ -2070,7 +2102,7 @@ export function createBookingTravelPlanModule(ctx) {
               ${renderTravelPlanDayExperienceHighlights(day)}
               ${!focusedBookingEditor && !showDayDetailsAfterTitle ? dayDetailsField : ""}
               <div class="travel-plan-day__services">
-                ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex)).join("")}
+                ${items.map((item, itemIndex) => renderTravelPlanService(day, item, itemIndex, { focusedBookingEditor })).join("")}
               </div>
             </div>
             <div class="travel-plan-service-footer">
@@ -2551,7 +2583,7 @@ export function createBookingTravelPlanModule(ctx) {
         ${travelPlanCustomizerOverlayOpen ? "" : "hidden"}
       >
         <div class="travel-plan-customizer-overlay__mount" data-travel-plan-customizer-overlay></div>
-        <button class="btn btn-ghost travel-plan-customizer-overlay__close" type="button" data-travel-plan-close-customizer${travelPlanCustomizerOverlayOpen ? "" : " hidden"}>Close</button>
+        <button class="btn btn-ghost travel-plan-customizer-overlay__close" type="button" data-travel-plan-close-customizer${travelPlanCustomizerOverlayOpen ? "" : " hidden"}>Use</button>
       </div>
     `;
   }
@@ -2571,10 +2603,34 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
+  function renderTravelPlanMapPdfActions() {
+    if (!allowPdfs) return "";
+    return `
+      <div class="travel-plan-map-pdf-actions" aria-label="${escapeHtml(bookingT("booking.travel_plan.pdf_preview_actions", "PDF preview actions"))}">
+        <button
+          class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-map-pdf-actions__btn"
+          data-travel-plan-preview-one-pager-pdf
+          data-requires-clean-state
+          data-clean-state-hint-id="travel_plan_map_pdf_dirty_hint"
+          type="button"
+        >${escapeHtml(bookingT("booking.travel_plan.preview_one_pager_pdf", "Preview one-pager PDF"))}</button>
+        <button
+          class="btn btn-ghost booking-offer-add-btn travel-plan-pdf-btn travel-plan-pdf-btn--preview travel-plan-map-pdf-actions__btn"
+          data-travel-plan-preview-pdf
+          data-requires-clean-state
+          data-clean-state-hint-id="travel_plan_map_pdf_dirty_hint"
+          type="button"
+        >${escapeHtml(bookingT("booking.travel_plan.preview_travel_plan_pdf", "Preview Travel Plan PDF"))}</button>
+        <span id="travel_plan_map_pdf_dirty_hint" class="micro booking-inline-status travel-plan-pdf-actions__hint"></span>
+      </div>
+    `;
+  }
+
   function renderTravelPlanMapPanel() {
     return `
       <aside class="travel-plan-booking-map" aria-label="${escapeHtml(bookingT("tour.customize.map", "Map"))}">
         ${renderTravelPlanCustomizerLauncher()}
+        ${renderTravelPlanMapPdfActions()}
       </aside>
     `;
   }
@@ -3185,11 +3241,11 @@ export function createBookingTravelPlanModule(ctx) {
     return true;
   }
 
-  function removeDay(dayId) {
+  function removeDay(dayId, { confirm = true } = {}) {
     syncTravelPlanDraftFromDom();
     const dayIndex = findDayIndex(dayId);
-    if (dayIndex < 0) return;
-    if (!window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its services?"))) return;
+    if (dayIndex < 0) return false;
+    if (confirm && !window.confirm(bookingT("booking.travel_plan.remove_day_confirm", "Remove this day and all its services?"))) return false;
     state.travelPlanDraft.days.splice(dayIndex, 1);
     if (useFocusedBookingWorkspace && state.travelPlanFocusedDayId === dayId) {
       const fallbackDay = state.travelPlanDraft.days[Math.min(dayIndex, state.travelPlanDraft.days.length - 1)] || null;
@@ -3199,6 +3255,7 @@ export function createBookingTravelPlanModule(ctx) {
     if (!recalculateTravelPlanDayDates()) clearTravelPlanDerivedDayDates();
     renderTravelPlanPanel();
     renderOfferPanel?.();
+    return true;
   }
 
   function syncTravelPlanDayNumbers(days) {
@@ -3256,6 +3313,18 @@ export function createBookingTravelPlanModule(ctx) {
     return row instanceof HTMLElement ? row : null;
   }
 
+  function travelPlanRouteListElement() {
+    const routeList = els.travel_plan_editor?.querySelector?.(".travel-plan-route-list");
+    return routeList instanceof HTMLElement ? routeList : null;
+  }
+
+  function travelPlanRouteDayElementById(dayId) {
+    const normalizedDayId = String(dayId || "").trim();
+    if (!normalizedDayId || !(els.travel_plan_editor instanceof HTMLElement)) return null;
+    const row = els.travel_plan_editor.querySelector(`[data-travel-plan-route-day="${CSS.escape(normalizedDayId)}"]`);
+    return row instanceof HTMLElement ? row : null;
+  }
+
   function travelPlanRouteDropPlaceholderElementFromTarget(target) {
     const placeholder = target instanceof Element ? target.closest("[data-travel-plan-route-placeholder]") : null;
     return placeholder instanceof HTMLElement ? placeholder : null;
@@ -3289,6 +3358,26 @@ export function createBookingTravelPlanModule(ctx) {
     });
   }
 
+  function clearTravelPlanRouteDeleteState() {
+    travelPlanRouteDeleteActive = false;
+    travelPlanRouteDragGhost?.classList?.remove("is-delete-target");
+    if (!(els.travel_plan_editor instanceof HTMLElement)) return;
+    els.travel_plan_editor.querySelectorAll(".travel-plan-route-list__item.is-delete-target").forEach((row) => {
+      row.classList.remove("is-delete-target");
+    });
+  }
+
+  function clearTravelPlanRouteNativeDragImage() {
+    travelPlanRouteNativeDragImage?.remove?.();
+    travelPlanRouteNativeDragImage = null;
+  }
+
+  function clearTravelPlanRouteDragGhost() {
+    travelPlanRouteDragGhost?.remove?.();
+    travelPlanRouteDragGhost = null;
+    travelPlanRouteDragOffset = { x: 0, y: 0 };
+  }
+
   function clearTravelPlanRouteDragState() {
     if (els.travel_plan_editor instanceof HTMLElement) {
       els.travel_plan_editor.querySelectorAll(".travel-plan-route-list__item.is-dragging").forEach((row) => {
@@ -3297,7 +3386,164 @@ export function createBookingTravelPlanModule(ctx) {
       });
     }
     clearTravelPlanRouteDropState();
+    clearTravelPlanRouteDeleteState();
+    clearTravelPlanRouteDragGhost();
+    clearTravelPlanRouteNativeDragImage();
     draggedTravelPlanRouteDayId = "";
+  }
+
+  function clearTravelPlanRouteDocumentListeners() {
+    if (!travelPlanRouteDocumentListeners) return;
+    const { ownerDocument, dragOverHandler, dropHandler } = travelPlanRouteDocumentListeners;
+    ownerDocument?.removeEventListener?.("dragover", dragOverHandler);
+    ownerDocument?.removeEventListener?.("drop", dropHandler);
+    travelPlanRouteDocumentListeners = null;
+  }
+
+  function moveTravelPlanRouteDragGhost(event) {
+    if (!(travelPlanRouteDragGhost instanceof HTMLElement) || !event) return;
+    const x = Number(event.clientX);
+    const y = Number(event.clientY);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+    travelPlanRouteDragGhost.style.left = `${x - travelPlanRouteDragOffset.x}px`;
+    travelPlanRouteDragGhost.style.top = `${y - travelPlanRouteDragOffset.y}px`;
+  }
+
+  function createTravelPlanRouteDragGhost(row, event) {
+    if (!(row instanceof HTMLElement)) return;
+    clearTravelPlanRouteDragGhost();
+    const rect = row.getBoundingClientRect();
+    const ghost = row.cloneNode(true);
+    if (!(ghost instanceof HTMLElement)) return;
+    ghost.classList.remove("is-selected", "is-dragging", "is-drop-target", "has-warnings");
+    ghost.classList.add("travel-plan-route-list__drag-ghost");
+    ghost.setAttribute("aria-hidden", "true");
+    ghost.removeAttribute("data-travel-plan-select-day");
+    ghost.removeAttribute("data-travel-plan-route-day");
+    ghost.removeAttribute("draggable");
+    ghost.style.width = `${rect.width}px`;
+    ghost.style.height = `${rect.height}px`;
+    const clientX = Number(event?.clientX);
+    const clientY = Number(event?.clientY);
+    travelPlanRouteDragOffset = {
+      x: Number.isFinite(clientX) ? Math.max(0, clientX - rect.left) : rect.width / 2,
+      y: Number.isFinite(clientY) ? Math.max(0, clientY - rect.top) : rect.height / 2
+    };
+    ghost.style.left = `${Number.isFinite(clientX) ? clientX - travelPlanRouteDragOffset.x : rect.left}px`;
+    ghost.style.top = `${Number.isFinite(clientY) ? clientY - travelPlanRouteDragOffset.y : rect.top}px`;
+    (row.ownerDocument?.body || document.body)?.appendChild(ghost);
+    travelPlanRouteDragGhost = ghost;
+    moveTravelPlanRouteDragGhost(event);
+  }
+
+  function hideNativeTravelPlanRouteDragImage(event, row) {
+    if (!event?.dataTransfer || !(row instanceof HTMLElement)) return;
+    try {
+      clearTravelPlanRouteNativeDragImage();
+      const ownerDocument = row.ownerDocument || document;
+      const dragImage = ownerDocument.createElement("div");
+      dragImage.setAttribute("aria-hidden", "true");
+      dragImage.style.position = "fixed";
+      dragImage.style.left = "-10000px";
+      dragImage.style.top = "-10000px";
+      dragImage.style.width = "1px";
+      dragImage.style.height = "1px";
+      dragImage.style.opacity = "0";
+      dragImage.style.pointerEvents = "none";
+      (ownerDocument.body || document.body)?.appendChild(dragImage);
+      travelPlanRouteNativeDragImage = dragImage;
+      event.dataTransfer.setDragImage(dragImage, 0, 0);
+    } catch {
+      clearTravelPlanRouteNativeDragImage();
+      // Some browsers reject custom drag images; the fixed ghost still tracks the drag.
+    }
+  }
+
+  function travelPlanRouteDeleteDistance(event, routeList) {
+    if (!event || !(routeList instanceof HTMLElement)) return 0;
+    const x = Number(event.clientX);
+    const y = Number(event.clientY);
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return 0;
+    const rect = routeList.getBoundingClientRect();
+    return Math.max(
+      rect.left - x,
+      x - rect.right,
+      rect.top - y,
+      y - rect.bottom,
+      0
+    );
+  }
+
+  function updateTravelPlanRouteDeleteTarget(event) {
+    const dayId = String(draggedTravelPlanRouteDayId || event?.dataTransfer?.getData("text/plain") || "").trim();
+    const routeList = travelPlanRouteListElement();
+    const sourceRow = travelPlanRouteDayElementById(dayId);
+    moveTravelPlanRouteDragGhost(event);
+    if (!dayId || !(routeList instanceof HTMLElement) || !(sourceRow instanceof HTMLElement)) {
+      clearTravelPlanRouteDeleteState();
+      return false;
+    }
+    const isDeleteTarget = travelPlanRouteDeleteDistance(event, routeList) >= TRAVEL_PLAN_ROUTE_DELETE_DISTANCE_PX;
+    travelPlanRouteDeleteActive = isDeleteTarget;
+    sourceRow.classList.remove("is-delete-target");
+    travelPlanRouteDragGhost?.classList?.toggle("is-delete-target", isDeleteTarget);
+    if (isDeleteTarget) clearTravelPlanRouteDropState();
+    return isDeleteTarget;
+  }
+
+  function animateTravelPlanRouteDaySmokeDissolve(row, onComplete, { removeAfter = false } = {}) {
+    if (!(row instanceof HTMLElement)) {
+      onComplete?.();
+      return;
+    }
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches) {
+      if (removeAfter) row.remove();
+      onComplete?.();
+      return;
+    }
+    row.classList.remove("is-dragging", "is-delete-target");
+    row.classList.add("is-smoke-dissolving");
+    row.setAttribute("aria-grabbed", "false");
+    appendTravelPlanRouteSmokePuffs(row);
+    window.setTimeout(() => {
+      if (removeAfter) row.remove();
+      onComplete?.();
+    }, TRAVEL_PLAN_ROUTE_SMOKE_ANIMATION_MS + 40);
+  }
+
+  function deleteDraggedTravelPlanRouteDay(dayId) {
+    const normalizedDayId = String(dayId || "").trim();
+    if (!normalizedDayId) {
+      clearTravelPlanRouteDragState();
+      return;
+    }
+    const row = travelPlanRouteDayElementById(normalizedDayId);
+    const ghost = travelPlanRouteDragGhost;
+    travelPlanRouteDragGhost = null;
+    draggedTravelPlanRouteDayId = "";
+    travelPlanRouteDeleteActive = false;
+    clearTravelPlanRouteNativeDragImage();
+    clearTravelPlanRouteDropState();
+    suppressTravelPlanRouteClick();
+    if (row instanceof HTMLElement) {
+      row.classList.remove("is-delete-target");
+      row.classList.add("is-delete-pending");
+      row.setAttribute("aria-grabbed", "false");
+    }
+    const commitDelete = () => {
+      if (!removeDay(normalizedDayId, { confirm: false }) && row instanceof HTMLElement) {
+        row.classList.remove("is-delete-pending");
+      }
+    };
+    if (ghost instanceof HTMLElement) {
+      animateTravelPlanRouteDaySmokeDissolve(ghost, commitDelete, { removeAfter: true });
+      return;
+    }
+    if (row instanceof HTMLElement) {
+      commitDelete();
+      return;
+    }
+    commitDelete();
   }
 
   function routeDropPlacement(event, row) {
@@ -3346,15 +3592,22 @@ export function createBookingTravelPlanModule(ctx) {
     draggedTravelPlanRouteDayId = dayId;
     row.classList.add("is-dragging");
     row.setAttribute("aria-grabbed", "true");
+    createTravelPlanRouteDragGhost(row, event);
     if (event.dataTransfer) {
       event.dataTransfer.effectAllowed = "move";
       event.dataTransfer.setData("text/plain", dayId);
+      hideNativeTravelPlanRouteDragImage(event, row);
     }
   }
 
   function handleTravelPlanRouteDragOver(event) {
     const sourceDayId = String(draggedTravelPlanRouteDayId || event.dataTransfer?.getData("text/plain") || "").trim();
     if (!sourceDayId) return;
+    if (updateTravelPlanRouteDeleteTarget(event)) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      return;
+    }
     const context = travelPlanRouteDropContextFromTarget(event.target);
     if (context.placeholder && context.targetDayId && context.targetDayId !== sourceDayId) {
       event.preventDefault();
@@ -3378,16 +3631,52 @@ export function createBookingTravelPlanModule(ctx) {
     const context = travelPlanRouteDropContextFromTarget(event.target);
     const targetDayId = context.targetDayId;
     const sourceDayId = String(draggedTravelPlanRouteDayId || event.dataTransfer?.getData("text/plain") || "").trim();
+    if (sourceDayId && (travelPlanRouteDeleteActive || updateTravelPlanRouteDeleteTarget(event))) {
+      event.preventDefault();
+      event.stopPropagation();
+      deleteDraggedTravelPlanRouteDay(sourceDayId);
+      return;
+    }
     if (!sourceDayId || !targetDayId || sourceDayId === targetDayId) {
+      if (sourceDayId) event.stopPropagation();
       clearTravelPlanRouteDragState();
       return;
     }
     event.preventDefault();
+    event.stopPropagation();
     const placement = context.placement || context.row?.dataset.travelPlanRouteDropPlacement || (context.row ? routeDropPlacement(event, context.row) : "before");
     clearTravelPlanRouteDragState();
     if (moveTravelPlanDayNearRouteTarget(sourceDayId, targetDayId, placement)) {
       suppressTravelPlanRouteClick();
     }
+  }
+
+  function handleTravelPlanRouteDocumentDragOver(event) {
+    const sourceDayId = String(draggedTravelPlanRouteDayId || event.dataTransfer?.getData("text/plain") || "").trim();
+    if (!sourceDayId) return;
+    if (updateTravelPlanRouteDeleteTarget(event)) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      return;
+    }
+    const routeList = travelPlanRouteListElement();
+    const isOutsideRouteList = !(routeList instanceof HTMLElement) || !(event.target instanceof Element) || !routeList.contains(event.target);
+    if (isOutsideRouteList) {
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "none";
+      clearTravelPlanRouteDropState();
+    }
+  }
+
+  function handleTravelPlanRouteDocumentDrop(event) {
+    const sourceDayId = String(draggedTravelPlanRouteDayId || event.dataTransfer?.getData("text/plain") || "").trim();
+    if (!sourceDayId) return;
+    event.preventDefault();
+    if (travelPlanRouteDeleteActive || updateTravelPlanRouteDeleteTarget(event)) {
+      deleteDraggedTravelPlanRouteDay(sourceDayId);
+      return;
+    }
+    clearTravelPlanRouteDragState();
   }
 
   function addItem(dayId) {
@@ -3464,105 +3753,62 @@ export function createBookingTravelPlanModule(ctx) {
     });
   }
 
-  function previewTravelPlanPdf() {
+  function previewBookingTravelPlanPdf({
+    pdfType = "travel-plan",
+    previewTitle = bookingT("booking.travel_plan.preview_pdf", "Preview PDF"),
+    loadingMessage = bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait.")
+  } = {}) {
     if (!state.booking?.id) return;
     if (hasUnsavedBookingChanges?.() || state.pageSaveInFlight || state.pageDiscardInFlight) {
       travelPlanStatus(bookingT("booking.action_requires_save", "Save edits to enable."), "info");
       return;
     }
-    const previewWindow = window.open("", "_blank");
-    if (!previewWindow) {
-      travelPlanStatus(bookingT("booking.travel_plan.preview_popup_blocked", "Allow pop-ups to preview the PDF."), "error");
-      return;
-    }
-    previewWindow.document.title = bookingT("booking.travel_plan.preview_pdf", "Preview PDF");
-    previewWindow.document.documentElement.innerHTML = `
-      <head>
-        <title>${escapeHtml(bookingT("booking.travel_plan.preview_pdf", "Preview PDF"))}</title>
-        <style>
-          :root {
-            color-scheme: light;
-          }
-          body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem;
-            background: rgba(245, 241, 232, 0.78);
-            backdrop-filter: blur(3px);
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-          }
-          .booking-page-overlay__panel {
-            min-width: min(28rem, calc(100vw - 3rem));
-            max-width: 32rem;
-            display: grid;
-            justify-items: center;
-            gap: 0.9rem;
-            padding: 1.45rem 1.6rem;
-            border: 1px solid rgba(202, 191, 173, 0.9);
-            border-radius: 24px;
-            background: rgba(255, 255, 255, 0.96);
-            box-shadow: 0 24px 48px rgba(24, 35, 52, 0.16);
-            text-align: center;
-          }
-          .booking-page-overlay__spinner {
-            width: 2.2rem;
-            height: 2.2rem;
-            border: 3px solid rgba(202, 191, 173, 0.9);
-            border-top-color: rgba(84, 93, 105, 1);
-            border-radius: 999px;
-            animation: booking-inline-status-spin 0.8s linear infinite;
-          }
-          .booking-page-overlay__text {
-            color: rgba(35, 52, 73, 1);
-            font-size: 1rem;
-            font-weight: 600;
-          }
-          @keyframes booking-inline-status-spin {
-            to { transform: rotate(360deg); }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="booking-page-overlay__panel" role="status" aria-live="polite">
-          <span class="booking-page-overlay__spinner" aria-hidden="true"></span>
-          <span class="booking-page-overlay__text">${escapeHtml(bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait."))}</span>
-        </div>
-      </body>
-    `;
+    const requestQuery = {
+      ...bookingLanguageQuery(),
+      ...(pdfType === "one-pager" ? { pdf: "one-pager" } : {})
+    };
     const request = bookingTravelPlanPdfRequest({
       baseURL: apiOrigin,
       params: { booking_id: state.booking.id },
-      query: bookingLanguageQuery()
+      query: requestQuery
     });
     const previewUrl = new URL(request.url, window.location.origin);
     previewUrl.searchParams.set("preview", "1");
-    setBookingPageOverlay(els, true, bookingT("booking.travel_plan.generating_pdf_overlay", "Generating travel plan PDF. Please wait."));
-    void fetch(previewUrl.toString(), {
-      method: request.method,
-      credentials: "include",
-      headers: request.headers
-    }).then(async (response) => {
-      if (!response.ok) {
-        throw new Error(`Preview request failed with status ${response.status}`);
+    previewUrl.searchParams.set("_", `${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const previewErrorMessage = pdfType === "one-pager"
+      ? bookingT("booking.travel_plan.preview_one_pager_pdf_failed", "Could not preview the one-pager PDF.")
+      : bookingT("booking.travel_plan.preview_pdf_failed", "Could not preview the travel plan PDF.");
+    void fetchAndShowPdfPreview({
+      url: previewUrl.toString(),
+      title: previewTitle,
+      loadingMessage,
+      errorMessage: previewErrorMessage,
+      escapeHtml,
+      onPopupBlocked: () => {
+        travelPlanStatus(bookingT("booking.travel_plan.preview_popup_blocked", "Allow pop-ups to preview the PDF."), "error");
+      },
+      onError: (error) => {
+        logBrowserConsoleError("[travel-plan] Failed to preview PDF.", {
+          booking_id: state.booking?.id || "",
+          pdf_type: pdfType
+        }, error);
+        travelPlanStatus(error?.message || previewErrorMessage, "error");
       }
-      const pdfBlob = await response.blob();
-      const objectUrl = URL.createObjectURL(pdfBlob);
-      previewWindow.location.replace(objectUrl);
-      window.setTimeout(() => {
-        URL.revokeObjectURL(objectUrl);
-      }, 60_000);
-    }).catch((error) => {
-      previewWindow.close();
-      travelPlanStatus(bookingT("booking.travel_plan.preview_pdf_failed", "Could not preview the travel plan PDF."), "error");
-      logBrowserConsoleError("[travel-plan] Failed to preview the travel plan PDF.", {
-        booking_id: state.booking?.id || null,
-        url: previewUrl.toString()
-      }, error);
-    }).finally(() => {
-      setBookingPageOverlay(els, false);
+    });
+  }
+
+  function previewTravelPlanPdf() {
+    previewBookingTravelPlanPdf({
+      pdfType: "travel-plan",
+      previewTitle: bookingT("booking.travel_plan.preview_travel_plan_pdf", "Preview Travel Plan PDF")
+    });
+  }
+
+  function previewOnePagerPdf() {
+    previewBookingTravelPlanPdf({
+      pdfType: "one-pager",
+      previewTitle: bookingT("booking.travel_plan.preview_one_pager_pdf", "Preview one-pager PDF"),
+      loadingMessage: bookingT("booking.travel_plan.generating_one_pager_pdf_overlay", "Generating one-pager PDF. Please wait.")
     });
   }
 
@@ -4720,6 +4966,12 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function bindEvents() {
+    if (!travelPlanEventController && typeof AbortController !== "undefined") {
+      travelPlanEventController = new AbortController();
+    }
+    const eventOptions = travelPlanEventController
+      ? { signal: travelPlanEventController.signal }
+      : undefined;
     if (els.travel_plan_editor && els.travel_plan_editor.dataset.travelPlanBound !== "true") {
       els.travel_plan_editor.addEventListener("input", (event) => {
         const target = event.target;
@@ -4745,7 +4997,7 @@ export function createBookingTravelPlanModule(ctx) {
         updateTravelPlanDirtyState();
         renderBookingSectionHeader(els.travel_plan_panel_summary, travelPlanSummary());
         renderTravelPlanTranslationPanel();
-      });
+      }, eventOptions);
       els.travel_plan_editor.addEventListener("change", (event) => {
         let target = event.target;
         if (target?.matches?.("[data-travel-plan-date-picker-for]")) {
@@ -4794,7 +5046,7 @@ export function createBookingTravelPlanModule(ctx) {
         if (shouldRerender) {
           renderTravelPlanPanel();
         }
-      });
+      }, eventOptions);
       els.travel_plan_editor.addEventListener("click", (event) => {
         const customizerTrigger = event.target instanceof Element
           ? event.target.closest("[data-travel-plan-open-customizer]")
@@ -4818,6 +5070,14 @@ export function createBookingTravelPlanModule(ctx) {
         }
         const button = event.target.closest("button");
         if (!button) return;
+        if (button.hasAttribute("data-travel-plan-preview-one-pager-pdf")) {
+          previewOnePagerPdf();
+          return;
+        }
+        if (button.hasAttribute("data-travel-plan-preview-pdf")) {
+          previewTravelPlanPdf();
+          return;
+        }
         if (button.hasAttribute("data-destination-scope-add-region")) {
           void createDestinationScopeRegion(button.getAttribute("data-destination-scope-add-region"));
           return;
@@ -4929,17 +5189,25 @@ export function createBookingTravelPlanModule(ctx) {
           openTravelPlanDatePicker(button);
           return;
         }
-      });
-      els.travel_plan_editor.addEventListener("dragstart", handleTravelPlanRouteDragStart);
-      els.travel_plan_editor.addEventListener("dragover", handleTravelPlanRouteDragOver);
-      els.travel_plan_editor.addEventListener("drop", handleTravelPlanRouteDrop);
-      els.travel_plan_editor.addEventListener("dragend", clearTravelPlanRouteDragState);
+      }, eventOptions);
+      els.travel_plan_editor.addEventListener("dragstart", handleTravelPlanRouteDragStart, eventOptions);
+      els.travel_plan_editor.addEventListener("dragover", handleTravelPlanRouteDragOver, eventOptions);
+      els.travel_plan_editor.addEventListener("drop", handleTravelPlanRouteDrop, eventOptions);
+      els.travel_plan_editor.addEventListener("dragend", clearTravelPlanRouteDragState, eventOptions);
+      const travelPlanEditorDocument = els.travel_plan_editor.ownerDocument || document;
+      travelPlanEditorDocument.addEventListener("dragover", handleTravelPlanRouteDocumentDragOver, eventOptions);
+      travelPlanEditorDocument.addEventListener("drop", handleTravelPlanRouteDocumentDrop, eventOptions);
+      travelPlanRouteDocumentListeners = {
+        ownerDocument: travelPlanEditorDocument,
+        dragOverHandler: handleTravelPlanRouteDocumentDragOver,
+        dropHandler: handleTravelPlanRouteDocumentDrop
+      };
       els.travel_plan_editor.addEventListener("focusout", (event) => {
         const target = event.target;
         if (target?.matches?.('[data-travel-plan-date-text="true"]')) {
           validateTravelPlanDateTextInput(target, { allowPartial: false });
         }
-      });
+      }, eventOptions);
       els.travel_plan_editor.addEventListener("keydown", (event) => {
         if (event.key === "Escape" && travelPlanCustomizerOverlayOpen) {
           event.preventDefault();
@@ -4952,7 +5220,7 @@ export function createBookingTravelPlanModule(ctx) {
         if (!customizerTrigger || (event.key !== "Enter" && event.key !== " ")) return;
         event.preventDefault();
         openTravelPlanCustomizerOverlay();
-      });
+      }, eventOptions);
       els.travel_plan_editor.dataset.travelPlanBound = "true";
       window.setTimeout(() => {
         warnIfTravelPlanControlsMissing("post-load-watchdog");
@@ -4977,7 +5245,7 @@ export function createBookingTravelPlanModule(ctx) {
         ) {
           renderTravelPlanPanel();
         }
-      });
+      }, eventOptions);
       externalDestinationScopeRoot.addEventListener("click", (event) => {
         const button = event.target.closest("button");
         if (!button) return;
@@ -4992,7 +5260,7 @@ export function createBookingTravelPlanModule(ctx) {
         if (button.hasAttribute("data-destination-scope-add-country-place")) {
           void createDestinationScopePlace("", button.getAttribute("data-destination-scope-add-country-place"));
         }
-      });
+      }, eventOptions);
       externalDestinationScopeRoot.dataset.travelPlanDestinationScopeBound = "true";
     }
     if (els.travel_plan_translation_panel && els.travel_plan_translation_panel.dataset.travelPlanBound !== "true") {
@@ -5006,7 +5274,7 @@ export function createBookingTravelPlanModule(ctx) {
           normalizeReviewText(field.getAttribute("data-booking-translation-review-key")),
           field.value || ""
         );
-      });
+      }, eventOptions);
       els.travel_plan_translation_panel.addEventListener("change", (event) => {
         const field = event.target instanceof HTMLElement
           ? event.target.closest("[data-booking-translation-review-key]")
@@ -5018,7 +5286,7 @@ export function createBookingTravelPlanModule(ctx) {
           field.value || "",
           { rerender: true }
         );
-      });
+      }, eventOptions);
       els.travel_plan_translation_panel.addEventListener("click", (event) => {
         const translateMissingButton = event.target instanceof Element
           ? event.target.closest("[data-travel-plan-review-translate-missing]")
@@ -5035,7 +5303,7 @@ export function createBookingTravelPlanModule(ctx) {
           event.preventDefault();
           void translateTravelPlanReview({ force: true });
         }
-      });
+      }, eventOptions);
       els.travel_plan_translation_panel.dataset.travelPlanBound = "true";
     }
     if (allowPdfs && els.travel_plan_pdf_workspace && els.travel_plan_pdf_workspace.dataset.travelPlanBound !== "true") {
@@ -5070,7 +5338,7 @@ export function createBookingTravelPlanModule(ctx) {
             if (!ok) renderTravelPlanPanel();
           });
         }
-      });
+      }, eventOptions);
       els.travel_plan_pdf_workspace.addEventListener("change", (event) => {
         const target = event.target;
         if (target?.matches?.("[data-travel-plan-pdf-sent]")) {
@@ -5080,13 +5348,13 @@ export function createBookingTravelPlanModule(ctx) {
             if (!ok) renderTravelPlanPanel();
           });
         }
-      });
+      }, eventOptions);
       els.travel_plan_pdf_workspace.dataset.travelPlanBound = "true";
     }
     if (allowTranslation && els.travel_plan_translate_all_btn instanceof HTMLButtonElement && els.travel_plan_translate_all_btn.dataset.travelPlanBound !== "true") {
       els.travel_plan_translate_all_btn.addEventListener("click", () => {
         void translateEntireTravelPlan();
-      });
+      }, eventOptions);
       els.travel_plan_translate_all_btn.dataset.travelPlanBound = "true";
     }
     travelPlanServiceLibraryModule.bindTravelPlanServiceLibrary();
@@ -5192,10 +5460,35 @@ export function createBookingTravelPlanModule(ctx) {
     scheduleTravelPlanControlsDiagnostic("renderTravelPlanPanel");
   }
 
+  function destroy() {
+    travelPlanEventController?.abort?.();
+    travelPlanEventController = null;
+    clearTravelPlanRouteDocumentListeners();
+    clearTravelPlanRouteDragState();
+    destroyTravelPlanCustomizerWorkspaces();
+    if (els.travel_plan_editor instanceof HTMLElement) {
+      delete els.travel_plan_editor.dataset.travelPlanBound;
+    }
+    const externalDestinationScopeRoot = destinationScopeEditorRoot();
+    if (externalDestinationScopeRoot instanceof HTMLElement) {
+      delete externalDestinationScopeRoot.dataset.travelPlanDestinationScopeBound;
+    }
+    if (els.travel_plan_translation_panel instanceof HTMLElement) {
+      delete els.travel_plan_translation_panel.dataset.travelPlanBound;
+    }
+    if (els.travel_plan_pdf_workspace instanceof HTMLElement) {
+      delete els.travel_plan_pdf_workspace.dataset.travelPlanBound;
+    }
+    if (els.travel_plan_translate_all_btn instanceof HTMLButtonElement) {
+      delete els.travel_plan_translate_all_btn.dataset.travelPlanBound;
+    }
+  }
+
   return {
     applyBookingPayload,
     bindEvents,
     collectTravelPlanPayload,
+    destroy,
     renderTravelPlanPanel,
     renderTravelPlanTranslationPanel,
     hasIncompleteTravelPlanTranslation,

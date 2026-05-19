@@ -225,8 +225,22 @@ export function createBackendServices({
     composeTravelPlanForPresentation: travelPlanHelpers.composeTravelPlanForPresentation
   });
 
+  const resolveOnePagerImageDiskPath = (storagePath) => {
+    const normalizedPath = String(storagePath || "").split("?")[0].replace(/^\/+/, "");
+    const bookingImagePrefix = "public/v1/booking-images/";
+    if (normalizedPath.startsWith(bookingImagePrefix)) {
+      return path.resolve(collections.bookingImagesDir, normalizedPath.slice(bookingImagePrefix.length));
+    }
+    const tourImagePrefix = "public/v1/tour-images/";
+    return tourHelpers.resolveTourImageDiskPath(
+      normalizedPath.startsWith(tourImagePrefix)
+        ? normalizedPath.slice(tourImagePrefix.length)
+        : normalizedPath
+    );
+  };
+
   const writeMarketingTourOnePagerPdf = createMarketingTourOnePagerPdfWriter({
-    resolveTourImageDiskPath: tourHelpers.resolveTourImageDiskPath,
+    resolveTourImageDiskPath: resolveOnePagerImageDiskPath,
     logoPath: path.join(repoRoot, "assets", "img", "logo-asiatravelplan.large.transparent.png"),
     fallbackImagePath: collections.fallbackBookingImagePath,
     experienceHighlightsManifestPath: path.join(repoRoot, "assets", "img", "experience-highlights", "manifest.json"),

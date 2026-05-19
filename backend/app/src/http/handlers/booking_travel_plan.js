@@ -19,6 +19,11 @@ import {
 import { createBookingTravelPlanAttachmentHandlers } from "./booking_travel_plan_attachments.js";
 import { createBookingTravelPlanImportHandlers } from "./booking_travel_plan_import.js";
 import { createBookingTravelPlanImageHandlers } from "./booking_travel_plan_images.js";
+import {
+  buildBookingTravelPlanPreviewTour,
+  writeTourDetailsOnePagerPdf,
+  writeTourDetailsTravelPlanPdf
+} from "../../lib/travel_plan_pdf_preview_adapter.js";
 
 export function createBookingTravelPlanHandlers(deps) {
   const {
@@ -43,6 +48,7 @@ export function createBookingTravelPlanHandlers(deps) {
     normalizeBookingTravelPlan,
     buildBookingTravelPlanReadModel,
     writeTravelPlanPdf,
+    writeMarketingTourOnePagerPdf,
     listBookingTravelPlanPdfs,
     persistBookingTravelPlanPdfArtifact,
     resolveBookingTravelPlanPdfArtifact,
@@ -105,6 +111,20 @@ export function createBookingTravelPlanHandlers(deps) {
   function travelPlanPdfTempOutputPath(bookingId, prefix = "travel-plan-preview") {
     const tempRoot = String(TRAVEL_PLAN_PDF_PREVIEW_DIR || TEMP_UPLOAD_DIR || "").trim();
     return path.join(tempRoot, `${prefix}-${bookingId}-${randomUUID()}.pdf`);
+  }
+
+  function requestTravelPlanPdfType(req) {
+    try {
+      const requestUrl = new URL(req.url, "http://localhost");
+      const value = normalizeText(
+        requestUrl.searchParams.get("pdf")
+        || requestUrl.searchParams.get("type")
+        || requestUrl.searchParams.get("variant")
+      ).toLowerCase().replace(/_/g, "-");
+      return value === "one-pager" || value === "one-page" ? "one-pager" : "travel-plan";
+    } catch {
+      return "travel-plan";
+    }
   }
 
   function buildTravelPlanPdfArtifactResponse(bookingId, artifact) {
@@ -284,8 +304,10 @@ export function createBookingTravelPlanHandlers(deps) {
       return;
     }
 
-    await sendFileWithCache(req, res, existingArtifact.storage_path, "private, max-age=0, no-store", {
-      "Content-Disposition": `inline; filename="${String(existingArtifact.filename || buildTravelPlanDownloadFilename(existingArtifact.created_at)).replace(/"/g, "")}"`
+    await sendFileWithCache(req, res, existingArtifact.storage_path, "private, no-store, no-cache, max-age=0, must-revalidate", {
+      "Content-Disposition": `inline; filename="${String(existingArtifact.filename || buildTravelPlanDownloadFilename(existingArtifact.created_at)).replace(/"/g, "")}"`,
+      Pragma: "no-cache",
+      Expires: "0"
     });
   }
 
@@ -323,20 +345,45 @@ export function createBookingTravelPlanHandlers(deps) {
       sourceLang
     });
 
-    const previewPath = travelPlanPdfTempOutputPath(booking.id, "travel-plan-preview");
+    const pdfType = requestTravelPlanPdfType(req);
+    if (pdfType === "one-pager" && typeof writeMarketingTourOnePagerPdf !== "function") {
+      sendJson(res, 503, { error: "Booking one-pager PDF rendering is not configured" });
+      return;
+    }
+
+    const previewPath = travelPlanPdfTempOutputPath(
+      booking.id,
+      pdfType === "one-pager" ? "one-pager-preview" : "travel-plan-preview"
+    );
     let renderedPath = previewPath;
     try {
       await mkdir(path.dirname(previewPath), { recursive: true });
-      const result = await writeTravelPlanPdf(booking, travelPlanSnapshot, {
-        lang: contentLang,
-        outputPath: previewPath
-      });
+      const previewTour = buildBookingTravelPlanPreviewTour(booking, travelPlanSnapshot);
+      const result = pdfType === "one-pager"
+        ? await writeTourDetailsOnePagerPdf({
+            writeMarketingTourOnePagerPdf,
+            tour: previewTour,
+            lang: contentLang,
+            outputPath: previewPath
+          })
+        : await writeTourDetailsTravelPlanPdf({
+            writeTravelPlanPdf,
+            tour: previewTour,
+            travelPlan: travelPlanSnapshot,
+            lang: contentLang,
+            outputPath: previewPath
+          });
       renderedPath = String(result?.outputPath || previewPath).trim() || previewPath;
-      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
-        "Content-Disposition": `inline; filename="${buildTravelPlanDownloadFilename(nowIso()).replace(/"/g, "")}"`
+      await sendFileWithCache(req, res, renderedPath, "private, no-store, no-cache, max-age=0, must-revalidate", {
+        "Content-Disposition": `inline; filename="${buildTravelPlanDownloadFilename(nowIso(), pdfType === "one-pager" ? "one-pager" : "").replace(/"/g, "")}"`,
+        Pragma: "no-cache",
+        Expires: "0"
       });
     } catch (error) {
-      sendJson(res, 500, { error: "Could not render travel plan PDF", detail: String(error?.message || error) });
+      sendJson(res, 500, {
+        error: pdfType === "one-pager" ? "Could not render one-pager PDF" : "Could not render travel plan PDF",
+        detail: String(error?.message || error)
+      });
     } finally {
       await rm(renderedPath, { force: true }).catch(() => {});
       if (renderedPath !== previewPath) {

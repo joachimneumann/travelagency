@@ -172,9 +172,10 @@ export function createHttpHelpers({ corsOrigin }) {
       return;
     }
 
-    const etag = `W/"${fileStats.size}-${Number(fileStats.mtimeMs)}"`;
-    const ifNoneMatch = normalizeText(req.headers["if-none-match"]);
-    if (ifNoneMatch === etag) {
+    const noStore = /\bno-store\b/i.test(String(cacheControl || ""));
+    const etag = noStore ? "" : `W/"${fileStats.size}-${Number(fileStats.mtimeMs)}"`;
+    const ifNoneMatch = noStore ? "" : normalizeText(req.headers["if-none-match"]);
+    if (!noStore && ifNoneMatch === etag) {
       res.writeHead(304, {
         "Cache-Control": cacheControl,
         ETag: etag,
@@ -187,20 +188,49 @@ export function createHttpHelpers({ corsOrigin }) {
     res.writeHead(200, {
       "Content-Type": getMimeTypeFromExt(filePath),
       "Cache-Control": cacheControl,
-      ETag: etag,
+      ...(etag ? { ETag: etag } : {}),
       "Content-Length": String(fileStats.size),
       ...extraHeaders
     });
 
     const stream = createReadStream(filePath);
-    stream.on("error", () => {
-      if (!res.headersSent) {
-        sendJson(res, 500, { error: "Unable to read file" });
-      } else {
+    if (typeof res.on !== "function") {
+      stream.pipe(res);
+      return;
+    }
+    await new Promise((resolve, reject) => {
+      let settled = false;
+      const cleanup = () => {
+        stream.off("error", onStreamError);
+        res.off("finish", onFinish);
+        res.off("close", onClose);
+      };
+      const settle = (handler, value) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        handler(value);
+      };
+      const onStreamError = (error) => {
+        if (!res.headersSent) {
+          sendJson(res, 500, { error: "Unable to read file" });
+          settle(reject, error);
+          return;
+        }
         res.end();
-      }
+        settle(resolve);
+      };
+      const onFinish = () => settle(resolve);
+      const onClose = () => {
+        stream.destroy();
+        settle(resolve);
+      };
+
+      stream.on("error", onStreamError);
+      res.on("finish", onFinish);
+      res.on("close", onClose);
+      stream.pipe(res);
     });
-    stream.pipe(res);
   }
 
   async function readBodyBuffer(req, options = {}) {
