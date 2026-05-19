@@ -440,6 +440,12 @@ export function createApplicationRoutes({
     tourVariantHelpers,
     nowIso: support.nowIso,
     randomUUID,
+    writeTravelPlanPdf,
+    writeMarketingTourOnePagerPdf,
+    sendFileWithCache: httpHelpers.sendFileWithCache,
+    mkdir,
+    rm,
+    TEMP_UPLOAD_DIR: runtime.paths.tempUploadDir,
     repoRoot: runtime.paths.repoRoot,
     execFile: runtime.execFile,
     path

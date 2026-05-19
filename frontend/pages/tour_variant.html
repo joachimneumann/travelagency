@@ -705,23 +705,15 @@
               </div>
             </div>
 
-            <div class="tour-variant-map-row">
-              <div id="tourVariantMapPreview" class="tour-variant-map-preview-mount"></div>
-              <div id="tourVariantDaySummary" class="tour-variant-day-summary" aria-label="Tour Variant days" data-i18n-aria-label-id="backend.tour_variant.day_summary"></div>
-            </div>
-
-            <div
-              id="tourVariantCustomizerOverlay"
-              class="tour-variant-customizer-overlay"
-              role="dialog"
-              aria-modal="true"
-              aria-label="Route customizer"
-              data-i18n-aria-label-id="backend.tour_variant.route_customizer"
-              hidden
-            >
-              <div id="tourVariantCustomizer" class="tour-variant-customizer-mount"></div>
-              <button class="btn btn-ghost tour-variant-customizer-close" id="tourVariantCustomizerClose" type="button" data-i18n-id="common.close">Close</button>
-            </div>
+            <article id="travel_plan_panel" class="booking-section is-open travel-plan-editor--tour-variant">
+              <div class="booking-section__head">
+                <button class="booking-section__summary booking-section__summary--inline-pad-16" id="travel_plan_panel_summary" type="button"></button>
+              </div>
+              <div class="booking-section__body">
+                <span id="travel_plan_status" class="micro booking-inline-status"></span>
+                <div id="travel_plan_editor"></div>
+              </div>
+            </article>
 
             <div class="tour-variant-grid">
               <section class="tour-variant-panel">
@@ -756,54 +748,6 @@
               </section>
             </div>
 
-            <details class="tour-variant-panel tour-variant-collapsible" open>
-              <summary data-i18n-id="backend.tour_variant.arrival_and_departure">Arrival and Departure</summary>
-              <div class="tour-variant-collapsible__body tour-variant-boundary-fields">
-                <h3 class="tour-variant-boundary-heading tour-variant-boundary-heading--arrival" data-i18n-id="backend.tour_variant.arrival">Arrival</h3>
-                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--mode">
-                  <label for="tourVariantArrivalMode" data-i18n-id="backend.tour_variant.mode">Mode</label>
-                  <select id="tourVariantArrivalMode">
-                    <option value="none" data-i18n-id="backend.tour_variant.none">None</option>
-                    <option value="first_day" data-i18n-id="backend.tour_variant.first_day">First day</option>
-                    <option value="before_first_day" data-i18n-id="backend.tour_variant.before_first_day">Before first day</option>
-                  </select>
-                </div>
-                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--title">
-                  <label for="tourVariantArrivalTitle" data-i18n-id="backend.tour_variant.title">Title</label>
-                  <input id="tourVariantArrivalTitle" type="text" />
-                </div>
-                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--airport-code">
-                  <label for="tourVariantArrivalAirportCode" data-i18n-id="backend.tour_variant.airport_code">Airport code</label>
-                  <input id="tourVariantArrivalAirportCode" type="text" />
-                </div>
-                <div class="field tour-variant-boundary-field--arrival tour-variant-boundary-field--details">
-                  <label for="tourVariantArrivalDetails" data-i18n-id="backend.tour_variant.details">Details</label>
-                  <textarea id="tourVariantArrivalDetails" rows="3"></textarea>
-                </div>
-
-                <h3 class="tour-variant-boundary-heading tour-variant-boundary-heading--departure" data-i18n-id="backend.tour_variant.departure">Departure</h3>
-                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--mode">
-                  <label for="tourVariantDepartureMode" data-i18n-id="backend.tour_variant.mode">Mode</label>
-                  <select id="tourVariantDepartureMode">
-                    <option value="none" data-i18n-id="backend.tour_variant.none">None</option>
-                    <option value="last_day" data-i18n-id="backend.tour_variant.last_day">Last day</option>
-                    <option value="after_last_day" data-i18n-id="backend.tour_variant.after_last_day">After last day</option>
-                  </select>
-                </div>
-                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--title">
-                  <label for="tourVariantDepartureTitle" data-i18n-id="backend.tour_variant.title">Title</label>
-                  <input id="tourVariantDepartureTitle" type="text" />
-                </div>
-                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--airport-code">
-                  <label for="tourVariantDepartureAirportCode" data-i18n-id="backend.tour_variant.airport_code">Airport code</label>
-                  <input id="tourVariantDepartureAirportCode" type="text" />
-                </div>
-                <div class="field tour-variant-boundary-field--departure tour-variant-boundary-field--details">
-                  <label for="tourVariantDepartureDetails" data-i18n-id="backend.tour_variant.details">Details</label>
-                  <textarea id="tourVariantDepartureDetails" rows="3"></textarea>
-                </div>
-              </div>
-            </details>
           </section>
       </div>
     </main>

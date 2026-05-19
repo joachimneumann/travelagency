@@ -5,6 +5,8 @@ import {
 } from "../shared/api.js";
 import { destinationScopeCatalogRequest } from "../../Generated/API/generated_APIRequestFactory.js";
 import { normalizeDestinationScopeCatalog } from "../shared/destination_scope_editor.js";
+import { initializeBookingSection, setBookingSectionOpen } from "../booking/sections.js";
+import { createTravelPlanEditorCore } from "../shared/travel_plan_editor_core.js";
 import { createTourCustomizerWorkspace } from "../tour_customize.js";
 import { GENERATED_APP_ROLES } from "../../Generated/Models/generated_Roles.js";
 import {
@@ -43,6 +45,10 @@ const els = {
   styles: document.getElementById("tourVariantStyles"),
   issues: document.getElementById("tourVariantIssues"),
   status: document.getElementById("tourVariantStatus"),
+  travel_plan_panel: document.getElementById("travel_plan_panel"),
+  travel_plan_panel_summary: document.getElementById("travel_plan_panel_summary"),
+  travel_plan_editor: document.getElementById("travel_plan_editor"),
+  travel_plan_status: document.getElementById("travel_plan_status"),
   arrivalMode: document.getElementById("tourVariantArrivalMode"),
   arrivalTitle: document.getElementById("tourVariantArrivalTitle"),
   arrivalAirportCode: document.getElementById("tourVariantArrivalAirportCode"),
@@ -91,6 +97,7 @@ let backendLoginRedirectScheduled = false;
 let cleanPayloadSignature = "";
 let isSavingTourVariant = false;
 let isCustomizerOverlayOpen = false;
+let tourVariantTravelPlanEditor = null;
 
 const fetchApi = createApiFetcher({
   apiBase,
@@ -131,6 +138,127 @@ const tourVariantCustomizer = createTourVariantCustomizerWorkspace(els.customize
 
 function tourVariantT(key, fallback, vars) {
   return backendT(`backend.tour_variant.${key}`, fallback, vars);
+}
+
+function fakeBookingFromVariant(variant = state.variant) {
+  const source = variant && typeof variant === "object" && !Array.isArray(variant) ? variant : {};
+  return {
+    id: normalizeText(source.id) || "tour_variant_draft",
+    updated_at: normalizeText(source.updated_at) || null,
+    base_marketing_tour_id: normalizeText(source.base_marketing_tour_id),
+    title: normalizeText(source.title),
+    travel_plan: source.travel_plan && typeof source.travel_plan === "object" && !Array.isArray(source.travel_plan)
+      ? source.travel_plan
+      : {
+          tour_card_image_ids: normalizeTourCardImageIdList(source.tour_card_image_ids),
+          boundary_logistics: source.boundary_logistics || {},
+          days: []
+        },
+    travel_plan_revision: 0,
+    translation_enabled: false,
+    travel_plan_translation_status: {},
+    travel_plan_pdfs: []
+  };
+}
+
+function buildTourVariantTravelPlanPdfPreviewRequest({ apiOrigin: requestApiOrigin, state: requestState, pdfType, contentLang }) {
+  const variantId = normalizeText(requestState.booking?.id || requestState.id);
+  const pdfPath = pdfType === "one-pager" ? "one-pager.pdf" : "travel-plan.pdf";
+  const url = new URL(`${requestApiOrigin}/api/v1/tour-variants/${encodeURIComponent(variantId)}/${pdfPath}`, window.location.origin);
+  const lang = normalizeText(contentLang) || currentBackendLang();
+  if (lang) url.searchParams.set("lang", lang);
+  return {
+    method: "GET",
+    url: url.toString()
+  };
+}
+
+function setTourVariantTravelPlanDirty(_section, isDirty) {
+  state.travelPlanDirty = Boolean(isDirty);
+  window.setTimeout(updateSaveButtonState, 0);
+}
+
+function ensureTourVariantTravelPlanEditor() {
+  if (tourVariantTravelPlanEditor) return tourVariantTravelPlanEditor;
+  state.permissions.canEditBooking = state.permissions.canEditTourVariants === true;
+  state.booking = fakeBookingFromVariant();
+  if (els.travel_plan_panel instanceof HTMLElement) {
+    initializeBookingSection(els.travel_plan_panel);
+    setBookingSectionOpen(els.travel_plan_panel, true, { animate: false });
+  }
+  tourVariantTravelPlanEditor = createTravelPlanEditorCore({
+    preset: "tourVariant",
+    state,
+    els,
+    apiOrigin,
+    fetchBookingMutation: async (url, options = {}) => fetchApi(url, {
+      method: options.method || "GET",
+      body: options.body
+    }),
+    getBookingRevision: () => 0,
+    renderBookingHeader: renderHeader,
+    renderBookingData: () => {},
+    renderOfferPanel: () => {
+      renderTourCardImageSelector();
+      updateSaveButtonState();
+    },
+    loadActivities: async () => {},
+    escapeHtml,
+    formatDateTime: (value) => normalizeText(value),
+    setBookingSectionDirty: setTourVariantTravelPlanDirty,
+    setPageSaveActionError: (message) => showError(message),
+    hasUnsavedBookingChanges: hasUnsavedTourVariantChanges,
+    updatePageDirtyBar: updateSaveButtonState,
+    prepareTravelPlanMutation: async () => true,
+    buildTravelPlanPdfPreviewRequest: buildTourVariantTravelPlanPdfPreviewRequest,
+    travelPlanLibrarySource: "tour_variant",
+    setPageOverlay: (isVisible, message = "") => setBackendPageLoadingOverlay(isVisible, message),
+    features: {
+      translation: false,
+      dayImport: false,
+      tourImport: false,
+      serviceImport: false,
+      imageUpload: false,
+      attachments: false,
+      destinationScope: false,
+      destinationScopeCreate: false,
+      allPrimaryMapPointOptions: true,
+      airportSelect: true,
+      departureBoundaryAfterDays: true,
+      pruneEmptyTravelPlanContentOnCollect: false
+    }
+  });
+  tourVariantTravelPlanEditor.bindEvents();
+  return tourVariantTravelPlanEditor;
+}
+
+function applyVariantTravelPlanEditor({ preserveCollapsedState = false } = {}) {
+  if (!state.variant || state.isCreateMode) return;
+  state.permissions.canEditBooking = state.permissions.canEditTourVariants === true;
+  state.booking = fakeBookingFromVariant();
+  state.travelPlanCustomizerSourceRows = Array.isArray(state.allSourceDays) ? state.allSourceDays : [];
+  state.travelPlanCustomizerBaseTourId = normalizeText(state.variant.base_marketing_tour_id);
+  state.travelPlanCustomizerBaseTourTitle = selectedBaseTourTitle(state.variant.base_marketing_tour_id);
+  const editor = ensureTourVariantTravelPlanEditor();
+  editor.applyBookingPayload({ preserveCollapsedState });
+  editor.renderTravelPlanPanel();
+}
+
+function collectVariantTravelPlanPayload() {
+  if (!tourVariantTravelPlanEditor || !state.variant || state.isCreateMode) {
+    return state.variant?.travel_plan && typeof state.variant.travel_plan === "object"
+      ? state.variant.travel_plan
+      : fakeBookingFromVariant().travel_plan;
+  }
+  const result = tourVariantTravelPlanEditor.collectTravelPlanPayload({
+    focusFirstInvalid: false,
+    pruneEmptyContent: false
+  });
+  if (result?.ok && result.payload) {
+    state.variant.travel_plan = result.payload;
+    return result.payload;
+  }
+  return state.variant.travel_plan || fakeBookingFromVariant().travel_plan;
 }
 
 function updateCustomizerLabels() {
@@ -744,8 +872,6 @@ function renderForm() {
   setInput(els.seasonEnd, variant.seasonality_end_month || "");
   if (els.published instanceof HTMLInputElement) els.published.checked = variant.published_on_webpage === true;
   renderStyleChoices(Array.isArray(variant.style_codes) && variant.style_codes.length ? variant.style_codes : variant.styles);
-  renderBoundary("arrival");
-  renderBoundary("departure");
   renderIssues();
   renderBaseTourOptions(normalizeText(qs.get("base_marketing_tour_id")) || variant.base_marketing_tour_id || "");
   renderCustomizer();
@@ -753,6 +879,21 @@ function renderForm() {
 }
 
 function timelineDays() {
+  const editorDays = Array.isArray(state.variant?.travel_plan?.days)
+    ? state.variant.travel_plan.days
+    : (Array.isArray(state.travelPlanDraft?.days) ? state.travelPlanDraft.days : []);
+  if (editorDays.length) {
+    return editorDays.map((day, index) => ({
+      id: normalizeText(day?.id) || `tour_variant_day_${index + 1}`,
+      day_number: index + 1,
+      source_tour_id: normalizeText(day?.source_tour_id),
+      source_day_id: normalizeText(day?.source_day_id),
+      source_tour_title: normalizeText(day?.source_tour_title),
+      source_day_title: normalizeText(day?.source_day_title || day?.title),
+      source_day_exists: day?.source_day_exists !== false,
+      source_tour_published_on_webpage: day?.source_tour_published_on_webpage !== false
+    })).filter((day) => day.source_tour_id && day.source_day_id);
+  }
   return Array.isArray(state.variant?.days) ? state.variant.days : [];
 }
 
@@ -938,20 +1079,8 @@ function applyCustomizerTimeline(items) {
 }
 
 function renderCustomizer() {
-  renderDaySummary();
+  applyVariantTravelPlanEditor({ preserveCollapsedState: true });
   renderTourCardImageSelector();
-  const tripState = customizerTripState();
-  void tourVariantMapPreview.setTripState({
-    ...tripState,
-    disabled: true
-  }).then(() => {
-    refreshMapPreviewStage();
-  }).catch((error) => {
-    console.error("[backend-tour-variant] Failed to render Tour Variant map preview.", error);
-  });
-  void tourVariantCustomizer.setTripState(tripState).catch((error) => {
-    console.error("[backend-tour-variant] Failed to render Tour Variant customizer.", error);
-  });
 }
 
 async function loadSourceDays() {
@@ -1028,6 +1157,20 @@ async function loadTourVariant() {
 
 function buildPayload() {
   const variant = state.variant || {};
+  const travelPlan = collectVariantTravelPlanPayload();
+  const boundaryLogistics = travelPlan?.boundary_logistics && typeof travelPlan.boundary_logistics === "object" && !Array.isArray(travelPlan.boundary_logistics)
+    ? travelPlan.boundary_logistics
+    : (variant.boundary_logistics || {});
+  const dayRefs = (Array.isArray(travelPlan?.days) ? travelPlan.days : timelineDays())
+    .map((day, index) => ({
+      id: normalizeText(day.id) || `tour_variant_day_${index + 1}`,
+      day_number: index + 1,
+      source_tour_id: normalizeText(day.source_tour_id),
+      source_day_id: normalizeText(day.source_day_id)
+    }))
+    .filter((day) => day.source_tour_id && day.source_day_id);
+  state.variant.boundary_logistics = boundaryLogistics;
+  state.variant.days = dayRefs;
   const tourCardImageIds = normalizeTourCardImageIdList(variant.tour_card_image_ids);
   const publishOnWebpage = Boolean(
     els.published instanceof HTMLInputElement
@@ -1046,16 +1189,8 @@ function buildPayload() {
     tour_card_image_ids: tourCardImageIds,
     published_on_webpage: publishOnWebpage,
     base_marketing_tour_id: normalizeText(variant.base_marketing_tour_id || els.baseTour?.value),
-    boundary_logistics: {
-      arrival: boundaryPayload("arrival"),
-      departure: boundaryPayload("departure")
-    },
-    days: timelineDays().map((day, index) => ({
-      id: normalizeText(day.id) || `tour_variant_day_${index + 1}`,
-      day_number: index + 1,
-      source_tour_id: normalizeText(day.source_tour_id),
-      source_day_id: normalizeText(day.source_day_id)
-    })).filter((day) => day.source_tour_id && day.source_day_id)
+    boundary_logistics: boundaryLogistics,
+    days: dayRefs
   };
 }
 
@@ -1261,7 +1396,8 @@ async function init() {
     });
     state.permissions = {
       canReadTourVariants: Boolean(authState.permissions?.canReadTourVariants),
-      canEditTourVariants: Boolean(authState.permissions?.canEditTourVariants)
+      canEditTourVariants: Boolean(authState.permissions?.canEditTourVariants),
+      canEditBooking: Boolean(authState.permissions?.canEditTourVariants)
     };
     bindControls();
     if (!state.permissions.canReadTourVariants) {

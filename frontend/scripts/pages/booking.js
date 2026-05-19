@@ -1657,6 +1657,7 @@ function cloneBookingMarketingTourDayForLocalImport({ searchResult, targetDayInd
 }
 
 travelPlanModule = createBookingTravelPlanModule({
+  preset: "booking",
   state,
   els,
   apiOrigin,
@@ -1691,8 +1692,7 @@ travelPlanModule = createBookingTravelPlanModule({
     destinationScopeCreate: false,
     allPrimaryMapPointOptions: true,
     airportSelect: true,
-    focusedBookingWorkspace: true,
-    serviceCollapse: false
+    focusedBookingWorkspace: true
   }
 });
 

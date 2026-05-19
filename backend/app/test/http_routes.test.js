@@ -155,6 +155,14 @@ test("buildApiRoutes includes the marketing tour one-pager PDF route", () => {
     true
   );
   assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/api/v1/tour-variants/variant_alpha/one-pager.pdf")),
+    true
+  );
+  assert.equal(
+    routes.some((route) => route.method === "GET" && route.pattern.test("/api/v1/tour-variants/variant_alpha/travel-plan.pdf")),
+    true
+  );
+  assert.equal(
     routes.some((route) => route.method === "GET" && route.pattern.test("/public/v1/tours/tour_alpha/one-pager.pdf")),
     true
   );

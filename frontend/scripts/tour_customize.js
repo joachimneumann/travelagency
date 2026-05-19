@@ -702,8 +702,7 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 .tour-customize-root .tour-customize-option p,
 .tour-customize-root .tour-customize-timeline__item p {
   margin: 0;
-  color: var(--text-muted);
-  font-size: 0.88rem;
+  color: #000;
   line-height: 1.35;
 }
 
@@ -1078,7 +1077,11 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 
 .tour-customize-root .tour-customize-option.is-dragging,
 .tour-customize-root .tour-customize-timeline__item.is-dragging {
-  opacity: 0.72;
+  opacity: 0.46;
+  filter: grayscale(0.8);
+  border-color: var(--line-strong);
+  background: #f3f5f7;
+  box-shadow: none;
 }
 
 .tour-customize-root .tour-customize-option.is-sticky-dragging,
@@ -1399,13 +1402,12 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
 
 .tour-customize-root .tour-customize-option p {
   overflow: hidden;
-  font-size: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .tour-customize-root .tour-customize-option__location {
-  color: var(--accent);
+  color: #000;
 }
 
 .tour-customize-root .tour-customize-option__body p:not(.tour-customize-option__location) {
@@ -1476,19 +1478,6 @@ const TOUR_CUSTOMIZER_COMPONENT_CSS = `
   flex: 0 0 var(--tour-customize-card-width);
   z-index: 1;
   scroll-snap-align: start;
-}
-
-.tour-customize-root .tour-customize-timeline__item:not(:last-of-type)::after {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: 50%;
-  left: 100%;
-  width: var(--tour-customize-timeline-gap);
-  height: 4px;
-  background: var(--line-strong);
-  transform: translateY(-50%);
-  pointer-events: none;
 }
 
 .tour-customize-root .tour-customize-timeline__move-placeholder {
@@ -1744,6 +1733,7 @@ export function createTourCustomizer({
   let modalCloseCallback = null;
   let lastStickyDragReleaseTargetKey = "";
   let forceTripRefreshOnClose = false;
+  let modalScrollLock = null;
   let embeddedWorkspaceRoot = null;
   let embeddedWorkspaceComponent = null;
   let embeddedWorkspaceTourId = "tour_variant_workspace";
@@ -1806,6 +1796,30 @@ export function createTourCustomizer({
     } else {
       target.classList.remove(className);
     }
+  }
+
+  function lockModalDocumentScroll(ownerDocument = customizerOwnerDocument()) {
+    if (modalScrollLock || !ownerDocument) return;
+    const body = ownerDocument.body || null;
+    const documentElement = ownerDocument.documentElement || null;
+    modalScrollLock = {
+      body,
+      documentElement,
+      bodyOverflow: body?.style?.overflow || "",
+      documentElementOverflow: documentElement?.style?.overflow || ""
+    };
+    body?.classList?.add?.("tour-customize-modal-open");
+    if (body?.style) body.style.overflow = "hidden";
+    if (documentElement?.style) documentElement.style.overflow = "hidden";
+  }
+
+  function unlockModalDocumentScroll() {
+    if (!modalScrollLock) return;
+    const { body, documentElement, bodyOverflow, documentElementOverflow } = modalScrollLock;
+    body?.classList?.remove?.("tour-customize-modal-open");
+    if (body?.style) body.style.overflow = bodyOverflow;
+    if (documentElement?.style) documentElement.style.overflow = documentElementOverflow;
+    modalScrollLock = null;
   }
 
   function scheduleTimeout(callback, delay = 0) {
@@ -3172,6 +3186,7 @@ export function createTourCustomizer({
     } else if (modal?.parentNode) {
       modal.parentNode.removeChild(modal);
     }
+    unlockModalDocumentScroll();
     modal = null;
     draft = null;
     modalCloseCallback = null;
@@ -4449,9 +4464,12 @@ export function createTourCustomizer({
       mapZoom: { zoomed: false, x: 50, y: 50 }
     };
     const mountContainer = options?.container instanceof HTMLElement ? options.container : document.body;
+    const ownerDocument = mountContainer?.ownerDocument || document;
+    lockModalDocumentScroll(ownerDocument);
     modalComponent = createTourConfiguratorShadowMount(mountContainer, { mode: "modal" });
     if (!modalComponent?.root) {
       modalComponent = null;
+      unlockModalDocumentScroll();
       return false;
     }
     modal = modalComponent.root;

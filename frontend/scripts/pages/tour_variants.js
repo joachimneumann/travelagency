@@ -141,6 +141,20 @@ function publicationClass(variant) {
   return variant?.published_on_webpage === true ? "tour-variant-status--published" : "tour-variant-status--draft";
 }
 
+function formatIntegerWithGrouping(value) {
+  if (!Number.isFinite(Number(value))) return "-";
+  return new Intl.NumberFormat("en-US", {
+    maximumFractionDigits: 0,
+    useGrouping: true
+  }).format(Number(value));
+}
+
+function formatWebPagePriority(value) {
+  const numberValue = Number(value);
+  const normalized = Number.isFinite(numberValue) ? Math.round(numberValue) : 50;
+  return String(Math.min(100, Math.max(0, normalized)));
+}
+
 function variantInitials(title) {
   const words = normalizeText(title).split(/\s+/).filter(Boolean);
   if (!words.length) return "TV";
@@ -151,9 +165,60 @@ function renderVariantThumbnail(variant) {
   const title = normalizeText(variant?.title || variant?.id);
   const thumbnailUrl = normalizeText(variant?.thumbnail_url);
   if (thumbnailUrl) {
-    return `<img class="tour-variant-thumb__image" src="${escapeHtml(resolveApiUrl(apiBase, thumbnailUrl))}" alt="${escapeHtml(title || backendT("tour.picture_label", "Tour picture"))}" loading="lazy" />`;
+    return `<img class="booking-list__booking-thumb-image" src="${escapeHtml(resolveApiUrl(apiBase, thumbnailUrl))}" alt="${escapeHtml(title || backendT("tour.picture_label", "Tour picture"))}" loading="lazy" />`;
   }
-  return `<span class="tour-variant-thumb__initials">${escapeHtml(variantInitials(title))}</span>`;
+  return `<span class="booking-list__booking-thumb-initials">${escapeHtml(variantInitials(title))}</span>`;
+}
+
+function dayCountLabel(count) {
+  const normalizedCount = Number.isFinite(Number(count)) ? Number(count) : 0;
+  return normalizedCount === 1
+    ? tourVariantsT("day_count_one", "1 day")
+    : tourVariantsT("day_count_other", "{count} days", { count: String(normalizedCount) });
+}
+
+function fallbackDayLabel(dayIndex) {
+  return tourVariantsT("day_label", "Day {day}", { day: String(dayIndex + 1) });
+}
+
+function resolvedVariantDayRows(variant) {
+  const resolvedDays = Array.isArray(variant?.travel_plan?.days) ? variant.travel_plan.days : [];
+  const referencedDays = Array.isArray(variant?.days) ? variant.days : [];
+  const rowCount = Math.max(resolvedDays.length, referencedDays.length);
+  return Array.from({ length: rowCount }, (_unused, index) => {
+    const resolvedDay = resolvedDays[index] && typeof resolvedDays[index] === "object" && !Array.isArray(resolvedDays[index])
+      ? resolvedDays[index]
+      : {};
+    const referencedDay = referencedDays[index] && typeof referencedDays[index] === "object" && !Array.isArray(referencedDays[index])
+      ? referencedDays[index]
+      : {};
+    return {
+      label: fallbackDayLabel(index),
+      title: normalizeText(resolvedDay.title || referencedDay.source_day_title),
+      sourceTourTitle: normalizeText(referencedDay.source_tour_title || resolvedDay.source_tour_title || referencedDay.source_tour_id)
+    };
+  });
+}
+
+function renderVariantDaysCell(variant) {
+  const rows = resolvedVariantDayRows(variant);
+  const travelPlanDays = Array.isArray(variant?.travel_plan?.days) ? variant.travel_plan.days : [];
+  const serviceCount = travelPlanDays.reduce((total, day) => total + (Array.isArray(day?.services) ? day.services.length : 0), 0);
+  const dayTitles = rows
+    .map((day) => normalizeText(day.title) || normalizeText(day.label))
+    .filter(Boolean)
+    .join(" | ");
+  const servicesLabel = backendT(
+    serviceCount === 1 ? "booking.travel_plan.summary.item" : "booking.travel_plan.summary.items",
+    serviceCount === 1 ? "{count} service" : "{count} services",
+    { count: formatIntegerWithGrouping(serviceCount) }
+  );
+  return `
+    <div class="booking-list__plan-summary tour-variant-days"${dayTitles ? ` title="${escapeHtml(dayTitles)}"` : ""}>
+      <div class="booking-list__plan-primary">${escapeHtml(dayCountLabel(rows.length))}</div>
+      <div class="booking-list__plan-secondary">${escapeHtml(servicesLabel)}</div>
+    </div>
+  `;
 }
 
 function issuesText(variant) {
@@ -191,47 +256,76 @@ function localizePublicationIssue(issue) {
   return entry ? tourVariantsT(entry[0], entry[1]) : text;
 }
 
+function variantBaseTourLabel(variant) {
+  const baseTourId = normalizeText(variant?.base_marketing_tour_id);
+  if (!baseTourId) return "";
+  const baseTour = (Array.isArray(state.options.base_tours) ? state.options.base_tours : [])
+    .find((tour) => normalizeText(tour?.id) === baseTourId);
+  return normalizeText(baseTour?.title) || baseTourId;
+}
+
+function renderVariantPublicationMeta(variant) {
+  if (variant?.published_on_webpage === true) {
+    return `
+      <span class="tour-list__published-meta">
+        <span class="tour-list__published-pill">${escapeHtml(backendT("backend.tours.published_pill", "web page"))}</span>
+        <span class="tour-list__published-priority" aria-label="${escapeHtml(backendT("backend.tours.web_page_priority", "Web page ranking priority"))}">${escapeHtml(formatWebPagePriority(variant?.priority))}</span>
+      </span>
+    `;
+  }
+  return `<span class="tour-variant-status ${publicationClass(variant)}">${escapeHtml(publicationLabel(variant))}</span>`;
+}
+
 function renderTable() {
   if (!els.table) return;
   if (!state.items.length) {
     els.table.innerHTML = `
       <tbody>
-        <tr><td>${escapeHtml(backendT("backend.tour_variants.empty", "No Tour Variants found."))}</td></tr>
+        <tr><td colspan="3">${escapeHtml(backendT("backend.tour_variants.empty", "No Tour Variants found."))}</td></tr>
       </tbody>
     `;
     return;
   }
   els.table.innerHTML = `
-    <thead>
-      <tr>
-        <th>${escapeHtml(tourVariantsT("table_tour_variant", "Tour Variant"))}</th>
-        <th>${escapeHtml(backendT("backend.table.days", "Days"))}</th>
-        <th>${escapeHtml(tourVariantsT("publication", "Publication"))}</th>
-        <th>${escapeHtml(backendT("backend.table.updated", "Updated"))}</th>
-        <th></th>
-      </tr>
-    </thead>
     <tbody>
       ${state.items.map((variant) => {
         const href = buildTourVariantEditHref(variant.id);
         const issues = issuesText(variant);
         const title = variant.title || variant.id;
+        const baseTourLabel = variantBaseTourLabel(variant);
+        const updatedAt = formatDateTime(variant.updated_at || variant.created_at);
+        const rowAriaLabel = tourVariantsT("open_tour_variant", "Open Tour Variant {name}", {
+          name: title
+        });
+        const actionButton = state.permissions.canEditTourVariants
+          ? `<button class="btn btn-ghost offer-remove-btn" type="button" data-delete-id="${escapeHtml(variant.id)}" title="${escapeHtml(backendT("common.delete", "Delete"))}" aria-label="${escapeHtml(backendT("common.delete", "Delete"))}">&times;</button>`
+          : "";
         return `
-          <tr class="tour-variant-row" tabindex="0" data-href="${escapeHtml(href)}">
+          <tr class="tour-list__row tour-list__row--clickable tour-variant-row" tabindex="0" role="link" aria-label="${escapeHtml(rowAriaLabel)}" data-href="${escapeHtml(href)}">
             <td>
-              <div class="tour-variant-title-cell">
-                <span class="tour-variant-thumb">${renderVariantThumbnail(variant)}</span>
-                <div class="tour-variant-title-copy">
-                  <strong>${escapeHtml(title)}</strong>
-                  <span class="micro">${escapeHtml(variant.base_marketing_tour_id || "")}</span>
+              <div class="booking-list__name-cell">
+                <span class="booking-list__booking-thumb">${renderVariantThumbnail(variant)}</span>
+                <div class="booking-list__name-copy">
+                  <div class="booking-list__booking-name">
+                    <span>${escapeHtml(title)}</span>
+                  </div>
+                  <div class="booking-list__representative">
+                    <span class="booking-list__representative-name">${escapeHtml(baseTourLabel || variant.base_marketing_tour_id || "-")}</span>
+                  </div>
                   ${issues ? `<span class="micro tour-variant-issues">${escapeHtml(issues)}</span>` : ""}
                 </div>
               </div>
             </td>
-            <td>${escapeHtml(String(Array.isArray(variant.days) ? variant.days.length : 0))}</td>
-            <td><span class="tour-variant-status ${publicationClass(variant)}">${escapeHtml(publicationLabel(variant))}</span></td>
-            <td>${escapeHtml(formatDateTime(variant.updated_at || variant.created_at))}</td>
-            <td><button class="btn btn-ghost" type="button" data-delete-id="${escapeHtml(variant.id)}">${escapeHtml(backendT("common.delete", "Delete"))}</button></td>
+            <td class="booking-list__meta-cell">${renderVariantDaysCell(variant)}</td>
+            <td class="tour-list__updated-cell" aria-label="${escapeHtml(backendT("backend.table.updated", "Updated"))}: ${escapeHtml(updatedAt)}">
+              <div class="tour-list__updated-cell-content">
+                <div class="tour-list__updated-summary">
+                  ${renderVariantPublicationMeta(variant)}
+                  <div class="tour-list__updated-primary">${escapeHtml(updatedAt)}</div>
+                </div>
+                ${actionButton}
+              </div>
+            </td>
           </tr>
         `;
       }).join("")}
@@ -243,7 +337,8 @@ function renderTable() {
       window.location.href = row.getAttribute("data-href") || "tour_variants.html";
     });
     row.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
       window.location.href = row.getAttribute("data-href") || "tour_variants.html";
     });
   });

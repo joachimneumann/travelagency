@@ -1735,8 +1735,8 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanSource,
-    /booking\.travel_plan\.item_numbered_title[\s\S]*booking\.travel_plan\.item_notes[\s\S]*renderTravelPlanServiceTimingSection\(day, item/,
-    "Service editing should keep title and details in the service overview ahead of the timing fields"
+    /booking\.travel_plan\.item_numbered_title[\s\S]*showLabel: false[\s\S]*booking\.travel_plan\.service_title_placeholder[\s\S]*booking\.travel_plan\.item_notes[\s\S]*showLabel: false[\s\S]*renderTravelPlanServiceTimingSection\(day, item/,
+    "Service editing should keep title and details in the service overview without visible field labels"
   );
   assert.match(
     travelPlanSource,
@@ -1761,13 +1761,18 @@ test("service titles remain optional across save validation and UI state", async
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: minmax\(7rem, 9rem\) minmax\(0, 1fr\);[\s\S]*\.travel-plan-service__overview-main \{[\s\S]*min-width: 0;[\s\S]*@media \(max-width: 520px\) \{[\s\S]*\.travel-plan-service__overview \{[\s\S]*grid-template-columns: 1fr;/,
-    "Travel plan styles should keep the compact image editor beside flexible service fields and collapse them on narrow screens"
+    /\.travel-plan-service__overview \{[\s\S]*grid-template-columns: 14px minmax\(7rem, 9rem\) minmax\(0, 1fr\);[\s\S]*\.travel-plan-service__overview-main \{[\s\S]*min-width: 0;[\s\S]*@media \(max-width: 520px\) \{[\s\S]*\.travel-plan-service__overview \{[\s\S]*grid-template-columns: 14px minmax\(0, 1fr\);[\s\S]*\.travel-plan-service__overview-main \{[\s\S]*grid-column: 1 \/ -1;/,
+    "Travel plan styles should keep the drag handle beside the compact image editor and collapse flexible service fields on narrow screens"
   );
   assert.match(
     travelPlanStyles,
-    /#travel_plan_panel \.booking-section__summary \{[\s\S]*font-weight: var\(--font-weight-bold\);[\s\S]*#travel_plan_panel :is\([\s\S]*\.travel-plan-day__head h3,[\s\S]*\.travel-plan-service__collapsed-title[\s\S]*\) \{[\s\S]*font-weight: var\(--font-weight-regular\);/,
-    "The Travel plan section header should be bold while the day and service headings remain regular-weight"
+    /#travel_plan_panel \.booking-section__summary \{[\s\S]*font-weight: var\(--font-weight-bold\);[\s\S]*#travel_plan_panel \.travel-plan-day__head h3 \{[\s\S]*font-weight: var\(--font-weight-regular\);/,
+    "The Travel plan section header should be bold while the day headings remain regular-weight"
+  );
+  assert.doesNotMatch(
+    travelPlanStyles,
+    /travel-plan-service__collapsed-title/,
+    "Travel plan services should not render or style a collapsed title"
   );
   assert.match(
     travelPlanStyles,
@@ -1888,6 +1893,11 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
     travelPlanStyles,
     /\.travel-plan-images__hero-frame \{[\s\S]*width: min\(100%, 8rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
     "The travel plan hero image should use a single fixed frame and contain-fit the uploaded image without cropping"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-images__hero-remove \{[\s\S]*color: #6f7a86;[\s\S]*\.travel-plan-images__hero-remove:hover,[\s\S]*\.travel-plan-images__hero-remove:focus-visible \{[\s\S]*color: #000;/,
+    "The service image remove x should stay muted until the delete icon is hovered or focused"
   );
   assert.doesNotMatch(
     travelPlanImagesSource,
@@ -3454,13 +3464,18 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     source,
-    /travel-plan-route-list__drag-handle[\s\S]*<span><\/span><span><\/span><span><\/span><span><\/span><span><\/span><span><\/span>/,
-    "draggable days in the route list should render a six-square drag handle"
+    /travel-plan-route-list__drag-handle[\s\S]*<img src="\/assets\/img\/drag-indicator\.svg" alt="" loading="lazy" decoding="async" \/>/,
+    "draggable days in the route list should render the shared drag indicator asset"
+  );
+  assert.match(
+    source,
+    /function travelPlanDayListTitle\(day, dayIndex\)[\s\S]*return title \|\| formatTravelPlanDayHeading\(dayIndex\);[\s\S]*titleNode\.textContent = travelPlanDayListTitle\(day, dayIndex\)[\s\S]*<strong data-travel-plan-route-day-title>\$\{escapeHtml\(travelPlanDayListTitle\(day, index\)\)\}<\/strong>/,
+    "route-list day titles should show the saved day title without repeating the day number prefix"
   );
   assert.match(
     cssSource,
-    /\.travel-plan-route-list__item--day \{[\s\S]*grid-template-columns: 14px 34px minmax\(0, 1fr\);[\s\S]*\.travel-plan-route-list__drag-handle span \{[\s\S]*background: #000;/,
-    "route-list day rows should place the black drag handle to the left of the day badge"
+    /\.travel-plan-route-list__item--day \{[\s\S]*grid-template-columns: 14px 34px minmax\(0, 1fr\);[\s\S]*\.travel-plan-route-list__drag-handle \{[\s\S]*display: flex;[\s\S]*align-items: center;[\s\S]*\.travel-plan-route-list__drag-handle img \{[\s\S]*object-fit: contain;[\s\S]*\.travel-plan-route-list__item\.is-dragging \{[\s\S]*opacity: 0\.46;[\s\S]*filter: grayscale\(0\.8\);[\s\S]*background: #f3f5f7;[\s\S]*\.travel-plan-route-list__drag-ghost \{[\s\S]*border: 1px solid #dfe5ee;[\s\S]*background: #fff;/,
+    "route-list day rows should place the shared drag indicator asset to the left of the day badge, gray out the source row while dragging, and keep the floating ghost fully styled"
   );
   assert.doesNotMatch(
     source,
@@ -3474,13 +3489,23 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     source,
-    /function createTravelPlanRouteDragGhost\(row, event\)[\s\S]*travel-plan-route-list__drag-ghost[\s\S]*ghost\.style\.left = `\$\{Number\.isFinite\(clientX\)[\s\S]*function hideNativeTravelPlanRouteDragImage\(event, row\)[\s\S]*dragImage\.style\.left = "-10000px"[\s\S]*travelPlanRouteNativeDragImage = dragImage[\s\S]*event\.dataTransfer\.setDragImage\(dragImage, 0, 0\)[\s\S]*function handleTravelPlanRouteDragStart\(event\)[\s\S]*createTravelPlanRouteDragGhost\(row, event\)[\s\S]*hideNativeTravelPlanRouteDragImage\(event, row\)/,
-    "route-list day dragging should use a pre-positioned fixed custom ghost and an offscreen native drag image"
+    /function createTravelPlanRouteDragGhost\(row, event\)[\s\S]*ghost\.classList\.remove\("is-dragging", "is-drop-target", "has-warnings"\)[\s\S]*travel-plan-route-list__drag-ghost[\s\S]*ghost\.style\.left = `\$\{Number\.isFinite\(clientX\)[\s\S]*function hideNativeTravelPlanRouteDragImage\(event, row\)[\s\S]*dragImage\.style\.left = "-10000px"[\s\S]*travelPlanRouteNativeDragImage = dragImage[\s\S]*event\.dataTransfer\.setDragImage\(dragImage, 0, 0\)[\s\S]*function handleTravelPlanRouteDragStart\(event\)[\s\S]*createTravelPlanRouteDragGhost\(row, event\)[\s\S]*hideNativeTravelPlanRouteDragImage\(event, row\)/,
+    "route-list day dragging should use a pre-positioned fixed custom ghost, keep selected styling on the ghost, and use an offscreen native drag image"
   );
   assert.match(
     source,
-    /travelPlanRouteDocumentListeners[\s\S]*travelPlanEditorDocument\.addEventListener\("dragover", handleTravelPlanRouteDocumentDragOver, eventOptions\)[\s\S]*clearTravelPlanRouteDocumentListeners/,
-    "route-list day deletion should track out-of-editor drops and expose cleanup for document listeners"
+    /function routeDropPlacement\(event, row, currentPlacement = ""\)[\s\S]*const hysteresisPx = Math\.min\(18, Math\.max\(8, rect\.height \* 0\.18\)\);[\s\S]*currentPlacement === "before"[\s\S]*currentPlacement === "after"[\s\S]*function renderTravelPlanRouteDropPlaceholder\(row, placement\)[\s\S]*clearTravelPlanRouteDropTargetRows\(\);[\s\S]*if \(placeholder !== referenceNode\) \{[\s\S]*const currentPlaceholder = els\.travel_plan_editor\?\.querySelector\?\.\("\[data-travel-plan-route-placeholder\]"\);[\s\S]*routeDropPlacement\(event, row, currentPlacement\)[\s\S]*renderTravelPlanRouteDropPlaceholder\(row, placement\)/,
+    "route-list day dragover should reuse the placeholder and use midpoint hysteresis so the drop target does not jitter"
+  );
+  assert.match(
+    source,
+    /function travelPlanRouteBoundaryDropContextFromTarget\(target\)[\s\S]*data-travel-plan-select-boundary[\s\S]*boundaryKind === "arrival"[\s\S]*travelPlanRouteDropContextForRow\(dayRows\[0\], "before"\)[\s\S]*boundaryKind === "departure"[\s\S]*travelPlanRouteDropContextForRow\(dayRows\[dayRows\.length - 1\], "after"\)[\s\S]*function travelPlanRouteEdgeDropContext\(event\)[\s\S]*routeList\.contains\(target\)[\s\S]*edgePadding[\s\S]*travelPlanRouteDropContextForRow\(firstRow, "before"\)[\s\S]*travelPlanRouteDropContextForRow\(lastRow, "after"\)[\s\S]*function handleTravelPlanRouteDragOver\(event\)[\s\S]*travelPlanRouteEdgeDropContext\(event\)[\s\S]*const placement = context\.placement \|\| routeDropPlacement\(event, row, currentPlacement\)[\s\S]*function handleTravelPlanRouteDrop\(event\)[\s\S]*travelPlanRouteEdgeDropContext\(event\)/,
+    "route-list day dragging should expose easy first and last insertion placeholders through arrival/departure boundaries and edge gaps"
+  );
+  assert.match(
+    source,
+    /travelPlanRouteDocumentListeners[\s\S]*function handleTravelPlanEditorDocumentDragOver\(event\)[\s\S]*handleTravelPlanRouteDocumentDragOver\(event\)[\s\S]*travelPlanEditorDocument\.addEventListener\("dragover", handleTravelPlanEditorDocumentDragOver, eventOptions\)[\s\S]*clearTravelPlanRouteDocumentListeners/,
+    "route-list day deletion should track out-of-editor drops through the shared drag document listener and expose cleanup"
   );
   assert.match(
     cssSource,
@@ -3504,6 +3529,11 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     cssSource,
+    /\.travel-plan-booking-editor__title \{[\s\S]*grid-template-columns: var\(--travel-plan-focused-label-width\) minmax\(0, 1fr\);[\s\S]*align-items: center;/,
+    "focused booking day title rows should vertically center the day label beside the title field"
+  );
+  assert.match(
+    cssSource,
     /\.travel-plan-booking-map \{[\s\S]*display: grid;[\s\S]*\.travel-plan-map-pdf-actions \{[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*\.travel-plan-map-pdf-actions__btn \{[\s\S]*width: fit-content;[\s\S]*max-width: 100%;/,
     "focused booking map panel should stack compact centered PDF preview buttons below the map"
   );
@@ -3519,13 +3549,33 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     source,
-    /function renderTravelPlanServiceActions\(item, collapsed\)[\s\S]*function renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor = false \} = \{\}\)[\s\S]*const showTitleRowActions = focusedBookingEditor && !collapsed;[\s\S]*\$\{showTitleRowActions \? "" : serviceActions\}[\s\S]*travel-plan-service__title-row[\s\S]*travel-plan-service__title-field[\s\S]*\$\{showTitleRowActions \? serviceActions : ""\}[\s\S]*renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor \}\)/,
-    "focused booking service details should render move and remove actions in the title row while collapsed services keep header actions"
+    /function renderTravelPlanServiceActions\(item\)[\s\S]*data-travel-plan-remove-item[\s\S]*function renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor = false \} = \{\}\)[\s\S]*data-travel-plan-service="\$\{escapeHtml\(item\.id\)\}" draggable="\$\{canDragService \? "true" : "false"\}"[\s\S]*travel-plan-service__drag-handle[\s\S]*<img src="\/assets\/img\/drag-indicator\.svg" alt="" loading="lazy" decoding="async" \/>[\s\S]*travel-plan-service__title-row[\s\S]*travel-plan-service__title-field[\s\S]*\$\{serviceActions\}[\s\S]*renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor \}\)/,
+    "focused booking service details should render the shared drag indicator asset and remove action in the service card"
   );
   assert.match(
     source,
-    /function renderTravelPlanServiceTimingSection\(day, item, \{ aligned = false \} = \{\}\)[\s\S]*travel-plan-service__timing-row[\s\S]*travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing[\s\S]*function renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor = false \} = \{\}\)[\s\S]*\$\{focusedBookingEditor \? renderTravelPlanServiceTimingSection\(day, item, \{ aligned: true \}\) : ""\}[\s\S]*\$\{focusedBookingEditor \? "" : renderTravelPlanServiceTimingSection\(day, item\)\}/,
-    "focused booking service time fields should align with the Detail label and text field inside the service overview column"
+    /function moveTravelPlanServiceNearTarget\(sourceItemId, targetItemId, placement = "before"\)[\s\S]*sourceDay\.services\.splice\(sourceIndex, 1\)[\s\S]*targetDay\.services\.splice/,
+    "focused booking services should reorder through drag-and-drop instead of arrow buttons"
+  );
+  assert.match(
+    source,
+    /function serviceDropPlacement\(event, row, currentPlacement = ""\)[\s\S]*const hysteresisPx = Math\.min\(22, Math\.max\(10, rect\.height \* 0\.18\)\);[\s\S]*currentPlacement === "before"[\s\S]*currentPlacement === "after"[\s\S]*function renderTravelPlanServiceDropPlaceholder\(row, placement\)[\s\S]*clearTravelPlanServiceDropTargetRows\(\);[\s\S]*if \(placeholder !== referenceNode\) \{[\s\S]*const currentPlaceholder = els\.travel_plan_editor\?\.querySelector\?\.\("\[data-travel-plan-service-placeholder\]"\);[\s\S]*serviceDropPlacement\(event, row, currentPlacement\)[\s\S]*renderTravelPlanServiceDropPlaceholder\(row, placement\)/,
+    "service dragover should reuse the placeholder and use midpoint hysteresis so the drop target does not jitter"
+  );
+  assert.doesNotMatch(
+    source,
+    /data-travel-plan-move-item-up|data-travel-plan-move-item-down|booking\.travel_plan\.move_item_up|booking\.travel_plan\.move_item_down/,
+    "focused booking services should not render or handle old up/down service arrows"
+  );
+  assert.doesNotMatch(
+    source,
+    /TravelPlanCollapsedServiceIds|travelPlanCollapsedServiceIds|data-travel-plan-toggle-item|travel-plan-service--collapsed|booking\.travel_plan\.(?:expand_item|collapse_item)/,
+    "Travel plan services should not keep collapse state, controls, classes, or labels"
+  );
+  assert.match(
+    source,
+    /function renderTravelPlanTimingFields\(day, item\)[\s\S]*label: bookingT\("booking\.travel_plan\.time", "Time"\)[\s\S]*showLabel: false[\s\S]*sourcePlaceholder: bookingT\("booking\.travel_plan\.time", "Time"\)[\s\S]*function renderTravelPlanServiceTimingSection\(day, item, \{ aligned = false \} = \{\}\)[\s\S]*travel-plan-service__timing-row[\s\S]*travel-plan-grid travel-plan-grid--item travel-plan-grid--item-timing[\s\S]*function renderTravelPlanService\(day, item, itemIndex, \{ focusedBookingEditor = false \} = \{\}\)[\s\S]*\$\{focusedBookingEditor \? renderTravelPlanServiceTimingSection\(day, item, \{ aligned: true \}\) : ""\}[\s\S]*\$\{focusedBookingEditor \? "" : renderTravelPlanServiceTimingSection\(day, item\)\}/,
+    "focused booking service time fields should render without a visible label and use Time as the input placeholder"
   );
   assert.match(
     cssSource,
@@ -3534,8 +3584,13 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     cssSource,
-    /\.travel-plan-service__title-row \{[\s\S]*grid-template-columns: minmax\(0, 1fr\);[\s\S]*\.travel-plan-booking-editor \.travel-plan-service:not\(\.travel-plan-service--collapsed\) \.travel-plan-service__head \{[\s\S]*display: none;[\s\S]*\.travel-plan-booking-editor \.travel-plan-service__title-row \{[\s\S]*grid-template-columns: minmax\(0, 1fr\) auto;/,
-    "focused booking service title rows should shorten the title field and place actions beside it"
+    /\.travel-plan-service\.is-dragging \{[\s\S]*opacity: 0\.46;[\s\S]*filter: grayscale\(0\.8\);[\s\S]*\.travel-plan-service__drag-ghost \{[\s\S]*border: 1px solid #e3e8ef !important;[\s\S]*background: var\(--travel-plan-service-detail-bg, rgba\(12, 99, 180, 0\.045\)\) !important;[\s\S]*\.travel-plan-service__drop-placeholder \{[\s\S]*min-height: 88px;[\s\S]*border: 1px dashed #2aa84a;[\s\S]*\.travel-plan-service__drag-handle \{[\s\S]*display: flex;[\s\S]*align-self: center;[\s\S]*align-items: center;[\s\S]*\.travel-plan-service__drag-handle img \{[\s\S]*object-fit: contain;[\s\S]*#travel_plan_editor \.travel-plan-service \.localized-pair\.localized-pair--single-language \{[\s\S]*grid-template-columns: minmax\(0, 1fr\);[\s\S]*#travel_plan_editor \.travel-plan-service \.localized-pair\.localized-pair--single-language \.localized-pair__row \{[\s\S]*grid-column: 1;[\s\S]*\.travel-plan-booking-editor \.travel-plan-service\.is-dragging \{[\s\S]*background: #f3f5f7 !important;[\s\S]*\.travel-plan-booking-editor \.travel-plan-service__overview \{[\s\S]*grid-template-columns: 14px minmax\(7rem, 8rem\) minmax\(0, 1fr\);/,
+    "focused booking service cards should gray out the source card while keeping the floating ghost opaque with its border/background, use a taller placeholder, and keep single-column service fields"
+  );
+  assert.doesNotMatch(
+    cssSource,
+    /travel-plan-service--collapsed|travel-plan-service__head|travel-plan-service__toggle|travel-plan-service__collapsed-timing/,
+    "Travel plan service CSS should not include collapse-only selectors"
   );
   assert.match(
     cssSource,
@@ -7127,6 +7182,76 @@ test("booking travel plan copies days and services from marketing tours only", a
   assert.doesNotMatch(travelPlanLibrarySource, /bookingTravelPlanImportRequest|travelPlanDaySearchRequest|travelPlanServiceSearchRequest|travelPlanSearchRequest|data-travel-plan-import-source-plan-booking|openTravelPlanLibrary/, "Shared library should not call booking travel-plan library endpoints");
 });
 
+test("tour variant travel plan initializes its collapsible panel", async () => {
+  const tourVariantPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tour_variant.html");
+  const tourVariantScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_variant.js");
+  const [tourVariantPageSource, tourVariantScriptSource] = await Promise.all([
+    readFile(tourVariantPagePath, "utf8"),
+    readFile(tourVariantScriptPath, "utf8")
+  ]);
+
+  assert.match(
+    tourVariantPageSource,
+    /<article id="travel_plan_panel" class="booking-section is-open travel-plan-editor--tour-variant">/,
+    "Tour Variant should render the travel plan as an initially open booking-section"
+  );
+  assert.match(
+    tourVariantScriptSource,
+    /import \{ initializeBookingSection, setBookingSectionOpen \} from "\.\.\/booking\/sections\.js";/,
+    "Tour Variant should import the shared booking-section initializer"
+  );
+  assert.match(
+    tourVariantScriptSource,
+    /initializeBookingSection\(els\.travel_plan_panel\);[\s\S]*setBookingSectionOpen\(els\.travel_plan_panel, true, \{ animate: false \}\);/,
+    "Tour Variant should initialize and open the travel-plan panel so its body height is auto instead of clipped"
+  );
+});
+
+test("tour variants list renders selected day details from resolved references", async () => {
+  const tourVariantsPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tour_variants.html");
+  const tourVariantsScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_variants.js");
+  const [tourVariantsPageSource, tourVariantsScriptSource] = await Promise.all([
+    readFile(tourVariantsPagePath, "utf8"),
+    readFile(tourVariantsScriptPath, "utf8")
+  ]);
+
+  assert.match(
+    tourVariantsScriptSource,
+    /function resolvedVariantDayRows\(variant\)[\s\S]*variant\?\.travel_plan\?\.days[\s\S]*variant\?\.days[\s\S]*source_day_title[\s\S]*source_tour_title/,
+    "Tour variants list should resolve display rows from the backend-resolved travel plan and reference metadata"
+  );
+  assert.match(
+    tourVariantsScriptSource,
+    /function renderVariantDaysCell\(variant\)[\s\S]*resolvedVariantDayRows\(variant\)[\s\S]*variant\?\.travel_plan\?\.days[\s\S]*booking-list__plan-primary[\s\S]*booking-list__plan-secondary/,
+    "Tour variants list should render the resolved selected-day summary in the same compact plan-summary shape as marketing tours"
+  );
+  assert.match(
+    tourVariantsScriptSource,
+    /const actionButton = state\.permissions\.canEditTourVariants[\s\S]*offer-remove-btn[\s\S]*<tr class="tour-list__row tour-list__row--clickable tour-variant-row"[\s\S]*role="link"[\s\S]*booking-list__name-cell[\s\S]*booking-list__booking-thumb[\s\S]*booking-list__name-copy[\s\S]*booking-list__meta-cell[\s\S]*renderVariantDaysCell\(variant\)[\s\S]*tour-list__updated-cell[\s\S]*\$\{actionButton\}/,
+    "Tour variants table rows should use the same thumbnail/name, plan-summary, updated/action row structure as marketing tours"
+  );
+  assert.match(
+    tourVariantsScriptSource,
+    /function renderVariantPublicationMeta\(variant\)[\s\S]*tour-list__published-meta[\s\S]*tour-list__published-pill[\s\S]*tour-list__published-priority[\s\S]*tour-variant-status/,
+    "Tour variants list should reuse the marketing-tour published pill pattern in the updated cell"
+  );
+  assert.doesNotMatch(
+    tourVariantsScriptSource,
+    /<td>\$\{escapeHtml\(String\(Array\.isArray\(variant\.days\) \? variant\.days\.length : 0\)\)\}<\/td>/,
+    "Tour variants table should not render a bare numeric day count"
+  );
+  assert.match(
+    tourVariantsPageSource,
+    /#tourVariantsTable \.tour-list__row--clickable[\s\S]*#tourVariantsTable \.booking-list__meta-cell,[\s\S]*#tourVariantsTable \.tour-list__updated-cell[\s\S]*#tourVariantsTable \.booking-list__plan-summary,[\s\S]*#tourVariantsTable \.tour-list__updated-summary[\s\S]*#tourVariantsTable \.tour-list__published-pill/,
+    "Tour variants page should scope the same marketing-tour list row styles to the Tour Variants table"
+  );
+  assert.doesNotMatch(
+    `${tourVariantsPageSource}\n${tourVariantsScriptSource}`,
+    /tour-variant-title-cell|tour-variant-thumb|tour-variant-days__title|tour-variant-days__source/,
+    "Tour variants list should not keep the old bespoke title/thumb/day-detail table layout"
+  );
+});
+
 test("tour customizer floating drag elements stay inside the active customizer runtime root", async () => {
   const tourCustomizerPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "tour_customize.js");
   const tourCardStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "components", "tour-card.css");
@@ -7159,6 +7284,11 @@ test("tour customizer floating drag elements stay inside the active customizer r
     tourCustomizerSource,
     /function createTourConfiguratorShadowMount\(container, \{ mode = "embedded" \} = \{\}\) \{[\s\S]*const shadow = host\.attachShadow\(\{ mode: "open" \}\);[\s\S]*style\.textContent = TOUR_CUSTOMIZER_COMPONENT_CSS;[\s\S]*shadow\.append\(style, root\);[\s\S]*container\.appendChild\(host\);/,
     "Customizer workspaces should mount into an explicit ShadowRoot with an internal style tag"
+  );
+  assert.doesNotMatch(
+    tourCustomizerSource,
+    /\.tour-customize-root \.tour-customize-timeline__item:not\(:last-of-type\)::after \{[\s\S]{0,400}background: var\(--line-strong\);/,
+    "Customizer timeline day cards should not render a connecting gray line between days"
   );
   assert.match(
     tourCustomizerSource,
@@ -7212,6 +7342,11 @@ test("tour customizer floating drag elements stay inside the active customizer r
   );
   assert.match(
     tourCustomizerSource,
+    /const TOUR_CUSTOMIZER_COMPONENT_CSS = `[\s\S]*\.tour-customize-root \.tour-customize-option\.is-dragging,[\s\S]*\.tour-customize-root \.tour-customize-timeline__item\.is-dragging \{[\s\S]*opacity: 0\.46;[\s\S]*filter: grayscale\(0\.8\);[\s\S]*background: #f3f5f7;[\s\S]*\.tour-customize-root \.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*background: #fff !important;[\s\S]*opacity: 1 !important;/,
+    "Customizer source cards should look disabled while the floating drag ghost keeps the normal card background and border"
+  );
+  assert.match(
+    tourCustomizerSource,
     /const TOUR_CUSTOMIZER_COMPONENT_CSS = `[\s\S]*\.tour-customize-root\.tour-customize-runtime-root,[\s\S]*\.tour-customize-root \.tour-customize-embedded,[\s\S]*--tour-customize-card-border-color: var\(--line-focus-strong\);[\s\S]*\.tour-customize-root \.tour-customize-option \{[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);[\s\S]*\.tour-customize-root \.tour-customize-drag-ghost\.tour-customize-drag-ghost--card,[\s\S]*border: 2px solid var\(--tour-customize-card-border-color\);/,
     "Component CSS should define the card border on the runtime scope and reuse it for normal and floating day cards"
   );
@@ -7229,6 +7364,16 @@ test("tour customizer floating drag elements stay inside the active customizer r
     `${bookingTravelPlanEditorSource}\n${tourVariantScriptSource}`,
     /createTravelPlanCustomizerWorkspace\(previewRoot, null, "preview"\)[\s\S]*createTravelPlanCustomizerWorkspace\(overlayRoot, applyTravelPlanCustomizerTimeline, "full"\)[\s\S]*createTourVariantCustomizerWorkspace\(els\.mapPreview, null, "preview"\)[\s\S]*createTourVariantCustomizerWorkspace\(els\.customizer, applyCustomizerTimeline, "full"\)/,
     "Booking and Tour Variant pages should reuse the shared customizer modes for previews and full editors"
+  );
+  assert.match(
+    bookingTravelPlanEditorSource,
+    /function buildTravelPlanCustomizerSourceTrip\(sourceTourId\)[\s\S]*function travelPlanCustomizerBookingTrip\(\) \{[\s\S]*customizerStorageMode === "dayReferences"[\s\S]*const baseTrip = buildTravelPlanCustomizerSourceTrip\(baseTourId\);/,
+    "Tour Variant day-reference customizers should resolve the base marketing tour directly from source rows"
+  );
+  assert.doesNotMatch(
+    bookingTravelPlanEditorSource,
+    /customizerStorageMode === "dayReferences"[\s\S]{0,400}findTravelPlanCustomizerTripById\(baseTourId\)/,
+    "Tour Variant day-reference base-trip lookup should not recurse through the all-trips helper"
   );
   assert.match(
     tourCustomizerSource,

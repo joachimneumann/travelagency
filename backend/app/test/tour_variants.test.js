@@ -200,6 +200,90 @@ test("Tour Variant without stored image ids keeps deriving web page images from 
   assert.deepEqual(resolvedTour.travel_plan.tour_card_image_ids, ["legacy_one", "legacy_two"]);
 });
 
+test("Tour Variant editor response resolves days while storage remains reference-only", () => {
+  const baseTour = {
+    id: "tour_base",
+    title: "Resolved source tour",
+    styles: ["culture"],
+    published_on_webpage: true,
+    travel_plan: {
+      days: [
+        {
+          id: "day_hanoi",
+          day_number: 1,
+          title: "Canonical Hanoi",
+          primary_location_id: "hanoi",
+          services: [
+            {
+              id: "service_walk",
+              kind: "activity",
+              title: "Canonical walk",
+              details: "Public service context"
+            }
+          ]
+        }
+      ]
+    }
+  };
+  const existing = {
+    id: "tour_variant_reference_only",
+    title: "Reference only",
+    styles: ["culture"],
+    base_marketing_tour_id: "tour_base",
+    boundary_logistics: tourVariantHelpers.emptyBoundaryLogistics(),
+    days: [
+      {
+        id: "tour_variant_day_1",
+        day_number: 1,
+        source_tour_id: "tour_base",
+        source_day_id: "day_hanoi"
+      }
+    ]
+  };
+
+  const readModel = tourVariantHelpers.buildTourVariantEditorResponse(existing, [baseTour], { lang: "en" });
+  assert.equal(readModel.travel_plan.days[0].title, "Canonical Hanoi");
+  assert.equal(readModel.travel_plan.days[0].services[0].title, "Canonical walk");
+  assert.equal(readModel.travel_plan.days[0].source_tour_id, "tour_base");
+  assert.equal(readModel.travel_plan.days[0].source_day_id, "day_hanoi");
+
+  const stored = tourVariantHelpers.buildTourVariantPayload({
+    travel_plan: {
+      days: [
+        {
+          id: "copied_day",
+          source_tour_id: "tour_base",
+          source_day_id: "day_hanoi",
+          title: "Do not store copied content",
+          services: [{ title: "Do not store copied service" }]
+        }
+      ]
+    },
+    days: [
+      {
+        id: "tour_variant_day_1",
+        source_tour_id: "tour_base",
+        source_day_id: "day_hanoi"
+      }
+    ]
+  }, {
+    existing,
+    lang: "en"
+  });
+
+  assert.deepEqual(stored.days, [
+    {
+      id: "tour_variant_day_1",
+      day_number: 1,
+      source_tour_id: "tour_base",
+      source_day_id: "day_hanoi"
+    }
+  ]);
+  assert.equal(Object.hasOwn(stored.days[0], "services"), false);
+  assert.equal(Object.hasOwn(stored.days[0], "title"), false);
+  assert.equal(Object.hasOwn(stored, "travel_plan"), false);
+});
+
 test("Tour Variant source-day options include only published marketing tours", () => {
   const tours = [
     {

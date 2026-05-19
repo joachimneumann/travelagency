@@ -96,64 +96,98 @@
         border: 1px solid var(--line);
       }
 
-      .tour-variants-table .tour-variant-row {
-        cursor: pointer;
-      }
-
-      .tour-variants-table .tour-variant-row:hover td,
-      .tour-variants-table .tour-variant-row:focus-visible td {
-        background: rgba(242, 235, 222, 0.97);
-      }
-
-      .tour-variants-table .tour-variant-row:focus-visible {
-        outline: none;
-      }
-
-      .tour-variants-table td {
+      .backend-list-page #tourVariantsTable td {
         vertical-align: middle;
       }
 
-      .tour-variant-title-cell {
+      .backend-list-page #tourVariantsTable .tour-list__row--clickable {
+        cursor: pointer;
+        transition: background-color 160ms ease;
+      }
+
+      .backend-list-page #tourVariantsTable .tour-list__row--clickable:hover td,
+      .backend-list-page #tourVariantsTable .tour-list__row--clickable:focus-visible td {
+        background: rgba(242, 235, 222, 0.97);
+      }
+
+      .backend-list-page #tourVariantsTable .tour-list__row--clickable:focus-visible {
+        outline: none;
+      }
+
+      .backend-list-page #tourVariantsTable .booking-list__meta-cell,
+      .backend-list-page #tourVariantsTable .tour-list__updated-cell {
+        white-space: nowrap;
+      }
+
+      .backend-list-page #tourVariantsTable .booking-list__plan-summary,
+      .backend-list-page #tourVariantsTable .tour-list__updated-summary {
         display: grid;
-        grid-template-columns: 44px minmax(0, 1fr);
-        gap: 0.7rem;
+        gap: 0.15rem;
+      }
+
+      .backend-list-page #tourVariantsTable .tour-list__updated-cell-content {
+        display: flex;
         align-items: center;
+        justify-content: space-between;
+        gap: 0.65rem;
       }
 
-      .tour-variant-title-copy {
-        display: grid;
-        gap: 0.2rem;
-        min-width: 0;
+      .backend-list-page #tourVariantsTable .booking-list__plan-primary,
+      .backend-list-page #tourVariantsTable .tour-list__updated-primary {
+        font-weight: 600;
+        color: #173329;
       }
 
-      .tour-variant-title-cell strong {
-        color: var(--text-strong);
+      .backend-list-page #tourVariantsTable .booking-list__plan-secondary,
+      .backend-list-page #tourVariantsTable .booking-list__representative-name {
+        color: #5f6b7a;
       }
 
-      .tour-variant-thumb {
-        width: 44px;
-        height: 44px;
-        border-radius: 8px;
-        overflow: hidden;
-        background: var(--surface-warm-soft);
-        border: 1px solid var(--line-warm);
+      .backend-list-page #tourVariantsTable .booking-list__booking-name {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.45rem;
+      }
+
+      .backend-list-page #tourVariantsTable .tour-list__published-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+      }
+
+      .backend-list-page #tourVariantsTable .tour-list__published-pill {
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        padding: 0.18rem 0.5rem;
+        border-radius: 999px;
+        background: var(--success-surface-alpha);
+        color: var(--success-text-deep);
+        font-size: var(--font-size-overline);
+        font-weight: var(--font-weight-bold);
+        line-height: 1.15;
+        text-transform: lowercase;
       }
 
-      .tour-variant-thumb__image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      .tour-variant-thumb__initials {
-        color: var(--text-neutral-soft);
-        font-size: var(--font-size-title-sm);
+      .backend-list-page #tourVariantsTable .tour-list__published-priority {
+        color: var(--text-muted);
+        font-size: var(--font-size-ui-sm);
         font-weight: var(--font-weight-semibold);
-        line-height: 1;
+        line-height: 1.15;
+      }
+
+      .backend-list-page #tourVariantsTable .tour-list__updated-summary .tour-list__published-pill,
+      .backend-list-page #tourVariantsTable .tour-list__updated-summary .tour-variant-status {
+        justify-self: start;
+      }
+
+      .tour-variant-days {
+        min-width: 7.5rem;
+      }
+
+      .tour-variant-status {
+        justify-self: start;
       }
 
       .tour-variant-issues {
@@ -165,6 +199,11 @@
         .tour-variants-controls__row,
         .tour-variants-create {
           grid-template-columns: 1fr;
+        }
+
+        .backend-list-page #tourVariantsTable .booking-list__meta-cell,
+        .backend-list-page #tourVariantsTable .tour-list__updated-cell {
+          white-space: normal;
         }
       }
     </style>

@@ -259,6 +259,18 @@ export function createTourTravelPlanAdapter({
     });
   }
 
+  function buildTourTravelPlanPdfPreviewRequest({ apiOrigin: requestApiOrigin, state: requestState, pdfType, contentLang }) {
+    const tourId = normalizeText(requestState.booking?.id || requestState.id);
+    const pdfPath = pdfType === "one-pager" ? "one-pager.pdf" : "travel-plan.pdf";
+    const url = new URL(`${requestApiOrigin}/api/v1/tours/${encodeURIComponent(tourId)}/${pdfPath}`, window.location.origin);
+    const lang = normalizeText(contentLang) || currentBackendLang();
+    if (lang) url.searchParams.set("lang", lang);
+    return {
+      method: "GET",
+      url: url.toString()
+    };
+  }
+
   function buildTourTravelPlanServiceImageUploadRequest({ apiOrigin: requestApiOrigin, state: requestState, dayId, itemId, file, dataBase64 }) {
     return tourTravelPlanServiceImageUploadRequest({
       baseURL: requestApiOrigin,
@@ -359,6 +371,7 @@ export function createTourTravelPlanAdapter({
     state.permissions.canEditBooking = state.permissions.canEditTours === true;
     state.booking = state.booking || fakeBookingFromTour(state.tour, state.id);
     core = createTravelPlanEditorCore({
+      preset: "marketingTour",
       state,
       els,
       apiOrigin,
@@ -375,6 +388,7 @@ export function createTourTravelPlanAdapter({
       hasUnsavedBookingChanges: () => false,
       prepareTravelPlanMutation: prepareTourTravelPlanMutation,
       buildTravelPlanSaveRequest: buildTourTravelPlanSaveRequest,
+      buildTravelPlanPdfPreviewRequest: buildTourTravelPlanPdfPreviewRequest,
       buildTravelPlanServiceImageUploadRequest: buildTourTravelPlanServiceImageUploadRequest,
       buildTravelPlanServiceImageDeleteRequest: buildTourTravelPlanServiceImageDeleteRequest,
       buildTravelPlanDaySearchRequest: buildTourTravelPlanDaySearchRequest,
@@ -393,7 +407,7 @@ export function createTourTravelPlanAdapter({
         serviceImport: false,
         imageUpload: true,
         attachments: false,
-        pdfs: false,
+        pdfs: true,
         translation: false,
         tourCardImageSelection: true,
         serviceDetails: true,
@@ -402,6 +416,7 @@ export function createTourTravelPlanAdapter({
         destinationScopeCreate: false,
         allPrimaryMapPointOptions: true,
         airportSelect: true,
+        focusedBookingWorkspace: true,
         departureBoundaryAfterDays: true,
         dayDetailsAfterTitle: true,
         pruneEmptyTravelPlanContentOnCollect: true

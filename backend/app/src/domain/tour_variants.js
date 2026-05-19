@@ -574,6 +574,7 @@ export function createTourVariantHelpers({
     const publication = validateTourVariantPublication(variant, storedTours);
     return {
       ...readModel,
+      travel_plan: resolvedTour.travel_plan,
       tour_card_image_ids: resolvedTourCardImageIds,
       thumbnail_url: firstTourCardImagePath(resolvedTour),
       days: dayStatuses,

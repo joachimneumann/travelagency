@@ -128,6 +128,7 @@ function installTourCustomizerShadowDocument({ querySelector = null } = {}) {
       return new CapturingElement(tagName);
     },
     documentElement: {
+      style: {},
       classList: {
         add() {},
         remove() {}
@@ -138,6 +139,12 @@ function installTourCustomizerShadowDocument({ querySelector = null } = {}) {
   return {
     get modalElement() {
       return runtimeRoot;
+    },
+    get bodyElement() {
+      return body;
+    },
+    get documentElement() {
+      return global.document.documentElement;
     },
     restore() {
       global.document = previousDocument;
@@ -982,6 +989,65 @@ test("tour customizer names the original itinerary with the tour title before cu
     assert.match(modalDocument.modalElement?.innerHTML || "", />Close<\/button>/);
     assert.doesNotMatch(modalDocument.modalElement?.innerHTML || "", /I am happy/);
     assert.doesNotMatch(modalDocument.modalElement?.innerHTML || "", /&times;|>×<\/button>/);
+  } finally {
+    modalDocument.restore();
+  }
+});
+
+test("tour customizer locks document scrolling while the modal is open", async () => {
+  const modalDocument = installTourCustomizerShadowDocument();
+  global.window = undefined;
+
+  try {
+    const { createTourCustomizer } = await loadTourCustomizer();
+    const trip = {
+      id: "tour_customizer_scroll_lock",
+      title: "Scrollable Page Tour",
+      travel_plan: {
+        days: [
+          {
+            id: "day_hanoi",
+            day_number: 1,
+            title: "Hanoi arrival",
+            primary_location_id: "place_hanoi",
+            services: [
+              { title: "Arrival", image: { storage_path: "/assets/img/hanoi.webp" } }
+            ]
+          }
+        ]
+      }
+    };
+    const customizer = createTourCustomizer({
+      state: {},
+      frontendT: (_id, fallback, vars = {}) => String(fallback ?? "").replace(/\{([^{}]+)\}/g, (_match, key) => (
+        Object.prototype.hasOwnProperty.call(vars, key) ? String(vars[key]) : ""
+      )),
+      currentFrontendLang: () => "en",
+      normalizeFrontendTourLang: (lang) => lang || "en",
+      escapeHTML,
+      escapeAttr,
+      travelPlanDays: (item) => item?.travel_plan?.days || [],
+      destinationScopeCatalog: () => ({
+        places: [
+          { id: "place_hanoi", label: "Hanoi", latitude: 21.0278, longitude: 105.8342 }
+        ]
+      }),
+      findTripById: () => trip,
+      ensureTourDetailsLoaded: async () => trip,
+      allTrips: () => [trip],
+      renderVisibleTrips() {}
+    });
+
+    modalDocument.bodyElement.style.overflow = "auto";
+    modalDocument.documentElement.style.overflow = "visible";
+
+    assert.equal(await customizer.open(trip.id), true);
+    assert.equal(modalDocument.bodyElement.style.overflow, "hidden");
+    assert.equal(modalDocument.documentElement.style.overflow, "hidden");
+
+    assert.equal(customizer.close({ restoreFocus: false, persistDraft: false }), true);
+    assert.equal(modalDocument.bodyElement.style.overflow, "auto");
+    assert.equal(modalDocument.documentElement.style.overflow, "visible");
   } finally {
     modalDocument.restore();
   }

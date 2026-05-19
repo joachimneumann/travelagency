@@ -147,8 +147,9 @@ export function createBookingTravelPlanImagesModule(deps) {
               data-requires-clean-state
               data-clean-state-allow-travel-plan-dirty="true"
               type="button"
-              aria-label="${escapeHtml(bookingT("common.remove", "Remove"))}"
-            >${escapeHtml(bookingT("common.remove", "Remove"))}</button>
+              aria-label="${escapeHtml(bookingT("booking.travel_plan.remove_picture", "Remove picture"))}"
+              title="${escapeHtml(bookingT("booking.travel_plan.remove_picture", "Remove picture"))}"
+            ><span aria-hidden="true">&times;</span></button>
           ` : ""}
         </div>
       `

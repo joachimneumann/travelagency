@@ -1,3 +1,8 @@
+import {
+  writeTourDetailsOnePagerPdf,
+  writeTourDetailsTravelPlanPdf
+} from "../../lib/travel_plan_pdf_preview_adapter.js";
+
 export function createTourVariantHandlers(deps) {
   const {
     normalizeText,
@@ -21,7 +26,14 @@ export function createTourVariantHandlers(deps) {
     normalizeTourLang,
     tourVariantHelpers,
     nowIso,
-    randomUUID
+    randomUUID,
+    writeMarketingTourOnePagerPdf,
+    writeTravelPlanPdf,
+    sendFileWithCache,
+    mkdir,
+    rm,
+    path,
+    TEMP_UPLOAD_DIR
   } = deps;
 
   const TOUR_VARIANT_STALE_UPDATE_MESSAGE = "This Tour Variant was updated by someone else. Reload before saving.";
@@ -97,6 +109,104 @@ export function createTourVariantHandlers(deps) {
       styles: options.styles,
       base_tours: buildBaseTourOptions(tours, { lang })
     };
+  }
+
+  function pdfFilename(tour, suffix) {
+    const title = normalizeText(tour?.title || tour?.id || "tour-variant")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80) || "tour-variant";
+    return `${title}-${suffix}.pdf`;
+  }
+
+  function pdfTempOutputPath(tourVariantId, suffix) {
+    const root = normalizeText(TEMP_UPLOAD_DIR) || "/tmp";
+    const safeId = normalizeText(tourVariantId).replace(/[^a-z0-9_-]+/gi, "_") || "tour_variant";
+    return path.join(root, "tour-variant-pdf-previews", `${safeId}-${suffix}-${randomUUID()}.pdf`);
+  }
+
+  function resolveTourVariantPdfTour(tourVariant, tours, lang) {
+    const resolvedTour = tourVariantHelpers.resolveTourVariantToTour(tourVariant, tours, {
+      travelPlanOptions: {
+        sourceLang: "en",
+        contentLang: lang,
+        flatLang: lang,
+        flatMode: "localized",
+        strictReferences: false
+      }
+    });
+    const readModel = normalizeTourForRead(resolvedTour, { lang });
+    const travelPlan = normalizeMarketingTourTravelPlan(resolvedTour.travel_plan, {
+      sourceLang: "en",
+      contentLang: lang,
+      flatLang: lang,
+      flatMode: "localized",
+      strictReferences: false
+    });
+    return {
+      ...resolvedTour,
+      ...readModel,
+      travel_plan: travelPlan
+    };
+  }
+
+  async function renderTourVariantPdf(req, res, tourVariantId, pdfType) {
+    const principal = getPrincipal(req);
+    if (!canReadTourVariants(principal)) {
+      sendJson(res, 403, { error: "Forbidden" });
+      return;
+    }
+    if (pdfType === "one-pager" && typeof writeMarketingTourOnePagerPdf !== "function") {
+      sendJson(res, 503, { error: "Tour Variant one-pager PDF rendering is not configured" });
+      return;
+    }
+    if (pdfType === "travel-plan" && typeof writeTravelPlanPdf !== "function") {
+      sendJson(res, 503, { error: "Tour Variant travel-plan PDF rendering is not configured" });
+      return;
+    }
+
+    const lang = requestLang(req.url);
+    const { tours, tourVariants } = await readStoredToursAndVariants();
+    const tourVariant = tourVariants.find((item) => item.id === tourVariantId);
+    if (!tourVariant) {
+      sendJson(res, 404, { error: "Tour Variant not found" });
+      return;
+    }
+    const renderTour = resolveTourVariantPdfTour(tourVariant, tours, lang);
+    const previewPath = pdfTempOutputPath(tourVariantId, pdfType);
+    let renderedPath = previewPath;
+    try {
+      await mkdir(path.dirname(previewPath), { recursive: true });
+      const result = pdfType === "one-pager"
+        ? await writeTourDetailsOnePagerPdf({
+            writeMarketingTourOnePagerPdf,
+            tour: renderTour,
+            lang,
+            outputPath: previewPath
+          })
+        : await writeTourDetailsTravelPlanPdf({
+            writeTravelPlanPdf,
+            tour: renderTour,
+            travelPlan: renderTour.travel_plan,
+            lang,
+            outputPath: previewPath
+          });
+      renderedPath = normalizeText(result?.outputPath) || previewPath;
+      await sendFileWithCache(req, res, renderedPath, "private, max-age=0, no-store", {
+        "Content-Disposition": `inline; filename="${pdfFilename(renderTour, pdfType === "one-pager" ? "one-pager" : "travel-plan").replace(/"/g, "")}"`
+      });
+    } catch (error) {
+      sendJson(res, 500, {
+        error: pdfType === "one-pager" ? "Could not render Tour Variant one-pager PDF" : "Could not render Tour Variant travel-plan PDF",
+        detail: String(error?.message || error)
+      });
+    } finally {
+      await rm(renderedPath, { force: true }).catch(() => {});
+      if (renderedPath !== previewPath) {
+        await rm(previewPath, { force: true }).catch(() => {});
+      }
+    }
   }
 
   function filterAndSortTourVariants(tourVariants, query, lang) {
@@ -378,6 +488,14 @@ export function createTourVariantHandlers(deps) {
     });
   }
 
+  async function handleGetTourVariantOnePagerPdf(req, res, [tourVariantId]) {
+    await renderTourVariantPdf(req, res, tourVariantId, "one-pager");
+  }
+
+  async function handleGetTourVariantTravelPlanPdf(req, res, [tourVariantId]) {
+    await renderTourVariantPdf(req, res, tourVariantId, "travel-plan");
+  }
+
   return {
     handleListTourVariants,
     handleGetTourVariant,
@@ -385,6 +503,8 @@ export function createTourVariantHandlers(deps) {
     handlePatchTourVariant,
     handleDeleteTourVariant,
     handleListTourVariantSourceDays,
-    handlePublishTourVariants
+    handlePublishTourVariants,
+    handleGetTourVariantOnePagerPdf,
+    handleGetTourVariantTravelPlanPdf
   };
 }

@@ -769,7 +769,7 @@ ${matrixPageControlStyles}
     }
 
     .content-warning {
-      color: #991b1b;
+      color: rgb(255, 0, 0);
       font-weight: 700;
       margin-top: 6px;
       overflow-wrap: anywhere;
