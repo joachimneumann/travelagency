@@ -1516,12 +1516,9 @@ export function createBookingTravelPlanModule(ctx) {
             <span class="travel-plan-service__drag-handle" data-travel-plan-service-drag-handle="${escapeHtml(item.id)}" aria-hidden="true">
               <img src="/assets/img/drag-indicator.svg" alt="" loading="lazy" decoding="async" />
             </span>
-            <div class="travel-plan-service__overview-media">
-              ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, {
-                variant: "sidebar",
-                editable: allowImageUpload && state.permissions.canEditBooking
-              })}
-            </div>
+            ${travelPlanImagesModule.renderTravelPlanServiceImages(day, item, {
+              editable: allowImageUpload && state.permissions.canEditBooking
+            })}
             <div class="travel-plan-service__overview-main">
               <div class="travel-plan-service__title-row">
                 <div class="field travel-plan-service__title-field">

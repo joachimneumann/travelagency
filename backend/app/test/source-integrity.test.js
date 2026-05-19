@@ -1874,6 +1874,11 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
     /class="travel-plan-images__hero-button"[\s\S]*data-travel-plan-add-image="[^"]*"[\s\S]*class="travel-plan-images__hero-image"/,
     "Travel plan services should render a single top-right hero image button for adding or replacing the service image"
   );
+  assert.doesNotMatch(
+    `${travelPlanSource}\n${travelPlanImagesSource}\n${travelPlanStyles}`,
+    /travel-plan-service__overview-media|travel-plan-images--sidebar|class="travel-plan-images"/,
+    "Travel plan service images should render without the old media and sidebar wrapper layers"
+  );
   assert.match(
     travelPlanImagesSource,
     /class="travel-plan-images__hero-remove"[\s\S]*data-travel-plan-remove-image="[^"]*"[\s\S]*data-travel-plan-day-id="[^"]*"[\s\S]*data-travel-plan-service-id="[^"]*"[\s\S]*data-requires-clean-state/,
@@ -1891,13 +1896,18 @@ test("travel plan images cap inline previews and open in a full-size modal", asy
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-images__hero-frame \{[\s\S]*width: min\(100%, 8rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
+    /\.travel-plan-images__hero-frame,[\s\S]*\.travel-plan-images__hero-static \{[\s\S]*width: min\(100%, 8rem\);[\s\S]*\.travel-plan-images__hero-button \{[\s\S]*width: 100%;[\s\S]*aspect-ratio: 1 \/ 1;[\s\S]*\.travel-plan-images__hero-image \{[\s\S]*width: 100%;[\s\S]*height: 100%;[\s\S]*object-fit: contain;/,
     "The travel plan hero image should use a single fixed frame and contain-fit the uploaded image without cropping"
   );
   assert.match(
     travelPlanStyles,
-    /\.travel-plan-images__hero-remove \{[\s\S]*color: #6f7a86;[\s\S]*\.travel-plan-images__hero-remove:hover,[\s\S]*\.travel-plan-images__hero-remove:focus-visible \{[\s\S]*color: #000;/,
-    "The service image remove x should stay muted until the delete icon is hovered or focused"
+    /\.travel-plan-images__hero-button \{[\s\S]*background: transparent;[\s\S]*\.travel-plan-images__hero-static \{[\s\S]*background: transparent;/,
+    "Travel plan service image controls should not paint a muted background behind the image"
+  );
+  assert.match(
+    travelPlanStyles,
+    /\.travel-plan-images__hero-remove \{[\s\S]*color: #6f7a86;[\s\S]*opacity: 0;[\s\S]*pointer-events: none;[\s\S]*\.travel-plan-images__hero-frame:hover \.travel-plan-images__hero-remove,[\s\S]*\.travel-plan-images__hero-frame:focus-within \.travel-plan-images__hero-remove \{[\s\S]*opacity: 1;[\s\S]*pointer-events: auto;[\s\S]*\.travel-plan-images__hero-remove:hover,[\s\S]*\.travel-plan-images__hero-remove:focus-visible \{[\s\S]*color: #000;/,
+    "The service image remove x should stay hidden until the image frame is hovered or focused, then stay muted until the delete icon itself is hovered or focused"
   );
   assert.doesNotMatch(
     travelPlanImagesSource,

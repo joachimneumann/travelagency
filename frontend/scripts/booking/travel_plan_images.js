@@ -107,7 +107,7 @@ export function createBookingTravelPlanImagesModule(deps) {
     return item.images.find((image) => image?.is_primary) || item.images[0] || null;
   }
 
-  function renderTravelPlanServiceImages(day, item, { variant = "default", editable = true } = {}) {
+  function renderTravelPlanServiceImages(day, item, { editable = true } = {}) {
     const image = resolveCurrentItemImage(item);
     const placeholderSrc = "assets/img/service.png";
     const primaryPreviewSrc = image
@@ -163,11 +163,7 @@ export function createBookingTravelPlanImagesModule(deps) {
           />
         </div>
       `;
-    return `
-      <div class="travel-plan-images${variant === "sidebar" ? " travel-plan-images--sidebar" : ""}">
-        ${heroMedia}
-      </div>
-    `;
+    return heroMedia;
   }
 
   function triggerTravelPlanServiceImagePicker(dayId, itemId) {
