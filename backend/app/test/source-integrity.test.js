@@ -3534,6 +3534,11 @@ test("travel-plan module preserves add/remove/reorder editing helpers", async ()
   );
   assert.match(
     cssSource,
+    /#travel_plan_editor \.travel-plan-booking-editor__title-field \.localized-pair \{[\s\S]*justify-self: stretch;[\s\S]*width: 100%;[\s\S]*min-width: 0;[\s\S]*#travel_plan_editor \.travel-plan-booking-editor__title-field \.localized-pair__row \{[\s\S]*width: 100%;[\s\S]*min-width: 0;[\s\S]*#travel_plan_editor \.travel-plan-booking-editor__title-field :is\(input, \.booking-text-field--customer\) \{[\s\S]*width: 100%;/,
+    "focused booking editable day title fields should stretch through the localized wrapper to the full detail-column width"
+  );
+  assert.match(
+    cssSource,
     /\.travel-plan-booking-map \{[\s\S]*display: grid;[\s\S]*\.travel-plan-map-pdf-actions \{[\s\S]*display: grid;[\s\S]*justify-items: center;[\s\S]*\.travel-plan-map-pdf-actions__btn \{[\s\S]*width: fit-content;[\s\S]*max-width: 100%;/,
     "focused booking map panel should stack compact centered PDF preview buttons below the map"
   );
@@ -7185,9 +7190,17 @@ test("booking travel plan copies days and services from marketing tours only", a
 test("tour variant travel plan initializes its collapsible panel", async () => {
   const tourVariantPagePath = path.resolve(__dirname, "..", "..", "..", "frontend", "pages", "tour_variant.html");
   const tourVariantScriptPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "pages", "tour_variant.js");
-  const [tourVariantPageSource, tourVariantScriptSource] = await Promise.all([
+  const bookingTravelPlanEditorPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_editor_core.js");
+  const travelPlanPresetsPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "shared", "travel_plan_presets.js");
+  const travelPlanHelpersPath = path.resolve(__dirname, "..", "..", "..", "frontend", "scripts", "booking", "travel_plan_helpers.js");
+  const travelPlanStylesPath = path.resolve(__dirname, "..", "..", "..", "shared", "css", "pages", "backend-booking-travel-plan.css");
+  const [tourVariantPageSource, tourVariantScriptSource, bookingTravelPlanEditorSource, travelPlanPresetsSource, travelPlanHelpersSource, travelPlanStylesSource] = await Promise.all([
     readFile(tourVariantPagePath, "utf8"),
-    readFile(tourVariantScriptPath, "utf8")
+    readFile(tourVariantScriptPath, "utf8"),
+    readFile(bookingTravelPlanEditorPath, "utf8"),
+    readFile(travelPlanPresetsPath, "utf8"),
+    readFile(travelPlanHelpersPath, "utf8"),
+    readFile(travelPlanStylesPath, "utf8")
   ]);
 
   assert.match(
@@ -7204,6 +7217,61 @@ test("tour variant travel plan initializes its collapsible panel", async () => {
     tourVariantScriptSource,
     /initializeBookingSection\(els\.travel_plan_panel\);[\s\S]*setBookingSectionOpen\(els\.travel_plan_panel, true, \{ animate: false \}\);/,
     "Tour Variant should initialize and open the travel-plan panel so its body height is auto instead of clipped"
+  );
+  assert.match(
+    tourVariantScriptSource,
+    /createTravelPlanEditorCore\(\{[\s\S]*preset: "tourVariant"/,
+    "Tour Variant should initialize the shared travel-plan editor with the Tour Variant preset"
+  );
+  assert.match(
+    travelPlanPresetsSource,
+    /dates: \(preset\) => preset\.dates === true/,
+    "Travel-plan presets should expose the dates capability to the shared editor"
+  );
+  assert.match(
+    travelPlanPresetsSource,
+    /tourVariant: Object\.freeze\(\{[\s\S]*dates: false/,
+    "Tour Variant preset should explicitly disable day dates"
+  );
+  assert.match(
+    travelPlanPresetsSource,
+    /tourVariant: Object\.freeze\(\{[\s\S]*dayDetailsEdit: false,[\s\S]*dayReadOnlyInfo: true,[\s\S]*mapPointEdit: false/,
+    "Tour Variant preset should keep day fields read-only while exposing day information"
+  );
+  assert.match(
+    bookingTravelPlanEditorSource,
+    /const allowDates = isFeatureEnabled\("dates"\);[\s\S]*const showDayDateField = allowDates && \(!allowSequentialDayDates \|\| dayIndex === 0\);[\s\S]*function travelPlanDayDateLabel\(day\) \{[\s\S]*if \(!allowDates\) return "";/,
+    "Shared travel-plan editor should hide day-list date metadata and day-detail date fields when dates are disabled"
+  );
+  assert.match(
+    bookingTravelPlanEditorSource,
+    /const allowDayReadOnlyInfo = isFeatureEnabled\("dayReadOnlyInfo"\);[\s\S]*function renderTravelPlanDayReadOnlyInfo\(day\) \{[\s\S]*booking\.travel_plan\.day_details[\s\S]*booking\.travel_plan\.map_point_1[\s\S]*booking\.travel_plan\.map_point_2[\s\S]*booking\.travel_plan\.experience_highlight[\s\S]*travel-plan-focused-day-grid__row--readonly-info/,
+    "Shared travel-plan editor should render Tour Variant day details, map points, and experience highlights as read-only information"
+  );
+  assert.match(
+    bookingTravelPlanEditorSource,
+    /function renderFocusedTravelPlanDayHeader\(day, dayIndex\) \{[\s\S]*const title = travelPlanFocusedDayTitle\(day, dayIndex\);[\s\S]*function travelPlanFocusedDayTitle\(day, dayIndex\) \{[\s\S]*resolveLocalizedDraftBranchText\(day\?\.title_i18n \?\? day\?\.title, bookingSourceLang\(\), ""\)\.trim\(\)[\s\S]*\|\| formatTravelPlanDayHeading\(dayIndex\);/,
+    "Focused Tour Variant day details should show the plain day title beside the day label instead of repeating the Day N prefix"
+  );
+  assert.match(
+    travelPlanHelpersSource,
+    /normalizeOptionalTextField\(rawDay, "source_tour_id"\)[\s\S]*normalizeOptionalTextField\(rawDay, "source_day_id"\)[\s\S]*normalizeOptionalBooleanField\(rawDay, "source_day_exists"\)[\s\S]*normalizeOptionalBooleanField\(rawDay, "source_tour_published_on_webpage"\)/,
+    "Shared travel-plan normalization should preserve hidden Tour Variant day-reference fields so saves and map previews keep their source refs"
+  );
+  assert.match(
+    bookingTravelPlanEditorSource,
+    /function travelPlanCustomizerSelectedDayRefs\(\) \{[\s\S]*customizerStorageMode === "dayReferences"[\s\S]*const resolvedDay = day && typeof day === "object"[\s\S]*id: sourceDayId \|\| normalizeTravelPlanCustomizerText\(day\?\.id\)[\s\S]*const selectedSourceDay = sourceDay \|\| resolvedDay[\s\S]*source_day: cloneTravelPlanCustomizerJson\(selectedSourceDay\),[\s\S]*day: cloneTravelPlanCustomizerJson\(selectedSourceDay\)/,
+    "Tour Variant customizer refs should include the resolved day as fallback map data when source rows have not loaded yet"
+  );
+  assert.match(
+    tourVariantScriptSource,
+    /const EXPERIENCE_HIGHLIGHTS_BASE_PATH = "\/assets\/img\/experience-highlights";[\s\S]*async function loadExperienceHighlights\(\)[\s\S]*await Promise\.all\(\[[\s\S]*loadDestinationScopeCatalog\(\),[\s\S]*loadExperienceHighlights\(\)/,
+    "Tour Variant page should load experience-highlight labels before rendering day read-only details"
+  );
+  assert.match(
+    travelPlanStylesSource,
+    /\.travel-plan-day-readonly-info \{[\s\S]*\.travel-plan-day-readonly-info__row \{[\s\S]*grid-template-columns: var\(--travel-plan-focused-label-width\) minmax\(0, 1fr\);[\s\S]*\.travel-plan-day-readonly-info__label \{[\s\S]*font-size: var\(--font-size-caption\);[\s\S]*font-weight: var\(--font-weight-regular\);/,
+    "Read-only Tour Variant day metadata should align to the focused title grid and use the same regular label typography"
   );
 });
 

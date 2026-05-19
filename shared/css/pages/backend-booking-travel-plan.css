@@ -3045,11 +3045,15 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 0.32rem;
+  justify-self: stretch;
+  width: 100%;
+  min-width: 0;
 }
 
 #travel_plan_editor .travel-plan-booking-editor__title-field .localized-pair__row {
   grid-column: 1;
   width: 100%;
+  min-width: 0;
 }
 
 #travel_plan_editor .travel-plan-booking-editor__title-field .localized-pair__field {
@@ -3117,6 +3121,35 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.85rem;
+}
+
+.travel-plan-day-readonly-info {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.travel-plan-day-readonly-info__row {
+  display: grid;
+  grid-template-columns: var(--travel-plan-focused-label-width) minmax(0, 1fr);
+  gap: 0.45rem;
+  align-items: start;
+}
+
+.travel-plan-day-readonly-info__label {
+  color: var(--text-ink);
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-regular);
+  line-height: 1.25;
+  padding-top: 0;
+}
+
+.travel-plan-day-readonly-info__value {
+  color: var(--text-ink);
+  font-size: var(--font-size-ui-md);
+  line-height: 1.45;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }
 
 .travel-plan-booking-editor .travel-plan-grid {

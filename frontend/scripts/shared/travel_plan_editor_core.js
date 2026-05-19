@@ -160,6 +160,7 @@ export function createBookingTravelPlanModule(ctx) {
   const allowEditableServices = travelPlanServiceMode === "editable";
   const allowDayTitleEdit = isFeatureEnabled("dayTitleEdit");
   const allowDayDetailsEdit = isFeatureEnabled("dayDetailsEdit");
+  const allowDayReadOnlyInfo = isFeatureEnabled("dayReadOnlyInfo");
   const allowMapPointEdit = isFeatureEnabled("mapPointEdit");
   const allowDayAdd = isFeatureEnabled("dayAdd");
   const allowDayDelete = isFeatureEnabled("dayDelete");
@@ -1826,6 +1827,63 @@ export function createBookingTravelPlanModule(ctx) {
     `;
   }
 
+  function travelPlanDayExperienceHighlightLabel(day) {
+    const ids = normalizeTravelPlanDayExperienceHighlightIds(day?.experience_highlight_ids);
+    const selectedId = ids[0] || "";
+    if (!selectedId) return bookingT("booking.travel_plan.experience_highlight_none", "No experience highlight");
+    const option = travelPlanExperienceHighlightOptions().find((item) => item.id === selectedId);
+    return option?.title || selectedId;
+  }
+
+  function travelPlanDayLocationReadOnlyLabel(locationId, optionMap = travelPlanLocationOptionMap()) {
+    const normalizedId = String(locationId || "").trim();
+    if (!normalizedId) return bookingT("booking.travel_plan.location_none", "No map point");
+    return optionMap.get(normalizedId)?.label || normalizedId;
+  }
+
+  function renderTravelPlanDayReadOnlyInfoRow({ label, value, className = "" }) {
+    return `
+      <div class="travel-plan-day-readonly-info__row${className ? ` ${escapeHtml(className)}` : ""}">
+        <div class="travel-plan-day-readonly-info__label">${escapeHtml(label)}</div>
+        <div class="travel-plan-day-readonly-info__value">${escapeHtml(value)}</div>
+      </div>
+    `;
+  }
+
+  function renderTravelPlanDayReadOnlyInfo(day) {
+    if (!allowDayReadOnlyInfo) return "";
+    const optionMap = travelPlanLocationOptionMap();
+    const details = resolveLocalizedDraftBranchText(day?.notes_i18n ?? day?.notes, bookingContentLang(), "")
+      || resolveLocalizedDraftBranchText(day?.notes_i18n ?? day?.notes, bookingSourceLang(), "")
+      || bookingT("booking.travel_plan.day_details_empty", "No day details");
+    const primaryLocationId = String(day?.primary_location_id || "").trim();
+    const secondaryLocationId = String(day?.secondary_location_id || "").trim();
+    const rows = [
+      renderTravelPlanDayReadOnlyInfoRow({
+        label: bookingT("booking.travel_plan.day_details", "Day details"),
+        value: details,
+        className: "travel-plan-day-readonly-info__row--details"
+      }),
+      renderTravelPlanDayReadOnlyInfoRow({
+        label: bookingT("booking.travel_plan.map_point_1", "Map point 1"),
+        value: travelPlanDayLocationReadOnlyLabel(primaryLocationId, optionMap)
+      }),
+      secondaryLocationId
+        ? renderTravelPlanDayReadOnlyInfoRow({
+            label: bookingT("booking.travel_plan.map_point_2", "Map point 2"),
+            value: travelPlanDayLocationReadOnlyLabel(secondaryLocationId, optionMap)
+          })
+        : "",
+      renderTravelPlanDayReadOnlyInfoRow({
+        label: bookingT("booking.travel_plan.experience_highlight", "Experience highlight"),
+        value: travelPlanDayExperienceHighlightLabel(day)
+      })
+    ].filter(Boolean);
+    return rows.length
+      ? `<div class="travel-plan-day-readonly-info">${rows.join("")}</div>`
+      : "";
+  }
+
   function renderTravelPlanDayDetailsField(day, { label = bookingT("booking.travel_plan.day_notes", "Details") } = {}) {
     return `
       <div class="field">
@@ -1881,7 +1939,7 @@ export function createBookingTravelPlanModule(ctx) {
   }
 
   function renderFocusedTravelPlanDayHeader(day, dayIndex) {
-    const title = travelPlanDayTitle(day, dayIndex);
+    const title = travelPlanFocusedDayTitle(day, dayIndex);
     return `
       <div class="travel-plan-booking-editor__toolbar">
         <div class="travel-plan-booking-editor__title">
@@ -1904,6 +1962,7 @@ export function createBookingTravelPlanModule(ctx) {
     const headingLabel = collapsedSummary || dayHeading;
     const dateInputId = `travel_plan_day_date_${day.id}`;
     const dayDetailsField = allowDayDetailsEdit ? renderTravelPlanDayDetailsField(day) : "";
+    const dayReadOnlyInfo = allowDayReadOnlyInfo ? renderTravelPlanDayReadOnlyInfo(day) : "";
     const dayTitleField = focusedBookingEditor || !allowDayTitleEdit ? "" : renderTravelPlanDayTitleField(day);
     const showDayDateField = allowDates && (!allowSequentialDayDates || dayIndex === 0);
     const dayDateField = showDayDateField
@@ -1976,9 +2035,16 @@ export function createBookingTravelPlanModule(ctx) {
             <div class="travel-plan-day__content">
               ${focusedBookingEditor
                 ? `<div class="travel-plan-focused-day-grid">
-                    <div class="travel-plan-focused-day-grid__row travel-plan-focused-day-grid__row--details">
-                      ${dayDetailsField}
-                    </div>
+                    ${dayDetailsField
+                      ? `<div class="travel-plan-focused-day-grid__row travel-plan-focused-day-grid__row--details">
+                          ${dayDetailsField}
+                        </div>`
+                      : ""}
+                    ${dayReadOnlyInfo
+                      ? `<div class="travel-plan-focused-day-grid__row travel-plan-focused-day-grid__row--readonly-info">
+                          ${dayReadOnlyInfo}
+                        </div>`
+                      : ""}
                     ${dayDateField
                       ? `<div class="travel-plan-focused-day-grid__row travel-plan-focused-day-grid__row--date">
                           ${dayDateField}
@@ -1992,6 +2058,7 @@ export function createBookingTravelPlanModule(ctx) {
                     ${dayTitleField}
                   </div>`
                 : ""}
+              ${!focusedBookingEditor ? dayReadOnlyInfo : ""}
               ${!focusedBookingEditor && showDayDetailsAfterTitle ? dayDetailsField : ""}
               ${focusedBookingEditor ? "" : dayMapLocationFields}
               ${renderTravelPlanDayExperienceHighlights(day)}
@@ -2089,6 +2156,11 @@ export function createBookingTravelPlanModule(ctx) {
     const title = resolveLocalizedDraftBranchText(day?.title_i18n ?? day?.title, bookingSourceLang(), "").trim();
     const heading = formatTravelPlanDayHeading(dayIndex);
     return title ? `${heading} · ${title}` : heading;
+  }
+
+  function travelPlanFocusedDayTitle(day, dayIndex) {
+    return resolveLocalizedDraftBranchText(day?.title_i18n ?? day?.title, bookingSourceLang(), "").trim()
+      || formatTravelPlanDayHeading(dayIndex);
   }
 
   function travelPlanDayListTitle(day, dayIndex) {
@@ -2418,6 +2490,13 @@ export function createBookingTravelPlanModule(ctx) {
         const sourceDayId = normalizeTravelPlanCustomizerText(day?.source_day_id);
         const sourceRow = findTravelPlanCustomizerSourceRow(sourceTourId, sourceDayId);
         const sourceDay = sourceRow ? travelPlanCustomizerSourceDay(sourceRow) : null;
+        const resolvedDay = day && typeof day === "object" && !Array.isArray(day)
+          ? {
+              ...cloneTravelPlanCustomizerJson(day),
+              id: sourceDayId || normalizeTravelPlanCustomizerText(day?.id)
+            }
+          : null;
+        const selectedSourceDay = sourceDay || resolvedDay;
         const timelineInstanceId = normalizeTravelPlanCustomizerText(day?.id) || `tour_variant_day_${index + 1}`;
         return {
           id: timelineInstanceId,
@@ -2427,9 +2506,14 @@ export function createBookingTravelPlanModule(ctx) {
           source_day_id: sourceDayId,
           source_tour_title: normalizeTravelPlanCustomizerText(sourceRow?.source_tour_title || day?.source_tour_title),
           source_day_title: normalizeTravelPlanCustomizerText(sourceRow?.title || day?.source_day_title || day?.title),
-          source_day_exists: Boolean(sourceDay),
-          source_tour_published_on_webpage: sourceRow?.source_tour_published_on_webpage !== false,
-          ...(sourceDay ? { source_day: cloneTravelPlanCustomizerJson(sourceDay), day: cloneTravelPlanCustomizerJson(sourceDay) } : {})
+          source_day_exists: Boolean(selectedSourceDay) && day?.source_day_exists !== false,
+          source_tour_published_on_webpage: sourceRow
+            ? sourceRow.source_tour_published_on_webpage !== false
+            : day?.source_tour_published_on_webpage !== false,
+          ...(selectedSourceDay ? {
+            source_day: cloneTravelPlanCustomizerJson(selectedSourceDay),
+            day: cloneTravelPlanCustomizerJson(selectedSourceDay)
+          } : {})
         };
       }).filter((item) => item.source_tour_id && item.source_day_id);
     }

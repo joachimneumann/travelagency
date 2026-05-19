@@ -75,6 +75,7 @@ const ROLES = Object.freeze({
 });
 
 const TOUR_WEB_PAGE_MIN_IMAGE_COUNT = 2;
+const EXPERIENCE_HIGHLIGHTS_BASE_PATH = "/assets/img/experience-highlights";
 
 const state = {
   id: normalizeText(qs.get("id")),
@@ -89,6 +90,8 @@ const state = {
     base_tours: []
   },
   destinationScopeCatalog: normalizeDestinationScopeCatalog({}),
+  experienceHighlights: [],
+  experienceHighlightsLoadFailed: false,
   allSourceDays: [],
   sourceDaysLoaded: false
 };
@@ -1083,6 +1086,46 @@ function renderCustomizer() {
   renderTourCardImageSelector();
 }
 
+function normalizeLocalizedTextMap(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([lang, text]) => [normalizeText(lang).toLowerCase(), normalizeText(text)])
+      .filter(([lang, text]) => lang && text)
+  );
+}
+
+function normalizeExperienceHighlightItem(item, index) {
+  const source = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+  const image = normalizeText(source.image);
+  const id = normalizeText(source.id) || image.replace(/\.[^.]+$/, "") || (image ? `highlight_${index + 1}` : "");
+  if (!id) return null;
+  const title_i18n = normalizeLocalizedTextMap(source.title_i18n || {});
+  const title = normalizeText(source.title) || normalizeText(title_i18n.en) || id;
+  return {
+    id,
+    image,
+    title,
+    title_i18n
+  };
+}
+
+async function loadExperienceHighlights() {
+  try {
+    const response = await fetch(`${EXPERIENCE_HIGHLIGHTS_BASE_PATH}/manifest.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const payload = await response.json();
+    state.experienceHighlights = (Array.isArray(payload) ? payload : [])
+      .map((item, index) => normalizeExperienceHighlightItem(item, index))
+      .filter(Boolean);
+    state.experienceHighlightsLoadFailed = false;
+  } catch (error) {
+    state.experienceHighlights = [];
+    state.experienceHighlightsLoadFailed = true;
+    console.error("[backend-tour-variant] Failed to load experience highlights.", error);
+  }
+}
+
 async function loadSourceDays() {
   state.sourceDaysLoaded = false;
   renderTourCardImageSelector();
@@ -1404,7 +1447,10 @@ async function init() {
       showError(tourVariantT("forbidden", "You do not have access to Tour Variants."));
       return;
     }
-    await loadDestinationScopeCatalog();
+    await Promise.all([
+      loadDestinationScopeCatalog(),
+      loadExperienceHighlights()
+    ]);
     await loadTourVariant();
   } catch (error) {
     console.error("[backend-tour-variant] initialization failed", error);

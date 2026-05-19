@@ -16,6 +16,7 @@ test("travel-plan presets resolve page capability contracts", async () => {
   const booking = resolveTravelPlanEditorPreset("booking");
   assert.equal(booking.name, "booking");
   assert.equal(booking.features.focusedBookingWorkspace, true);
+  assert.equal(booking.features.dates, true);
   assert.equal(booking.features.sequentialDayDates, true);
   assert.equal(booking.features.services, "editable");
   assert.equal(booking.features.dayTitleEdit, true);
@@ -23,6 +24,7 @@ test("travel-plan presets resolve page capability contracts", async () => {
   const marketingTour = resolveTravelPlanEditorPreset("marketing_tour");
   assert.equal(marketingTour.name, "marketingTour");
   assert.equal(marketingTour.features.focusedBookingWorkspace, true);
+  assert.equal(marketingTour.features.dates, false);
   assert.equal(marketingTour.features.sequentialDayDates, false);
   assert.equal(marketingTour.features.timing, false);
   assert.equal(marketingTour.features.services, "editable");
@@ -31,8 +33,10 @@ test("travel-plan presets resolve page capability contracts", async () => {
   const tourVariant = resolveTravelPlanEditorPreset("tour-variant");
   assert.equal(tourVariant.name, "tourVariant");
   assert.equal(tourVariant.features.focusedBookingWorkspace, true);
+  assert.equal(tourVariant.features.dates, false);
   assert.equal(tourVariant.features.dayTitleEdit, false);
   assert.equal(tourVariant.features.dayDetailsEdit, false);
+  assert.equal(tourVariant.features.dayReadOnlyInfo, true);
   assert.equal(tourVariant.features.mapPointEdit, false);
   assert.equal(tourVariant.features.services, "readonlyCompact");
   assert.equal(tourVariant.features.imageUpload, false);

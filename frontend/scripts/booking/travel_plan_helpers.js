@@ -65,6 +65,15 @@ function hasOwnProperty(source, key) {
   return Object.prototype.hasOwnProperty.call(source || {}, key);
 }
 
+function normalizeOptionalTextField(source, key) {
+  const value = normalizeOptionalText(source?.[key]);
+  return value ? { [key]: value } : {};
+}
+
+function normalizeOptionalBooleanField(source, key) {
+  return hasOwnProperty(source, key) ? { [key]: source?.[key] !== false } : {};
+}
+
 function normalizeDraftLocalizedPayload(source, field, sourceLang, targetLang) {
   const rawSource = source && typeof source === "object" ? source : {};
   const mapValue = rawSource[`${field}_i18n`];
@@ -459,6 +468,12 @@ export function normalizeTravelPlanDraft(plan, options = {}) {
       return {
         id: String(rawDay.id || travelPlanId("travel_plan_day")),
         day_number: dayIndex + 1,
+        ...normalizeOptionalTextField(rawDay, "source_tour_id"),
+        ...normalizeOptionalTextField(rawDay, "source_day_id"),
+        ...normalizeOptionalTextField(rawDay, "source_tour_title"),
+        ...normalizeOptionalTextField(rawDay, "source_day_title"),
+        ...normalizeOptionalBooleanField(rawDay, "source_day_exists"),
+        ...normalizeOptionalBooleanField(rawDay, "source_tour_published_on_webpage"),
         date: normalizedDate,
         title: titleField.text,
         title_i18n: titleField.map,
