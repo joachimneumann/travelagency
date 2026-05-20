@@ -45,6 +45,19 @@ export const MONTH_CODE_OPTIONS = enumOptionsFor("MonthCode");
 export const MONTH_CODE_CATALOG = enumValuesFor("MonthCode");
 export const TRAVEL_PLAN_SERVICE_KIND_OPTIONS = enumOptionsFor("TravelPlanServiceKind");
 export const TRAVEL_PLAN_SERVICE_KIND_CATALOG = enumValuesFor("TravelPlanServiceKind");
+const LEGACY_TRAVEL_PLAN_TIMING_KIND_OPTIONS = Object.freeze([
+  Object.freeze({ value: "label", label: "label" }),
+  Object.freeze({ value: "not_applicable", label: "not_applicable" }),
+  Object.freeze({ value: "point", label: "point" }),
+  Object.freeze({ value: "range", label: "range" })
+]);
+const GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS = enumOptionsFor("TravelPlanTimingKind");
+export const TRAVEL_PLAN_TIMING_KIND_OPTIONS = GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS.length
+  ? GENERATED_TRAVEL_PLAN_TIMING_KIND_OPTIONS
+  : LEGACY_TRAVEL_PLAN_TIMING_KIND_OPTIONS;
+export const TRAVEL_PLAN_TIMING_KIND_CATALOG = Object.freeze(
+  TRAVEL_PLAN_TIMING_KIND_OPTIONS.map((option) => option.value)
+);
 export const TRAVEL_PLAN_OFFER_COVERAGE_TYPE_OPTIONS = enumOptionsFor("TravelPlanOfferCoverageType");
 export const TRAVEL_PLAN_OFFER_COVERAGE_TYPE_CATALOG = enumValuesFor("TravelPlanOfferCoverageType");
 export const TRAVEL_PLAN_FINANCIAL_COVERAGE_STATUS_OPTIONS = enumOptionsFor("TravelPlanFinancialCoverageStatus");

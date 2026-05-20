@@ -3974,6 +3974,15 @@ test("tour page reads month options from the generated catalogs layer", async ()
     generatedCatalogs.MONTH_CODE_CATALOG,
     ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
   );
+  assert.deepEqual(
+    generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_CATALOG,
+    ["label", "not_applicable", "point", "range"],
+    "Generated catalogs should retain the legacy travel-plan timing export for cached production modules"
+  );
+  assert.ok(
+    generatedCatalogs.TRAVEL_PLAN_TIMING_KIND_OPTIONS.some((option) => option.value === "label"),
+    "Generated catalogs should expose legacy travel-plan timing options for cached production modules"
+  );
   assert.match(
     tourSource,
     /function normalizeText\(value\)\s*\{\s*return String\(value \?\? ""\)\.trim\(\);\s*\}/,
