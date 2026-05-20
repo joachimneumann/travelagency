@@ -25,3 +25,13 @@ test("travel plan default welcome text localizes style-aware copy", () => {
   );
   assert.equal(translated.includes("This is your current"), false);
 });
+
+test("travel plan marketing section title localizes", () => {
+  assert.equal(pdfT("vi", "travel_plan.marketing_section_title", "Your Travel Plan"), "Kế hoạch du lịch của bạn");
+  assert.equal(pdfT("de", "travel_plan.marketing_section_title", "Your Travel Plan"), "Ihr Reiseplan");
+});
+
+test("one-pager experience highlights label localizes", () => {
+  assert.equal(pdfT("vi", "one_pager.experience_highlights", "Experience highlights"), "Điểm nhấn trải nghiệm");
+  assert.equal(pdfT("de", "one_pager.experience_highlights", "Experience highlights"), "Erlebnis-Highlights");
+});

@@ -2588,6 +2588,7 @@ test("offer and travel-plan PDFs localize guide, pricing summary, and payment-te
     "offer.tax_rate",
     "offer.quotation_tax_summary",
     "offer.payment_terms_title",
+    "travel_plan.marketing_section_title",
     "travel_plan.default_welcome_styles",
     "travel_plan.default_welcome"
   ]) {

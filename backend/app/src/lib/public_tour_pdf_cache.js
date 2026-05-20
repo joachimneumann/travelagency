@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { normalizeTourLang } from "../domain/tour_catalog_i18n.js";
 
-export const PUBLIC_ONE_PAGER_CACHE_VERSION = "public-one-pager-v1";
-export const PUBLIC_TRAVEL_PLAN_CACHE_VERSION = "public-travel-plan-v1";
+export const PUBLIC_ONE_PAGER_CACHE_VERSION = "public-one-pager-v2";
+export const PUBLIC_TRAVEL_PLAN_CACHE_VERSION = "public-travel-plan-v2";
 
 function sha256Json(value) {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
